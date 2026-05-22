@@ -9,8 +9,13 @@ declare module "next-auth" {
       image?: string | null;
       roles: {
         isAdmin: boolean;
+        clubAdmin: boolean;
+        teamAdmin: boolean;
+        coach: boolean;
+        player: boolean;
+        parent: boolean;
         coachTeamIds: number[];
-        managerTeamIds: number[];
+        teamAdminTeamIds: number[];
         playerTeamIds: number[];
         parentTeamIds: number[];
         clubAdminTeamIds: number[];
@@ -25,8 +30,13 @@ declare module "next-auth" {
     image?: string | null;
     roles?: {
       isAdmin: boolean;
+      clubAdmin: boolean;
+      teamAdmin: boolean;
+      coach: boolean;
+      player: boolean;
+      parent: boolean;
       coachTeamIds: number[];
-      managerTeamIds: number[];
+      teamAdminTeamIds: number[];
       playerTeamIds: number[];
       parentTeamIds: number[];
       clubAdminTeamIds: number[];
@@ -39,8 +49,13 @@ declare module "next-auth/jwt" {
     id: string;
     roles: {
       isAdmin: boolean;
+      clubAdmin: boolean;
+      teamAdmin: boolean;
+      coach: boolean;
+      player: boolean;
+      parent: boolean;
       coachTeamIds: number[];
-      managerTeamIds: number[];
+      teamAdminTeamIds: number[];
       playerTeamIds: number[];
       parentTeamIds: number[];
       clubAdminTeamIds: number[];

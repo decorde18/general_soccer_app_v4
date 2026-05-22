@@ -3,6 +3,21 @@ import { getServerSession } from "next-auth/next";
 import type { NextAuthOptions, Session } from "next-auth";
 import db from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { getUserRolesAndTeams } from "@/lib/auth/auth-utils";
+
+const defaultRoles = {
+  isAdmin: false,
+  clubAdmin: false,
+  teamAdmin: false,
+  coach: false,
+  player: false,
+  parent: false,
+  coachTeamIds: [] as number[],
+  teamAdminTeamIds: [] as number[],
+  playerTeamIds: [] as number[],
+  parentTeamIds: [] as number[],
+  clubAdminTeamIds: [] as number[],
+};
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -21,29 +36,32 @@ export const authOptions: NextAuthOptions = {
 
         try {
           const [rows]: any = await db.query(
-            "SELECT * FROM people WHERE email = ? LIMIT 1",
+            "SELECT id, first_name, last_name, name, email, password_hash, system_admin FROM people WHERE email = ? LIMIT 1",
             [credentials.email],
           );
 
           if (rows.length > 0) {
             const user = rows[0];
-            // Prefer hashed password field `password_hash` in DB
             const hash = user.password_hash || user.password;
             const match = await bcrypt.compare(
               credentials.password,
               hash || "",
             );
             if (match) {
+              const roles = await getUserRolesAndTeams(
+                user.id ?? user.personId,
+              );
               return {
                 id: user.id?.toString(),
-                name: user.name,
+                name:
+                  user.name ||
+                  `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
                 email: user.email,
-                roles: user.roles || { isAdmin: false },
+                roles,
               } as any;
             }
           }
 
-          // Dev fallback
           if (
             credentials.email === "admin@example.com" &&
             credentials.password === "password"
@@ -52,7 +70,10 @@ export const authOptions: NextAuthOptions = {
               id: "1",
               name: "Admin",
               email: "admin@example.com",
-              roles: { isAdmin: true },
+              roles: {
+                ...defaultRoles,
+                isAdmin: process.env.DEV_MOCK_IS_ADMIN === "true",
+              },
             } as any;
           }
 
@@ -65,20 +86,21 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: { strategy: "jwt" },
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = (user as any).id ?? token.id;
-        token.roles = (user as any).roles ?? token.roles ?? { isAdmin: false };
+        token.roles =
+          (user as any).roles ?? token.roles ?? ({ ...defaultRoles } as any);
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         (session.user as any).id = token.id as any;
-        (session.user as any).roles = (token as any).roles ?? {
-          isAdmin: false,
-        };
+        (session.user as any).roles =
+          (token as any).roles ?? ({ ...defaultRoles } as any);
       }
       return session;
     },
@@ -86,5 +108,10 @@ export const authOptions: NextAuthOptions = {
 };
 
 export async function getServerAuthSession(): Promise<Session | null> {
-  return await getServerSession(authOptions as any);
+  try {
+    return await getServerSession(authOptions as any);
+  } catch (error) {
+    console.warn("getServerAuthSession failed:", error);
+    return null;
+  }
 }

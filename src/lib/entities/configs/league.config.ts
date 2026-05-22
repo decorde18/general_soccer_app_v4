@@ -1,0 +1,115 @@
+// config/league.config.ts
+import type { EntityConfig } from "@/components/entities/types";
+
+export const leagueConfig: EntityConfig = {
+  title: "Leagues",
+  singular: "League",
+  plural: "Leagues",
+
+  permissions: {
+    view: ["ADMIN", "TEAM_ADMIN", "COACH", "PLAYER"],
+    create: ["ADMIN"],
+    edit: ["ADMIN", "TEAM_ADMIN"],
+    delete: ["ADMIN"],
+  },
+
+  table: {
+    columns: [
+      {
+        key: "name",
+        label: "League Name",
+        type: "text",
+        sortable: true,
+      },
+      {
+        key: "abbreviation",
+        label: "Abbreviation",
+        type: "text",
+        sortable: true,
+        hiddenOnMobile: true,
+      },
+      {
+        key: "governingBodyName",
+        label: "Governing Body",
+        type: "text",
+        sortable: true,
+        hiddenOnMobile: true,
+      },
+      {
+        key: "status",
+        label: "Status",
+        type: "badge",
+        sortable: true,
+        options: {
+          active: "green",
+          upcoming: "blue",
+          inactive: "gray",
+        },
+      },
+      {
+        key: "isTournament",
+        label: "Tournament",
+        type: "text",
+        sortable: true,
+        hiddenOnMobile: true,
+      },
+    ],
+  },
+
+  form: {
+    layout: "grid",
+    fields: [
+      {
+        key: "name",
+        label: "League Name",
+        type: "text",
+        required: true,
+        placeholder: "e.g. Premier League",
+        gridColumn: "span-2",
+      },
+      {
+        key: "abbreviation",
+        label: "Abbreviation",
+        type: "text",
+        required: false,
+        placeholder: "e.g. PL",
+        gridColumn: "span-1",
+      },
+      {
+        key: "governingBodyName",
+        label: "Governing Body",
+        type: "text",
+        required: false,
+        placeholder: "e.g. USSF",
+        gridColumn: "span-1",
+      },
+      {
+        key: "status",
+        label: "Status",
+        type: "select",
+        required: true,
+        options: [
+          { value: "active", label: "Active" },
+          { value: "upcoming", label: "Upcoming" },
+          { value: "inactive", label: "Inactive" },
+        ],
+        gridColumn: "span-1",
+      },
+      {
+        key: "isTournament",
+        label: "Is Tournament",
+        type: "text",
+        required: false,
+        gridColumn: "span-1",
+      },
+      {
+        key: "description",
+        label: "Description",
+        type: "textarea",
+        required: false,
+        placeholder: "League details and notes...",
+        gridColumn: "span-2",
+      },
+    ],
+  },
+};
