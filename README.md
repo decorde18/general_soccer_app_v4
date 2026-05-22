@@ -1,3 +1,5 @@
+git push -u origin main
+
 # My App — Starter Shell
 
 This repository is a Next.js app skeleton with authentication, role helpers, and UI primitives wired together for quick app starts.
