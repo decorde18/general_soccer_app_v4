@@ -25,10 +25,10 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({
     return (
       <button
         onClick={handleLogout}
-        className='w-full flex items-center gap-2 px-3 py-2 rounded-lg text-text hover:bg-danger/10 transition-colors duration-200 text-sm text-danger'
+        className='w-full flex items-center gap-2 px-3 py-2 rounded-lg text-danger transition-colors duration-200 hover:bg-danger/10'
       >
-        <LogOut size={16} className='text-danger' />
-        <span>Logout</span>
+        <LogOut size={16} />
+        <span className='text-sm'>Logout</span>
       </button>
     );
   }

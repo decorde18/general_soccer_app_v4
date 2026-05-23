@@ -10,6 +10,7 @@ import { User, UserCircle, ChevronDown } from "lucide-react";
 import LoginButton from "@/components/ui/LoginButton";
 import LogoutButton from "@/components/ui/LogoutButton";
 import Button from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 interface HeaderUser {
   name?: string;
@@ -54,51 +55,49 @@ function Header({ user }: { user?: HeaderUser }) {
   }, []);
 
   return (
-    <header className='sticky top-0 z-50 border-b border-border bg-linear-to-r from-primary via-secondary to-primary text-white shadow-lg'>
+    <header className='sticky top-0 z-50 border-b border-border bg-surface shadow-md'>
       <div className='mx-auto flex h-16 w-full max-w-screen-2xl items-center gap-4 px-4 sm:px-6 lg:px-8'>
+        {/* Logo Section */}
         <div className='flex items-center gap-3'>
-          <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-lg'>
-            <User size={20} className='text-white' />
+          <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-md'>
+            <User size={20} />
           </div>
           <div>
-            <p className='text-sm font-bold text-white'>Soccer Stats</p>
-            <p className='text-xs text-white/70 hidden sm:block'>
+            <p className='text-sm font-bold text-text'>Soccer Stats</p>
+            <p className='text-xs text-muted hidden sm:block'>
               {formattedDate}
             </p>
           </div>
         </div>
 
+        {/* Team Selector */}
         <div className='flex-1'>
           <TeamSelector />
         </div>
 
+        {/* Right Section */}
         <div className='flex items-center gap-3'>
           {session?.user ? (
             <div className='relative' ref={dropdownRef}>
+              {/* User Button */}
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className='hidden items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 text-sm text-white transition-all duration-200 md:flex'
+                className='hidden items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm text-text transition-all duration-200 hover:bg-primary/10 md:flex'
               >
-                <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white font-semibold text-xs'>
+                <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white font-semibold text-xs'>
                   {initials || "U"}
                 </span>
                 <div className='min-w-0 text-left'>
-                  <p className='truncate text-sm font-medium text-white'>
+                  <p className='truncate text-sm font-medium text-text'>
                     {name}
                   </p>
-                  {isAdmin ? (
-                    <p className='text-xs uppercase tracking-[0.25em] text-accent'>
-                      Admin
-                    </p>
-                  ) : (
-                    <p className='text-xs uppercase tracking-[0.25em] text-white/70'>
-                      Member
-                    </p>
-                  )}
+                  <p className='text-xs text-muted'>
+                    {isAdmin ? "Admin" : "Member"}
+                  </p>
                 </div>
                 <ChevronDown
                   size={16}
-                  className={`transition-transform duration-200 ${
+                  className={`text-muted transition-transform duration-200 ${
                     isDropdownOpen ? "rotate-180" : ""
                   }`}
                 />
@@ -106,23 +105,30 @@ function Header({ user }: { user?: HeaderUser }) {
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className='absolute right-0 mt-2 w-48 rounded-2xl bg-white shadow-2xl overflow-hidden border border-border animate-in fade-in zoom-in-95'>
-                  <div className='px-4 py-3 border-b border-border bg-background/50'>
+                <Card
+                  variant='default'
+                  padding='none'
+                  className='absolute right-0 mt-2 w-48 shadow-lg'
+                >
+                  {/* User Info Header */}
+                  <div className='border-b border-border bg-background px-4 py-3'>
                     <p className='text-sm font-semibold text-text'>{name}</p>
                     <p className='text-xs text-muted'>
                       {isAdmin ? "Administrator" : "Member"}
                     </p>
                   </div>
+
+                  {/* Menu Items */}
                   <div className='p-2'>
                     <button
                       onClick={() => {
                         router.push("/profile");
                         setIsDropdownOpen(false);
                       }}
-                      className='w-full flex items-center gap-2 px-3 py-2 rounded-lg text-text hover:bg-primary/10 transition-colors duration-200 text-sm'
+                      className='w-full flex items-center gap-2 px-3 py-2 rounded-lg text-text transition-colors duration-200 hover:bg-primary/10'
                     >
                       <UserCircle size={16} className='text-primary' />
-                      <span>Profile</span>
+                      <span className='text-sm'>Profile</span>
                     </button>
                     <div className='border-t border-border my-1' />
                     <LogoutButton
@@ -130,13 +136,13 @@ function Header({ user }: { user?: HeaderUser }) {
                       isDropdown={true}
                     />
                   </div>
-                </div>
+                </Card>
               )}
 
-              {/* Mobile User Icon */}
+              {/* Mobile User Avatar */}
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className='md:hidden flex items-center justify-center h-10 w-10 rounded-full bg-accent text-white font-semibold'
+                className='md:hidden flex items-center justify-center h-10 w-10 rounded-full bg-primary text-white font-semibold text-sm'
               >
                 {initials || "U"}
               </button>
