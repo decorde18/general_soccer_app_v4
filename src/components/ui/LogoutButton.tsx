@@ -34,11 +34,7 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({
   }
 
   return (
-    <Button
-      variant='secondary'
-      size='sm'
-      onClick={handleLogout}
-    >
+    <Button variant='secondary' size='sm' onClick={handleLogout}>
       Logout
     </Button>
   );
