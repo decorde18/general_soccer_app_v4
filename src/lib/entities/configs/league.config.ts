@@ -8,8 +8,8 @@ export const leagueConfig: EntityConfig = {
 
   permissions: {
     view: ["ADMIN", "TEAM_ADMIN", "COACH", "PLAYER"],
-    create: ["ADMIN"],
-    edit: ["ADMIN", "TEAM_ADMIN"],
+    create: ["ADMIN", "TEAM_ADMIN", "COACH"],
+    edit: ["ADMIN", "TEAM_ADMIN", "COACH"],
     delete: ["ADMIN"],
   },
 
