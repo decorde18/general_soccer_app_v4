@@ -9,6 +9,8 @@ import { GenericTable } from "../ui/GenericTable";
 import { GenericForm } from "../ui/GenericForm";
 import { useToast } from "@/components/ui/toast";
 import Dialog from "@/components/ui/Dialog";
+import Button from "@/components/ui/Button";
+import Select from "@/components/ui/Select";
 import { useSessionContext } from "@/contexts/SessionProvider";
 
 interface EntityPageProps<T extends Record<string, unknown>> {
@@ -176,16 +178,18 @@ export function EntityPage<T extends Record<string, unknown>>({
           </p>
         </div>
         {canCreate && (
-          <button
+          <Button
+            variant="primary"
             onClick={() => {
               setEditRecord(null);
               setShowForm(true);
             }}
-            className='flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-accent-hover transition-colors'
+            className='flex-row items-center gap-2 font-medium px-4 py-2 text-sm'
+            size="md"
           >
             <Plus size={15} />
             Add {config.singular}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -231,23 +235,21 @@ export function EntityPage<T extends Record<string, unknown>>({
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder={`Search ${config.plural?.toLowerCase() ?? config.title.toLowerCase()}...`}
-              className='w-full pl-8 pr-3 py-2 text-sm border border-border rounded-lg bg-surface text-text placeholder:text-muted/60 focus:outline-none focus:border-border focus:ring-2 focus:ring-primary/10 transition-colors'
+              className='w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-text placeholder:text-muted/60 focus:outline-none focus:border-border focus:ring-2 focus:ring-primary/10 transition-colors'
             />
           </div>
 
           {statusOptions.length > 0 && (
-            <select
+            <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className='text-sm border border-border rounded-lg px-3 py-2 bg-surface text-muted focus:outline-none focus:border-border transition-colors'
-            >
-              <option value=''>All statuses</option>
-              {statusOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </option>
-              ))}
-            </select>
+              onChange={(e: any) => setStatusFilter(e.target.value)}
+              options={[
+                { value: "", label: "All statuses" },
+                ...statusOptions.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))
+              ]}
+              showPlaceholder={false}
+              className="min-w-[140px]"
+            />
           )}
 
           <span className='ml-auto text-xs text-muted'>
@@ -274,17 +276,15 @@ export function EntityPage<T extends Record<string, unknown>>({
 
       {/* Modal form */}
       {showForm && (
-        <div className='modal-overlay p-4 backdrop-blur-sm'>
-          <GenericForm
-            config={config}
-            initialData={editRecord}
-            onSubmit={editRecord ? handleUpdate : handleCreate}
-            onCancel={() => {
-              setShowForm(false);
-              setEditRecord(null);
-            }}
-          />
-        </div>
+        <GenericForm
+          config={config}
+          initialData={editRecord}
+          onSubmit={editRecord ? handleUpdate : handleCreate}
+          onCancel={() => {
+            setShowForm(false);
+            setEditRecord(null);
+          }}
+        />
       )}
 
       <Dialog

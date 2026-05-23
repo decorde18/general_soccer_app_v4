@@ -48,7 +48,25 @@ const DEV_USERS = [
 
 function NavBar({ user }: { user?: NavBarUser }) {
   const { data: session } = useSession();
-  console.log(user)
+  // user = 
+  // name: 'David Cordero de Jesus',
+  // email: 'decorde@yahoo.com',
+  // id: '17',
+  // personId: 17,
+  // roles: {
+  //   isAdmin: true,
+  //   clubAdmin: false,
+  //   teamAdmin: false,
+  //   coach: false,
+  //   player: false,
+  //   parent: false,
+  //   coachTeamIds: [],
+  //   teamAdminTeamIds: [],
+  //   playerTeamIds: [],
+  //   parentTeamIds: [],
+  //   clubAdminTeamIds: []
+  // }
+
   // const { myTeams, myClubs, activeClubId, setActiveClubId } =
   //   useNavigationStore();
   const [myTeams, myClubs, activeClubId, setActiveClubId] = [[1, 2], [1], 1, () => console.log("set")]
