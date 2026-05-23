@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "../auth/auth-utils";
+import pool from "../db";
 
 export async function createLeague(data: Record<string, string>) {
   await verifyAdmin();
@@ -11,19 +12,26 @@ export async function createLeague(data: Record<string, string>) {
   }
 
   // --- MySQL DB logic ---
-  // try {
-  //     const [result] = await pool.query(
-  //         `INSERT INTO leagues (name, season, startDate, status, description) VALUES (?, ?, ?, ?, ?)`,
-  //         [data.name, data.season || null, data.startDate || null, data.status || 'active', data.description || null]
-  //     );
-  //     // const insertId = (result as any).insertId;
-  // } catch (error) {
-  //     console.error("Error creating league:", error);
-  //     throw new Error("Failed to create league");
-  // }
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO leagues (name, abbreviation, governing_body_id, status, description, is_tournament) VALUES (?, ?, ?, ?, ?,?)`,
+      [
+        data.name,
+        data.abbreviation || null,
+        data.governing_body_id || null,
+        data.status || "active",
+        data.description || null,
+        data.is_tournament || 0,
+      ],
+    );
+    // const insertId = (result as any).insertId;
+  } catch (error) {
+    console.error("Error creating league:", error);
+    throw new Error("Failed to create league");
+  }
 
   revalidatePath("/leagues");
-  console.log("createLeague called with:", data);
+  // console.log("createLeague called with:", data);
 }
 
 export async function updateLeague(id: unknown, data: Record<string, string>) {
@@ -31,21 +39,40 @@ export async function updateLeague(id: unknown, data: Record<string, string>) {
   if (!id) throw new Error("ID required");
 
   // --- MySQL DB logic ---
-  // const updates = [];
-  // const values = [];
-  // if (data.name) { updates.push('name = ?'); values.push(data.name); }
-  // if (data.status) { updates.push('status = ?'); values.push(data.status); }
-  // if (data.startDate) { updates.push('startDate = ?'); values.push(data.startDate); }
-  // if (data.description !== undefined) { updates.push('description = ?'); values.push(data.description); }
-  // values.push(id);
+  const updates = [];
+  const values = [];
+  if (data.name) {
+    updates.push("name = ?");
+    values.push(data.name);
+  }
+  if (data.status) {
+    updates.push("status = ?");
+    values.push(data.status);
+  }
+  if (data.governing_body_id !== undefined) {
+    updates.push("governing_body_id = ?");
+    values.push(data.governing_body_id);
+  }
 
-  // if (updates.length > 0) {
-  //     const sql = `UPDATE leagues SET ${updates.join(', ')} WHERE id = ?`;
-  //     await pool.query(sql, values);
-  // }
+  if (data.description !== undefined) {
+    updates.push("description = ?");
+    values.push(data.description);
+  }
+
+  if (data.is_tournament !== undefined) {
+    updates.push("is_tournament = ?");
+    values.push(data.is_tournament);
+  }
+
+  values.push(id);
+
+  if (updates.length > 0) {
+    const sql = `UPDATE leagues SET ${updates.join(", ")} WHERE id = ?`;
+    await pool.query(sql, values);
+  }
 
   revalidatePath("/leagues");
-  console.log("updateLeague called:", id, data);
+  // console.log("updateLeague called:", id, data);
 }
 
 export async function deleteLeague(id: unknown) {
@@ -53,8 +80,8 @@ export async function deleteLeague(id: unknown) {
   if (!id) throw new Error("ID required");
 
   // --- MySQL DB logic ---
-  // await pool.query(`DELETE FROM leagues WHERE id = ?`, [id]);
+  await pool.query(`DELETE FROM leagues WHERE id = ?`, [id]);
 
   revalidatePath("/leagues");
-  console.log("deleteLeague called:", id);
+  // console.log("deleteLeague called:", id);
 }

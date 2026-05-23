@@ -46,8 +46,8 @@ export const governingBodyConfig: EntityConfig = {
         label: "Governing Body Name",
         type: "text",
         required: true,
-        placeholder: "e.g. USSF",
-        gridColumn: "span-2",
+        placeholder: "e.g. United States Soccer Federation",
+        gridColumn: "span-10",
       },
       {
         key: "abbreviation",
@@ -55,7 +55,7 @@ export const governingBodyConfig: EntityConfig = {
         type: "text",
         required: false,
         placeholder: "e.g. PL",
-        gridColumn: "span-1",
+        gridColumn: "span-6",
       },
       {
         key: "website",
@@ -63,7 +63,7 @@ export const governingBodyConfig: EntityConfig = {
         type: "text",
         required: false,
         placeholder: "e.g. https://ussf.org",
-        gridColumn: "span-1",
+        gridColumn: "span-8",
       },
     ],
   },
