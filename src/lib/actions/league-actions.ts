@@ -49,9 +49,13 @@ export async function updateLeague(id: unknown, data: Record<string, string>) {
     updates.push("status = ?");
     values.push(data.status);
   }
-  if (data.governing_body_id !== undefined) {
+  if (data.abbreviation !== undefined) {
+    updates.push("abbreviation = ?");
+    values.push(data.abbreviation);
+  }
+  if (data.governingBodyName !== undefined) {
     updates.push("governing_body_id = ?");
-    values.push(data.governing_body_id);
+    values.push(data.governingBodyName);
   }
 
   if (data.description !== undefined) {
@@ -59,9 +63,9 @@ export async function updateLeague(id: unknown, data: Record<string, string>) {
     values.push(data.description);
   }
 
-  if (data.is_tournament !== undefined) {
+  if (data.isTournament) {
     updates.push("is_tournament = ?");
-    values.push(data.is_tournament);
+    values.push(data.isTournament === "true" ? 1 : 0);
   }
 
   values.push(id);

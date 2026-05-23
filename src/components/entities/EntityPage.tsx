@@ -105,6 +105,28 @@ export function EntityPage<T extends Record<string, unknown>>({
     const id = (editRecord as Record<string, unknown>).id;
     try {
       await onUpdate(id, formData);
+      const displayPatch: Record<string, unknown> = { ...formData };
+
+      config.form.fields.forEach((field) => {
+        const val = formData[field.key];
+        if (val === undefined) return;
+
+        // Boolean: convert "true"/"false" string → 1/0 to match DB/table expectation
+        if (field.type === "toggle" || field.type === "checkbox") {
+          displayPatch[field.key] = val === "true" ? 1 : 0;
+        }
+
+        // Select: swap the stored value back to the label for display
+        if (field.type === "select" && field.options) {
+          const match = field.options.find((o) => o.value === val);
+          if (match) {
+            // store the label under the display key your table column uses
+            // e.g. governingBodyName instead of governing_body_id
+            displayPatch[field.key] = match.label;
+          }
+        }
+      });
+
       setData((prev) =>
         prev.map((row) =>
           (row as Record<string, unknown>).id === id
@@ -179,13 +201,13 @@ export function EntityPage<T extends Record<string, unknown>>({
         </div>
         {canCreate && (
           <Button
-            variant="primary"
+            variant='primary'
             onClick={() => {
               setEditRecord(null);
               setShowForm(true);
             }}
             className='flex-row items-center gap-2 font-medium px-4 py-2 text-sm'
-            size="md"
+            size='md'
           >
             <Plus size={15} />
             Add {config.singular}
@@ -245,10 +267,13 @@ export function EntityPage<T extends Record<string, unknown>>({
               onChange={(e: any) => setStatusFilter(e.target.value)}
               options={[
                 { value: "", label: "All statuses" },
-                ...statusOptions.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))
+                ...statusOptions.map((s) => ({
+                  value: s,
+                  label: s.charAt(0).toUpperCase() + s.slice(1),
+                })),
               ]}
               showPlaceholder={false}
-              className="min-w-[140px]"
+              className='min-w-[140px]'
             />
           )}
 
