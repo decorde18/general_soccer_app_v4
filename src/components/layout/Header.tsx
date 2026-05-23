@@ -55,7 +55,7 @@ function Header({ user }: { user?: HeaderUser }) {
   }, []);
 
   return (
-    <header className='sticky top-0 z-50 border-b border-border bg-surface shadow-md'>
+    <header className='sticky top-0 z-50 border-b border-border bg-surface shadow-md items-center'>
       <div className='mx-auto flex h-16 w-full max-w-screen-2xl items-center gap-4 px-4 sm:px-6 lg:px-8'>
         {/* Logo Section */}
         <div className='flex items-center gap-3'>
@@ -71,7 +71,7 @@ function Header({ user }: { user?: HeaderUser }) {
         </div>
 
         {/* Team Selector */}
-        <div className='flex-1'>
+        <div className='flex-1 '>
           <TeamSelector />
         </div>
 
