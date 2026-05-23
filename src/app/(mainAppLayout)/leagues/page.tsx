@@ -2,6 +2,7 @@
 import { EntityShell } from "@/components/entities/EntityShell";
 import { leagueConfig } from "@/lib/entities/configs/league.config";
 import { governingBodyConfig } from "@/lib/entities/configs/governingBody.config";
+import { governingBodyConfig } from "@/lib/entities/configs/governingBody.config";
 import {
   createLeague,
   updateLeague,
@@ -9,9 +10,12 @@ import {
 } from "@/lib/actions/league-actions";
 import { createGoverningBody } from "@/lib/actions/governingBody-actions";
 import { getLeagues, getGoverningBodies } from "@/lib/data/queries";
+import { createGoverningBody } from "@/lib/actions/governingBody-actions";
+import { getLeagues, getGoverningBodies } from "@/lib/data/queries";
 
 export default async function LeaguesPage() {
   const leagues = await getLeagues();
+  const governingBodies = await getGoverningBodies();
   const governingBodies = await getGoverningBodies();
 
   const stats = [
@@ -59,6 +63,7 @@ export default async function LeaguesPage() {
   return (
     <div className='p-6 max-w-6xl mx-auto'>
       <EntityShell
+        config={config}
         config={config}
         data={leagues}
         stats={stats}

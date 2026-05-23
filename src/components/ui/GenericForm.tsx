@@ -227,11 +227,13 @@ function FieldInput({
   error,
   onChange,
   onAddOption,
+  onAddOption,
 }: {
   field: FormField;
   value: string;
   error?: string;
   onChange: (val: string) => void;
+  onAddOption?: (val: string, label: string) => void;
   onAddOption?: (val: string, label: string) => void;
 }) {
   const [isCustom, setIsCustom] = useState(false);
@@ -241,6 +243,12 @@ function FieldInput({
 
   return (
     <div className='flex flex-col gap-1.5'>
+      {!isCheckboxOrToggle && (
+        <label className='text-sm font-medium text-text'>
+          {field.label}
+          {field.required && <span className='text-danger ml-1'>*</span>}
+        </label>
+      )}
       {!isCheckboxOrToggle && (
         <label className='text-sm font-medium text-text'>
           {field.label}
