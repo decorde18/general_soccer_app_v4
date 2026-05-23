@@ -105,25 +105,19 @@ export function EntityPage<T extends Record<string, unknown>>({
     const id = (editRecord as Record<string, unknown>).id;
     try {
       await onUpdate(id, formData);
-      const displayPatch: Record<string, unknown> = { ...formData };
-
-      config.form.fields.forEach((field) => {
-        const val = formData[field.key];
+      const displayPatch: Record<string, unknown> = {};
+      config.form.fields.forEach((f) => {
+        const val = formData[f.valueKey ?? f.key]; // formData now uses valueKey
         if (val === undefined) return;
 
-        // Boolean: convert "true"/"false" string → 1/0 to match DB/table expectation
-        if (field.type === "toggle" || field.type === "checkbox") {
-          displayPatch[field.key] = val === "true" ? 1 : 0;
-        }
-
-        // Select: swap the stored value back to the label for display
-        if (field.type === "select" && field.options) {
-          const match = field.options.find((o) => o.value === val);
-          if (match) {
-            // store the label under the display key your table column uses
-            // e.g. governingBodyName instead of governing_body_id
-            displayPatch[field.key] = match.label;
-          }
+        if (f.type === "toggle" || f.type === "checkbox") {
+          displayPatch[f.key] = val === "true" ? 1 : 0;
+        } else if (f.type === "select" && f.options) {
+          const match = f.options.find((o) => String(o.value) === String(val));
+          displayPatch[f.key] = match ? match.label : val; // restore label to display key
+          if (f.valueKey) displayPatch[f.valueKey] = val; // also keep the id
+        } else {
+          displayPatch[f.key] = val;
         }
       });
 

@@ -96,7 +96,12 @@ export function GenericForm<T extends Record<string, unknown>>({
     if (!validate()) return;
     setLoading(true);
     try {
-      await onSubmit(values);
+      const payload: Record<string, string> = {};
+      config.form.fields.forEach((f) => {
+        const submitKey = f.valueKey ?? f.key;
+        payload[submitKey] = values[f.key] ?? "";
+      });
+      await onSubmit(payload);
     } finally {
       setLoading(false);
     }
@@ -241,6 +246,12 @@ function FieldInput({
 
   return (
     <div className='flex flex-col gap-1.5'>
+      {!isCheckboxOrToggle && (
+        <label className='text-sm font-medium text-text'>
+          {field.label}
+          {field.required && <span className='text-danger ml-1'>*</span>}
+        </label>
+      )}
       {!isCheckboxOrToggle && (
         <label className='text-sm font-medium text-text'>
           {field.label}

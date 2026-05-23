@@ -83,10 +83,11 @@ export const leagueConfig: EntityConfig = {
         gridColumn: "span-4",
       },
       {
-        key: "governingBodyName",
-        label: "Governing Body",
+        key: "governingBodyName", // display key (table column)
+        valueKey: "governingBodyId", // what gets sent to the server action
         type: "select",
-        required: false,
+        label: "Governing Body",
+        required: true,
         placeholder: "Select or add governing body",
         gridColumn: "span-8",
         creatable: true,

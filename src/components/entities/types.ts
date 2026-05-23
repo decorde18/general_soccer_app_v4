@@ -33,7 +33,7 @@ export interface FormField {
   options?: { value: string; label: string }[];
   creatable?: boolean;
   creatableConfig?: EntityConfig;
-
+  valueKey?: string; // the DB key to submit under (e.g. "governingBodyId")
   onCreatableSubmit?: (data: Record<string, string>) => Promise<any>;
 }
 
