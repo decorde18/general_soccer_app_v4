@@ -23,13 +23,14 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({
 
   if (isDropdown) {
     return (
-      <button
+      <Button
+        variant="outline"
         onClick={handleLogout}
-        className='w-full flex items-center gap-2 px-3 py-2 rounded-lg text-danger transition-colors duration-200 hover:bg-danger/10'
+        className='w-full flex flex-row items-center justify-start gap-2 px-3 py-2 border-none bg-transparent shadow-none font-normal text-danger hover:bg-danger/10'
       >
         <LogOut size={16} />
         <span className='text-sm'>Logout</span>
-      </button>
+      </Button>
     );
   }
 

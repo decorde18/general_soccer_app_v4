@@ -1,28 +1,68 @@
 "use client";
 import { Menu, X, ChevronDown, ChevronRight, Building2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
-import { useNavigationStore } from "@/stores/navigationStore";
-import {
-  buildCompleteNavigation,
-  getRoleBadgeInfo,
-} from "@/lib/navigationUtils";
+// import { useNavigationStore } from "@/stores/navigationStore";
+// import {
+//   buildCompleteNavigation,
+//   getRoleBadgeInfo,
+// } from "@/lib/navigationUtils";
 import LogoutButton from "../ui/LogoutButton";
+import Select from "../ui/Select";
 
-function NavBar() {
+const DEV_USERS = [
+  {
+    value: "admin",
+    label: "Admin User",
+    user: {
+      name: "Admin User",
+      roles: { isAdmin: true },
+      first_name: "Admin",
+      last_name: "User",
+    },
+  },
+  {
+    value: "coach",
+    label: "Coach User",
+    user: {
+      name: "Coach User",
+      roles: { isAdmin: false },
+      first_name: "Coach",
+      last_name: "User",
+    },
+  },
+  {
+    value: "player",
+    label: "Player User",
+    user: {
+      name: "Player User",
+      roles: { isAdmin: false },
+      first_name: "Player",
+      last_name: "User",
+    },
+  },
+];
+
+function NavBar({ user }: { user?: NavBarUser }) {
   const { data: session } = useSession();
-  const user = session?.user;
-  const { myTeams, myClubs, activeClubId, setActiveClubId } =
-    useNavigationStore();
+  console.log(user)
+  // const { myTeams, myClubs, activeClubId, setActiveClubId } =
+  //   useNavigationStore();
+  const [myTeams, myClubs, activeClubId, setActiveClubId] = [[1, 2], [1], 1, () => console.log("set")]
   const pathname = usePathname();
+  const router = useRouter();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedTeams, setExpandedTeams] = useState<Record<number, boolean>>(
     {},
   );
+  const [devUserMode, setDevUserMode] = useState<string>("");
+
+  const devUserOverride = DEV_USERS.find(u => u.value === devUserMode)?.user;
+  // const user = devUserOverride ?? session?.user;
 
   // Initialize active club when data loads
   useEffect(() => {
@@ -83,31 +123,30 @@ function NavBar() {
     }));
   };
 
-  const sections = buildCompleteNavigation(
-    user,
-    myTeams,
-    myClubs,
-    activeClubId,
-  ) as any[];
-
+  // const sections = buildCompleteNavigation(
+  //   user,
+  //   myTeams,
+  //   myClubs,
+  //   activeClubId,
+  // ) as any[];
+  const sections = []
   const NavButton = ({ item, indent = 0 }: { item: any; indent?: number }) => {
     const isActive = pathname === item.path;
 
     return (
       <Link
         href={item.path}
-        className={`w-full flex items-center gap-3 py-2.5 text-white text-sm cursor-pointer transition-all duration-200 rounded-lg ${
-          isActive
-            ? "bg-white/15 backdrop-blur-sm shadow-lg"
-            : "bg-transparent hover:bg-white/10 hover:translate-x-1"
-        }`}
+        className={`w-full flex items-center gap-3 py-2.5 text-sm cursor-pointer transition-all duration-200 rounded-lg ${isActive
+          ? "bg-primary/10 text-primary font-semibold shadow-sm"
+          : "bg-transparent text-text hover:bg-surface-hover hover:translate-x-1"
+          }`}
         style={{ paddingLeft: `${16 + indent * 12}px` }}
       >
         <div className='flex items-center gap-3 w-full'>
           {item.icon && <span className='text-base'>{item.icon}</span>}
           <span className='font-medium flex-1 text-left'>{item.label}</span>
           {item.badge && (
-            <span className='text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white/90'>
+            <span className='text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary'>
               {item.badge}
             </span>
           )}
@@ -119,73 +158,87 @@ function NavBar() {
   return (
     <>
       {/* Hamburger Button - Hidden on desktop */}
-      <button
-        onClick={() => setSidebarOpen((prev) => !prev)}
-        className='lg:hidden fixed top-4 left-4 z-[1200] bg-transparent border-none cursor-pointer transition-transform hover:scale-110'
-        aria-label='Toggle menu'
-      >
-        {sidebarOpen ? (
-          <X size={28} className='text-white drop-shadow-lg' />
-        ) : (
-          <Menu size={28} className='text-text drop-shadow-lg' />
-        )}
-      </button>
+      {!sidebarOpen && (
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className='lg:hidden fixed top-3 left-4 z-[1200] bg-surface p-1.5 rounded-md shadow-sm border border-border text-text cursor-pointer transition-transform hover:scale-105'
+          aria-label='Open menu'
+        >
+          <Menu size={24} />
+        </button>
+      )}
 
       {/* Backdrop - Hidden on desktop */}
       <div
-        className={`lg:hidden fixed inset-0 bg-black/50 z-[1000] transition-opacity duration-300 ${
-          sidebarOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        className={`lg:hidden fixed inset-0 bg-black/50 z-[1000] transition-opacity duration-300 ${sidebarOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+          }`}
         onClick={() => setSidebarOpen(false)}
       />
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-72 bg-gradient-to-br from-primary to-secondary text-white z-[1100] transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:shadow-none ${
-          sidebarOpen
-            ? "translate-x-0 shadow-[4px_0_20px_rgba(0,0,0,0.2)]"
-            : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 h-full w-72 bg-surface text-text border-r border-border z-[1100] transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:shadow-none ${sidebarOpen
+          ? "translate-x-0 shadow-[4px_0_20px_rgba(0,0,0,0.1)]"
+          : "-translate-x-full"
+          }`}
       >
         <div className='flex flex-col h-full'>
           {/* Header */}
-          <div className='flex-shrink-0 p-6 border-b border-white/10'>
-            <h1 className='text-2xl font-bold mb-1 bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent'>
+          <div className='flex-shrink-0 p-6 border-b border-border flex items-center justify-between'>
+            <h1 className='text-2xl font-bold mb-1 text-primary'>
               Soccer Stats
             </h1>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className='lg:hidden p-1 rounded-md text-muted hover:bg-surface-hover'
+              aria-label='Close menu'
+            >
+              <X size={24} />
+            </button>
           </div>
+
+          {/* Dev User Select */}
+          {process.env.NODE_ENV === "development" && (
+            <div className='p-4 border-b border-border'>
+              <Select
+                label='View As (Dev)'
+                options={[{ value: "", label: "Real User" }, ...DEV_USERS]}
+                value={devUserMode}
+                onChange={(e: any) => setDevUserMode(e.target.value)}
+                width="full"
+                showPlaceholder={false}
+              />
+            </div>
+          )}
 
           {/* Club Selector */}
           {myClubs.length > 0 && (
-            <div className='p-4 border-b border-white/5'>
-              <label className='text-[10px] uppercase font-bold tracking-wider text-white/50 mb-1.5 block px-1'>
-                Current Club
-              </label>
-              <div className='relative'>
-                <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-white/60'>
-                  <Building2 size={14} />
-                </div>
-                <select
-                  value={activeClubId || ""}
-                  onChange={handleClubChange}
-                  className='w-full pl-9 pr-8 py-2 bg-white/10 hover:bg-white/15 border border-white/10 rounded-lg text-sm text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors'
-                >
-                  {myClubs.map((club: any) => (
-                    <option
-                      key={club.club_id}
-                      value={club.club_id}
-                      className='bg-gray-800 text-white'
-                    >
-                      {club.club_name}
-                    </option>
-                  ))}
-                </select>
-                <div className='absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-white/60'>
-                  <ChevronDown size={14} />
-                </div>
-              </div>
+            <div className='p-4 border-b border-border'>
+              <Select
+                label='Current Club'
+                value={activeClubId || ""}
+                onChange={handleClubChange}
+                options={myClubs.map((club: any) => ({ value: club.club_id, label: club.club_name }))}
+                width="full"
+                showPlaceholder={false}
+              />
+            </div>
+          )}
+
+          {/* Team Selector */}
+          {myTeams.length > 0 && (
+            <div className='p-4 border-b border-border'>
+              <Select
+                label='Current Team'
+                options={[{ value: "", label: "Select Team..." }, ...myTeams.map((team: any) => ({ value: team.team_season_id, label: team.team_name }))]}
+                onChange={(e: any) => {
+                  if (e.target.value) router.push(`/teams/${e.target.value}`);
+                }}
+                width="full"
+                showPlaceholder={false}
+              />
             </div>
           )}
 
@@ -194,7 +247,7 @@ function NavBar() {
             {sections.map((section) => (
               <div key={section.id}>
                 {/* Section Header */}
-                <div className='text-xs font-semibold text-white/50 uppercase tracking-wider mb-3 px-4'>
+                <div className='text-xs font-semibold text-muted uppercase tracking-wider mb-3 px-4'>
                   {section.label}
                 </div>
 
@@ -227,7 +280,7 @@ function NavBar() {
                                     onClick={() =>
                                       toggleTeam(team.team_season_id)
                                     }
-                                    className='hover:bg-white/5 rounded p-1'
+                                    className='hover:bg-primary/5 text-muted rounded p-1'
                                   >
                                     {expandedTeams[team.team_season_id] ? (
                                       <ChevronDown size={16} />
@@ -238,7 +291,7 @@ function NavBar() {
 
                                   <Link
                                     href={`/teams/${team.team_season_id}`}
-                                    className='flex-1 flex items-center gap-2 text-sm hover:bg-white/10 rounded-lg transition-all py-2 px-2'
+                                    className='flex-1 flex items-center gap-2 text-sm text-text hover:bg-surface-hover rounded-lg transition-all py-2 px-2'
                                   >
                                     <span className='flex-1 text-left font-medium truncate'>
                                       {team.team_name}
@@ -253,7 +306,7 @@ function NavBar() {
 
                                 {/* Team Navigation */}
                                 {expandedTeams[team.team_season_id] && (
-                                  <div className='space-y-1 mt-1 ml-4 border-l border-white/10 pl-2'>
+                                  <div className='space-y-1 mt-1 ml-4 border-l border-border pl-2'>
                                     {team.navigation
                                       .filter(
                                         (nav: any) => nav.type !== "divider",
@@ -281,7 +334,7 @@ function NavBar() {
 
           {/* Footer Actions */}
           {user && (
-            <div className='flex-shrink-0 p-4 border-t border-white/10 space-y-2 bg-gradient-to-t from-black/10 to-transparent'>
+            <div className='flex-shrink-0 p-4 border-t border-border space-y-2 bg-surface'>
               <LogoutButton />
             </div>
           )}

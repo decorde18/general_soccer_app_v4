@@ -11,6 +11,40 @@ import LoginButton from "@/components/ui/LoginButton";
 import LogoutButton from "@/components/ui/LogoutButton";
 import Button from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import Select from "@/components/ui/Select";
+
+const DEV_USERS = [
+  {
+    value: "admin",
+    label: "Admin User",
+    user: {
+      name: "Admin User",
+      roles: { isAdmin: true },
+      first_name: "Admin",
+      last_name: "User",
+    },
+  },
+  {
+    value: "coach",
+    label: "Coach User",
+    user: {
+      name: "Coach User",
+      roles: { isAdmin: false },
+      first_name: "Coach",
+      last_name: "User",
+    },
+  },
+  {
+    value: "player",
+    label: "Player User",
+    user: {
+      name: "Player User",
+      roles: { isAdmin: false },
+      first_name: "Player",
+      last_name: "User",
+    },
+  },
+];
 
 interface HeaderUser {
   name?: string;
@@ -25,9 +59,11 @@ function Header({ user }: { user?: HeaderUser }) {
   const router = useRouter();
   const { data: session } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [devUserMode, setDevUserMode] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentUser = (user as HeaderUser) ?? session?.user;
+  const devUserOverride = DEV_USERS.find(u => u.value === devUserMode)?.user;
+  const currentUser = devUserOverride ?? (user as HeaderUser) ?? session?.user;
   const name = currentUser?.name ?? "Player";
   const isAdmin = currentUser?.roles?.isAdmin;
   const firstNameInitial = currentUser?.first_name
@@ -72,17 +108,30 @@ function Header({ user }: { user?: HeaderUser }) {
 
         {/* Team Selector */}
         <div className='flex-1 '>
-          <TeamSelector />
+          <TeamSelector type="header" />
         </div>
 
         {/* Right Section */}
         <div className='flex items-center gap-3'>
-          {session?.user ? (
+          {process.env.NODE_ENV === "development" && (
+            <div className="hidden lg:block mr-2">
+               <Select
+                 options={[{value: "", label: "Real User"}, ...DEV_USERS]}
+                 value={devUserMode}
+                 onChange={(e: any) => setDevUserMode(e.target.value)}
+                 width="auto"
+                 className="min-w-[140px]"
+                 showPlaceholder={false}
+               />
+            </div>
+          )}
+          {currentUser ? (
             <div className='relative' ref={dropdownRef}>
               {/* User Button */}
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className='hidden items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm text-text transition-all duration-200 hover:bg-primary/10 md:flex'
+                className='hidden md:flex flex-row items-center gap-2 px-4 py-2 text-sm font-normal border-border bg-background hover:bg-primary/10'
               >
                 <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white font-semibold text-xs'>
                   {initials || "U"}
@@ -101,7 +150,7 @@ function Header({ user }: { user?: HeaderUser }) {
                     isDropdownOpen ? "rotate-180" : ""
                   }`}
                 />
-              </button>
+              </Button>
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
@@ -120,16 +169,17 @@ function Header({ user }: { user?: HeaderUser }) {
 
                   {/* Menu Items */}
                   <div className='p-2'>
-                    <button
+                    <Button
+                      variant="outline"
                       onClick={() => {
                         router.push("/profile");
                         setIsDropdownOpen(false);
                       }}
-                      className='w-full flex items-center gap-2 px-3 py-2 rounded-lg text-text transition-colors duration-200 hover:bg-primary/10'
+                      className='w-full flex flex-row items-center justify-start gap-2 px-3 py-2 border-none font-normal text-text hover:bg-primary/10 bg-transparent shadow-none'
                     >
                       <UserCircle size={16} className='text-primary' />
                       <span className='text-sm'>Profile</span>
-                    </button>
+                    </Button>
                     <div className='border-t border-border my-1' />
                     <LogoutButton
                       onLogout={() => setIsDropdownOpen(false)}
@@ -140,12 +190,12 @@ function Header({ user }: { user?: HeaderUser }) {
               )}
 
               {/* Mobile User Avatar */}
-              <button
+              <Button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className='md:hidden flex items-center justify-center h-10 w-10 rounded-full bg-primary text-white font-semibold text-sm'
+                className='md:hidden flex items-center justify-center h-10 w-10 !p-0 rounded-full text-sm'
               >
                 {initials || "U"}
-              </button>
+              </Button>
             </div>
           ) : (
             <div className='flex items-center gap-2'>
