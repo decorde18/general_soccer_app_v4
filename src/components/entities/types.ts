@@ -7,7 +7,7 @@ export type Role =
   | "PLAYER"
   | "PUBLIC";
 
-export type FieldType = "text" | "date" | "textarea" | "select" | "number";
+export type FieldType = "text" | "date" | "textarea" | "select" | "number" | "checkbox" | "toggle";
 export type ColumnType = "text" | "date" | "badge" | "number" | "action";
 
 export interface FormField {
@@ -18,6 +18,9 @@ export interface FormField {
   gridColumn?: string;
   placeholder?: string;
   options?: { value: string; label: string }[];
+  creatable?: boolean;
+  creatableConfig?: EntityConfig;
+  onCreatableSubmit?: (data: Record<string, string>) => Promise<any>;
 }
 
 export interface TableColumn {

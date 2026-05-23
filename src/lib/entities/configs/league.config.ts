@@ -78,10 +78,12 @@ export const leagueConfig: EntityConfig = {
       {
         key: "governingBodyName",
         label: "Governing Body",
-        type: "text",
+        type: "select",
         required: false,
-        placeholder: "e.g. USSF",
+        placeholder: "Select or add governing body",
         gridColumn: "span-8",
+        creatable: true,
+        options: [], // Options will be populated in page.tsx
       },
       {
         key: "status",
@@ -98,9 +100,9 @@ export const leagueConfig: EntityConfig = {
       {
         key: "isTournament",
         label: "Tournament",
-        type: "text",
+        type: "toggle",
         required: false,
-        gridColumn: "span-1",
+        gridColumn: "span-12",
       },
       {
         key: "description",
