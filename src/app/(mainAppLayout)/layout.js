@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import Footer from "@/components/layout/Footer";
-// import Header from "@/components/layout/Header";
+import Header from "@/components/layout/Header";
 // import NavBar from "@/components/layout/NavBar";
 import HeaderSkeleton from "@/components/layout/HeaderSkeleton";
 import NavBarSkeleton from "@/components/layout/NavBarSkeleton";
@@ -20,7 +20,7 @@ export default async function MainAppLayout({ children }) {
         </Suspense>
         <div className='main-content'>
           <Suspense fallback={<HeaderSkeleton />}>
-            {/* <Header user={user} /> */}
+            <Header user={user} />
           </Suspense>
           <SessionProvider session={session}>{children}</SessionProvider>
         </div>

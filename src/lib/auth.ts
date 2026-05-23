@@ -1,22 +1,44 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getServerSession } from "next-auth/next";
-import type { NextAuthOptions, Session } from "next-auth";
+import type { JWT } from "next-auth/jwt";
+import type { NextAuthOptions, Session, User } from "next-auth";
+import type { RowDataPacket } from "mysql2";
 import db from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { getUserRolesAndTeams } from "@/lib/auth/auth-utils";
+import { getUserRolesAndTeams, UserRoles } from "@/lib/auth/auth-utils";
 
-const defaultRoles = {
+interface AuthUserRow extends RowDataPacket {
+  person_id: number;
+  first_name?: string;
+  last_name?: string;
+  name?: string;
+  email?: string;
+  password_hash?: string;
+  system_admin?: number;
+}
+
+interface CredentialUser extends User {
+  personId?: number;
+  roles: UserRoles;
+}
+
+interface AuthToken extends JWT {
+  personId?: number;
+  roles?: UserRoles;
+}
+
+const defaultRoles: UserRoles = {
   isAdmin: false,
   clubAdmin: false,
   teamAdmin: false,
   coach: false,
   player: false,
   parent: false,
-  coachTeamIds: [] as number[],
-  teamAdminTeamIds: [] as number[],
-  playerTeamIds: [] as number[],
-  parentTeamIds: [] as number[],
-  clubAdminTeamIds: [] as number[],
+  coachTeamIds: [],
+  teamAdminTeamIds: [],
+  playerTeamIds: [],
+  parentTeamIds: [],
+  clubAdminTeamIds: [],
 };
 
 export const authOptions: NextAuthOptions = {
@@ -35,30 +57,41 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          const [rows]: any = await db.query(
-            "SELECT id, first_name, last_name, name, email, password_hash, system_admin FROM people WHERE email = ? LIMIT 1",
+          const [rows] = await db.query<AuthUserRow[]>(
+            `SELECT
+               p.id AS person_id,
+               p.first_name,
+               p.last_name,
+          
+               p.email,
+               u.password_hash,
+               u.system_admin
+             FROM users u
+             JOIN people p ON u.person_id = p.id
+             WHERE p.email = ?
+             LIMIT 1`,
             [credentials.email],
           );
 
           if (rows.length > 0) {
             const user = rows[0];
-            const hash = user.password_hash || user.password;
+            const hash = user.password_hash || undefined;
             const match = await bcrypt.compare(
               credentials.password,
               hash || "",
             );
             if (match) {
-              const roles = await getUserRolesAndTeams(
-                user.id ?? user.personId,
-              );
+              const personId = user.person_id;
+              const roles = await getUserRolesAndTeams(personId);
               return {
-                id: user.id?.toString(),
+                id: personId.toString(),
+                personId,
                 name:
                   user.name ||
                   `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
                 email: user.email,
                 roles,
-              } as any;
+              };
             }
           }
 
@@ -74,7 +107,7 @@ export const authOptions: NextAuthOptions = {
                 ...defaultRoles,
                 isAdmin: process.env.DEV_MOCK_IS_ADMIN === "true",
               },
-            } as any;
+            } as CredentialUser;
           }
 
           return null;
@@ -88,19 +121,21 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: AuthToken; user?: CredentialUser }) {
       if (user) {
-        token.id = (user as any).id ?? token.id;
-        token.roles =
-          (user as any).roles ?? token.roles ?? ({ ...defaultRoles } as any);
+        token.id = user.id ?? token.id;
+        token.personId = user.personId ?? token.personId;
+        token.roles = user.roles ?? token.roles ?? { ...defaultRoles };
       }
       return token;
     },
-    async session({ session, token }) {
-      if (token && session.user) {
-        (session.user as any).id = token.id as any;
-        (session.user as any).roles =
-          (token as any).roles ?? ({ ...defaultRoles } as any);
+    async session({ session, token }: { session: Session; token: AuthToken }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        (session.user as unknown as { personId?: number }).personId =
+          token.personId;
+        (session.user as unknown as { roles?: UserRoles }).roles =
+          token.roles ?? { ...defaultRoles };
       }
       return session;
     },
@@ -109,7 +144,7 @@ export const authOptions: NextAuthOptions = {
 
 export async function getServerAuthSession(): Promise<Session | null> {
   try {
-    return await getServerSession(authOptions as any);
+    return await getServerSession(authOptions);
   } catch (error) {
     console.warn("getServerAuthSession failed:", error);
     return null;

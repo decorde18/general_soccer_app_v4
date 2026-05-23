@@ -21,6 +21,12 @@ interface PersonRow extends RowDataPacket {
   system_admin: number;
 }
 
+interface VUserRow extends RowDataPacket {
+  system_admin: number;
+  roles_json?: string;
+  has_team_access: number;
+}
+
 interface TeamIdRow extends RowDataPacket {
   team_id: number;
 }
@@ -33,20 +39,32 @@ interface AppSessionUser {
   roles?: UserRoles;
 }
 
+function parseRolesJson(rolesJson?: string): string[] {
+  if (!rolesJson) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rolesJson);
+    return Array.isArray(parsed)
+      ? parsed.map((item) => String(item).toLowerCase())
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 async function getUserRolesFromView(
   id: number,
 ): Promise<Partial<UserRoles> | null> {
   try {
-    const [rows] = await db.query<RowDataPacket[]>(
+    const [rows] = await db.query<VUserRow[]>(
       `SELECT
          system_admin,
-         club_admin,
-         team_admin,
-         coach,
-         parent,
-         player
+         roles_json,
+         has_team_access
        FROM v_users
-       WHERE id = ?
+       WHERE person_id = ?
        LIMIT 1`,
       [id],
     );
@@ -55,16 +73,18 @@ async function getUserRolesFromView(
       return null;
     }
 
-    const row = rows[0] as Record<string, unknown>;
+    const row = rows[0];
+    const viewRoles = parseRolesJson(row.roles_json);
     return {
       isAdmin: Boolean(row.system_admin),
-      clubAdmin: Boolean(row.club_admin),
-      teamAdmin: Boolean(row.team_admin),
-      coach: Boolean(row.coach),
-      player: Boolean(row.player),
-      parent: Boolean(row.parent),
+      clubAdmin: viewRoles.includes("club_admin"),
+      teamAdmin: viewRoles.includes("team_admin"),
+      coach: viewRoles.includes("coach"),
+      player: viewRoles.includes("player"),
+      parent: viewRoles.includes("parent"),
     };
-  } catch {
+  } catch (error) {
+    console.error("Error reading v_users roles:", error);
     return null;
   }
 }
@@ -99,7 +119,11 @@ export async function getUserRolesAndTeams(
       roles.parent = viewRoleFlags.parent ?? false;
     } else {
       const [peopleRows] = await db.query<PersonRow[]>(
-        "SELECT system_admin FROM people WHERE id = ? LIMIT 1",
+        `SELECT u.system_admin AS system_admin
+         FROM users u
+         JOIN people p ON u.person_id = p.id
+         WHERE p.id = ?
+         LIMIT 1`,
         [id],
       );
       if (peopleRows.length > 0 && peopleRows[0].system_admin) {
@@ -280,7 +304,8 @@ export async function verifyTeamAccess(teamId: number | string) {
   const user = session.user as AppSessionUser;
   if (user.roles?.isAdmin) return true;
 
-  const roles = await getUserRolesAndTeams(user.personId);
+  const targetPersonId = user.personId ?? Number(user.id);
+  const roles = await getUserRolesAndTeams(targetPersonId);
   const tId = Number(teamId);
   const hasAccess =
     roles.coachTeamIds.includes(tId) ||
