@@ -2,29 +2,30 @@
 
 import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "../auth/auth-utils";
-import pool from "../db";
+import prisma from "@/lib/prisma";
+import { governingBodySchema } from "../validations/schemas";
 
 export async function createGoverningBody(data: Record<string, string>) {
   await verifyAdmin();
 
-  // Validate server-side (never trust the client)
-  if (!data.name || data.name.length < 3) {
-    throw new Error("Name must be at least 3 characters");
-  }
+  // Validate server-side with Zod
+  const parsedData = governingBodySchema.parse(data);
 
-  // --- MySQL DB logic ---
   try {
-    const [result] = await pool.query(
-      `INSERT INTO governing_bodies (name, abbreviation, website) VALUES (?, ?, ?)`,
-      [data.name, data.abbreviation || null, data.website || null],
-    );
+    const newBody = await prisma.governing_bodies.create({
+      data: {
+        name: parsedData.name,
+        abbreviation: parsedData.abbreviation,
+        website: parsedData.website,
+      },
+    });
+    
+    revalidatePath("/governing-bodies");
+    return newBody; // Return the created object so nested configs get the ID!
   } catch (error) {
     console.error("Error creating governingBody:", error);
     throw new Error("Failed to create governingBody");
   }
-
-  revalidatePath("/governing-bodies");
-  // console.log("createGoverningBody called:", data);
 }
 
 export async function updateGoverningBody(
@@ -32,42 +33,28 @@ export async function updateGoverningBody(
   data: Record<string, string>,
 ) {
   await verifyAdmin();
-  if (!id) throw new Error("ID required");
+  const numId = Number(id);
+  if (!numId) throw new Error("ID required");
 
-  // --- MySQL DB logic ---
-  const updates = [];
-  const values = [];
-  if (data.name) {
-    updates.push("name = ?");
-    values.push(data.name);
-  }
-  if (data.abbreviation !== undefined) {
-    updates.push("abbreviation = ?");
-    values.push(data.abbreviation);
-  }
-  if (data.website !== undefined) {
-    updates.push("website = ?");
-    values.push(data.website);
-  }
+  // Partial validation for updates
+  const parsedData = governingBodySchema.partial().parse(data);
 
-  values.push(id);
-
-  if (updates.length > 0) {
-    const sql = `UPDATE governing_bodies SET ${updates.join(", ")} WHERE id = ?`;
-    await pool.query(sql, values);
-  }
+  await prisma.governing_bodies.update({
+    where: { id: numId },
+    data: parsedData,
+  });
 
   revalidatePath("/governing-bodies");
-  // console.log("updateGoverningBody called:", id, data);
 }
 
 export async function deleteGoverningBody(id: unknown) {
   await verifyAdmin();
-  if (!id) throw new Error("ID required");
+  const numId = Number(id);
+  if (!numId) throw new Error("ID required");
 
-  // --- MySQL DB logic ---
-  await pool.query(`DELETE FROM governing_bodies WHERE id = ?`, [id]);
+  await prisma.governing_bodies.delete({
+    where: { id: numId },
+  });
 
   revalidatePath("/governing-bodies");
-  // console.log("deleteGoverningBody called:", id);
 }

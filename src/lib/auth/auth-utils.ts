@@ -1,7 +1,6 @@
-import db from "@/lib/db";
+import prisma from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import type { RowDataPacket } from "mysql2";
 
 export interface UserRoles {
   isAdmin: boolean;
@@ -17,17 +16,17 @@ export interface UserRoles {
   clubAdminTeamIds: number[];
 }
 
-interface PersonRow extends RowDataPacket {
+interface PersonRow {
   system_admin: number;
 }
 
-interface VUserRow extends RowDataPacket {
+interface VUserRow {
   system_admin: number;
   roles_json?: string;
   has_team_access: number;
 }
 
-interface TeamIdRow extends RowDataPacket {
+interface TeamIdRow {
   team_id: number;
 }
 
@@ -58,16 +57,15 @@ async function getUserRolesFromView(
   id: number,
 ): Promise<Partial<UserRoles> | null> {
   try {
-    const [rows] = await db.query<VUserRow[]>(
-      `SELECT
+    const rows = await prisma.$queryRaw<VUserRow[]>`
+       SELECT
          system_admin,
          roles_json,
          has_team_access
        FROM v_users
-       WHERE person_id = ?
-       LIMIT 1`,
-      [id],
-    );
+       WHERE person_id = ${id}
+       LIMIT 1
+    `;
 
     if (rows.length === 0) {
       return null;
@@ -118,61 +116,55 @@ export async function getUserRolesAndTeams(
       roles.player = viewRoleFlags.player ?? false;
       roles.parent = viewRoleFlags.parent ?? false;
     } else {
-      const [peopleRows] = await db.query<PersonRow[]>(
-        `SELECT u.system_admin AS system_admin
+      const peopleRows = await prisma.$queryRaw<PersonRow[]>`
+         SELECT u.system_admin AS system_admin
          FROM users u
          JOIN people p ON u.person_id = p.id
-         WHERE p.id = ?
-         LIMIT 1`,
-        [id],
-      );
+         WHERE p.id = ${id}
+         LIMIT 1
+      `;
       if (peopleRows.length > 0 && peopleRows[0].system_admin) {
         roles.isAdmin = true;
       }
     }
 
-    const [coachRows] = await db.query<TeamIdRow[]>(
-      `SELECT DISTINCT team_id FROM coaches WHERE person_id = ? AND is_active = 1
+    const coachRows = await prisma.$queryRaw<TeamIdRow[]>`
+       SELECT DISTINCT team_id FROM coaches WHERE person_id = ${id} AND is_active = 1
        UNION
        SELECT DISTINCT ts.team_id FROM team_staff staff
        JOIN team_seasons ts ON staff.team_season_id = ts.id
-       WHERE staff.person_id = ? AND staff.role IN ('head_coach', 'assistant_coach') AND staff.is_active = 1`,
-      [id, id],
-    );
+       WHERE staff.person_id = ${id} AND staff.role IN ('head_coach', 'assistant_coach') AND staff.is_active = 1
+    `;
     roles.coachTeamIds = coachRows.map((r) => r.team_id);
 
-    const [teamAdminRows] = await db.query<TeamIdRow[]>(
-      `SELECT DISTINCT ts.team_id FROM team_staff staff
+    const teamAdminRows = await prisma.$queryRaw<TeamIdRow[]>`
+       SELECT DISTINCT ts.team_id FROM team_staff staff
        JOIN team_seasons ts ON staff.team_season_id = ts.id
-       WHERE staff.person_id = ? AND staff.role IN ('team_admin', 'stats_keeper') AND staff.is_active = 1`,
-      [id],
-    );
+       WHERE staff.person_id = ${id} AND staff.role IN ('team_admin', 'stats_keeper') AND staff.is_active = 1
+    `;
     roles.teamAdminTeamIds = teamAdminRows.map((r) => r.team_id);
 
-    const [playerRows] = await db.query<TeamIdRow[]>(
-      `SELECT DISTINCT ts.team_id FROM player_teams pt
+    const playerRows = await prisma.$queryRaw<TeamIdRow[]>`
+       SELECT DISTINCT ts.team_id FROM player_teams pt
        JOIN team_seasons ts ON pt.team_season_id = ts.id
-       WHERE pt.player_id = ?`,
-      [id],
-    );
+       WHERE pt.player_id = ${id}
+    `;
     roles.playerTeamIds = playerRows.map((r) => r.team_id);
 
-    const [parentRows] = await db.query<TeamIdRow[]>(
-      `SELECT DISTINCT ts.team_id FROM player_relationships pr
+    const parentRows = await prisma.$queryRaw<TeamIdRow[]>`
+       SELECT DISTINCT ts.team_id FROM player_relationships pr
        JOIN player_teams pt ON pr.player_id = pt.player_id
        JOIN team_seasons ts ON pt.team_season_id = ts.id
-       WHERE pr.related_person_id = ? AND pr.relationship IN ('Parent', 'Guardian')`,
-      [id],
-    );
+       WHERE pr.related_person_id = ${id} AND pr.relationship IN ('Parent', 'Guardian')
+    `;
     roles.parentTeamIds = parentRows.map((r) => r.team_id);
 
-    const [clubAdminRows] = await db.query<TeamIdRow[]>(
-      `SELECT DISTINCT t.id AS team_id
+    const clubAdminRows = await prisma.$queryRaw<TeamIdRow[]>`
+       SELECT DISTINCT t.id AS team_id
        FROM club_staff cs
        JOIN teams t ON cs.club_id = t.club_id
-       WHERE cs.person_id = ? AND cs.role = 'club_admin' AND cs.is_active = 1`,
-      [id],
-    );
+       WHERE cs.person_id = ${id} AND cs.role = 'club_admin' AND cs.is_active = 1
+    `;
     roles.clubAdminTeamIds = clubAdminRows.map((r) => r.team_id);
 
     roles.coach = roles.coach || roles.coachTeamIds.length > 0;

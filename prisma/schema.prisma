@@ -1,0 +1,951 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model addresses {
+  id            Int         @id @default(autoincrement())
+  address_line1 String?     @db.VarChar(255)
+  address_line2 String?     @db.VarChar(255)
+  city          String?     @db.VarChar(100)
+  state         String?     @db.VarChar(50)
+  postal_code   String?     @db.VarChar(20)
+  country       String?     @default("USA") @db.VarChar(100)
+  created_at    DateTime?   @default(now()) @db.Timestamp(0)
+  modified_at   DateTime?   @default(now()) @db.Timestamp(0)
+  clubs         clubs[]
+  locations     locations[]
+}
+
+model age_groups {
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(50)
+  begin_date   DateTime?      @db.Date
+  end_date     DateTime?      @db.Date
+  team_seasons team_seasons[]
+}
+
+model club_staff {
+  id          Int             @id @default(autoincrement())
+  person_id   Int
+  club_id     Int
+  role        club_staff_role
+  is_active   Boolean?        @default(true)
+  joined_date DateTime?       @db.Date
+  left_date   DateTime?       @db.Date
+  created_at  DateTime?       @default(now()) @db.DateTime(0)
+  modified_at DateTime?       @default(now()) @db.DateTime(0)
+  people      people          @relation(fields: [person_id], references: [id], onUpdate: Restrict, map: "club_staff_ibfk_1")
+  clubs       clubs           @relation(fields: [club_id], references: [id], onUpdate: Restrict, map: "club_staff_ibfk_2")
+
+  @@unique([person_id, club_id, role], map: "unique_person_club_role")
+  @@index([club_id], map: "idx_club_staff_club")
+  @@index([person_id], map: "idx_club_staff_person")
+}
+
+model clubs {
+  id           Int          @id @default(autoincrement())
+  name         String       @db.VarChar(100)
+  location     String?      @db.VarChar(100)
+  logo_url     String?      @db.VarChar(255)
+  founded_year Int?
+  contact_info String?      @db.Text
+  created_at   DateTime?    @default(now()) @db.DateTime(0)
+  modified_at  DateTime?    @default(now()) @db.DateTime(0)
+  is_active    Boolean      @default(true)
+  abbreviation String?      @db.VarChar(20)
+  type         clubs_type?  @default(club)
+  location_id  Int?
+  club_staff   club_staff[]
+  addresses    addresses?   @relation(fields: [location_id], references: [id], map: "fk_clubs_location")
+  teams        teams[]
+
+  @@index([location_id], map: "fk_clubs_location")
+}
+
+model event_types {
+  id          Int                   @id @default(autoincrement())
+  name        String                @db.VarChar(100)
+  category    event_types_category? @default(other)
+  created_at  DateTime?             @default(now()) @db.Timestamp(0)
+  modified_at DateTime?             @default(now()) @db.Timestamp(0)
+  events      events[]
+}
+
+model events {
+  id              Int           @id @default(autoincrement())
+  created_at      DateTime?     @default(now()) @db.Timestamp(0)
+  modified_at     DateTime?     @default(now()) @db.Timestamp(0)
+  start_datetime  DateTime      @db.DateTime(0)
+  end_datetime    DateTime      @db.DateTime(0)
+  is_all_day      Boolean?      @default(false)
+  title           String        @db.VarChar(255)
+  description     String?       @db.Text
+  recurrence_rule String?       @db.Text
+  google_cal_id   String?       @db.VarChar(255)
+  team_season_id  Int?
+  event_type_id   Int?
+  location_id     Int?
+  video_link      String?       @db.VarChar(500)
+  event_types     event_types?  @relation(fields: [event_type_id], references: [id], onUpdate: Restrict, map: "events_ibfk_2")
+  locations       locations?    @relation(fields: [location_id], references: [id], onUpdate: Restrict, map: "events_ibfk_3")
+  team_seasons    team_seasons? @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_events_team_season")
+
+  @@index([event_type_id], map: "event_type_id")
+  @@index([team_season_id], map: "fk_events_team_season")
+  @@index([location_id], map: "location_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model game_events_discipline {
+  id                     Int                              @id @default(autoincrement())
+  major_event_id         Int
+  team_season_id         Int
+  player_game_id         Int?
+  opponent_jersey_number Int?
+  card_type              game_events_discipline_card_type
+  card_reason            String?                          @db.Text
+  created_at             DateTime?                        @default(now()) @db.Timestamp(0)
+  modified_at            DateTime?                        @default(now()) @db.Timestamp(0)
+  game_events_major      game_events_major                @relation(fields: [major_event_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_discipline_major")
+  player_games           player_games?                    @relation(fields: [player_game_id], references: [id], onUpdate: Restrict, map: "fk_discipline_player")
+  team_seasons           team_seasons                     @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_discipline_team")
+
+  @@index([card_type], map: "idx_discipline_card_type")
+  @@index([major_event_id], map: "idx_discipline_major")
+  @@index([player_game_id], map: "idx_discipline_player")
+  @@index([team_season_id], map: "idx_discipline_team")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model game_events_goals {
+  id                                                                       Int                     @id @default(autoincrement())
+  major_event_id                                                           Int
+  team_season_id                                                           Int
+  scorer_player_game_id                                                    Int?
+  opponent_jersey_number                                                   Int?
+  assist_player_game_id                                                    Int?
+  defending_gk_player_game_id                                              Int?
+  is_own_goal                                                              Boolean                 @default(false)
+  goal_types                                                               String?                 @db.LongText
+  created_at                                                               DateTime?               @default(now()) @db.Timestamp(0)
+  modified_at                                                              DateTime?               @default(now()) @db.Timestamp(0)
+  player_games_game_events_goals_assist_player_game_idToplayer_games       player_games?           @relation("game_events_goals_assist_player_game_idToplayer_games", fields: [assist_player_game_id], references: [id], onUpdate: Restrict, map: "fk_goals_assist")
+  player_games_game_events_goals_defending_gk_player_game_idToplayer_games player_games?           @relation("game_events_goals_defending_gk_player_game_idToplayer_games", fields: [defending_gk_player_game_id], references: [id], onUpdate: Restrict, map: "fk_goals_gk")
+  game_events_major                                                        game_events_major       @relation(fields: [major_event_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_goals_major")
+  player_games_game_events_goals_scorer_player_game_idToplayer_games       player_games?           @relation("game_events_goals_scorer_player_game_idToplayer_games", fields: [scorer_player_game_id], references: [id], onUpdate: Restrict, map: "fk_goals_scorer")
+  team_seasons                                                             team_seasons            @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_goals_team")
+  game_events_penalties                                                    game_events_penalties[]
+
+  @@index([assist_player_game_id], map: "idx_goals_assist")
+  @@index([defending_gk_player_game_id], map: "idx_goals_gk")
+  @@index([major_event_id], map: "idx_goals_major")
+  @@index([scorer_player_game_id], map: "idx_goals_scorer")
+  @@index([team_season_id], map: "idx_goals_team")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model game_events_major {
+  id                     Int                          @id @default(autoincrement())
+  game_id                Int
+  event_type             game_events_major_event_type
+  game_time              Int
+  end_time               Int?
+  period                 Int
+  clock_should_run       Boolean                      @default(true)
+  details                String?                      @db.Text
+  created_at             DateTime?                    @default(now()) @db.Timestamp(0)
+  modified_at            DateTime?                    @default(now()) @db.Timestamp(0)
+  game_events_discipline game_events_discipline[]
+  game_events_goals      game_events_goals[]
+  games                  games                        @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_major_game")
+  game_events_penalties  game_events_penalties[]
+
+  @@index([game_id], map: "idx_major_game")
+  @@index([game_id, period, game_time], map: "idx_major_time")
+  @@index([event_type], map: "idx_major_type")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model game_events_penalties {
+  id                                                                      Int                           @id @default(autoincrement())
+  major_event_id                                                          Int?
+  game_id                                                                 Int?
+  team_season_id                                                          Int
+  shooter_player_game_id                                                  Int?
+  opponent_jersey_number                                                  Int?
+  gk_player_game_id                                                       Int?
+  outcome                                                                 game_events_penalties_outcome
+  is_shootout                                                             Boolean                       @default(false)
+  shootout_round                                                          Int?
+  game_time                                                               Int?
+  top_of_round                                                            Boolean?                      @default(false)
+  goal_id                                                                 Int?
+  created_at                                                              DateTime?                     @default(now()) @db.Timestamp(0)
+  modified_at                                                             DateTime?                     @default(now()) @db.Timestamp(0)
+  shooter_jersey_number                                                   Int?
+  games                                                                   games?                        @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_penalties_game")
+  player_games_game_events_penalties_gk_player_game_idToplayer_games      player_games?                 @relation("game_events_penalties_gk_player_game_idToplayer_games", fields: [gk_player_game_id], references: [id], onUpdate: Restrict, map: "fk_penalties_gk")
+  game_events_goals                                                       game_events_goals?            @relation(fields: [goal_id], references: [id], onUpdate: Restrict, map: "fk_penalties_goal")
+  game_events_major                                                       game_events_major?            @relation(fields: [major_event_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_penalties_major")
+  player_games_game_events_penalties_shooter_player_game_idToplayer_games player_games?                 @relation("game_events_penalties_shooter_player_game_idToplayer_games", fields: [shooter_player_game_id], references: [id], onUpdate: Restrict, map: "fk_penalties_shooter")
+  team_seasons                                                            team_seasons                  @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_penalties_team")
+
+  @@index([game_id], map: "idx_penalties_game")
+  @@index([gk_player_game_id], map: "idx_penalties_gk")
+  @@index([goal_id], map: "idx_penalties_goal")
+  @@index([major_event_id], map: "idx_penalties_major")
+  @@index([shooter_player_game_id], map: "idx_penalties_shooter")
+  @@index([is_shootout, shootout_round], map: "idx_penalties_shootout")
+  @@index([team_season_id], map: "idx_penalties_team")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model game_events_player_actions {
+  id             Int                                   @id @default(autoincrement())
+  game_id        Int
+  player_game_id Int
+  event_type     game_events_player_actions_event_type
+  game_time      Int
+  period         Int
+  created_at     DateTime?                             @default(now()) @db.Timestamp(0)
+  modified_at    DateTime?                             @default(now()) @db.Timestamp(0)
+  games          games                                 @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_action_game")
+  player_games   player_games                          @relation(fields: [player_game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_action_player")
+
+  @@index([game_id], map: "idx_player_action_game")
+  @@index([player_game_id], map: "idx_player_action_player")
+  @@index([game_id, period, game_time], map: "idx_player_action_time")
+  @@index([event_type], map: "idx_player_action_type")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model game_events_team {
+  id             Int                         @id @default(autoincrement())
+  game_id        Int
+  team_season_id Int
+  event_type     game_events_team_event_type
+  game_time      Int
+  period         Int
+  created_at     DateTime?                   @default(now()) @db.Timestamp(0)
+  modified_at    DateTime?                   @default(now()) @db.Timestamp(0)
+  games          games                       @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_events_team_game")
+  team_seasons   team_seasons                @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_events_team_team_season")
+
+  @@index([game_id], map: "idx_events_team_game")
+  @@index([team_season_id], map: "idx_events_team_season")
+  @@index([game_id, period, game_time], map: "idx_events_team_time")
+  @@index([event_type], map: "idx_events_team_type")
+}
+
+model game_league_nodes {
+  game_id             Int
+  league_node_id      Int
+  is_primary          Boolean             @default(true)
+  league_node_seasons league_node_seasons @relation(fields: [league_node_id], references: [id], onDelete: Cascade, map: "fk_game_league_nodes_season")
+  games               games               @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "game_league_nodes_ibfk_1")
+
+  @@id([game_id, league_node_id])
+  @@index([league_node_id], map: "fk_game_league_nodes_season")
+}
+
+model game_periods {
+  id            Int       @id @default(autoincrement())
+  game_id       Int
+  period_number Int
+  start_time    BigInt?
+  end_time      BigInt?
+  created_at    DateTime? @default(now()) @db.DateTime(0)
+  modified_at   DateTime? @default(now()) @db.DateTime(0)
+  games         games     @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "game_periods_ibfk_1")
+
+  @@unique([game_id, period_number], map: "game_id")
+}
+
+model game_scores {
+  id                 Int                       @id @default(autoincrement())
+  game_id            Int                       @unique(map: "unique_game_score")
+  home_score         Int?
+  away_score         Int?
+  home_penalty_score Int?
+  away_penalty_score Int?
+  final_status       game_scores_final_status? @default(regulation)
+  created_at         DateTime?                 @default(now()) @db.Timestamp(0)
+  modified_at        DateTime?                 @default(now()) @db.Timestamp(0)
+  games              games                     @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_game_scores_game")
+
+  @@index([game_id], map: "idx_game_scores_game")
+}
+
+model game_standings_inclusions {
+  id                   Int          @id @default(autoincrement())
+  game_id              Int
+  league_node_id       Int
+  counts_for_standings Boolean?     @default(true)
+  created_at           DateTime?    @default(now()) @db.Timestamp(0)
+  modified_at          DateTime?    @default(now()) @db.Timestamp(0)
+  games                games        @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "game_standings_inclusions_ibfk_1")
+  league_nodes         league_nodes @relation(fields: [league_node_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "game_standings_inclusions_ibfk_2")
+
+  @@unique([game_id, league_node_id], map: "unique_game_league")
+  @@index([league_node_id], map: "league_node_id")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model game_subs {
+  id                                                 Int           @id @default(autoincrement())
+  game_id                                            Int
+  in_player_id                                       Int?
+  out_player_id                                      Int?
+  sub_time                                           Int?
+  period                                             Int
+  gk_sub                                             Boolean?      @default(false)
+  created_at                                         DateTime?     @default(now()) @db.Timestamp(0)
+  modified_at                                        DateTime?     @default(now()) @db.Timestamp(0)
+  player_games_game_subs_in_player_idToplayer_games  player_games? @relation("game_subs_in_player_idToplayer_games", fields: [in_player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_game_subs_in")
+  player_games_game_subs_out_player_idToplayer_games player_games? @relation("game_subs_out_player_idToplayer_games", fields: [out_player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_game_subs_out")
+  games                                              games         @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "game_subs_ibfk_1")
+
+  @@index([in_player_id], map: "fk_game_subs_in")
+  @@index([out_player_id], map: "fk_game_subs_out")
+  @@index([game_id], map: "game_subs_ibfk_1")
+}
+
+model games {
+  id                                                   Int                          @id @default(autoincrement())
+  season_id                                            Int
+  timezone_label                                       String?                      @db.VarChar(10)
+  home_team_season_id                                  Int
+  away_team_season_id                                  Int
+  status                                               games_status?                @default(scheduled)
+  game_type                                            games_game_type?             @default(league)
+  notes                                                String?                      @db.Text
+  created_at                                           DateTime?                    @default(now()) @db.DateTime(0)
+  modified_at                                          DateTime?                    @default(now()) @db.DateTime(0)
+  default_reg_periods                                  Int                          @default(2) @db.TinyInt
+  video_link                                           String?                      @db.VarChar(500)
+  location_id                                          Int?
+  google_cal_id                                        String?                      @db.VarChar(255)
+  sublocation_id                                       Int?
+  start_date                                           DateTime                     @db.Date
+  start_time                                           DateTime?                    @db.Time(0)
+  end_date                                             DateTime?                    @db.Date
+  end_time                                             DateTime?                    @db.Time(0)
+  game_events_major                                    game_events_major[]
+  game_events_penalties                                game_events_penalties[]
+  game_events_player_actions                           game_events_player_actions[]
+  game_events_team                                     game_events_team[]
+  game_league_nodes                                    game_league_nodes[]
+  game_periods                                         game_periods[]
+  game_scores                                          game_scores?
+  game_standings_inclusions                            game_standings_inclusions[]
+  game_subs                                            game_subs[]
+  team_seasons_games_away_team_season_idToteam_seasons team_seasons                 @relation("games_away_team_season_idToteam_seasons", fields: [away_team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_games_away_team_season")
+  team_seasons_games_home_team_season_idToteam_seasons team_seasons                 @relation("games_home_team_season_idToteam_seasons", fields: [home_team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_games_home_team_season")
+  locations                                            locations?                   @relation(fields: [location_id], references: [id], onUpdate: Restrict, map: "fk_games_location")
+  seasons                                              seasons                      @relation(fields: [season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_games_season")
+  locations_sublocations                               locations_sublocations?      @relation(fields: [sublocation_id], references: [id], onUpdate: Restrict, map: "fk_games_sublocation")
+  games_overtimes                                      games_overtimes[]
+  player_games                                         player_games[]
+
+  @@index([away_team_season_id], map: "fk_games_away_team_season")
+  @@index([home_team_season_id], map: "fk_games_home_team_season")
+  @@index([location_id], map: "fk_games_location")
+  @@index([season_id], map: "fk_games_season")
+  @@index([sublocation_id], map: "fk_games_sublocation")
+}
+
+model games_overtimes {
+  id                   Int       @id @default(autoincrement())
+  game_id              Int
+  ot_1                 Int?      @db.TinyInt
+  so_if_tied           Boolean?
+  ot_if_tied           Boolean?
+  min_ot_periods       Int?      @db.TinyInt
+  max_ot_periods       Int?      @db.TinyInt
+  default_ot_1_minutes Int?      @db.TinyInt
+  default_ot_2_periods Int?      @db.TinyInt
+  created_at           DateTime? @default(now()) @db.DateTime(0)
+  modified_at          DateTime? @default(now()) @db.DateTime(0)
+  games                games     @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_games_overtimes_game")
+
+  @@index([game_id], map: "fk_games_overtimes_game")
+}
+
+model governing_bodies {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(255)
+  abbreviation String?   @db.VarChar(50)
+  website      String?   @db.VarChar(255)
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  modified_at  DateTime? @default(now()) @db.Timestamp(0)
+  leagues      leagues[]
+}
+
+model league_node_seasons {
+  id                      Int                        @id @default(autoincrement())
+  league_node_id          Int
+  season_id               Int
+  start_date              DateTime?                  @db.Date
+  end_date                DateTime?                  @db.Date
+  status                  league_node_seasons_status @default(active)
+  is_active               Boolean?                   @default(true)
+  created_at              DateTime?                  @default(now()) @db.Timestamp(0)
+  modified_at             DateTime?                  @default(now()) @db.Timestamp(0)
+  game_league_nodes       game_league_nodes[]
+  league_nodes            league_nodes               @relation(fields: [league_node_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ln_season_node")
+  seasons                 seasons                    @relation(fields: [season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ln_season_season")
+  team_league_enrollments team_league_enrollments[]
+  team_season_records     team_season_records[]
+
+  @@unique([league_node_id, season_id], map: "unique_node_season")
+  @@index([season_id], map: "fk_ln_season_season")
+}
+
+model league_nodes {
+  id                        Int                         @id @default(autoincrement())
+  league_id                 Int
+  parent_id                 Int?
+  name                      String                      @db.VarChar(255)
+  node_type                 league_nodes_node_type
+  level                     Int?                        @default(0)
+  display_order             Int?                        @default(0)
+  start_date                DateTime?                   @db.Date
+  end_date                  DateTime?                   @db.Date
+  created_at                DateTime?                   @default(now()) @db.Timestamp(0)
+  modified_at               DateTime?                   @default(now()) @db.Timestamp(0)
+  game_standings_inclusions game_standings_inclusions[]
+  league_node_seasons       league_node_seasons[]
+  leagues                   leagues                     @relation(fields: [league_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_league_nodes_league")
+  league_nodes              league_nodes?               @relation("league_nodesToleague_nodes", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "league_nodes_ibfk_1")
+  other_league_nodes        league_nodes[]              @relation("league_nodesToleague_nodes")
+
+  @@index([league_id], map: "fk_league_nodes_league")
+  @@index([parent_id], map: "parent_id")
+}
+
+model leagues {
+  id                Int               @id @default(autoincrement())
+  name              String            @db.VarChar(255)
+  abbreviation      String?           @db.VarChar(20)
+  governing_body_id Int?
+  status            leagues_status    @default(active)
+  is_active         Boolean?
+  created_at        DateTime?         @default(now()) @db.Timestamp(0)
+  modified_at       DateTime?         @db.DateTime(0)
+  description       String?           @db.Text
+  is_tournament     Boolean?          @default(false)
+  league_nodes      league_nodes[]
+  governing_bodies  governing_bodies? @relation(fields: [governing_body_id], references: [id], onUpdate: Restrict, map: "fk_leagues_governing_body")
+
+  @@index([governing_body_id], map: "fk_leagues_governing_body")
+}
+
+model locations {
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @db.VarChar(255)
+  address_id             Int?
+  created_at             DateTime?                @default(now()) @db.Timestamp(0)
+  modified_at            DateTime?                @default(now()) @db.Timestamp(0)
+  events                 events[]
+  games                  games[]
+  addresses              addresses?               @relation(fields: [address_id], references: [id], onUpdate: Restrict, map: "locations_ibfk_1")
+  locations_sublocations locations_sublocations[]
+
+  @@index([address_id], map: "address_id")
+}
+
+model locations_sublocations {
+  id           Int       @id @default(autoincrement())
+  location_id  Int
+  name         String    @db.VarChar(100)
+  description  String?   @db.Text
+  capacity     Int?
+  surface_type String?   @db.VarChar(50)
+  is_active    Boolean?  @default(true)
+  created_at   DateTime? @default(now()) @db.Timestamp(0)
+  modified_at  DateTime? @default(now()) @db.Timestamp(0)
+  games        games[]
+  locations    locations @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_locations_sublocations_location")
+
+  @@unique([location_id, name], map: "uq_location_sublocation")
+  @@index([location_id], map: "fk_locations_sublocations_location")
+}
+
+model people {
+  id                                                                  Int                    @id @default(autoincrement())
+  created_at                                                          DateTime?              @default(now()) @db.DateTime(0)
+  modified_at                                                         DateTime?              @default(now()) @db.DateTime(0)
+  birth_date                                                          DateTime?              @db.Date
+  first_name                                                          String                 @db.VarChar(25)
+  last_name                                                           String                 @db.VarChar(25)
+  nickname                                                            String?                @db.VarChar(25)
+  email                                                               String?                @db.VarChar(100)
+  phone                                                               String?                @db.VarChar(20)
+  gender                                                              String?                @db.VarChar(1)
+  title                                                               String?                @db.VarChar(50)
+  other_last_name                                                     String?                @db.LongText
+  entry_year                                                          Int?                   @db.Year
+  credits_needed                                                      Int?                   @default(22)
+  is_active                                                           Boolean?               @default(true)
+  club_staff                                                          club_staff[]
+  player_games                                                        player_games[]
+  player_relationships_player_relationships_related_person_idTopeople player_relationships[] @relation("player_relationships_related_person_idTopeople")
+  player_relationships_player_relationships_player_idTopeople         player_relationships[] @relation("player_relationships_player_idTopeople")
+  player_season_stats                                                 player_season_stats[]
+  player_teams                                                        player_teams[]
+  team_staff                                                          team_staff[]
+  user_favorites                                                      user_favorites[]
+  user_preferences                                                    user_preferences?
+  user_team_seasons                                                   user_team_seasons[]
+  users                                                               users?
+}
+
+model player_games {
+  id                                                                               Int                          @id @default(autoincrement())
+  game_id                                                                          Int
+  player_id                                                                        Int
+  team_season_id                                                                   Int
+  position_id                                                                      Int?
+  started                                                                          Boolean?                     @default(false)
+  game_status                                                                      player_games_game_status     @default(dressed)
+  created_at                                                                       DateTime?                    @default(now()) @db.DateTime(0)
+  modified_at                                                                      DateTime?                    @default(now()) @db.DateTime(0)
+  is_guest                                                                         Boolean?                     @default(false)
+  game_events_discipline                                                           game_events_discipline[]
+  game_events_goals_game_events_goals_assist_player_game_idToplayer_games          game_events_goals[]          @relation("game_events_goals_assist_player_game_idToplayer_games")
+  game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games    game_events_goals[]          @relation("game_events_goals_defending_gk_player_game_idToplayer_games")
+  game_events_goals_game_events_goals_scorer_player_game_idToplayer_games          game_events_goals[]          @relation("game_events_goals_scorer_player_game_idToplayer_games")
+  game_events_penalties_game_events_penalties_gk_player_game_idToplayer_games      game_events_penalties[]      @relation("game_events_penalties_gk_player_game_idToplayer_games")
+  game_events_penalties_game_events_penalties_shooter_player_game_idToplayer_games game_events_penalties[]      @relation("game_events_penalties_shooter_player_game_idToplayer_games")
+  game_events_player_actions                                                       game_events_player_actions[]
+  game_subs_game_subs_in_player_idToplayer_games                                   game_subs[]                  @relation("game_subs_in_player_idToplayer_games")
+  game_subs_game_subs_out_player_idToplayer_games                                  game_subs[]                  @relation("game_subs_out_player_idToplayer_games")
+  people                                                                           people                       @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_games_person")
+  team_seasons                                                                     team_seasons                 @relation(fields: [team_season_id], references: [id], onUpdate: Restrict, map: "fk_player_games_team_season")
+  games                                                                            games                        @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "player_games_ibfk_1")
+
+  @@unique([game_id, player_id], map: "game_id")
+  @@index([game_id], map: "idx_player_games_game")
+  @@index([player_id], map: "idx_player_games_player")
+  @@index([team_season_id], map: "idx_player_games_team_season")
+  @@index([position_id], map: "position_id")
+}
+
+model player_relationships {
+  id                                                    Int                               @id @default(autoincrement())
+  player_id                                             Int
+  related_person_id                                     Int
+  created_at                                            DateTime?                         @default(now()) @db.DateTime(0)
+  modified_at                                           DateTime?                         @default(now()) @db.DateTime(0)
+  relationship                                          player_relationships_relationship @default(Parent)
+  people_player_relationships_related_person_idTopeople people                            @relation("player_relationships_related_person_idTopeople", fields: [related_person_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_parent_person")
+  people_player_relationships_player_idTopeople         people                            @relation("player_relationships_player_idTopeople", fields: [player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_person")
+
+  @@unique([player_id, related_person_id], map: "player_id")
+  @@index([related_person_id], map: "fk_parent_person")
+}
+
+model player_season_stats {
+  id              Int                               @id @default(autoincrement())
+  player_id       Int
+  team_season_id  Int
+  goals           Int?                              @default(0)
+  assists         Int?                              @default(0)
+  yellow_cards    Int?                              @default(0)
+  red_cards       Int?                              @default(0)
+  games_played    Int?                              @default(0)
+  games_started   Int?                              @default(0)
+  minutes_played  Int?                              @default(0)
+  shots           Int?                              @default(0)
+  shots_on_target Int?                              @default(0)
+  saves           Int?                              @default(0)
+  clean_sheets    Int?                              @default(0)
+  penalty_goals   Int?                              @default(0)
+  notes           String?                           @db.Text
+  stats_source    player_season_stats_stats_source? @default(manual)
+  created_at      DateTime?                         @default(now()) @db.Timestamp(0)
+  modified_at     DateTime?                         @default(now()) @db.Timestamp(0)
+  people          people                            @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_season_stats_player")
+  team_seasons    team_seasons                      @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_season_stats_team_season")
+
+  @@unique([player_id, team_season_id], map: "unique_player_team_season")
+  @@index([player_id, team_season_id], map: "idx_player_season_stats_composite")
+  @@index([player_id], map: "idx_player_season_stats_player")
+  @@index([team_season_id], map: "idx_player_season_stats_team_season")
+}
+
+model player_teams {
+  id                 Int                  @id @default(autoincrement())
+  grade              String?              @db.VarChar(10)
+  status             player_teams_status? @default(interested)
+  alt_jersey_number  Int?
+  gk_number          Int?
+  player_id          Int
+  team_season_id     Int
+  jersey_number      Int?
+  created_at         DateTime?            @default(now()) @db.DateTime(0)
+  modified_at        DateTime?            @default(now()) @db.DateTime(0)
+  position           String?              @db.VarChar(50)
+  previous_school    String?              @db.VarChar(255)
+  lives_with_parents Boolean?             @default(true)
+  played_last_season Boolean?
+  earned_credits     Boolean?
+  enrolled_last_year Boolean?             @default(true)
+  captain            Boolean?             @default(false)
+  is_active          Boolean?             @default(true)
+  joined_date        DateTime?            @db.Date
+  left_date          DateTime?            @db.Date
+  people             people               @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_teams_person")
+  team_seasons       team_seasons         @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_teams_team_season")
+
+  @@index([player_id], map: "idx_player_teams_player")
+  @@index([team_season_id], map: "idx_player_teams_team_season")
+}
+
+model seasons {
+  id                  Int                   @id @default(autoincrement())
+  season_name         String                @db.VarChar(50)
+  start_date          DateTime              @db.Date
+  end_date            DateTime              @db.Date
+  status              seasons_status        @default(upcoming)
+  created_at          DateTime?             @default(now()) @db.DateTime(0)
+  modified_at         DateTime?             @default(now()) @db.DateTime(0)
+  games               games[]
+  league_node_seasons league_node_seasons[]
+  team_seasons        team_seasons[]
+}
+
+model team_league_enrollments {
+  id                    Int                 @id @default(autoincrement())
+  team_season_id        Int
+  league_node_season_id Int
+  is_active             Boolean?            @default(true)
+  enrollment_date       DateTime?           @db.Date
+  created_at            DateTime?           @default(now()) @db.Timestamp(0)
+  modified_at           DateTime?           @default(now()) @db.Timestamp(0)
+  team_seasons          team_seasons        @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_team_league_enrollments_team_season")
+  league_node_seasons   league_node_seasons @relation(fields: [league_node_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_tls_node_season")
+
+  @@unique([team_season_id, league_node_season_id], map: "unique_enrollment")
+  @@index([league_node_season_id], map: "fk_tls_node_season")
+  @@index([team_season_id], map: "idx_team_league_enrollments_team_season")
+}
+
+model team_season_records {
+  id                    Int                                @id @default(autoincrement())
+  team_season_id        Int
+  league_node_season_id Int?
+  wins                  Int?                               @default(0)
+  losses                Int?                               @default(0)
+  draws                 Int?                               @default(0)
+  goals_for             Int?                               @default(0)
+  goals_against         Int?                               @default(0)
+  games_played          Int?                               @default(0)
+  points                Int?                               @default(0)
+  notes                 String?                            @db.Text
+  record_source         team_season_records_record_source? @default(manual)
+  created_at            DateTime?                          @default(now()) @db.Timestamp(0)
+  modified_at           DateTime?                          @default(now()) @db.Timestamp(0)
+  league_node_seasons   league_node_seasons?               @relation(fields: [league_node_season_id], references: [id], onUpdate: Restrict, map: "fk_team_records_league")
+  team_seasons          team_seasons                       @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_team_records_team_season")
+
+  @@unique([team_season_id, league_node_season_id], map: "unique_team_league_record")
+  @@index([league_node_season_id], map: "idx_team_records_league")
+  @@index([team_season_id], map: "idx_team_records_team_season")
+  @@index([team_season_id, league_node_season_id], map: "idx_team_season_records_composite")
+}
+
+model team_seasons {
+  id                                            Int                       @id @default(autoincrement())
+  team_id                                       Int
+  season_id                                     Int
+  created_at                                    DateTime?                 @default(now()) @db.DateTime(0)
+  modified_at                                   DateTime?                 @default(now()) @db.DateTime(0)
+  age_group                                     Int?
+  is_active                                     Boolean                   @default(true)
+  events                                        events[]
+  game_events_discipline                        game_events_discipline[]
+  game_events_goals                             game_events_goals[]
+  game_events_penalties                         game_events_penalties[]
+  game_events_team                              game_events_team[]
+  games_games_away_team_season_idToteam_seasons games[]                   @relation("games_away_team_season_idToteam_seasons")
+  games_games_home_team_season_idToteam_seasons games[]                   @relation("games_home_team_season_idToteam_seasons")
+  player_games                                  player_games[]
+  player_season_stats                           player_season_stats[]
+  player_teams                                  player_teams[]
+  team_league_enrollments                       team_league_enrollments[]
+  team_season_records                           team_season_records[]
+  age_groups                                    age_groups?               @relation(fields: [age_group], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_team_seasons_age_group")
+  teams                                         teams                     @relation(fields: [team_id], references: [id], onUpdate: Restrict, map: "team_seasons_ibfk_1")
+  seasons                                       seasons                   @relation(fields: [season_id], references: [id], onUpdate: Restrict, map: "team_seasons_ibfk_2")
+  team_staff                                    team_staff[]
+  user_favorites                                user_favorites[]
+  user_preferences                              user_preferences[]
+  user_team_seasons                             user_team_seasons[]
+
+  @@unique([team_id, season_id], map: "team_id")
+  @@index([age_group], map: "fk_team_seasons_age_group")
+  @@index([season_id], map: "season_id")
+}
+
+model team_staff {
+  id             Int             @id @default(autoincrement())
+  person_id      Int
+  team_season_id Int
+  role           team_staff_role
+  is_active      Boolean?        @default(true)
+  joined_date    DateTime?       @db.Date
+  left_date      DateTime?       @db.Date
+  created_at     DateTime?       @default(now()) @db.DateTime(0)
+  modified_at    DateTime?       @default(now()) @db.DateTime(0)
+  people         people          @relation(fields: [person_id], references: [id], onUpdate: Restrict, map: "team_staff_ibfk_1")
+  team_seasons   team_seasons    @relation(fields: [team_season_id], references: [id], onUpdate: Restrict, map: "team_staff_ibfk_2")
+
+  @@unique([person_id, team_season_id, role], map: "unique_person_team_season_role")
+  @@index([person_id], map: "idx_team_staff_person")
+  @@index([team_season_id], map: "idx_team_staff_team_season")
+}
+
+model teams {
+  id           Int            @id @default(autoincrement())
+  club_id      Int
+  team_name    String         @db.VarChar(100)
+  gender       teams_gender
+  created_at   DateTime?      @default(now()) @db.DateTime(0)
+  modified_at  DateTime?      @default(now()) @db.DateTime(0)
+  is_active    Boolean?       @default(true)
+  team_seasons team_seasons[]
+  clubs        clubs          @relation(fields: [club_id], references: [id], onUpdate: Restrict, map: "teams_ibfk_1")
+
+  @@index([club_id], map: "club_id")
+}
+
+model user_favorites {
+  id             Int          @id @default(autoincrement())
+  person_id      Int
+  team_season_id Int
+  created_at     DateTime?    @default(now()) @db.DateTime(0)
+  modified_at    DateTime?    @default(now()) @db.Timestamp(0)
+  team_seasons   team_seasons @relation(fields: [team_season_id], references: [id], onUpdate: Restrict, map: "user_favorites_fk_team_season")
+  people         people       @relation(fields: [person_id], references: [id], onUpdate: Restrict, map: "user_favorites_ibfk_1")
+
+  @@unique([person_id, team_season_id], map: "unique_person_team_season_favorite")
+  @@index([person_id], map: "idx_favorites_person")
+  @@index([team_season_id], map: "idx_favorites_team_season")
+}
+
+model user_preferences {
+  id                  Int           @id @default(autoincrement())
+  person_id           Int           @unique(map: "unique_person_prefs")
+  last_team_season_id Int?
+  theme               String?       @default("light") @db.VarChar(50)
+  created_at          DateTime?     @default(now()) @db.Timestamp(0)
+  modified_at         DateTime?     @default(now()) @db.Timestamp(0)
+  team_seasons        team_seasons? @relation(fields: [last_team_season_id], references: [id], onUpdate: Restrict, map: "user_preferences_fk_team_season")
+  people              people        @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "user_preferences_ibfk_1")
+
+  @@index([last_team_season_id], map: "idx_last_team_season")
+}
+
+model user_team_seasons {
+  id             BigInt                 @id @default(autoincrement()) @db.UnsignedBigInt
+  person_id      Int
+  team_season_id Int
+  role           user_team_seasons_role
+  created_at     DateTime?              @default(now()) @db.Timestamp(0)
+  modified_at    DateTime?              @default(now()) @db.Timestamp(0)
+  people         people                 @relation(fields: [person_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_person")
+  team_seasons   team_seasons           @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_team_season")
+
+  @@index([person_id], map: "fk_person")
+  @@index([team_season_id], map: "fk_team_season")
+}
+
+model users {
+  id                 Int       @id @default(autoincrement())
+  person_id          Int       @unique(map: "uq_users_person")
+  system_admin       Boolean   @default(false)
+  password_hash      String    @db.VarChar(255)
+  reset_token        String?   @db.VarChar(255)
+  reset_token_expiry DateTime? @db.DateTime(0)
+  last_login_at      DateTime? @db.DateTime(0)
+  created_at         DateTime? @default(now()) @db.DateTime(0)
+  modified_at        DateTime? @default(now()) @db.DateTime(0)
+  people             people    @relation(fields: [person_id], references: [id], onDelete: Cascade, map: "fk_users_person")
+}
+
+enum event_types_category {
+  training
+  social
+  team
+  other
+}
+
+enum game_events_major_event_type {
+  weather
+  discipline
+  goal
+  penalty
+  injury
+  other
+}
+
+enum player_teams_status {
+  interested
+  rostered
+  trying_out  @map("trying out")
+  not_playing @map("not playing")
+}
+
+enum teams_gender {
+  Men
+  Women
+  Mixed
+}
+
+enum user_team_seasons_role {
+  coach
+  team_admin
+  player
+  parent
+}
+
+enum club_staff_role {
+  club_admin
+  director
+  registrar
+}
+
+enum game_events_player_actions_event_type {
+  shot
+  shot_on_target
+  shot_blocked
+  save
+}
+
+enum game_events_team_event_type {
+  foul
+  corner
+  offside
+  throw_in
+  goal_kick
+  free_kick
+}
+
+enum team_staff_role {
+  head_coach
+  assistant_coach
+  team_admin
+  stats_keeper
+}
+
+enum leagues_status {
+  upcoming
+  active
+  inactive
+}
+
+enum seasons_status {
+  upcoming
+  active
+  completed
+  archived
+}
+
+enum league_nodes_node_type {
+  league
+  conference
+  division
+  group
+  region
+  district
+  classification
+  age_group
+  gender
+  custom
+  tournament
+}
+
+enum player_relationships_relationship {
+  Parent
+  Team_Captain @map("Team Captain")
+  Guardian
+  Sibling
+  Spouse
+  Other
+}
+
+enum league_node_seasons_status {
+  upcoming
+  active
+  completed
+  archived
+}
+
+enum game_events_discipline_card_type {
+  yellow
+  red
+  yellow_red
+}
+
+enum games_status {
+  scheduled
+  in_progress
+  completed
+  postponed
+  cancelled
+}
+
+enum games_game_type {
+  league
+  tournament
+  friendly
+  scrimmage
+  exhibition
+  playoff
+}
+
+enum game_scores_final_status {
+  regulation
+  overtime
+  penalty_kicks
+}
+
+enum player_games_game_status {
+  goalkeeper
+  starter
+  dressed
+  not_dressed
+  injured
+  suspended
+  unavailable
+}
+
+enum game_events_penalties_outcome {
+  goal
+  saved
+  missed
+  hit_post
+}
+
+enum clubs_type {
+  high_school
+  club
+}
+
+enum team_season_records_record_source {
+  manual
+  calculated
+  hybrid
+}
+
+enum player_season_stats_stats_source {
+  manual
+  calculated
+  hybrid
+}
