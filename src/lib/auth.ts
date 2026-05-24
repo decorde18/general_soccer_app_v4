@@ -2,12 +2,11 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { getServerSession } from "next-auth/next";
 import type { JWT } from "next-auth/jwt";
 import type { NextAuthOptions, Session, User } from "next-auth";
-import type { RowDataPacket } from "mysql2";
-import db from "@/lib/db";
+import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { getUserRolesAndTeams, UserRoles } from "@/lib/auth/auth-utils";
 
-interface AuthUserRow extends RowDataPacket {
+interface AuthUserRow {
   person_id: number;
   first_name?: string;
   last_name?: string;
@@ -57,8 +56,8 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          const [rows] = await db.query<AuthUserRow[]>(
-            `SELECT
+          const rows = await prisma.$queryRaw<AuthUserRow[]>`
+             SELECT
                p.id AS person_id,
                p.first_name,
                p.last_name,
@@ -68,10 +67,9 @@ export const authOptions: NextAuthOptions = {
                u.system_admin
              FROM users u
              JOIN people p ON u.person_id = p.id
-             WHERE p.email = ?
-             LIMIT 1`,
-            [credentials.email],
-          );
+             WHERE p.email = ${credentials.email}
+             LIMIT 1
+          `;
 
           if (rows.length > 0) {
             const user = rows[0];
@@ -121,7 +119,7 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async jwt({ token, user }: { token: AuthToken; user?: CredentialUser }) {
+    async jwt({ token, user }: any) {
       if (user) {
         token.id = user.id ?? token.id;
         token.personId = user.personId ?? token.personId;
@@ -129,13 +127,11 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    async session({ session, token }: { session: Session; token: AuthToken }) {
+    async session({ session, token }: any) {
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as unknown as { personId?: number }).personId =
-          token.personId;
-        (session.user as unknown as { roles?: UserRoles }).roles =
-          token.roles ?? { ...defaultRoles };
+        (session.user as any).personId = token.personId;
+        (session.user as any).roles = token.roles ?? { ...defaultRoles };
       }
       return session;
     },

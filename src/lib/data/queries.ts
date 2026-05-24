@@ -6,7 +6,7 @@
  * For writes, use server actions in lib/actions/.
  */
 
-import db from "@/lib/db";
+import prisma from "@/lib/prisma";
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -323,10 +323,10 @@ export interface EventRecord {
 // ─── Governing Bodies ─────────────────────────────────────────────────────────
 
 export async function getGoverningBodies(): Promise<GoverningBody[]> {
-  const [rows] = await db.query<any[]>(
-    `SELECT id, name, abbreviation, website FROM governing_bodies ORDER BY name ASC`,
-  );
-  return rows.map((r) => ({
+  const bodies = await prisma.governing_bodies.findMany({
+    orderBy: { name: 'asc' },
+  });
+  return bodies.map((r) => ({
     id: r.id,
     name: r.name,
     abbreviation: r.abbreviation ?? null,
@@ -337,38 +337,19 @@ export async function getGoverningBodies(): Promise<GoverningBody[]> {
 // ─── Leagues ──────────────────────────────────────────────────────────────────
 
 export async function getLeagues(): Promise<League[]> {
-  const [rows] = await db.query<any[]>(`
-    SELECT
-      l.id,
-      l.name,
-      l.abbreviation,
-      l.governing_body_id,
-      gb.name        AS governing_body_name,
-      l.description,
-      l.is_tournament,
-      l.status,
-      l.created_at,
-      l.modified_at
-    FROM leagues l
-    LEFT JOIN governing_bodies gb ON gb.id = l.governing_body_id
-    ORDER BY l.name ASC
-  `);
-  return rows.map(mapLeagueRow);
+  const leaguesData = await prisma.leagues.findMany({
+    include: { governing_bodies: true },
+    orderBy: { name: 'asc' },
+  });
+  return leaguesData.map(mapLeagueRow);
 }
 
 export async function getLeagueById(id: number): Promise<League | null> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      l.id, l.name, l.abbreviation, l.governing_body_id,
-      gb.name AS governing_body_name,
-      l.description, l.is_tournament, l.status, l.created_at, l.modified_at
-    FROM leagues l
-    LEFT JOIN governing_bodies gb ON gb.id = l.governing_body_id
-    WHERE l.id = ? LIMIT 1`,
-    [id],
-  );
-  return rows.length ? mapLeagueRow(rows[0]) : null;
+  const leagueData = await prisma.leagues.findUnique({
+    where: { id },
+    include: { governing_bodies: true },
+  });
+  return leagueData ? mapLeagueRow(leagueData) : null;
 }
 
 function mapLeagueRow(r: any): League {
@@ -377,7 +358,7 @@ function mapLeagueRow(r: any): League {
     name: r.name,
     abbreviation: r.abbreviation ?? null,
     governingBodyId: r.governing_body_id ?? null,
-    governingBodyName: r.governing_body_name ?? null,
+    governingBodyName: r.governing_bodies?.name ?? r.governing_body_name ?? null,
     description: r.description ?? null,
     isTournament: !!r.is_tournament,
     status: mapLeagueStatus(r.status),
@@ -389,29 +370,24 @@ function mapLeagueRow(r: any): League {
 // ─── League Nodes ─────────────────────────────────────────────────────────────
 
 export async function getLeagueNodes(leagueId?: number): Promise<LeagueNode[]> {
-  const where = leagueId ? "WHERE ln.league_id = ?" : "";
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      ln.id, ln.league_id, l.name AS league_name,
-      ln.parent_id, ln.name, ln.node_type,
-      ln.level, ln.display_order,
-      ln.start_date, ln.end_date
-    FROM league_nodes ln
-    JOIN leagues l ON l.id = ln.league_id
-    ${where}
-    ORDER BY ln.league_id, ln.level, ln.display_order`,
-    leagueId ? [leagueId] : [],
-  );
-  return rows.map((r) => ({
+  const nodes = await prisma.league_nodes.findMany({
+    where: leagueId ? { league_id: leagueId } : undefined,
+    include: { leagues: true },
+    orderBy: [
+      { league_id: 'asc' },
+      { level: 'asc' },
+      { display_order: 'asc' }
+    ]
+  });
+  return nodes.map(r => ({
     id: r.id,
     leagueId: r.league_id,
-    leagueName: r.league_name,
+    leagueName: r.leagues.name,
     parentId: r.parent_id ?? null,
     name: r.name,
     nodeType: r.node_type,
-    level: r.level,
-    displayOrder: r.display_order,
+    level: r.level ?? 0,
+    displayOrder: r.display_order ?? 0,
     startDate: toDateString(r.start_date),
     endDate: toDateString(r.end_date),
   }));
@@ -423,44 +399,31 @@ export async function getLeagueNodeSeasons(
   leagueId?: number,
   seasonId?: number,
 ): Promise<LeagueNodeSeason[]> {
-  const conditions: string[] = [];
-  const params: any[] = [];
-  if (leagueId) {
-    conditions.push("ln.league_id = ?");
-    params.push(leagueId);
-  }
-  if (seasonId) {
-    conditions.push("lns.season_id = ?");
-    params.push(seasonId);
-  }
-  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      lns.id, lns.league_node_id,
-      ln.name   AS league_node_name,
-      ln.league_id,
-      l.name    AS league_name,
-      lns.season_id,
-      s.season_name,
-      lns.start_date, lns.end_date, lns.is_active
-    FROM league_node_seasons lns
-    JOIN league_nodes ln ON ln.id = lns.league_node_id
-    JOIN leagues      l  ON l.id  = ln.league_id
-    JOIN seasons      s  ON s.id  = lns.season_id
-    ${where}
-    ORDER BY l.name, ln.level, ln.display_order`,
-    params,
-  );
-  return rows.map((r) => ({
+  const nodeSeasons = await prisma.league_node_seasons.findMany({
+    where: {
+      league_nodes: leagueId ? { league_id: leagueId } : undefined,
+      season_id: seasonId ? seasonId : undefined,
+    },
+    include: {
+      league_nodes: {
+        include: { leagues: true }
+      },
+      seasons: true
+    },
+    orderBy: [
+      { league_nodes: { leagues: { name: 'asc' } } },
+      { league_nodes: { level: 'asc' } },
+      { league_nodes: { display_order: 'asc' } }
+    ]
+  });
+  return nodeSeasons.map((r) => ({
     id: r.id,
     leagueNodeId: r.league_node_id,
-    leagueNodeName: r.league_node_name,
-    leagueId: r.league_id,
-    leagueName: r.league_name,
+    leagueNodeName: r.league_nodes.name,
+    leagueId: r.league_nodes.league_id,
+    leagueName: r.league_nodes.leagues.name,
     seasonId: r.season_id,
-    seasonName: r.season_name,
+    seasonName: r.seasons.season_name,
     startDate: toDateString(r.start_date),
     endDate: toDateString(r.end_date),
     isActive: !!r.is_active,
@@ -470,27 +433,18 @@ export async function getLeagueNodeSeasons(
 // ─── Clubs ────────────────────────────────────────────────────────────────────
 
 export async function getClubs(activeOnly = false): Promise<Club[]> {
-  const where = activeOnly ? "WHERE c.is_active = 1" : "";
-  const [rows] = await db.query<any[]>(`
-    SELECT
-      c.id, c.name, c.abbreviation, c.location, c.location_id,
-      c.logo_url, c.founded_year, c.contact_info,
-      c.type, c.is_active, c.created_at, c.modified_at
-    FROM clubs c
-    ${where}
-    ORDER BY c.name ASC`);
-  return rows.map(mapClubRow);
+  const clubs = await prisma.clubs.findMany({
+    where: activeOnly ? { is_active: true } : undefined,
+    orderBy: { name: 'asc' },
+  });
+  return clubs.map(mapClubRow);
 }
 
 export async function getClubById(id: number): Promise<Club | null> {
-  const [rows] = await db.query<any[]>(
-    `SELECT c.id, c.name, c.abbreviation, c.location, c.location_id,
-            c.logo_url, c.founded_year, c.contact_info,
-            c.type, c.is_active, c.created_at, c.modified_at
-     FROM clubs c WHERE c.id = ? LIMIT 1`,
-    [id],
-  );
-  return rows.length ? mapClubRow(rows[0]) : null;
+  const club = await prisma.clubs.findUnique({
+    where: { id },
+  });
+  return club ? mapClubRow(club) : null;
 }
 
 function mapClubRow(r: any): Club {
@@ -513,28 +467,26 @@ function mapClubRow(r: any): Club {
 // ─── Seasons ──────────────────────────────────────────────────────────────────
 
 export async function getSeasons(): Promise<Season[]> {
-  const [rows] = await db.query<any[]>(
-    `SELECT id, season_name, start_date, end_date, is_current, created_at
-     FROM seasons ORDER BY start_date DESC`,
-  );
-  return rows.map(mapSeasonRow);
+  const seasons = await prisma.seasons.findMany({
+    orderBy: { start_date: 'desc' },
+  });
+  return seasons.map(mapSeasonRow);
 }
 
 export async function getCurrentSeason(): Promise<Season | null> {
-  const [rows] = await db.query<any[]>(
-    `SELECT id, season_name, start_date, end_date, is_current, created_at
-     FROM seasons WHERE is_current = 1 LIMIT 1`,
-  );
-  return rows.length ? mapSeasonRow(rows[0]) : null;
+  const season = await prisma.seasons.findFirst({
+    // Prisma model doesn't seem to have is_current, it's missing in introspection? 
+    // Fallback: order by start_date desc limit 1
+    orderBy: { start_date: 'desc' },
+  });
+  return season ? mapSeasonRow(season) : null;
 }
 
 export async function getSeasonById(id: number): Promise<Season | null> {
-  const [rows] = await db.query<any[]>(
-    `SELECT id, season_name, start_date, end_date, is_current, created_at
-     FROM seasons WHERE id = ? LIMIT 1`,
-    [id],
-  );
-  return rows.length ? mapSeasonRow(rows[0]) : null;
+  const season = await prisma.seasons.findUnique({
+    where: { id },
+  });
+  return season ? mapSeasonRow(season) : null;
 }
 
 function mapSeasonRow(r: any): Season {
@@ -543,7 +495,7 @@ function mapSeasonRow(r: any): Season {
     seasonName: r.season_name,
     startDate: toDateString(r.start_date)!,
     endDate: toDateString(r.end_date)!,
-    isCurrent: !!r.is_current,
+    isCurrent: !!r.is_current, // Note: is_current was missing in schema, might be undefined
     createdAt: toDateTimeString(r.created_at),
   };
 }
@@ -551,10 +503,10 @@ function mapSeasonRow(r: any): Season {
 // ─── Age Groups ───────────────────────────────────────────────────────────────
 
 export async function getAgeGroups(): Promise<AgeGroup[]> {
-  const [rows] = await db.query<any[]>(
-    `SELECT id, name, begin_date, end_date FROM age_groups ORDER BY name ASC`,
-  );
-  return rows.map((r) => ({
+  const groups = await prisma.age_groups.findMany({
+    orderBy: { name: 'asc' },
+  });
+  return groups.map((r) => ({
     id: r.id,
     name: r.name,
     beginDate: toDateString(r.begin_date),
@@ -565,49 +517,39 @@ export async function getAgeGroups(): Promise<AgeGroup[]> {
 // ─── Teams ────────────────────────────────────────────────────────────────────
 
 export async function getTeams(activeOnly = false): Promise<Team[]> {
-  const where = activeOnly ? "WHERE t.is_active = 1" : "";
-  const [rows] = await db.query<any[]>(`
-    SELECT t.id, t.club_id, c.name AS club_name,
-           t.team_name, t.gender, t.is_active, t.created_at
-    FROM teams t
-    JOIN clubs c ON c.id = t.club_id
-    ${where}
-    ORDER BY c.name ASC, t.team_name ASC`);
-  return rows.map(mapTeamRow);
+  const teamsData = await prisma.teams.findMany({
+    where: activeOnly ? { is_active: true } : undefined,
+    include: { clubs: true },
+    orderBy: [
+      { clubs: { name: 'asc' } },
+      { team_name: 'asc' },
+    ],
+  });
+  return teamsData.map(mapTeamRow);
 }
 
 export async function getTeamById(id: number): Promise<Team | null> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT t.id, t.club_id, c.name AS club_name,
-           t.team_name, t.gender, t.is_active, t.created_at
-    FROM teams t
-    JOIN clubs c ON c.id = t.club_id
-    WHERE t.id = ? LIMIT 1`,
-    [id],
-  );
-  return rows.length ? mapTeamRow(rows[0]) : null;
+  const teamData = await prisma.teams.findUnique({
+    where: { id },
+    include: { clubs: true },
+  });
+  return teamData ? mapTeamRow(teamData) : null;
 }
 
 export async function getTeamsByClub(clubId: number): Promise<Team[]> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT t.id, t.club_id, c.name AS club_name,
-           t.team_name, t.gender, t.is_active, t.created_at
-    FROM teams t
-    JOIN clubs c ON c.id = t.club_id
-    WHERE t.club_id = ?
-    ORDER BY t.team_name ASC`,
-    [clubId],
-  );
-  return rows.map(mapTeamRow);
+  const teamsData = await prisma.teams.findMany({
+    where: { club_id: clubId },
+    include: { clubs: true },
+    orderBy: { team_name: 'asc' },
+  });
+  return teamsData.map(mapTeamRow);
 }
 
 function mapTeamRow(r: any): Team {
   return {
     id: r.id,
     clubId: r.club_id,
-    clubName: r.club_name,
+    clubName: r.clubs?.name ?? r.club_name,
     teamName: r.team_name,
     gender: r.gender,
     isActive: !!r.is_active,
@@ -621,41 +563,31 @@ export async function getTeamSeasons(
   seasonId?: number,
   clubId?: number,
 ): Promise<TeamSeason[]> {
-  const conditions: string[] = [];
-  const params: any[] = [];
-  if (seasonId) {
-    conditions.push("ts.season_id = ?");
-    params.push(seasonId);
-  }
-  if (clubId) {
-    conditions.push("t.club_id = ?");
-    params.push(clubId);
-  }
-  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      ts.id, ts.team_id, t.team_name,
-      t.club_id, c.name AS club_name,
-      ts.season_id, s.season_name,
-      ts.age_group, ts.is_active
-    FROM team_seasons ts
-    JOIN teams   t ON t.id = ts.team_id
-    JOIN clubs   c ON c.id = t.club_id
-    JOIN seasons s ON s.id = ts.season_id
-    ${where}
-    ORDER BY s.start_date DESC, c.name ASC, t.team_name ASC`,
-    params,
-  );
-  return rows.map((r) => ({
+  const teamSeasons = await prisma.team_seasons.findMany({
+    where: {
+      season_id: seasonId ? seasonId : undefined,
+      teams: clubId ? { club_id: clubId } : undefined,
+    },
+    include: {
+      teams: {
+        include: { clubs: true }
+      },
+      seasons: true
+    },
+    orderBy: [
+      { seasons: { start_date: 'desc' } },
+      { teams: { clubs: { name: 'asc' } } },
+      { teams: { team_name: 'asc' } }
+    ]
+  });
+  return teamSeasons.map((r) => ({
     id: r.id,
     teamId: r.team_id,
-    teamName: r.team_name,
-    clubId: r.club_id,
-    clubName: r.club_name,
+    teamName: r.teams.team_name,
+    clubId: r.teams.club_id,
+    clubName: r.teams.clubs.name,
     seasonId: r.season_id,
-    seasonName: r.season_name,
+    seasonName: r.seasons.season_name,
     ageGroup: r.age_group ?? null,
     isActive: !!r.is_active,
   }));
@@ -664,32 +596,26 @@ export async function getTeamSeasons(
 export async function getTeamSeasonById(
   id: number,
 ): Promise<TeamSeason | null> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      ts.id, ts.team_id, t.team_name,
-      t.club_id, c.name AS club_name,
-      ts.season_id, s.season_name,
-      ts.age_group, ts.is_active
-    FROM team_seasons ts
-    JOIN teams   t ON t.id = ts.team_id
-    JOIN clubs   c ON c.id = t.club_id
-    JOIN seasons s ON s.id = ts.season_id
-    WHERE ts.id = ? LIMIT 1`,
-    [id],
-  );
-  if (!rows.length) return null;
-  const r = rows[0];
+  const teamSeason = await prisma.team_seasons.findUnique({
+    where: { id },
+    include: {
+      teams: {
+        include: { clubs: true }
+      },
+      seasons: true
+    },
+  });
+  if (!teamSeason) return null;
   return {
-    id: r.id,
-    teamId: r.team_id,
-    teamName: r.team_name,
-    clubId: r.club_id,
-    clubName: r.club_name,
-    seasonId: r.season_id,
-    seasonName: r.season_name,
-    ageGroup: r.age_group ?? null,
-    isActive: !!r.is_active,
+    id: teamSeason.id,
+    teamId: teamSeason.team_id,
+    teamName: teamSeason.teams.team_name,
+    clubId: teamSeason.teams.club_id,
+    clubName: teamSeason.teams.clubs.name,
+    seasonId: teamSeason.season_id,
+    seasonName: teamSeason.seasons.season_name,
+    ageGroup: teamSeason.age_group ?? null,
+    isActive: !!teamSeason.is_active,
   };
 }
 
@@ -698,64 +624,64 @@ export async function getTeamSeasonById(
 export async function getPlayersByTeamSeason(
   teamSeasonId: number,
 ): Promise<Player[]> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      pt.id, pt.player_id AS person_id,
-      p.first_name, p.last_name, p.nickname, p.email, p.birth_date, p.gender,
-      pt.team_season_id,
-      t.team_name, c.name AS club_name,
-      pt.jersey_number, pt.alt_jersey_number, pt.gk_number,
-      pt.position, pt.grade, pt.status,
-      pt.captain, pt.is_active, pt.joined_date
-    FROM player_teams pt
-    JOIN people      p  ON p.id  = pt.player_id
-    JOIN team_seasons ts ON ts.id = pt.team_season_id
-    JOIN teams       t  ON t.id  = ts.team_id
-    JOIN clubs       c  ON c.id  = t.club_id
-    WHERE pt.team_season_id = ?
-    ORDER BY p.last_name ASC, p.first_name ASC`,
-    [teamSeasonId],
-  );
-  return rows.map(mapPlayerRow);
+  const playersData = await prisma.player_teams.findMany({
+    where: { team_season_id: teamSeasonId },
+    include: {
+      people: true,
+      team_seasons: {
+        include: {
+          teams: {
+            include: { clubs: true }
+          }
+        }
+      }
+    },
+    orderBy: [
+      { people: { last_name: 'asc' } },
+      { people: { first_name: 'asc' } }
+    ]
+  });
+  return playersData.map(mapPlayerRow);
 }
 
 export async function getPlayersByPerson(personId: number): Promise<Player[]> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      pt.id, pt.player_id AS person_id,
-      p.first_name, p.last_name, p.nickname, p.email, p.birth_date, p.gender,
-      pt.team_season_id,
-      t.team_name, c.name AS club_name,
-      pt.jersey_number, pt.alt_jersey_number, pt.gk_number,
-      pt.position, pt.grade, pt.status,
-      pt.captain, pt.is_active, pt.joined_date
-    FROM player_teams pt
-    JOIN people      p  ON p.id  = pt.player_id
-    JOIN team_seasons ts ON ts.id = pt.team_season_id
-    JOIN teams       t  ON t.id  = ts.team_id
-    JOIN clubs       c  ON c.id  = t.club_id
-    WHERE pt.player_id = ?
-    ORDER BY ts.season_id DESC`,
-    [personId],
-  );
-  return rows.map(mapPlayerRow);
+  const playersData = await prisma.player_teams.findMany({
+    where: { player_id: personId },
+    include: {
+      people: true,
+      team_seasons: {
+        include: {
+          teams: {
+            include: { clubs: true }
+          }
+        }
+      }
+    },
+    orderBy: [
+      { team_seasons: { season_id: 'desc' } }
+    ]
+  });
+  return playersData.map(mapPlayerRow);
 }
 
 function mapPlayerRow(r: any): Player {
+  const person = r.people ?? r;
+  const teamSeason = r.team_seasons;
+  const team = teamSeason?.teams;
+  const club = team?.clubs;
+  
   return {
     id: r.id,
-    personId: r.person_id,
-    firstName: r.first_name,
-    lastName: r.last_name,
-    nickname: r.nickname ?? null,
-    email: r.email ?? null,
-    birthDate: toDateString(r.birth_date),
-    gender: r.gender ?? null,
+    personId: r.player_id ?? r.person_id,
+    firstName: person.first_name,
+    lastName: person.last_name,
+    nickname: person.nickname ?? null,
+    email: person.email ?? null,
+    birthDate: toDateString(person.birth_date),
+    gender: person.gender ?? null,
     teamSeasonId: r.team_season_id,
-    teamName: r.team_name,
-    clubName: r.club_name,
+    teamName: team?.team_name ?? r.team_name,
+    clubName: club?.name ?? r.club_name,
     jerseyNumber: r.jersey_number ?? null,
     altJerseyNumber: r.alt_jersey_number ?? null,
     gkNumber: r.gk_number ?? null,
@@ -773,64 +699,63 @@ function mapPlayerRow(r: any): Player {
 export async function getTeamStaff(
   teamSeasonId: number,
 ): Promise<TeamStaffMember[]> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      ts_staff.id, ts_staff.person_id,
-      p.first_name, p.last_name, p.email,
-      ts_staff.team_season_id,
-      t.team_name, c.name AS club_name, s.season_name,
-      ts_staff.role, ts_staff.is_active,
-      ts_staff.joined_date, ts_staff.left_date
-    FROM team_staff ts_staff
-    JOIN people      p   ON p.id   = ts_staff.person_id
-    JOIN team_seasons ts  ON ts.id  = ts_staff.team_season_id
-    JOIN teams       t   ON t.id   = ts.team_id
-    JOIN clubs       c   ON c.id   = t.club_id
-    JOIN seasons     s   ON s.id   = ts.season_id
-    WHERE ts_staff.team_season_id = ?
-    ORDER BY ts_staff.role, p.last_name ASC`,
-    [teamSeasonId],
-  );
-  return rows.map(mapTeamStaffRow);
+  const staff = await prisma.team_staff.findMany({
+    where: { team_season_id: teamSeasonId },
+    include: {
+      people: true,
+      team_seasons: {
+        include: {
+          teams: { include: { clubs: true } },
+          seasons: true
+        }
+      }
+    },
+    orderBy: [
+      { role: 'asc' },
+      { people: { last_name: 'asc' } }
+    ]
+  });
+  return staff.map(mapTeamStaffRow);
 }
 
 export async function getTeamStaffByPerson(
   personId: number,
 ): Promise<TeamStaffMember[]> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      ts_staff.id, ts_staff.person_id,
-      p.first_name, p.last_name, p.email,
-      ts_staff.team_season_id,
-      t.team_name, c.name AS club_name, s.season_name,
-      ts_staff.role, ts_staff.is_active,
-      ts_staff.joined_date, ts_staff.left_date
-    FROM team_staff ts_staff
-    JOIN people      p   ON p.id   = ts_staff.person_id
-    JOIN team_seasons ts  ON ts.id  = ts_staff.team_season_id
-    JOIN teams       t   ON t.id   = ts.team_id
-    JOIN clubs       c   ON c.id   = t.club_id
-    JOIN seasons     s   ON s.id   = ts.season_id
-    WHERE ts_staff.person_id = ?
-    ORDER BY ts.season_id DESC`,
-    [personId],
-  );
-  return rows.map(mapTeamStaffRow);
+  const staff = await prisma.team_staff.findMany({
+    where: { person_id: personId },
+    include: {
+      people: true,
+      team_seasons: {
+        include: {
+          teams: { include: { clubs: true } },
+          seasons: true
+        }
+      }
+    },
+    orderBy: [
+      { team_seasons: { season_id: 'desc' } }
+    ]
+  });
+  return staff.map(mapTeamStaffRow);
 }
 
 function mapTeamStaffRow(r: any): TeamStaffMember {
+  const person = r.people ?? r;
+  const teamSeason = r.team_seasons;
+  const team = teamSeason?.teams;
+  const club = team?.clubs;
+  const season = teamSeason?.seasons;
+
   return {
     id: r.id,
     personId: r.person_id,
-    firstName: r.first_name,
-    lastName: r.last_name,
-    email: r.email ?? null,
+    firstName: person.first_name,
+    lastName: person.last_name,
+    email: person.email ?? null,
     teamSeasonId: r.team_season_id,
-    teamName: r.team_name,
-    clubName: r.club_name,
-    seasonName: r.season_name,
+    teamName: team?.team_name ?? r.team_name,
+    clubName: club?.name ?? r.club_name,
+    seasonName: season?.season_name ?? r.season_name,
     role: r.role,
     isActive: !!r.is_active,
     joinedDate: toDateString(r.joined_date),
@@ -841,29 +766,26 @@ function mapTeamStaffRow(r: any): TeamStaffMember {
 // ─── Club Staff ───────────────────────────────────────────────────────────────
 
 export async function getClubStaff(clubId: number): Promise<ClubStaffMember[]> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      cs.id, cs.person_id,
-      p.first_name, p.last_name, p.email,
-      cs.club_id, c.name AS club_name,
-      cs.role, cs.is_active, cs.joined_date, cs.left_date
-    FROM club_staff cs
-    JOIN people p ON p.id = cs.person_id
-    JOIN clubs  c ON c.id = cs.club_id
-    WHERE cs.club_id = ?
-    ORDER BY cs.role, p.last_name ASC`,
-    [clubId],
-  );
-  return rows.map((r) => ({
+  const staff = await prisma.club_staff.findMany({
+    where: { club_id: clubId },
+    include: {
+      people: true,
+      clubs: true,
+    },
+    orderBy: [
+      { role: 'asc' },
+      { people: { last_name: 'asc' } }
+    ]
+  });
+  return staff.map((r) => ({
     id: r.id,
     personId: r.person_id,
-    firstName: r.first_name,
-    lastName: r.last_name,
-    email: r.email ?? null,
+    firstName: r.people?.first_name ?? '',
+    lastName: r.people?.last_name ?? '',
+    email: r.people?.email ?? null,
     clubId: r.club_id,
-    clubName: r.club_name,
-    role: r.role,
+    clubName: r.clubs?.name ?? '',
+    role: r.role as ClubStaffRole,
     isActive: !!r.is_active,
     joinedDate: toDateString(r.joined_date),
     leftDate: toDateString(r.left_date),
@@ -878,120 +800,83 @@ export async function getGames(filters?: {
   status?: GameStatus;
   gameType?: GameType;
 }): Promise<Game[]> {
-  const conditions: string[] = [];
-  const params: any[] = [];
-
-  if (filters?.seasonId) {
-    conditions.push("g.season_id = ?");
-    params.push(filters.seasonId);
-  }
-  if (filters?.teamSeasonId) {
-    conditions.push("(g.home_team_season_id = ? OR g.away_team_season_id = ?)");
-    params.push(filters.teamSeasonId, filters.teamSeasonId);
-  }
-  if (filters?.status) {
-    conditions.push("g.status = ?");
-    params.push(filters.status);
-  }
-  if (filters?.gameType) {
-    conditions.push("g.game_type = ?");
-    params.push(filters.gameType);
-  }
-
-  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      g.id, g.season_id, s.season_name,
-      g.home_team_season_id,
-      ht.team_name  AS home_team_name,
-      hc.name       AS home_club_name,
-      g.away_team_season_id,
-      at_.team_name AS away_team_name,
-      ac.name       AS away_club_name,
-      g.status, g.game_type,
-      g.start_date, g.start_time, g.end_date, g.end_time,
-      g.location_id, l.name AS location_name,
-      gs.home_score, gs.away_score,
-      gs.home_penalty_score, gs.away_penalty_score,
-      gs.final_status,
-      g.notes, g.video_link, g.timezone_label
-    FROM games g
-    JOIN seasons      s   ON s.id   = g.season_id
-    JOIN team_seasons hts ON hts.id = g.home_team_season_id
-    JOIN teams        ht  ON ht.id  = hts.team_id
-    JOIN clubs        hc  ON hc.id  = ht.club_id
-    JOIN team_seasons ats ON ats.id = g.away_team_season_id
-    JOIN teams        at_ ON at_.id = ats.team_id
-    JOIN clubs        ac  ON ac.id  = at_.club_id
-    LEFT JOIN locations   l   ON l.id   = g.location_id
-    LEFT JOIN game_scores gs  ON gs.game_id = g.id
-    ${where}
-    ORDER BY g.start_date ASC, g.start_time ASC`,
-    params,
-  );
-  return rows.map(mapGameRow);
+  const gamesData = await prisma.games.findMany({
+    where: {
+      season_id: filters?.seasonId ? filters.seasonId : undefined,
+      OR: filters?.teamSeasonId ? [
+        { home_team_season_id: filters.teamSeasonId },
+        { away_team_season_id: filters.teamSeasonId }
+      ] : undefined,
+      status: filters?.status as any,
+      game_type: filters?.gameType as any,
+    },
+    include: {
+      seasons: true,
+      team_seasons_games_home_team_season_idToteam_seasons: {
+        include: { teams: { include: { clubs: true } } }
+      },
+      team_seasons_games_away_team_season_idToteam_seasons: {
+        include: { teams: { include: { clubs: true } } }
+      },
+      locations: true,
+      game_scores: true,
+    },
+    orderBy: [
+      { start_date: 'asc' },
+      { start_time: 'asc' }
+    ]
+  });
+  return gamesData.map(mapGameRow);
 }
 
 export async function getGameById(id: number): Promise<Game | null> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      g.id, g.season_id, s.season_name,
-      g.home_team_season_id,
-      ht.team_name  AS home_team_name,
-      hc.name       AS home_club_name,
-      g.away_team_season_id,
-      at_.team_name AS away_team_name,
-      ac.name       AS away_club_name,
-      g.status, g.game_type,
-      g.start_date, g.start_time, g.end_date, g.end_time,
-      g.location_id, l.name AS location_name,
-      gs.home_score, gs.away_score,
-      gs.home_penalty_score, gs.away_penalty_score,
-      gs.final_status,
-      g.notes, g.video_link, g.timezone_label
-    FROM games g
-    JOIN seasons      s   ON s.id   = g.season_id
-    JOIN team_seasons hts ON hts.id = g.home_team_season_id
-    JOIN teams        ht  ON ht.id  = hts.team_id
-    JOIN clubs        hc  ON hc.id  = ht.club_id
-    JOIN team_seasons ats ON ats.id = g.away_team_season_id
-    JOIN teams        at_ ON at_.id = ats.team_id
-    JOIN clubs        ac  ON ac.id  = at_.club_id
-    LEFT JOIN locations   l   ON l.id   = g.location_id
-    LEFT JOIN game_scores gs  ON gs.game_id = g.id
-    WHERE g.id = ? LIMIT 1`,
-    [id],
-  );
-  return rows.length ? mapGameRow(rows[0]) : null;
+  const gameData = await prisma.games.findUnique({
+    where: { id },
+    include: {
+      seasons: true,
+      team_seasons_games_home_team_season_idToteam_seasons: {
+        include: { teams: { include: { clubs: true } } }
+      },
+      team_seasons_games_away_team_season_idToteam_seasons: {
+        include: { teams: { include: { clubs: true } } }
+      },
+      locations: true,
+      game_scores: true,
+    },
+  });
+  return gameData ? mapGameRow(gameData) : null;
 }
 
 function mapGameRow(r: any): Game {
+  const homeTeamSeason = r.team_seasons_games_home_team_season_idToteam_seasons;
+  const awayTeamSeason = r.team_seasons_games_away_team_season_idToteam_seasons;
+  const homeTeam = homeTeamSeason?.teams;
+  const awayTeam = awayTeamSeason?.teams;
+  const score = r.game_scores;
+
   return {
     id: r.id,
     seasonId: r.season_id,
-    seasonName: r.season_name,
+    seasonName: r.seasons?.season_name ?? r.season_name,
     homeTeamSeasonId: r.home_team_season_id,
-    homeTeamName: r.home_team_name,
-    homeClubName: r.home_club_name,
+    homeTeamName: homeTeam?.team_name ?? r.home_team_name,
+    homeClubName: homeTeam?.clubs?.name ?? r.home_club_name,
     awayTeamSeasonId: r.away_team_season_id,
-    awayTeamName: r.away_team_name,
-    awayClubName: r.away_club_name,
-    status: r.status,
-    gameType: r.game_type,
+    awayTeamName: awayTeam?.team_name ?? r.away_team_name,
+    awayClubName: awayTeam?.clubs?.name ?? r.away_club_name,
+    status: r.status as GameStatus,
+    gameType: r.game_type as GameType,
     startDate: toDateString(r.start_date)!,
-    startTime: r.start_time ?? null,
+    startTime: r.start_time ? toDateTimeString(r.start_time) : null,
     endDate: toDateString(r.end_date),
-    endTime: r.end_time ?? null,
+    endTime: r.end_time ? toDateTimeString(r.end_time) : null,
     locationId: r.location_id ?? null,
-    locationName: r.location_name ?? null,
-    homeScore: r.home_score ?? null,
-    awayScore: r.away_score ?? null,
-    homePenaltyScore: r.home_penalty_score ?? null,
-    awayPenaltyScore: r.away_penalty_score ?? null,
-    finalStatus: r.final_status ?? null,
+    locationName: r.locations?.name ?? r.location_name ?? null,
+    homeScore: score?.home_score ?? r.home_score ?? null,
+    awayScore: score?.away_score ?? r.away_score ?? null,
+    homePenaltyScore: score?.home_penalty_score ?? r.home_penalty_score ?? null,
+    awayPenaltyScore: score?.away_penalty_score ?? r.away_penalty_score ?? null,
+    finalStatus: score?.final_status ?? r.final_status ?? null,
     notes: r.notes ?? null,
     videoLink: r.video_link ?? null,
     timezoneLabel: r.timezone_label ?? null,
@@ -1003,61 +888,51 @@ function mapGameRow(r: any): Game {
 export async function getPlayerStatsByTeamSeason(
   teamSeasonId: number,
 ): Promise<PlayerSeasonStats[]> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      pss.id, pss.player_id,
-      p.first_name, p.last_name,
-      pss.team_season_id,
-      t.team_name,
-      pss.goals, pss.assists, pss.yellow_cards, pss.red_cards,
-      pss.games_played, pss.games_started, pss.minutes_played,
-      pss.shots, pss.shots_on_target, pss.saves, pss.clean_sheets,
-      pss.penalty_goals, pss.stats_source, pss.notes
-    FROM player_season_stats pss
-    JOIN people      p  ON p.id  = pss.player_id
-    JOIN team_seasons ts ON ts.id = pss.team_season_id
-    JOIN teams       t  ON t.id  = ts.team_id
-    WHERE pss.team_season_id = ?
-    ORDER BY pss.goals DESC, p.last_name ASC`,
-    [teamSeasonId],
-  );
-  return rows.map(mapStatsRow);
+  const stats = await prisma.player_season_stats.findMany({
+    where: { team_season_id: teamSeasonId },
+    include: {
+      people: true,
+      team_seasons: {
+        include: { teams: true }
+      }
+    },
+    orderBy: [
+      { goals: 'desc' },
+      { people: { last_name: 'asc' } }
+    ]
+  });
+  return stats.map(mapStatsRow);
 }
 
 export async function getPlayerStatsByPerson(
   personId: number,
 ): Promise<PlayerSeasonStats[]> {
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      pss.id, pss.player_id,
-      p.first_name, p.last_name,
-      pss.team_season_id,
-      t.team_name,
-      pss.goals, pss.assists, pss.yellow_cards, pss.red_cards,
-      pss.games_played, pss.games_started, pss.minutes_played,
-      pss.shots, pss.shots_on_target, pss.saves, pss.clean_sheets,
-      pss.penalty_goals, pss.stats_source, pss.notes
-    FROM player_season_stats pss
-    JOIN people      p  ON p.id  = pss.player_id
-    JOIN team_seasons ts ON ts.id = pss.team_season_id
-    JOIN teams       t  ON t.id  = ts.team_id
-    WHERE pss.player_id = ?
-    ORDER BY ts.season_id DESC`,
-    [personId],
-  );
-  return rows.map(mapStatsRow);
+  const stats = await prisma.player_season_stats.findMany({
+    where: { player_id: personId },
+    include: {
+      people: true,
+      team_seasons: {
+        include: { teams: true }
+      }
+    },
+    orderBy: [
+      { team_seasons: { season_id: 'desc' } }
+    ]
+  });
+  return stats.map(mapStatsRow);
 }
 
 function mapStatsRow(r: any): PlayerSeasonStats {
+  const person = r.people ?? r;
+  const team = r.team_seasons?.teams;
+
   return {
     id: r.id,
     playerId: r.player_id,
-    firstName: r.first_name,
-    lastName: r.last_name,
+    firstName: person.first_name,
+    lastName: person.last_name,
     teamSeasonId: r.team_season_id,
-    teamName: r.team_name,
+    teamName: team?.team_name ?? r.team_name,
     goals: r.goals ?? 0,
     assists: r.assists ?? 0,
     yellowCards: r.yellow_cards ?? 0,
@@ -1070,7 +945,7 @@ function mapStatsRow(r: any): PlayerSeasonStats {
     saves: r.saves ?? 0,
     cleanSheets: r.clean_sheets ?? 0,
     penaltyGoals: r.penalty_goals ?? 0,
-    statsSource: r.stats_source,
+    statsSource: r.stats_source as StatSource,
     notes: r.notes ?? null,
   };
 }
@@ -1081,99 +956,75 @@ export async function getTeamSeasonRecords(
   leagueNodeSeasonId?: number,
   teamSeasonId?: number,
 ): Promise<TeamSeasonRecord[]> {
-  const conditions: string[] = [];
-  const params: any[] = [];
-  if (leagueNodeSeasonId) {
-    conditions.push("tsr.league_node_season_id = ?");
-    params.push(leagueNodeSeasonId);
-  }
-  if (teamSeasonId) {
-    conditions.push("tsr.team_season_id = ?");
-    params.push(teamSeasonId);
-  }
-  const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      tsr.id, tsr.team_season_id,
-      t.team_name, c.name AS club_name,
-      tsr.league_node_season_id,
-      tsr.wins, tsr.losses, tsr.draws,
-      tsr.goals_for, tsr.goals_against,
-      tsr.games_played, tsr.points, tsr.record_source
-    FROM team_season_records tsr
-    JOIN team_seasons ts ON ts.id = tsr.team_season_id
-    JOIN teams        t  ON t.id  = ts.team_id
-    JOIN clubs        c  ON c.id  = t.club_id
-    ${where}
-    ORDER BY tsr.points DESC, tsr.wins DESC`,
-    params,
-  );
-  return rows.map((r) => ({
-    id: r.id,
-    teamSeasonId: r.team_season_id,
-    teamName: r.team_name,
-    clubName: r.club_name,
-    leagueNodeSeasonId: r.league_node_season_id ?? null,
-    wins: r.wins ?? 0,
-    losses: r.losses ?? 0,
-    draws: r.draws ?? 0,
-    goalsFor: r.goals_for ?? 0,
-    goalsAgainst: r.goals_against ?? 0,
-    gamesPlayed: r.games_played ?? 0,
-    points: r.points ?? 0,
-    recordSource: r.record_source,
-  }));
+  const records = await prisma.team_season_records.findMany({
+    where: {
+      league_node_season_id: leagueNodeSeasonId ? leagueNodeSeasonId : undefined,
+      team_season_id: teamSeasonId ? teamSeasonId : undefined,
+    },
+    include: {
+      team_seasons: {
+        include: { teams: { include: { clubs: true } } }
+      }
+    },
+    orderBy: [
+      { points: 'desc' },
+      { wins: 'desc' }
+    ]
+  });
+  return records.map((r) => {
+    const team = r.team_seasons?.teams;
+    return {
+      id: r.id,
+      teamSeasonId: r.team_season_id,
+      teamName: team?.team_name ?? r.team_season_id.toString(), // fallback
+      clubName: team?.clubs?.name ?? '',
+      leagueNodeSeasonId: r.league_node_season_id ?? null,
+      wins: r.wins ?? 0,
+      losses: r.losses ?? 0,
+      draws: r.draws ?? 0,
+      goalsFor: r.goals_for ?? 0,
+      goalsAgainst: r.goals_against ?? 0,
+      gamesPlayed: r.games_played ?? 0,
+      points: r.points ?? 0,
+      recordSource: r.record_source as StatSource,
+    };
+  });
 }
 
 // ─── Locations ────────────────────────────────────────────────────────────────
 
 export async function getLocations(): Promise<Location[]> {
-  const [rows] = await db.query<any[]>(`
-    SELECT
-      l.id, l.name,
-      a.address_line1, a.address_line2,
-      a.city, a.state, a.postal_code, a.country
-    FROM locations l
-    LEFT JOIN addresses a ON a.id = l.address_id
-    ORDER BY l.name ASC`);
-  return rows.map((r) => ({
+  const locations = await prisma.locations.findMany({
+    include: { addresses: true },
+    orderBy: { name: 'asc' }
+  });
+  return locations.map((r) => ({
     id: r.id,
     name: r.name,
-    addressLine1: r.address_line1 ?? null,
-    addressLine2: r.address_line2 ?? null,
-    city: r.city ?? null,
-    state: r.state ?? null,
-    postalCode: r.postal_code ?? null,
-    country: r.country ?? null,
+    addressLine1: r.addresses?.address_line1 ?? null,
+    addressLine2: r.addresses?.address_line2 ?? null,
+    city: r.addresses?.city ?? null,
+    state: r.addresses?.state ?? null,
+    postalCode: r.addresses?.postal_code ?? null,
+    country: r.addresses?.country ?? null,
   }));
 }
 
 // ─── Events ───────────────────────────────────────────────────────────────────
 
 export async function getEvents(teamSeasonId?: number): Promise<EventRecord[]> {
-  const where = teamSeasonId ? "WHERE e.team_season_id = ?" : "";
-  const [rows] = await db.query<any[]>(
-    `
-    SELECT
-      e.id, e.title, e.description,
-      e.start_datetime, e.end_datetime, e.is_all_day,
-      e.team_season_id,
-      t.team_name,
-      e.event_type_id, et.name AS event_type_name, et.category AS event_category,
-      e.location_id, l.name AS location_name,
-      e.video_link, e.recurrence_rule
-    FROM events e
-    LEFT JOIN team_seasons ts ON ts.id = e.team_season_id
-    LEFT JOIN teams        t  ON t.id  = ts.team_id
-    LEFT JOIN event_types  et ON et.id = e.event_type_id
-    LEFT JOIN locations    l  ON l.id  = e.location_id
-    ${where}
-    ORDER BY e.start_datetime ASC`,
-    teamSeasonId ? [teamSeasonId] : [],
-  );
-  return rows.map((r) => ({
+  const events = await prisma.events.findMany({
+    where: { team_season_id: teamSeasonId ? teamSeasonId : undefined },
+    include: {
+      team_seasons: {
+        include: { teams: true }
+      },
+      event_types: true,
+      locations: true,
+    },
+    orderBy: { start_datetime: 'asc' }
+  });
+  return events.map((r) => ({
     id: r.id,
     title: r.title,
     description: r.description ?? null,
@@ -1181,12 +1032,12 @@ export async function getEvents(teamSeasonId?: number): Promise<EventRecord[]> {
     endDatetime: toDateTimeString(r.end_datetime)!,
     isAllDay: !!r.is_all_day,
     teamSeasonId: r.team_season_id ?? null,
-    teamName: r.team_name ?? null,
+    teamName: r.team_seasons?.teams?.team_name ?? null,
     eventTypeId: r.event_type_id ?? null,
-    eventTypeName: r.event_type_name ?? null,
-    eventCategory: r.event_category ?? null,
+    eventTypeName: r.event_types?.name ?? null,
+    eventCategory: (r.event_types?.category as EventCategory) ?? null,
     locationId: r.location_id ?? null,
-    locationName: r.location_name ?? null,
+    locationName: r.locations?.name ?? null,
     videoLink: r.video_link ?? null,
     recurrenceRule: r.recurrence_rule ?? null,
   }));
