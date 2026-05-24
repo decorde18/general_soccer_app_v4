@@ -37,7 +37,7 @@ export async function createLeague(data: Record<string, string>) {
 export async function updateLeague(id: unknown, data: Record<string, string>) {
   await verifyAdmin();
   if (!id) throw new Error("ID required");
-  console.log(data);
+
   // --- MySQL DB logic ---
   const updates = [];
   const values = [];
