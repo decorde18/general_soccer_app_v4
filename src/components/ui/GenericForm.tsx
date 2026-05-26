@@ -24,7 +24,7 @@ import Select from "@/components/ui/Select";
 interface GenericFormProps<T extends Record<string, unknown>> {
   config: EntityConfig;
   initialData?: T | null;
-  onSubmit: (data: Record<string, string>) => Promise<void>;
+  onSubmit: (data: Record<string, string | number | null>) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -96,12 +96,17 @@ export function GenericForm<T extends Record<string, unknown>>({
     if (!validate()) return;
     setLoading(true);
     try {
-      const payload: Record<string, string> = {};
+      const payload: Record<string, string | number | null> = {};
       config.form.fields.forEach((f) => {
         const submitKey = f.valueKey ?? f.key;
-        payload[submitKey] = values[f.key] ?? "";
+        const raw = values[f.key] ?? "";
+        if (f.type === "number") {
+          payload[submitKey] = raw === "" ? null : Number(raw);
+        } else {
+          payload[submitKey] = raw;
+        }
       });
-      await onSubmit(payload);
+      await onSubmit(payload as any);
     } finally {
       setLoading(false);
     }

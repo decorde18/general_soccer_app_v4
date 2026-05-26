@@ -19,6 +19,7 @@ model addresses {
   modified_at   DateTime?   @default(now()) @db.Timestamp(0)
   clubs         clubs[]
   locations     locations[]
+  
 }
 
 model age_groups {
