@@ -252,12 +252,6 @@ function FieldInput({
           {field.required && <span className='text-danger ml-1'>*</span>}
         </label>
       )}
-      {!isCheckboxOrToggle && (
-        <label className='text-sm font-medium text-text'>
-          {field.label}
-          {field.required && <span className='text-danger ml-1'>*</span>}
-        </label>
-      )}
 
       {isCheckboxOrToggle ? (
         <div className='flex items-center gap-3 pt-1 pb-2'>
