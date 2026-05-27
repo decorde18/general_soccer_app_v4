@@ -1023,9 +1023,9 @@ export async function getLocations(): Promise<Location[]> {
     country: r.addresses?.country ?? null,
   }));
 }
-export async function getsubLocations(): Promise<locations_sublocations[]> {
+export async function getsubLocations(): Promise<any[]> {
   const subLocations = await prisma.locations_sublocations.findMany({
-    include: { locations: true, addresses: true },
+    include: { locations: { include: { addresses: true } } },
     orderBy: { name: 'asc' }
   });
   return subLocations.map((r) => ({
@@ -1033,15 +1033,16 @@ export async function getsubLocations(): Promise<locations_sublocations[]> {
     name: r.name,
     capacity: r.capacity ?? null,
     description: r.description ?? null,
-    surfaceType: r.surface_type as SurfaceType,
-    isActive: r.is_active as boolean,
-    addressLine1: r.addresses?.address_line1 ?? null,
+    surfaceType: r.surface_type,
+    isActive: !!r.is_active,
+    locationId: r.location_id,
     locationName: r.locations?.name ?? null,
-    addressLine2: r.addresses?.address_line2 ?? null,
-    city: r.addresses?.city ?? null,
-    state: r.addresses?.state ?? null,
-    postalCode: r.addresses?.postal_code ?? null,
-    country: r.addresses?.country ?? null,
+    addressLine1: r.locations?.addresses?.address_line1 ?? null,
+    addressLine2: r.locations?.addresses?.address_line2 ?? null,
+    city: r.locations?.addresses?.city ?? null,
+    state: r.locations?.addresses?.state ?? null,
+    postalCode: r.locations?.addresses?.postal_code ?? null,
+    country: r.locations?.addresses?.country ?? null,
   }));
 }
 

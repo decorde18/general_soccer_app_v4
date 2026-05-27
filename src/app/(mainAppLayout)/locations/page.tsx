@@ -1,6 +1,6 @@
 import { EntityShell } from "@/components/entities/EntityShell";
 import { locationConfig } from "@/lib/entities/configs/location.config";
-import { createLocation /* updateLocation, deleteLocation */ } from "@/lib/actions/location-actions";
+import { createLocation, updateLocation, deleteLocation } from "@/lib/actions/location-actions";
 import { getLocations } from "@/lib/data/queries";
 
 export default async function LocationsPage() {
@@ -15,8 +15,8 @@ export default async function LocationsPage() {
         data={locations}
         stats={stats}
         onCreate={createLocation}
-      // onUpdate={async () => {}} // Hook up your update action
-      // onDelete={async () => {}} // Hook up your delete action
+        onUpdate={updateLocation}
+        onDelete={deleteLocation}
       />
     </div>
   );

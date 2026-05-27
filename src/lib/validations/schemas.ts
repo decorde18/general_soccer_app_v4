@@ -57,7 +57,7 @@ export const leagueSchema = z.object({
     locationId: z.coerce
     .number()
     .transform((val) => (val ? val : null)),
-    capacity: z.number().int().optional().nullable(),
+    capacity: z.coerce.number().int().optional().nullable().transform((val) => (val ? val : null)),
     description: z.string().optional().nullable(),
     postalCode: z.string().optional().nullable(),
     surfaceType: z
