@@ -1,4 +1,4 @@
-// app/(main)/governingBodys/page.tsx
+// app/(main)/governingBodies/page.tsx
 import { EntityShell } from "@/components/entities/EntityShell";
 import { governingBodyConfig } from "@/lib/entities/configs/governingBody.config";
 import {
@@ -8,7 +8,7 @@ import {
 } from "@/lib/actions/governingBody-actions";
 import { getGoverningBodies } from "@/lib/data/queries";
 
-export default async function GoverningBodysPage() {
+export default async function GoverningBodiesPage() {
   const governingBodies = await getGoverningBodies();
 
   return (

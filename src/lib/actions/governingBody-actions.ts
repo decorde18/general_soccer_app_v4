@@ -19,7 +19,7 @@ export async function createGoverningBody(data: Record<string, string>) {
         website: parsedData.website,
       },
     });
-    
+
     revalidatePath("/governing-bodies");
     return newBody; // Return the created object so nested configs get the ID!
   } catch (error) {
