@@ -669,7 +669,7 @@ function mapPlayerRow(r: any): Player {
   const teamSeason = r.team_seasons;
   const team = teamSeason?.teams;
   const club = team?.clubs;
-  
+
   return {
     id: r.id,
     personId: r.player_id ?? r.person_id,
@@ -993,6 +993,20 @@ export async function getTeamSeasonRecords(
 
 // ─── Locations ────────────────────────────────────────────────────────────────
 
+export async function getAddresses(): Promise<Address[]> {
+  const bodies = await prisma.addresses.findMany({
+    orderBy: { city: 'asc' },
+  });
+  return bodies.map((r) => ({
+    id: r.id,
+    addressLine1: r.address_line1,
+    addressLine2: r.address_line2 ?? null,
+    city: r.city ?? null,
+    state: r.state ?? null,
+    country: r.country ?? null,
+    postalCode: r.postal_code ?? null,
+  }));
+}
 export async function getLocations(): Promise<Location[]> {
   const locations = await prisma.locations.findMany({
     include: { addresses: true },
@@ -1007,6 +1021,28 @@ export async function getLocations(): Promise<Location[]> {
     state: r.addresses?.state ?? null,
     postalCode: r.addresses?.postal_code ?? null,
     country: r.addresses?.country ?? null,
+  }));
+}
+export async function getsubLocations(): Promise<any[]> {
+  const subLocations = await prisma.locations_sublocations.findMany({
+    include: { locations: { include: { addresses: true } } },
+    orderBy: { name: 'asc' }
+  });
+  return subLocations.map((r) => ({
+    id: r.id,
+    name: r.name,
+    capacity: r.capacity ?? null,
+    description: r.description ?? null,
+    surfaceType: r.surface_type,
+    isActive: !!r.is_active,
+    locationId: r.location_id,
+    locationName: r.locations?.name ?? null,
+    addressLine1: r.locations?.addresses?.address_line1 ?? null,
+    addressLine2: r.locations?.addresses?.address_line2 ?? null,
+    city: r.locations?.addresses?.city ?? null,
+    state: r.locations?.addresses?.state ?? null,
+    postalCode: r.locations?.addresses?.postal_code ?? null,
+    country: r.locations?.addresses?.country ?? null,
   }));
 }
 
