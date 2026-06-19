@@ -129,8 +129,6 @@ export async function getUserRolesAndTeams(
     }
 
     const coachRows = await prisma.$queryRaw<TeamIdRow[]>`
-       SELECT DISTINCT team_id FROM coaches WHERE person_id = ${id} AND is_active = 1
-       UNION
        SELECT DISTINCT ts.team_id FROM team_staff staff
        JOIN team_seasons ts ON staff.team_season_id = ts.id
        WHERE staff.person_id = ${id} AND staff.role IN ('head_coach', 'assistant_coach') AND staff.is_active = 1

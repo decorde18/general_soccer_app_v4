@@ -19,7 +19,9 @@ export default function LoginPage() {
         await signOut({ redirect: false });
         const res = await signIn("credentials", { redirect: false });
         if (!res?.error) {
-          router.push("/");
+          const params = new URLSearchParams(window.location.search);
+          const callback = params.get("callbackUrl");
+          router.push(callback && callback !== "/" ? callback : "/dashboard");
           return;
         }
       }
@@ -27,7 +29,9 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/session");
       const session = await res.json();
       if (session?.user && process.env.NODE_ENV === "development") {
-        router.push("/");
+        const params = new URLSearchParams(window.location.search);
+        const callback = params.get("callbackUrl");
+        router.push(callback && callback !== "/" ? callback : "/dashboard");
       }
     }
     attemptDevAutoSignIn();
@@ -52,7 +56,9 @@ export default function LoginPage() {
       setError("Invalid Email or Password");
       setLoading(false);
     } else {
-      window.location.href = "/";
+      const params = new URLSearchParams(window.location.search);
+      const callback = params.get("callbackUrl");
+      window.location.href = callback && callback !== "/" ? callback : "/dashboard";
     }
   };
 

@@ -291,6 +291,16 @@ export interface TeamSeasonRecord {
   recordSource: StatSource;
 }
 
+export interface Address {
+  id: number;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postalCode: string | null;
+}
+
 export interface Location {
   id: number;
   name: string;
@@ -797,6 +807,7 @@ export async function getClubStaff(clubId: number): Promise<ClubStaffMember[]> {
 export async function getGames(filters?: {
   seasonId?: number;
   teamSeasonId?: number;
+  leagueId?: number;
   status?: GameStatus;
   gameType?: GameType;
 }): Promise<Game[]> {
@@ -807,6 +818,15 @@ export async function getGames(filters?: {
         { home_team_season_id: filters.teamSeasonId },
         { away_team_season_id: filters.teamSeasonId }
       ] : undefined,
+      game_league_nodes: filters?.leagueId ? {
+        some: {
+          league_node_seasons: {
+            league_nodes: {
+              league_id: filters.leagueId
+            }
+          }
+        }
+      } : undefined,
       status: filters?.status as any,
       game_type: filters?.gameType as any,
     },

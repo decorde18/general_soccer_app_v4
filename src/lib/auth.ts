@@ -131,16 +131,253 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         (session.user as any).personId = token.personId;
-        (session.user as any).roles = token.roles ?? { ...defaultRoles };
+        
+        let roles = token.roles ?? { ...defaultRoles };
+        if (process.env.NODE_ENV === "development") {
+          try {
+            const { cookies } = await import("next/headers");
+            const cookieStore = await cookies();
+            const devOverride = cookieStore.get("dev-user-override")?.value;
+            if (devOverride) {
+              const mock = getMockSessionForRole(devOverride);
+              if (mock) {
+                roles = mock.user.roles;
+              }
+            }
+          } catch (e) {}
+        }
+
+        // Store original roles before applying switched active view
+        (session.user as any).originalRoles = { ...roles };
+
+        // Apply active-role-view override if admin or clubAdmin
+        try {
+          const { cookies } = await import("next/headers");
+          const cookieStore = await cookies();
+          const activeView = cookieStore.get("active-role-view")?.value;
+          roles = applyActiveViewOverride(roles, activeView);
+        } catch (e) {}
+
+        (session.user as any).roles = roles;
       }
       return session;
     },
   },
 };
 
+export function applyActiveViewOverride(roles: UserRoles, activeView: string | undefined): UserRoles {
+  if (!activeView) return roles;
+  
+  const defaultRoles: UserRoles = {
+    isAdmin: false,
+    clubAdmin: false,
+    teamAdmin: false,
+    coach: false,
+    player: false,
+    parent: false,
+    coachTeamIds: [],
+    teamAdminTeamIds: [],
+    playerTeamIds: [],
+    parentTeamIds: [],
+    clubAdminTeamIds: [],
+  };
+
+  const hasAdminOrClubAdmin = roles.isAdmin || roles.clubAdmin;
+  if (!hasAdminOrClubAdmin) return roles;
+
+  // Let Admins switch to any view. Let Club Admins switch to any view except Admin.
+  if (activeView === "admin" && roles.isAdmin) {
+    return {
+      ...defaultRoles,
+      isAdmin: true,
+    };
+  }
+
+  // Pre-fill mock team access lists for role views when acting as switched role
+  // Using typical IDs present in the DB
+  const mockAccessTeams = [1, 2, 12, 13, 14, 15, 16, 17, 18, 19];
+
+  if (activeView === "club_admin") {
+    return {
+      ...defaultRoles,
+      clubAdmin: true,
+      clubAdminTeamIds: roles.isAdmin ? mockAccessTeams : roles.clubAdminTeamIds,
+    };
+  }
+  if (activeView === "coach") {
+    return {
+      ...defaultRoles,
+      coach: true,
+      coachTeamIds: roles.isAdmin ? mockAccessTeams : roles.coachTeamIds.length > 0 ? roles.coachTeamIds : mockAccessTeams,
+    };
+  }
+  if (activeView === "team_admin") {
+    return {
+      ...defaultRoles,
+      teamAdmin: true,
+      teamAdminTeamIds: roles.isAdmin ? mockAccessTeams : roles.teamAdminTeamIds.length > 0 ? roles.teamAdminTeamIds : mockAccessTeams,
+    };
+  }
+  if (activeView === "player") {
+    return {
+      ...defaultRoles,
+      player: true,
+      playerTeamIds: roles.isAdmin ? [1] : roles.playerTeamIds.length > 0 ? roles.playerTeamIds : [1],
+    };
+  }
+  if (activeView === "parent") {
+    return {
+      ...defaultRoles,
+      parent: true,
+      parentTeamIds: roles.isAdmin ? [1] : roles.parentTeamIds.length > 0 ? roles.parentTeamIds : [1],
+    };
+  }
+
+  return roles;
+}
+
+export function getMockSessionForRole(role: string): any {
+  const expires = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+  
+  const defaultRoles: UserRoles = {
+    isAdmin: false,
+    clubAdmin: false,
+    teamAdmin: false,
+    coach: false,
+    player: false,
+    parent: false,
+    coachTeamIds: [],
+    teamAdminTeamIds: [],
+    playerTeamIds: [],
+    parentTeamIds: [],
+    clubAdminTeamIds: [],
+  };
+
+  switch (role) {
+    case "admin":
+      return {
+        expires,
+        user: {
+          id: "17",
+          personId: 17,
+          name: "Dev Admin User",
+          email: "admin@dev.local",
+          roles: {
+            ...defaultRoles,
+            isAdmin: true,
+          },
+        },
+      };
+    case "club_admin":
+      return {
+        expires,
+        user: {
+          id: "9992",
+          personId: 9992,
+          name: "Dev Club Admin User",
+          email: "clubadmin@dev.local",
+          roles: {
+            ...defaultRoles,
+            clubAdmin: true,
+            clubAdminTeamIds: [1, 2, 16],
+          },
+        },
+      };
+    case "coach":
+      return {
+        expires,
+        user: {
+          id: "9993",
+          personId: 9993,
+          name: "Dev Coach User",
+          email: "coach@dev.local",
+          roles: {
+            ...defaultRoles,
+            coach: true,
+            coachTeamIds: [1, 2],
+          },
+        },
+      };
+    case "player":
+      return {
+        expires,
+        user: {
+          id: "11",
+          personId: 11,
+          name: "Amelia Duff (Dev Player)",
+          email: "player@dev.local",
+          roles: {
+            ...defaultRoles,
+            player: true,
+            playerTeamIds: [1],
+          },
+        },
+      };
+    case "parent":
+      return {
+        expires,
+        user: {
+          id: "9995",
+          personId: 9995,
+          name: "Dev Parent User",
+          email: "parent@dev.local",
+          roles: {
+            ...defaultRoles,
+            parent: true,
+            parentTeamIds: [1],
+          },
+        },
+      };
+    default:
+      return null;
+  }
+}
+
 export async function getServerAuthSession(): Promise<Session | null> {
+  if (process.env.NODE_ENV === "development") {
+    try {
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      const devOverride = cookieStore.get("dev-user-override")?.value;
+      if (devOverride) {
+        const mock = getMockSessionForRole(devOverride);
+        if (mock) {
+          const activeView = cookieStore.get("active-role-view")?.value;
+          mock.user.originalRoles = { ...mock.user.roles };
+          mock.user.roles = applyActiveViewOverride(mock.user.roles, activeView);
+          return mock as Session;
+        }
+      }
+    } catch (error) {
+      // Ignore
+    }
+  }
+
   try {
-    return await getServerSession(authOptions);
+    const session = await getServerSession(authOptions);
+    if (session?.user) {
+      try {
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        const activeView = cookieStore.get("active-role-view")?.value;
+        const currentRoles = (session.user as any).roles ?? {
+          isAdmin: false,
+          clubAdmin: false,
+          teamAdmin: false,
+          coach: false,
+          player: false,
+          parent: false,
+          coachTeamIds: [],
+          teamAdminTeamIds: [],
+          playerTeamIds: [],
+          parentTeamIds: [],
+          clubAdminTeamIds: [],
+        };
+        (session.user as any).originalRoles = { ...currentRoles };
+        (session.user as any).roles = applyActiveViewOverride(currentRoles, activeView);
+      } catch (e) {}
+    }
+    return session;
   } catch (error) {
     console.warn("getServerAuthSession failed:", error);
     return null;

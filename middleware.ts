@@ -4,6 +4,8 @@ import { getToken } from "next-auth/jwt";
 
 const PUBLIC_PATHS = [
   "/",
+  "/about",
+  "/contact",
   "/login",
   "/forgot-password",
   "/reset-password",
@@ -13,10 +15,13 @@ const PUBLIC_PATHS = [
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+
+
   // Allow public paths
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
+
 
   // Protect /admin prefix as an example (require isAdmin role)
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });

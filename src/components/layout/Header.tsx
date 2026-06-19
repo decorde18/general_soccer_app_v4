@@ -14,36 +14,11 @@ import { Card } from "@/components/ui/Card";
 import Select from "@/components/ui/Select";
 
 const DEV_USERS = [
-  {
-    value: "admin",
-    label: "Admin User",
-    user: {
-      name: "Admin User",
-      roles: { isAdmin: true },
-      first_name: "Admin",
-      last_name: "User",
-    },
-  },
-  {
-    value: "coach",
-    label: "Coach User",
-    user: {
-      name: "Coach User",
-      roles: { isAdmin: false },
-      first_name: "Coach",
-      last_name: "User",
-    },
-  },
-  {
-    value: "player",
-    label: "Player User",
-    user: {
-      name: "Player User",
-      roles: { isAdmin: false },
-      first_name: "Player",
-      last_name: "User",
-    },
-  },
+  { value: "admin", label: "Admin User" },
+  { value: "club_admin", label: "Club Admin User" },
+  { value: "coach", label: "Coach User" },
+  { value: "player", label: "Player User" },
+  { value: "parent", label: "Parent User" },
 ];
 
 interface HeaderUser {
@@ -62,8 +37,26 @@ function Header({ user }: { user?: HeaderUser }) {
   const [devUserMode, setDevUserMode] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const devUserOverride = DEV_USERS.find(u => u.value === devUserMode)?.user;
-  const currentUser = devUserOverride ?? (user as HeaderUser) ?? session?.user;
+  // Read initial dev override cookie value
+  useEffect(() => {
+    const match = document.cookie.match(/(?:^|; )dev-user-override=([^;]*)/);
+    const cookieVal = match ? decodeURIComponent(match[1]) : "";
+    setDevUserMode(cookieVal);
+  }, []);
+
+  const handleDevUserChange = (e: any) => {
+    const val = e.target.value;
+    if (val) {
+      document.cookie = `dev-user-override=${val}; path=/; max-age=31536000; SameSite=Lax`;
+    } else {
+      document.cookie = "dev-user-override=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
+    }
+    // Clear active-role-view when changing mock users to avoid state conflicts
+    document.cookie = "active-role-view=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
+    window.location.reload();
+  };
+
+  const currentUser = (user as HeaderUser) ?? session?.user;
   const name = currentUser?.name ?? "Player";
   const isAdmin = currentUser?.roles?.isAdmin;
   const firstNameInitial = currentUser?.first_name
@@ -118,7 +111,7 @@ function Header({ user }: { user?: HeaderUser }) {
                <Select
                  options={[{value: "", label: "Real User"}, ...DEV_USERS]}
                  value={devUserMode}
-                 onChange={(e: any) => setDevUserMode(e.target.value)}
+                 onChange={handleDevUserChange}
                  width="auto"
                  className="min-w-[140px]"
                  showPlaceholder={false}
