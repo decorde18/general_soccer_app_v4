@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import db from "@/lib/db";
+import prisma from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
@@ -14,12 +14,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if user exists
-    const [rows]: any = await db.query(
-      "SELECT * FROM people WHERE email = ? LIMIT 1",
-      [email],
-    );
-    if (rows.length === 0) {
+    // Find user with this email
+    const user = await prisma.users.findFirst({
+      where: {
+        people: {
+          email: email,
+        },
+      },
+    });
+
+    if (!user) {
       // Return 200 even if not found to prevent email enumeration attacks
       return NextResponse.json(
         {
@@ -35,17 +39,14 @@ export async function POST(req: Request) {
     // Token expires in 1 hour
     const tokenExpiry = new Date(Date.now() + 3600000);
 
-    // Calculate proper MySQL DATETIME format (YYYY-MM-DD HH:MM:SS)
-    const formattedExpiry = tokenExpiry
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " ");
-
     // Store token in database
-    await db.query(
-      "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?",
-      [resetToken, formattedExpiry, email],
-    );
+    await prisma.users.update({
+      where: { id: user.id },
+      data: {
+        reset_token: resetToken,
+        reset_token_expiry: tokenExpiry,
+      },
+    });
 
     // Send the email
     const emailResponse = await sendPasswordResetEmail(email, resetToken);

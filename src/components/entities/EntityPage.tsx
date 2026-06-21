@@ -5,8 +5,8 @@ import { useState, useMemo } from "react";
 import { type EntityConfig, type Role } from "@/components/entities/types";
 import { getEffectiveRoles } from "@/lib/roles";
 import { Plus, Search, AlertCircle } from "lucide-react";
-import { GenericTable } from "../ui/GenericTable";
-import { GenericForm } from "../ui/GenericForm";
+import { GenericTable } from "@/components/ui/GenericTable";
+import { GenericForm } from "@/components/ui/GenericForm";
 import { useToast } from "@/components/ui/toast";
 import Dialog from "@/components/ui/Dialog";
 import Button from "@/components/ui/Button";
@@ -91,10 +91,10 @@ export function EntityPage<T extends Record<string, unknown>>({
         description: `${config.singular} created successfully`,
         type: "success",
       });
-    } catch {
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: `Failed to create ${config.singular.toLowerCase()}`,
+        description: err?.message || `Failed to create ${config.singular.toLowerCase()}`,
         type: "error",
       });
     }
@@ -135,10 +135,10 @@ export function EntityPage<T extends Record<string, unknown>>({
         description: `${config.singular} updated successfully`,
         type: "success",
       });
-    } catch {
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: `Failed to update ${config.singular.toLowerCase()}`,
+        description: err?.message || `Failed to update ${config.singular.toLowerCase()}`,
         type: "error",
       });
     }
@@ -158,11 +158,12 @@ export function EntityPage<T extends Record<string, unknown>>({
         description: `${config.singular} deleted successfully`,
         type: "success",
       });
-    } catch {
-      setDeleteError(`Failed to delete ${config.singular}. Please try again.`);
+    } catch (err: any) {
+      const errorMsg = err?.message || `Failed to delete ${config.singular.toLowerCase()}`;
+      setDeleteError(errorMsg);
       toast({
         title: "Error",
-        description: `Failed to delete ${config.singular.toLowerCase()}`,
+        description: errorMsg,
         type: "error",
       });
     }

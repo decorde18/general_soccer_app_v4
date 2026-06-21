@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { verifyAdmin } from "../auth/auth-utils";
+import { verifyAdmin } from "@/lib/auth/auth-utils";
 import prisma from "@/lib/prisma";
-import { locationSchema } from "../validations/schemas"; // Make sure your location schema includes address fields!
+import { locationSchema } from "@/lib/validations/schemas"; // Make sure your location schema includes address fields!
 
 export async function createLocation(data: Record<string, string>) {
   await verifyAdmin();

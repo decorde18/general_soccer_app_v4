@@ -112,6 +112,7 @@ export interface Season {
   seasonName: string;
   startDate: string;
   endDate: string;
+  status: string;
   isCurrent: boolean;
   createdAt: string | null;
 }
@@ -505,6 +506,7 @@ function mapSeasonRow(r: any): Season {
     seasonName: r.season_name,
     startDate: toDateString(r.start_date)!,
     endDate: toDateString(r.end_date)!,
+    status: r.status || "upcoming",
     isCurrent: !!r.is_current, // Note: is_current was missing in schema, might be undefined
     createdAt: toDateTimeString(r.created_at),
   };
@@ -839,7 +841,12 @@ export async function getGames(filters?: {
         include: { teams: { include: { clubs: true } } }
       },
       locations: true,
-      game_scores: true,
+      game_events_major: {
+        include: {
+          game_events_goals: true,
+          game_events_penalties: true,
+        }
+      }
     },
     orderBy: [
       { start_date: 'asc' },
@@ -861,7 +868,12 @@ export async function getGameById(id: number): Promise<Game | null> {
         include: { teams: { include: { clubs: true } } }
       },
       locations: true,
-      game_scores: true,
+      game_events_major: {
+        include: {
+          game_events_goals: true,
+          game_events_penalties: true,
+        }
+      }
     },
   });
   return gameData ? mapGameRow(gameData) : null;
@@ -872,7 +884,66 @@ function mapGameRow(r: any): Game {
   const awayTeamSeason = r.team_seasons_games_away_team_season_idToteam_seasons;
   const homeTeam = homeTeamSeason?.teams;
   const awayTeam = awayTeamSeason?.teams;
-  const score = r.game_scores;
+
+  const isPlayed = r.status === "completed" || r.status === "in_progress";
+  
+  let homeScore: number | null = null;
+  let awayScore: number | null = null;
+  let homePenaltyScore: number | null = null;
+  let awayPenaltyScore: number | null = null;
+  let finalStatus: string | null = null;
+
+  if (isPlayed) {
+    homeScore = 0;
+    awayScore = 0;
+    
+    let hasShootout = false;
+
+    r.game_events_major?.forEach((major: any) => {
+      if (major.event_type === "goal") {
+        major.game_events_goals?.forEach((goal: any) => {
+          const isHomeScorer = goal.team_season_id === r.home_team_season_id;
+          if ((isHomeScorer && !goal.is_own_goal) || (!isHomeScorer && goal.is_own_goal)) {
+            homeScore = (homeScore || 0) + 1;
+          } else {
+            awayScore = (awayScore || 0) + 1;
+          }
+        });
+      }
+
+      if (major.game_events_penalties && major.game_events_penalties.length > 0) {
+        major.game_events_penalties.forEach((pen: any) => {
+          if (pen.is_shootout) {
+            hasShootout = true;
+            if (pen.outcome === "goal") {
+              const isHomePenalty = pen.team_season_id === r.home_team_season_id;
+              if (isHomePenalty) {
+                homePenaltyScore = (homePenaltyScore || 0) + 1;
+              } else {
+                awayPenaltyScore = (awayPenaltyScore || 0) + 1;
+              }
+            }
+          }
+        });
+      }
+    });
+
+    if (hasShootout) {
+      finalStatus = "penalty_kicks";
+    } else {
+      let maxPeriod = 0;
+      r.game_events_major?.forEach((major: any) => {
+        if (major.period > maxPeriod) {
+          maxPeriod = major.period;
+        }
+      });
+      if (maxPeriod > r.default_reg_periods) {
+        finalStatus = "overtime";
+      } else {
+        finalStatus = "regulation";
+      }
+    }
+  }
 
   return {
     id: r.id,
@@ -892,11 +963,11 @@ function mapGameRow(r: any): Game {
     endTime: r.end_time ? toDateTimeString(r.end_time) : null,
     locationId: r.location_id ?? null,
     locationName: r.locations?.name ?? r.location_name ?? null,
-    homeScore: score?.home_score ?? r.home_score ?? null,
-    awayScore: score?.away_score ?? r.away_score ?? null,
-    homePenaltyScore: score?.home_penalty_score ?? r.home_penalty_score ?? null,
-    awayPenaltyScore: score?.away_penalty_score ?? r.away_penalty_score ?? null,
-    finalStatus: score?.final_status ?? r.final_status ?? null,
+    homeScore,
+    awayScore,
+    homePenaltyScore,
+    awayPenaltyScore,
+    finalStatus,
     notes: r.notes ?? null,
     videoLink: r.video_link ?? null,
     timezoneLabel: r.timezone_label ?? null,
@@ -908,66 +979,197 @@ function mapGameRow(r: any): Game {
 export async function getPlayerStatsByTeamSeason(
   teamSeasonId: number,
 ): Promise<PlayerSeasonStats[]> {
-  const stats = await prisma.player_season_stats.findMany({
+  const roster = await prisma.player_teams.findMany({
     where: { team_season_id: teamSeasonId },
     include: {
       people: true,
       team_seasons: {
         include: { teams: true }
       }
-    },
-    orderBy: [
-      { goals: 'desc' },
-      { people: { last_name: 'asc' } }
-    ]
+    }
   });
-  return stats.map(mapStatsRow);
+
+  return getStatsForRoster(roster, teamSeasonId);
 }
 
 export async function getPlayerStatsByPerson(
   personId: number,
 ): Promise<PlayerSeasonStats[]> {
-  const stats = await prisma.player_season_stats.findMany({
+  const roster = await prisma.player_teams.findMany({
     where: { player_id: personId },
     include: {
       people: true,
       team_seasons: {
         include: { teams: true }
       }
-    },
-    orderBy: [
-      { team_seasons: { season_id: 'desc' } }
-    ]
+    }
   });
-  return stats.map(mapStatsRow);
+
+  const statsList: PlayerSeasonStats[] = [];
+  for (const r of roster) {
+    const playerStats = await getStatsForRoster([r], r.team_season_id);
+    if (playerStats.length > 0) {
+      statsList.push(playerStats[0]);
+    }
+  }
+
+  return statsList;
 }
 
-function mapStatsRow(r: any): PlayerSeasonStats {
-  const person = r.people ?? r;
-  const team = r.team_seasons?.teams;
+async function getStatsForRoster(roster: any[], teamSeasonId: number): Promise<PlayerSeasonStats[]> {
+  if (roster.length === 0) return [];
 
-  return {
-    id: r.id,
-    playerId: r.player_id,
-    firstName: person.first_name,
-    lastName: person.last_name,
-    teamSeasonId: r.team_season_id,
-    teamName: team?.team_name ?? r.team_name,
-    goals: r.goals ?? 0,
-    assists: r.assists ?? 0,
-    yellowCards: r.yellow_cards ?? 0,
-    redCards: r.red_cards ?? 0,
-    gamesPlayed: r.games_played ?? 0,
-    gamesStarted: r.games_started ?? 0,
-    minutesPlayed: r.minutes_played ?? 0,
-    shots: r.shots ?? 0,
-    shotsOnTarget: r.shots_on_target ?? 0,
-    saves: r.saves ?? 0,
-    cleanSheets: r.clean_sheets ?? 0,
-    penaltyGoals: r.penalty_goals ?? 0,
-    statsSource: r.stats_source as StatSource,
-    notes: r.notes ?? null,
-  };
+  const personIds = roster.map(r => r.player_id);
+
+  const playerGames = await prisma.player_games.findMany({
+    where: {
+      player_id: { in: personIds },
+      team_season_id: teamSeasonId,
+    },
+    include: {
+      game_events_discipline: true,
+      game_events_player_actions: true,
+      game_events_goals_game_events_goals_scorer_player_game_idToplayer_games: true,
+      game_events_goals_game_events_goals_assist_player_game_idToplayer_games: true,
+      game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games: true,
+    }
+  });
+
+  const gameIds = Array.from(new Set(playerGames.map(pg => pg.game_id)));
+  
+  const games = await prisma.games.findMany({
+    where: { id: { in: gameIds } },
+    include: {
+      game_events_major: {
+        include: {
+          game_events_goals: true,
+        }
+      }
+    }
+  });
+
+  const gameScoresMap = new Map<number, { homeScore: number, awayScore: number, homeTeamSeasonId: number, awayTeamSeasonId: number }>();
+  games.forEach(g => {
+    let homeScore = 0;
+    let awayScore = 0;
+    g.game_events_major?.forEach((major: any) => {
+      if (major.event_type === "goal") {
+        major.game_events_goals?.forEach((goal: any) => {
+          const isHomeScorer = goal.team_season_id === g.home_team_season_id;
+          if ((isHomeScorer && !goal.is_own_goal) || (!isHomeScorer && goal.is_own_goal)) {
+            homeScore++;
+          } else {
+            awayScore++;
+          }
+        });
+      }
+    });
+    gameScoresMap.set(g.id, { homeScore, awayScore, homeTeamSeasonId: g.home_team_season_id, awayTeamSeasonId: g.away_team_season_id });
+  });
+
+  const pgMap = new Map<number, any[]>();
+  playerGames.forEach(pg => {
+    if (!pgMap.has(pg.player_id)) {
+      pgMap.set(pg.player_id, []);
+    }
+    pgMap.get(pg.player_id)!.push(pg);
+  });
+
+  return roster.map(r => {
+    const pgs = pgMap.get(r.player_id) || [];
+    
+    let goals = 0;
+    let assists = 0;
+    let yellowCards = 0;
+    let redCards = 0;
+    let gamesPlayed = 0;
+    let gamesStarted = 0;
+    let minutesPlayed = 0;
+    let shots = 0;
+    let shotsOnTarget = 0;
+    let saves = 0;
+    let cleanSheets = 0;
+    let penaltyGoals = 0;
+
+    pgs.forEach(pg => {
+      const status = pg.game_status;
+      if (status === "starter" || status === "goalkeeper" || status === "dressed") {
+        gamesPlayed++;
+      }
+      if (pg.started || status === "starter" || status === "goalkeeper") {
+        gamesStarted++;
+      }
+
+      const scorerGoals = pg.game_events_goals_game_events_goals_scorer_player_game_idToplayer_games || [];
+      scorerGoals.forEach((goal: any) => {
+        if (!goal.is_own_goal) {
+          goals++;
+          if (goal.goal_types && goal.goal_types.toLowerCase().includes("penalty")) {
+            penaltyGoals++;
+          }
+        }
+      });
+
+      const assistGoals = pg.game_events_goals_game_events_goals_assist_player_game_idToplayer_games || [];
+      assists += assistGoals.length;
+
+      pg.game_events_discipline?.forEach((card: any) => {
+        if (card.card_type === "yellow") yellowCards++;
+        else if (card.card_type === "red") redCards++;
+        else if (card.card_type === "yellow_red") {
+          yellowCards++;
+          redCards++;
+        }
+      });
+
+      pg.game_events_player_actions?.forEach((act: any) => {
+        if (act.event_type === "shot") shots++;
+        else if (act.event_type === "shot_on_target") {
+          shots++;
+          shotsOnTarget++;
+        } else if (act.event_type === "save") {
+          saves++;
+        }
+      });
+
+      if (status === "goalkeeper") {
+        const gameScore = gameScoresMap.get(pg.game_id);
+        if (gameScore) {
+          const isHomeGK = gameScore.homeTeamSeasonId === teamSeasonId;
+          const opponentScore = isHomeGK ? gameScore.awayScore : gameScore.homeScore;
+          if (opponentScore === 0) {
+            cleanSheets++;
+          }
+        }
+      }
+    });
+
+    minutesPlayed = gamesPlayed * 80;
+
+    const person = r.people;
+    return {
+      id: r.id,
+      playerId: r.player_id,
+      firstName: person.first_name,
+      lastName: person.last_name,
+      teamSeasonId: teamSeasonId,
+      teamName: r.team_seasons?.teams?.team_name ?? "",
+      goals,
+      assists,
+      yellowCards,
+      redCards,
+      gamesPlayed,
+      gamesStarted,
+      minutesPlayed,
+      shots,
+      shotsOnTarget,
+      saves,
+      cleanSheets,
+      penaltyGoals,
+      statsSource: "calculated" as const,
+      notes: null,
+    };
+  }).sort((a, b) => b.goals - a.goals || a.lastName.localeCompare(b.lastName));
 }
 
 // ─── Team Season Records (standings) ─────────────────────────────────────────
@@ -976,39 +1178,176 @@ export async function getTeamSeasonRecords(
   leagueNodeSeasonId?: number,
   teamSeasonId?: number,
 ): Promise<TeamSeasonRecord[]> {
-  const records = await prisma.team_season_records.findMany({
+  const gamesData = await prisma.games.findMany({
     where: {
-      league_node_season_id: leagueNodeSeasonId ? leagueNodeSeasonId : undefined,
-      team_season_id: teamSeasonId ? teamSeasonId : undefined,
+      status: "completed",
+      game_league_nodes: leagueNodeSeasonId ? {
+        some: { league_node_id: leagueNodeSeasonId }
+      } : undefined,
+      OR: teamSeasonId ? [
+        { home_team_season_id: teamSeasonId },
+        { away_team_season_id: teamSeasonId }
+      ] : undefined,
     },
     include: {
-      team_seasons: {
+      game_events_major: {
+        include: {
+          game_events_goals: true,
+        }
+      },
+      team_seasons_games_home_team_season_idToteam_seasons: {
         include: { teams: { include: { clubs: true } } }
+      },
+      team_seasons_games_away_team_season_idToteam_seasons: {
+        include: { teams: { include: { clubs: true } } }
+      },
+      game_league_nodes: true,
+    }
+  });
+
+  const recordsMap = new Map<string, {
+    teamSeasonId: number;
+    teamName: string;
+    clubName: string;
+    leagueNodeSeasonId: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    goalsFor: number;
+    goalsAgainst: number;
+    gamesPlayed: number;
+    points: number;
+  }>();
+
+  const getOrCreateRecord = (tsId: number, lnId: number, teamSeasonObj: any) => {
+    const key = `${tsId}_${lnId}`;
+    if (!recordsMap.has(key)) {
+      const team = teamSeasonObj?.teams;
+      recordsMap.set(key, {
+        teamSeasonId: tsId,
+        teamName: team?.team_name ?? tsId.toString(),
+        clubName: team?.clubs?.name ?? "",
+        leagueNodeSeasonId: lnId,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        gamesPlayed: 0,
+        points: 0,
+      });
+    }
+    return recordsMap.get(key)!;
+  };
+
+  gamesData.forEach((g) => {
+    let homeScore = 0;
+    let awayScore = 0;
+    g.game_events_major?.forEach((major: any) => {
+      if (major.event_type === "goal") {
+        major.game_events_goals?.forEach((goal: any) => {
+          const isHomeScorer = goal.team_season_id === g.home_team_season_id;
+          if ((isHomeScorer && !goal.is_own_goal) || (!isHomeScorer && goal.is_own_goal)) {
+            homeScore++;
+          } else {
+            awayScore++;
+          }
+        });
       }
-    },
-    orderBy: [
-      { points: 'desc' },
-      { wins: 'desc' }
-    ]
+    });
+
+    const nodes = g.game_league_nodes.map(n => n.league_node_id);
+    const targetNodes = nodes.length > 0 ? nodes : [0];
+
+    targetNodes.forEach(lnId => {
+      if (leagueNodeSeasonId && lnId !== leagueNodeSeasonId) return;
+
+      const homeRec = getOrCreateRecord(
+        g.home_team_season_id,
+        lnId,
+        g.team_seasons_games_home_team_season_idToteam_seasons
+      );
+      const awayRec = getOrCreateRecord(
+        g.away_team_season_id,
+        lnId,
+        g.team_seasons_games_away_team_season_idToteam_seasons
+      );
+
+      homeRec.gamesPlayed++;
+      awayRec.gamesPlayed++;
+      homeRec.goalsFor += homeScore;
+      homeRec.goalsAgainst += awayScore;
+      awayRec.goalsFor += awayScore;
+      awayRec.goalsAgainst += homeScore;
+
+      if (homeScore > awayScore) {
+        homeRec.wins++;
+        homeRec.points += 3;
+        awayRec.losses++;
+      } else if (homeScore < awayScore) {
+        awayRec.wins++;
+        awayRec.points += 3;
+        homeRec.losses++;
+      } else {
+        homeRec.draws++;
+        homeRec.points += 1;
+        awayRec.draws++;
+        awayRec.points += 1;
+      }
+    });
   });
-  return records.map((r) => {
-    const team = r.team_seasons?.teams;
-    return {
-      id: r.id,
-      teamSeasonId: r.team_season_id,
-      teamName: team?.team_name ?? r.team_season_id.toString(), // fallback
-      clubName: team?.clubs?.name ?? '',
-      leagueNodeSeasonId: r.league_node_season_id ?? null,
-      wins: r.wins ?? 0,
-      losses: r.losses ?? 0,
-      draws: r.draws ?? 0,
-      goalsFor: r.goals_for ?? 0,
-      goalsAgainst: r.goals_against ?? 0,
-      gamesPlayed: r.games_played ?? 0,
-      points: r.points ?? 0,
-      recordSource: r.record_source as StatSource,
-    };
+
+  if (teamSeasonId && recordsMap.size === 0) {
+    const teamSeason = await prisma.team_seasons.findUnique({
+      where: { id: teamSeasonId },
+      include: { teams: { include: { clubs: true } } }
+    });
+    if (teamSeason) {
+      const team = teamSeason.teams;
+      return [{
+        id: teamSeasonId,
+        teamSeasonId: teamSeasonId,
+        teamName: team.team_name,
+        clubName: team.clubs.name,
+        leagueNodeSeasonId: null,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        gamesPlayed: 0,
+        points: 0,
+        recordSource: "calculated" as const,
+      }];
+    }
+  }
+
+  let result = Array.from(recordsMap.values()).map((r, index) => ({
+    id: index + 1,
+    teamSeasonId: r.teamSeasonId,
+    teamName: r.teamName,
+    clubName: r.clubName,
+    leagueNodeSeasonId: r.leagueNodeSeasonId || null,
+    wins: r.wins,
+    losses: r.losses,
+    draws: r.draws,
+    goalsFor: r.goalsFor,
+    goalsAgainst: r.goalsAgainst,
+    gamesPlayed: r.gamesPlayed,
+    points: r.points,
+    recordSource: "calculated" as const,
+  }));
+
+  result.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const gdA = a.goalsFor - a.goalsAgainst;
+    const gdB = b.goalsFor - b.goalsAgainst;
+    if (gdB !== gdA) return gdB - gdA;
+    return b.goalsFor - a.goalsFor;
   });
+
+  return result;
 }
 
 // ─── Locations ────────────────────────────────────────────────────────────────
@@ -1098,3 +1437,233 @@ export async function getEvents(teamSeasonId?: number): Promise<EventRecord[]> {
     recurrenceRule: r.recurrence_rule ?? null,
   }));
 }
+
+// ─── Admin Users & People ───────────────────────────────────────────────────
+
+export interface AdminUser {
+  id: number;
+  personId: number;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  systemAdmin: boolean;
+  rolesList: string;
+  createdAt: string | null;
+  modifiedAt: string | null;
+}
+
+export async function getUsers(): Promise<AdminUser[]> {
+  const userRows = await prisma.users.findMany({
+    include: {
+      people: {
+        include: {
+          club_staff: true,
+          team_staff: true,
+          player_teams: true,
+          player_relationships_player_relationships_related_person_idTopeople: true,
+        },
+      },
+    },
+    orderBy: {
+      people: {
+        last_name: "asc",
+      },
+    },
+  });
+
+  return userRows.map((u) => {
+    const roles: string[] = [];
+    if (u.system_admin) roles.push("Admin");
+    if (u.people.club_staff.some((cs) => cs.role === "club_admin" && cs.is_active)) {
+      roles.push("Club Admin");
+    }
+    if (u.people.team_staff.some((ts) => ts.role === "team_admin" && ts.is_active)) {
+      roles.push("Team Admin");
+    }
+    if (u.people.team_staff.some((ts) => (ts.role === "head_coach" || ts.role === "assistant_coach") && ts.is_active)) {
+      roles.push("Coach");
+    }
+    if (u.people.player_teams.some((pt) => pt.status === "rostered" && pt.is_active)) {
+      roles.push("Player");
+    }
+    if (u.people.player_relationships_player_relationships_related_person_idTopeople.some((pr) => pr.relationship === "Parent" || pr.relationship === "Guardian")) {
+      roles.push("Parent");
+    }
+
+    return {
+      id: u.id,
+      personId: u.person_id,
+      firstName: u.people.first_name,
+      lastName: u.people.last_name,
+      email: u.people.email,
+      systemAdmin: u.system_admin,
+      rolesList: roles.length > 0 ? roles.join(", ") : "No assigned roles",
+      createdAt: toDateTimeString(u.created_at),
+      modifiedAt: toDateTimeString(u.modified_at),
+    };
+  });
+}
+
+export interface AdminPerson {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  displayName: string;
+}
+
+export async function getPeople(): Promise<AdminPerson[]> {
+  const people = await prisma.people.findMany({
+    orderBy: [
+      { last_name: "asc" },
+      { first_name: "asc" },
+    ],
+  });
+
+  return people.map((p) => ({
+    id: p.id,
+    firstName: p.first_name,
+    lastName: p.last_name,
+    email: p.email,
+    displayName: `${p.first_name} ${p.last_name} (${p.email || "No Email"})`,
+  }));
+}
+
+// ─── Club Staff Records ─────────────────────────────────────────────────────
+
+export interface ClubStaffRecord {
+  id: number;
+  clubId: number;
+  clubName: string;
+  personId: number;
+  personName: string;
+  role: string;
+  isActive: boolean;
+}
+
+export async function getClubStaffRecords(): Promise<ClubStaffRecord[]> {
+  const staff = await prisma.club_staff.findMany({
+    include: {
+      clubs: true,
+      people: true,
+    },
+    orderBy: [
+      { clubs: { name: "asc" } },
+      { people: { last_name: "asc" } },
+    ],
+  });
+
+  return staff.map((s) => ({
+    id: s.id,
+    clubId: s.club_id,
+    clubName: s.clubs.name,
+    personId: s.person_id,
+    personName: `${s.people.first_name} ${s.people.last_name}`,
+    role: s.role,
+    isActive: !!s.is_active,
+  }));
+}
+
+// ─── Team Staff Records ─────────────────────────────────────────────────────
+
+export interface TeamStaffRecord {
+  id: number;
+  teamSeasonId: number;
+  teamName: string;
+  clubName: string;
+  seasonName: string;
+  personId: number;
+  personName: string;
+  role: string;
+  isActive: boolean;
+}
+
+export async function getTeamStaffRecords(): Promise<TeamStaffRecord[]> {
+  const staff = await prisma.team_staff.findMany({
+    include: {
+      team_seasons: {
+        include: {
+          teams: { include: { clubs: true } },
+          seasons: true,
+        },
+      },
+      people: true,
+    },
+    orderBy: [
+      { team_seasons: { teams: { team_name: "asc" } } },
+      { people: { last_name: "asc" } },
+    ],
+  });
+
+  return staff.map((s) => ({
+    id: s.id,
+    teamSeasonId: s.team_season_id,
+    teamName: s.team_seasons.teams.team_name,
+    clubName: s.team_seasons.teams.clubs.name,
+    seasonName: s.team_seasons.seasons.season_name,
+    personId: s.person_id,
+    personName: `${s.people.first_name} ${s.people.last_name}`,
+    role: s.role,
+    isActive: !!s.is_active,
+  }));
+}
+
+// ─── Team League Enrollments ────────────────────────────────────────────────
+
+export interface TeamLeagueEnrollmentRecord {
+  id: number;
+  teamSeasonId: number;
+  teamName: string;
+  clubName: string;
+  seasonId: number;
+  seasonName: string;
+  leagueId: number;
+  leagueName: string;
+  leagueNodeId: number;
+  leagueNodeName: string;
+  leagueNodeSeasonId: number;
+  isActive: boolean;
+}
+
+export async function getTeamLeagueEnrollments(): Promise<TeamLeagueEnrollmentRecord[]> {
+  const enrollments = await prisma.team_league_enrollments.findMany({
+    include: {
+      team_seasons: {
+        include: {
+          teams: { include: { clubs: true } },
+          seasons: true,
+        },
+      },
+      league_node_seasons: {
+        include: {
+          league_nodes: {
+            include: { leagues: true },
+          },
+          seasons: true,
+        },
+      },
+    },
+    orderBy: [
+      { league_node_seasons: { league_nodes: { leagues: { name: "asc" } } } },
+      { team_seasons: { teams: { team_name: "asc" } } },
+    ],
+  });
+
+  
+  return enrollments.map((e) => ({
+    id: e.id,
+    teamSeasonId: e.team_season_id,
+    teamName: e.team_seasons.teams.team_name,
+    clubName: e.team_seasons.teams.clubs.name,
+    seasonId: e.league_node_seasons.season_id,
+    seasonName: e.league_node_seasons.seasons.season_name,
+    leagueId: e.league_node_seasons.league_nodes.league_id,
+    leagueName: e.league_node_seasons.league_nodes.leagues.name,
+    leagueNodeId: e.league_node_seasons.league_node_id,
+    leagueNodeName: e.league_node_seasons.league_nodes.name,
+    leagueNodeSeasonId: e.league_node_season_id,
+    isActive: !!e.is_active,
+  }));
+}
+
+

@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { verifyAdmin } from "../auth/auth-utils";
+import { verifyAdmin } from "@/lib/auth/auth-utils";
 import prisma from "@/lib/prisma";
-import { leagueSchema } from "../validations/schemas";
+import { leagueSchema } from "@/lib/validations/schemas";
 
 export async function createLeague(data: Record<string, string>) {
   await verifyAdmin();
