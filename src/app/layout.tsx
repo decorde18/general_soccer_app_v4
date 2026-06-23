@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { ToastProvider } from "@/components/ui/toast";
-import AuthProvider from "@/components/AuthProvider";
-import { getServerAuthSession } from "@/lib/auth";
 import "@/styles/globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getServerAuthSession } from "@/lib/auth";
+
+import { ToastProvider } from "@/components/ui/toast";
+import { Toaster } from "sonner";
+import AuthProvider from "@/components/AuthProvider";
 
 export const metadata = {
   title: "Soccer Stats App",
@@ -35,6 +37,8 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider session={session}>
           <ToastProvider>{children}</ToastProvider>
+          <Toaster richColors closeButton position='top-right' />
+
         </AuthProvider>
       </body>
     </html>
