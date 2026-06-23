@@ -5,9 +5,9 @@ import { useState, useMemo } from "react";
 import { type EntityConfig, type Role } from "@/components/entities/types";
 import { getEffectiveRoles } from "@/lib/roles";
 import { Plus, Search, AlertCircle } from "lucide-react";
-import { GenericTable } from "../ui/GenericTable";
-import { GenericForm } from "../ui/GenericForm";
-
+import { GenericTable } from "@/components/ui/GenericTable";
+import { GenericForm } from "@/components/ui/GenericForm";
+import { useToast } from "@/components/ui/toast";
 import Dialog from "@/components/ui/Dialog";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
@@ -87,9 +87,17 @@ export function EntityPage<T extends Record<string, unknown>>({
         { ...formData, id: Date.now() } as unknown as T,
       ]);
       setShowForm(false);
-      toast.success((`${config.singular} created successfully`));
-    } catch {
-      toast.error(`Failed to create ${config.singular.toLowerCase()}`);
+      toast({
+        title: "Success",
+        description: `${config.singular} created successfully`,
+        type: "success",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.message || `Failed to create ${config.singular.toLowerCase()}`,
+        type: "error",
+      });
     }
   };
 
@@ -123,9 +131,17 @@ export function EntityPage<T extends Record<string, unknown>>({
       );
       setEditRecord(null);
       setShowForm(false);
-      toast.success(`${config.singular} updated successfully`)
-    } catch {
-      toast.error(`Failed to update ${config.singular.toLowerCase()}`);
+      toast({
+        title: "Success",
+        description: `${config.singular} updated successfully`,
+        type: "success",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.message || `Failed to update ${config.singular.toLowerCase()}`,
+        type: "error",
+      });
     }
   };
 
@@ -138,11 +154,19 @@ export function EntityPage<T extends Record<string, unknown>>({
       setData((prev) =>
         prev.filter((r) => (r as Record<string, unknown>).id !== id),
       );
-      toast.success(`${config.singular} deleted successfully`)
-
-    } catch {
-      setDeleteError(`Failed to delete ${config.singular}. Please try again.`);
-      toast.error(`Failed to delete ${config.singular.toLowerCase()}`);
+      toast({
+        title: "Success",
+        description: `${config.singular} deleted successfully`,
+        type: "success",
+      });
+    } catch (err: any) {
+      const errorMsg = err?.message || `Failed to delete ${config.singular.toLowerCase()}`;
+      setDeleteError(errorMsg);
+      toast({
+        title: "Error",
+        description: errorMsg,
+        type: "error",
+      });
     }
   };
 

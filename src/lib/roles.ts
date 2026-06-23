@@ -8,6 +8,8 @@ export const Roles = {
   PUBLIC: "PUBLIC",
 } as const;
 
+
+
 export type Role = (typeof Roles)[keyof typeof Roles];
 
 export function hasRole(userRoles: any, role: Role) {

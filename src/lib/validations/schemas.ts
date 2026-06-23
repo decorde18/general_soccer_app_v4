@@ -77,3 +77,47 @@ export const leagueSchema = z.object({
   state: z.string().optional().nullable(),
   postalCode: z.string().optional().nullable(),
 });
+
+export const userSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().optional().or(z.literal("")),
+  systemAdmin: z
+    .string()
+    .optional()
+    .transform((v) => v === "true"),
+});
+
+export const seasonSchema = z.object({
+  seasonName: z.string().min(1, "Season Name is required"),
+  startDate: z.string().min(10, "Start Date is required"),
+  endDate: z.string().min(10, "End Date is required"),
+  status: z.enum(["upcoming", "active", "completed", "archived"]).optional().default("upcoming"),
+});
+
+export const leagueNodeSchema = z.object({
+  leagueId: z.coerce.number(),
+  parentId: z.coerce.number().optional().nullable().transform((val) => (val ? val : null)),
+  name: z.string().min(1, "Name is required"),
+  nodeType: z.enum([
+    "league",
+    "conference",
+    "division",
+    "group",
+    "region",
+    "district",
+    "classification",
+    "age_group",
+    "gender",
+  ]),
+  level: z.coerce.number().optional().nullable().transform((val) => (val !== undefined ? val : 0)),
+  displayOrder: z.coerce.number().optional().nullable().transform((val) => (val !== undefined ? val : 0)),
+});
+
+export const teamEnrollmentSchema = z.object({
+  teamSeasonId: z.coerce.number(),
+  seasonId: z.coerce.number(),
+  leagueNodeId: z.coerce.number(),
+  isActive: z.string().optional().transform((v) => v === "true"),
+});

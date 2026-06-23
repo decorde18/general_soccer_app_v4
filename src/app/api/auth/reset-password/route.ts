@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import db from "@/lib/db";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -21,19 +21,16 @@ export async function POST(req: Request) {
     }
 
     // Find user with this token
-    const [rows]: any = await db.query(
-      "SELECT * FROM people WHERE reset_token = ? LIMIT 1",
-      [token],
-    );
+    const user = await prisma.users.findFirst({
+      where: { reset_token: token },
+    });
 
-    if (rows.length === 0) {
+    if (!user) {
       return NextResponse.json(
         { message: "Invalid or expired token" },
         { status: 400 },
       );
     }
-
-    const user = rows[0];
 
     // Check if token is expired
     if (
@@ -51,10 +48,14 @@ export async function POST(req: Request) {
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
     // Update user: clear token and set new password_hash
-    await db.query(
-      "UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?",
-      [passwordHash, user.id],
-    );
+    await prisma.users.update({
+      where: { id: user.id },
+      data: {
+        password_hash: passwordHash,
+        reset_token: null,
+        reset_token_expiry: null,
+      },
+    });
 
     return NextResponse.json(
       { message: "Password updated successfully" },

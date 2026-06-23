@@ -267,20 +267,6 @@ model game_periods {
   @@unique([game_id, period_number], map: "game_id")
 }
 
-model game_scores {
-  id                 Int                       @id @default(autoincrement())
-  game_id            Int                       @unique(map: "unique_game_score")
-  home_score         Int?
-  away_score         Int?
-  home_penalty_score Int?
-  away_penalty_score Int?
-  final_status       game_scores_final_status? @default(regulation)
-  created_at         DateTime?                 @default(now()) @db.Timestamp(0)
-  modified_at        DateTime?                 @default(now()) @db.Timestamp(0)
-  games              games                     @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_game_scores_game")
-
-  @@index([game_id], map: "idx_game_scores_game")
-}
 
 model game_standings_inclusions {
   id                   Int          @id @default(autoincrement())
@@ -342,7 +328,6 @@ model games {
   game_events_team                                     game_events_team[]
   game_league_nodes                                    game_league_nodes[]
   game_periods                                         game_periods[]
-  game_scores                                          game_scores?
   game_standings_inclusions                            game_standings_inclusions[]
   game_subs                                            game_subs[]
   team_seasons_games_away_team_season_idToteam_seasons team_seasons                 @relation("games_away_team_season_idToteam_seasons", fields: [away_team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_games_away_team_season")
@@ -401,7 +386,6 @@ model league_node_seasons {
   league_nodes            league_nodes               @relation(fields: [league_node_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ln_season_node")
   seasons                 seasons                    @relation(fields: [season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ln_season_season")
   team_league_enrollments team_league_enrollments[]
-  team_season_records     team_season_records[]
 
   @@unique([league_node_id, season_id], map: "unique_node_season")
   @@index([season_id], map: "fk_ln_season_season")
@@ -497,7 +481,6 @@ model people {
   player_games                                                        player_games[]
   player_relationships_player_relationships_related_person_idTopeople player_relationships[] @relation("player_relationships_related_person_idTopeople")
   player_relationships_player_relationships_player_idTopeople         player_relationships[] @relation("player_relationships_player_idTopeople")
-  player_season_stats                                                 player_season_stats[]
   player_teams                                                        player_teams[]
   team_staff                                                          team_staff[]
   user_favorites                                                      user_favorites[]
@@ -551,34 +534,6 @@ model player_relationships {
   @@index([related_person_id], map: "fk_parent_person")
 }
 
-model player_season_stats {
-  id              Int                               @id @default(autoincrement())
-  player_id       Int
-  team_season_id  Int
-  goals           Int?                              @default(0)
-  assists         Int?                              @default(0)
-  yellow_cards    Int?                              @default(0)
-  red_cards       Int?                              @default(0)
-  games_played    Int?                              @default(0)
-  games_started   Int?                              @default(0)
-  minutes_played  Int?                              @default(0)
-  shots           Int?                              @default(0)
-  shots_on_target Int?                              @default(0)
-  saves           Int?                              @default(0)
-  clean_sheets    Int?                              @default(0)
-  penalty_goals   Int?                              @default(0)
-  notes           String?                           @db.Text
-  stats_source    player_season_stats_stats_source? @default(manual)
-  created_at      DateTime?                         @default(now()) @db.Timestamp(0)
-  modified_at     DateTime?                         @default(now()) @db.Timestamp(0)
-  people          people                            @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_season_stats_player")
-  team_seasons    team_seasons                      @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_season_stats_team_season")
-
-  @@unique([player_id, team_season_id], map: "unique_player_team_season")
-  @@index([player_id, team_season_id], map: "idx_player_season_stats_composite")
-  @@index([player_id], map: "idx_player_season_stats_player")
-  @@index([team_season_id], map: "idx_player_season_stats_team_season")
-}
 
 model player_teams {
   id                 Int                  @id @default(autoincrement())
@@ -637,29 +592,6 @@ model team_league_enrollments {
   @@index([team_season_id], map: "idx_team_league_enrollments_team_season")
 }
 
-model team_season_records {
-  id                    Int                                @id @default(autoincrement())
-  team_season_id        Int
-  league_node_season_id Int?
-  wins                  Int?                               @default(0)
-  losses                Int?                               @default(0)
-  draws                 Int?                               @default(0)
-  goals_for             Int?                               @default(0)
-  goals_against         Int?                               @default(0)
-  games_played          Int?                               @default(0)
-  points                Int?                               @default(0)
-  notes                 String?                            @db.Text
-  record_source         team_season_records_record_source? @default(manual)
-  created_at            DateTime?                          @default(now()) @db.Timestamp(0)
-  modified_at           DateTime?                          @default(now()) @db.Timestamp(0)
-  league_node_seasons   league_node_seasons?               @relation(fields: [league_node_season_id], references: [id], onUpdate: Restrict, map: "fk_team_records_league")
-  team_seasons          team_seasons                       @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_team_records_team_season")
-
-  @@unique([team_season_id, league_node_season_id], map: "unique_team_league_record")
-  @@index([league_node_season_id], map: "idx_team_records_league")
-  @@index([team_season_id], map: "idx_team_records_team_season")
-  @@index([team_season_id, league_node_season_id], map: "idx_team_season_records_composite")
-}
 
 model team_seasons {
   id                                            Int                       @id @default(autoincrement())
@@ -677,10 +609,8 @@ model team_seasons {
   games_games_away_team_season_idToteam_seasons games[]                   @relation("games_away_team_season_idToteam_seasons")
   games_games_home_team_season_idToteam_seasons games[]                   @relation("games_home_team_season_idToteam_seasons")
   player_games                                  player_games[]
-  player_season_stats                           player_season_stats[]
   player_teams                                  player_teams[]
   team_league_enrollments                       team_league_enrollments[]
-  team_season_records                           team_season_records[]
   age_groups                                    age_groups?               @relation(fields: [age_group], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_team_seasons_age_group")
   teams                                         teams                     @relation(fields: [team_id], references: [id], onUpdate: Restrict, map: "team_seasons_ibfk_1")
   seasons                                       seasons                   @relation(fields: [season_id], references: [id], onUpdate: Restrict, map: "team_seasons_ibfk_2")
@@ -939,14 +869,3 @@ enum clubs_type {
   club
 }
 
-enum team_season_records_record_source {
-  manual
-  calculated
-  hybrid
-}
-
-enum player_season_stats_stats_source {
-  manual
-  calculated
-  hybrid
-}

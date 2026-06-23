@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { verifyAdmin } from "../auth/auth-utils";
+import { verifyAdmin } from "@/lib/auth/auth-utils";
 import prisma from "@/lib/prisma";
-import { governingBodySchema } from "../validations/schemas";
+import { governingBodySchema } from "@/lib/validations/schemas";
 
 export async function createGoverningBody(data: Record<string, string>) {
   await verifyAdmin();
@@ -19,7 +19,7 @@ export async function createGoverningBody(data: Record<string, string>) {
         website: parsedData.website,
       },
     });
-    
+
     revalidatePath("/governing-bodies");
     return newBody; // Return the created object so nested configs get the ID!
   } catch (error) {
