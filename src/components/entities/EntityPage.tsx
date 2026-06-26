@@ -7,7 +7,7 @@ import { getEffectiveRoles } from "@/lib/roles";
 import { Plus, Search, AlertCircle } from "lucide-react";
 import { GenericTable } from "@/components/ui/GenericTable";
 import { GenericForm } from "@/components/ui/GenericForm";
-import { useToast } from "@/components/ui/toast";
+
 import Dialog from "@/components/ui/Dialog";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
@@ -53,7 +53,6 @@ export function EntityPage<T extends Record<string, unknown>>({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<T | null>(null);
 
-
   const canCreate = config.permissions.create.some((role) =>
     activeRoles.includes(role),
   );
@@ -87,17 +86,11 @@ export function EntityPage<T extends Record<string, unknown>>({
         { ...formData, id: Date.now() } as unknown as T,
       ]);
       setShowForm(false);
-      toast({
-        title: "Success",
-        description: `${config.singular} created successfully`,
-        type: "success",
-      });
+      toast.success(`${config.singular} created successfully`);
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err?.message || `Failed to create ${config.singular.toLowerCase()}`,
-        type: "error",
-      });
+      toast.error(
+        err?.message || `Failed to create ${config.singular.toLowerCase()}`,
+      );
     }
   };
 
@@ -131,17 +124,11 @@ export function EntityPage<T extends Record<string, unknown>>({
       );
       setEditRecord(null);
       setShowForm(false);
-      toast({
-        title: "Success",
-        description: `${config.singular} updated successfully`,
-        type: "success",
-      });
+      toast.success(`${config.singular} updated successfully`);
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err?.message || `Failed to update ${config.singular.toLowerCase()}`,
-        type: "error",
-      });
+      toast.error(
+        err?.message || `Failed to update ${config.singular.toLowerCase()}`,
+      );
     }
   };
 
@@ -154,19 +141,12 @@ export function EntityPage<T extends Record<string, unknown>>({
       setData((prev) =>
         prev.filter((r) => (r as Record<string, unknown>).id !== id),
       );
-      toast({
-        title: "Success",
-        description: `${config.singular} deleted successfully`,
-        type: "success",
-      });
+      toast.success(`${config.singular} deleted successfully`);
     } catch (err: any) {
-      const errorMsg = err?.message || `Failed to delete ${config.singular.toLowerCase()}`;
+      const errorMsg =
+        err?.message || `Failed to delete ${config.singular.toLowerCase()}`;
       setDeleteError(errorMsg);
-      toast({
-        title: "Error",
-        description: errorMsg,
-        type: "error",
-      });
+      toast.error(errorMsg);
     }
   };
 
@@ -269,7 +249,7 @@ export function EntityPage<T extends Record<string, unknown>>({
                 })),
               ]}
               showPlaceholder={false}
-              className='min-w-[140px]'
+              className='min-w-35'
             />
           )}
 
