@@ -38,6 +38,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import Link from "next/link";
 
 const BADGE_STYLES: Record<string, string> = {
   green: "bg-success/10 text-success border border-success/30",
@@ -76,34 +77,47 @@ export function GenericTable<T extends Record<string, unknown>>({
       accessorKey: col.key,
       header: col.label,
       enableSorting: col.sortable ?? false,
-      cell: ({ getValue }) => {
-        const val = getValue() as string;
+      cell: ({ getValue, row }) => {
+        const val = getValue() as any;
 
-        if (col.type === "badge" && col.options) {
-          const style = BADGE_STYLES[col.options[val] ?? "gray"];
+        const cellContent = (() => {
+          if (col.type === "badge" && col.options) {
+            const style = BADGE_STYLES[col.options[val] ?? "gray"];
+            return (
+              <span
+                className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${style}`}
+              >
+                {val}
+              </span>
+            );
+          }
+
+          if (col.type === "date") {
+            return val
+              ? new Date(val).toLocaleDateString("en-US", { dateStyle: "medium" })
+              : "—";
+          }
+          if (col.type === "boolean") {
+            return val == 1 || val === true || val === "true" ? (
+              <span className='text-xs font-medium text-success'>Yes</span>
+            ) : (
+              <span className='text-xs text-muted'>No</span>
+            );
+          }
+
+          return <span className='text-sm'>{val ?? "—"}</span>;
+        })();
+
+        if (col.linkPattern && row.original && (row.original as any).id) {
+          const href = col.linkPattern.replace("{id}", String((row.original as any).id));
           return (
-            <span
-              className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${style}`}
-            >
-              {val}
-            </span>
+            <Link href={href} className="text-primary hover:underline font-semibold">
+              {cellContent}
+            </Link>
           );
         }
 
-        if (col.type === "date") {
-          return val
-            ? new Date(val).toLocaleDateString("en-US", { dateStyle: "medium" })
-            : "—";
-        }
-        if (col.type === "boolean") {
-          return val == 1 || val === true || val === "true" ? (
-            <span className='text-xs font-medium text-success'>Yes</span>
-          ) : (
-            <span className='text-xs text-muted'>No</span>
-          );
-        }
-
-        return <span className='text-sm'>{val ?? "—"}</span>;
+        return cellContent;
       },
     }));
 

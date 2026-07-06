@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Activity, Calendar, Trophy, Users, ShieldAlert } from "lucide-react";
-import TeamHeader from "./TeamHeader";
+import TeamHeader, { type TeamLeagueLink } from "./TeamHeader";
 import TeamOverview from "./TeamOverview";
 import TeamRoster from "./TeamRoster";
 import TeamSchedule from "./TeamSchedule";
@@ -90,6 +90,7 @@ interface TeamPageClientProps {
     draws: number;
     points: number;
   } | null;
+  leagueLinks?: TeamLeagueLink[];
 }
 
 export default function TeamPageClient({
@@ -99,6 +100,7 @@ export default function TeamPageClient({
   games,
   stats,
   record,
+  leagueLinks,
 }: TeamPageClientProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "roster" | "schedule" | "stats">("overview");
 
@@ -129,6 +131,7 @@ export default function TeamPageClient({
         ageGroup={teamSeason.ageGroup}
         record={record}
         rosterCount={players.length}
+        leagueLinks={leagueLinks}
       />
 
       {/* Tabs bar with horizontal scrolling for mobile */}

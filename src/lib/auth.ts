@@ -23,7 +23,7 @@ interface CredentialUser extends User {
 
 interface AuthToken extends JWT {
   personId?: number;
-  roles?: UserRoles;
+  roles: UserRoles;
 }
 
 const defaultRoles: UserRoles = {

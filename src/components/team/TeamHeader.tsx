@@ -2,6 +2,15 @@
 
 import React from "react";
 import { Shield, Trophy, Users } from "lucide-react";
+import Link from "next/link";
+
+export interface TeamLeagueLink {
+  leagueId: number;
+  leagueName: string;
+  leagueNodeId: number;
+  leagueNodeName: string;
+  leagueNodeSeasonId: number;
+}
 
 interface TeamHeaderProps {
   teamName: string;
@@ -15,6 +24,7 @@ interface TeamHeaderProps {
     points: number;
   } | null;
   rosterCount: number;
+  leagueLinks?: TeamLeagueLink[];
 }
 
 export default function TeamHeader({
@@ -24,9 +34,10 @@ export default function TeamHeader({
   ageGroup,
   record,
   rosterCount,
+  leagueLinks,
 }: TeamHeaderProps) {
   const totalGames = record ? record.wins + record.losses + record.draws : 0;
-  const winRate = totalGames > 0 ? Math.round((record!.wins / totalGames) * 100) : 0;
+  const winRate = totalGames > 0 ? Math.round(((record!.wins + 0.5 * record!.draws) / totalGames) * 100) : 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-md">
@@ -60,6 +71,20 @@ export default function TeamHeader({
               <p className="text-sm font-medium text-muted mt-0.5">
                 {seasonName} Season
               </p>
+              {leagueLinks && leagueLinks.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {leagueLinks.map((link) => (
+                    <Link
+                      key={link.leagueNodeSeasonId}
+                      href={`/leagues/${link.leagueId}`}
+                      className="text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-3 py-1 rounded-xl transition-all inline-flex items-center gap-1.5"
+                    >
+                      <Trophy size={12} className="stroke-[2.5]" />
+                      <span>{link.leagueName} ({link.leagueNodeName}) Standings</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

@@ -281,7 +281,7 @@ export async function requireSession() {
 export async function verifyAdmin() {
   const session = await getServerAuthSession();
   if (!session?.user?.roles?.isAdmin) {
-    throw new Error("Unauthorized: Admin access required.");
+    redirect("/");
   }
 }
 

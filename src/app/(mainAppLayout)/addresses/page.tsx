@@ -7,7 +7,7 @@ export default async function AddresssPage() {
   const addresses = await getAddresses();
 
 
-  let stats = []
+  const stats: { label: string; value: number | string }[] = [];
 
 
   let config = { ...addressConfig };
@@ -17,11 +17,11 @@ export default async function AddresssPage() {
     <div className='p-6 max-w-6xl mx-auto'>
       <EntityShell
         config={config}
-        data={addresses}
+        data={addresses as any}
         stats={stats}
-        onCreate={createAddress}
-        onUpdate={updateAddress}
-        onDelete={deleteAddress}
+        onCreate={createAddress as any}
+        onUpdate={updateAddress as any}
+        onDelete={deleteAddress as any}
       />
     </div>
   );

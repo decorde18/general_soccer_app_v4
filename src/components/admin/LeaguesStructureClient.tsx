@@ -105,6 +105,7 @@ export default function LeaguesStructureClient({
   const [nodeFormType, setNodeFormType] = useState("conference");
   const [nodeFormLevel, setNodeFormLevel] = useState("0");
   const [nodeFormOrder, setNodeFormOrder] = useState("0");
+  const [nodeFormParentId, setNodeFormParentId] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const [enrollFormTeamSeasonId, setEnrollFormTeamSeasonId] = useState("");
@@ -322,6 +323,7 @@ export default function LeaguesStructureClient({
     setAddParentItem(parent);
     setNodeFormName("");
     setNodeFormType("conference");
+    setNodeFormParentId(parent?.type === "node" ? String(parent.nodeId) : "");
     if (parent?.type === "node") {
       const pNode = leagueNodesRecords.find((n) => n.id === parent.nodeId);
       setNodeFormLevel(String((pNode?.level || 0) + 1));
@@ -341,8 +343,7 @@ export default function LeaguesStructureClient({
     try {
       await createLeagueNode({
         leagueId: String(addParentItem.leagueId),
-        parentId:
-          addParentItem.type === "node" ? String(addParentItem.nodeId) : "",
+        parentId: nodeFormParentId,
         name: nodeFormName.trim(),
         nodeType: nodeFormType,
         level: nodeFormLevel,
@@ -366,6 +367,7 @@ export default function LeaguesStructureClient({
     setNodeFormType(node.nodeType);
     setNodeFormLevel(String(node.level || 0));
     setNodeFormOrder(String(node.displayOrder || 0));
+    setNodeFormParentId(node.parentId ? String(node.parentId) : "");
     setIsEditNodeOpen(true);
   };
 
@@ -381,6 +383,7 @@ export default function LeaguesStructureClient({
         nodeType: nodeFormType,
         level: nodeFormLevel,
         displayOrder: nodeFormOrder,
+        parentId: nodeFormParentId,
       });
 
       toast.success(`Node updated successfully`);
@@ -1047,6 +1050,17 @@ export default function LeaguesStructureClient({
       >
         <form onSubmit={handleCreateNodeSubmit} className='space-y-4'>
           <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>Parent Node</label>
+            <Select
+              value={nodeFormParentId}
+              onChange={(e: any) => setNodeFormParentId(e.target.value)}
+              placeholder="Root Level (No Parent)"
+              options={leagueNodesOptionsData}
+              showPlaceholder={true}
+            />
+          </div>
+
+          <div className='space-y-1.5'>
             <label className='text-sm font-bold text-text'>Node Name</label>
             <Input
               type='text'
@@ -1125,6 +1139,17 @@ export default function LeaguesStructureClient({
         size='md'
       >
         <form onSubmit={handleEditNodeSubmit} className='space-y-4'>
+          <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>Parent Node</label>
+            <Select
+              value={nodeFormParentId}
+              onChange={(e: any) => setNodeFormParentId(e.target.value)}
+              placeholder="Root Level (No Parent)"
+              options={leagueNodesOptionsData.filter(opt => Number(opt.value) !== editItem?.id)}
+              showPlaceholder={true}
+            />
+          </div>
+
           <div className='space-y-1.5'>
             <label className='text-sm font-bold text-text'>Node Name</label>
             <Input

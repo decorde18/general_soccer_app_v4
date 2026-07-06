@@ -358,7 +358,7 @@ function FieldInput({
                 config={field.creatableConfig}
                 onSubmit={async (data) => {
                   try {
-                    const res = await field.onCreatableSubmit!(data);
+                    const res = await field.onCreatableSubmit!(data as any);
                     const newVal =
                       res?.value ||
                       data.name ||

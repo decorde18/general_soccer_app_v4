@@ -12,11 +12,11 @@ export default async function LocationsPage() {
     <div className='p-6 max-w-6xl mx-auto'>
       <EntityShell
         config={locationConfig}
-        data={locations}
+        data={locations as any}
         stats={stats}
-        onCreate={createLocation}
-        onUpdate={updateLocation}
-        onDelete={deleteLocation}
+        onCreate={createLocation as any}
+        onUpdate={updateLocation as any}
+        onDelete={deleteLocation as any}
       />
     </div>
   );

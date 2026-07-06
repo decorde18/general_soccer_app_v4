@@ -53,11 +53,11 @@ export default async function LeaguesPage() {
     <div className='p-6 max-w-6xl mx-auto'>
       <EntityShell
         config={config}
-        data={leagues}
+        data={leagues as any}
         stats={stats}
-        onCreate={createLeague}
-        onUpdate={updateLeague}
-        onDelete={deleteLeague}
+        onCreate={createLeague as any}
+        onUpdate={updateLeague as any}
+        onDelete={deleteLeague as any}
       />
     </div>
   );

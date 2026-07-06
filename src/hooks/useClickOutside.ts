@@ -4,7 +4,7 @@ import type { RefObject } from "react";
 // Calls `onOutsideClick` whenever a mousedown happens outside the given ref.
 // Generic and reusable for any dropdown/popover/menu, not just the header.
 export function useClickOutside<T extends HTMLElement>(
-  ref: RefObject<T>,
+  ref: RefObject<T | null>,
   onOutsideClick: () => void
 ) {
   useEffect(() => {

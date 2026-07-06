@@ -39,7 +39,8 @@ export async function GET() {
         seasonId: ts.season_id,
         seasonName: ts.seasons.season_name,
         teamName: ts.teams.team_name,
-        clubId: ts.teams.club_id
+        clubId: ts.teams.club_id,
+        teamId: ts.team_id
       }))
     });
   } catch (error: any) {

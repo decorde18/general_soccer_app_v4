@@ -20,6 +20,7 @@ export const leagueConfig: EntityConfig = {
         label: "League Name",
         type: "text",
         sortable: true,
+        linkPattern: "/leagues/{id}",
       },
       {
         key: "abbreviation",

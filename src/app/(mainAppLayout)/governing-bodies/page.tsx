@@ -15,10 +15,10 @@ export default async function GoverningBodiesPage() {
     <div className='p-6 max-w-6xl mx-auto'>
       <EntityShell
         config={governingBodyConfig}
-        data={governingBodies}
-        onCreate={createGoverningBody}
-        onUpdate={updateGoverningBody}
-        onDelete={deleteGoverningBody}
+        data={governingBodies as any}
+        onCreate={createGoverningBody as any}
+        onUpdate={updateGoverningBody as any}
+        onDelete={deleteGoverningBody as any}
       />
     </div>
   );

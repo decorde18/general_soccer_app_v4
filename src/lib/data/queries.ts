@@ -144,6 +144,7 @@ export interface TeamSeason {
   seasonName: string;
   ageGroup: number | null;
   isActive: boolean;
+  clubType?: string | null;
 }
 
 export interface LeagueNode {
@@ -602,6 +603,7 @@ export async function getTeamSeasons(
     seasonName: r.seasons.season_name,
     ageGroup: r.age_group ?? null,
     isActive: !!r.is_active,
+    clubType: r.teams.clubs.type,
   }));
 }
 
@@ -628,6 +630,7 @@ export async function getTeamSeasonById(
     seasonName: teamSeason.seasons.season_name,
     ageGroup: teamSeason.age_group ?? null,
     isActive: !!teamSeason.is_active,
+    clubType: teamSeason.teams.clubs.type,
   };
 }
 
@@ -812,6 +815,7 @@ export async function getGames(filters?: {
   leagueId?: number;
   status?: GameStatus;
   gameType?: GameType;
+  clubType?: string;
 }): Promise<Game[]> {
   const gamesData = await prisma.games.findMany({
     where: {
@@ -829,6 +833,30 @@ export async function getGames(filters?: {
           }
         }
       } : undefined,
+      AND: filters?.clubType ? [
+        {
+          OR: [
+            {
+              team_seasons_games_home_team_season_idToteam_seasons: {
+                teams: {
+                  clubs: {
+                    type: filters.clubType as any
+                  }
+                }
+              }
+            },
+            {
+              team_seasons_games_away_team_season_idToteam_seasons: {
+                teams: {
+                  clubs: {
+                    type: filters.clubType as any
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ] : undefined,
       status: filters?.status as any,
       game_type: filters?.gameType as any,
     },
@@ -1178,16 +1206,46 @@ export async function getTeamSeasonRecords(
   leagueNodeSeasonId?: number,
   teamSeasonId?: number,
 ): Promise<TeamSeasonRecord[]> {
+  let enrolledTeamSeasonIds: number[] = [];
+  const enrolledTeamSeasonsMap = new Map<number, any>();
+
+  if (leagueNodeSeasonId) {
+    const enrollments = await prisma.team_league_enrollments.findMany({
+      where: { league_node_season_id: leagueNodeSeasonId, is_active: true },
+      include: {
+        team_seasons: {
+          include: { teams: { include: { clubs: true } } }
+        }
+      }
+    });
+    enrolledTeamSeasonIds = enrollments.map((e) => e.team_season_id);
+    enrollments.forEach((e) => {
+      enrolledTeamSeasonsMap.set(e.team_season_id, e.team_seasons);
+    });
+  }
+
   const gamesData = await prisma.games.findMany({
     where: {
       status: "completed",
-      game_league_nodes: leagueNodeSeasonId ? {
-        some: { league_node_id: leagueNodeSeasonId }
-      } : undefined,
-      OR: teamSeasonId ? [
-        { home_team_season_id: teamSeasonId },
-        { away_team_season_id: teamSeasonId }
-      ] : undefined,
+      OR: [
+        ...(leagueNodeSeasonId ? [{
+          game_league_nodes: {
+            some: { league_node_id: leagueNodeSeasonId }
+          }
+        }] : []),
+        ...(leagueNodeSeasonId && enrolledTeamSeasonIds.length > 0 ? [{
+          AND: [
+            { home_team_season_id: { in: enrolledTeamSeasonIds } },
+            { away_team_season_id: { in: enrolledTeamSeasonIds } }
+          ]
+        }] : []),
+        ...(teamSeasonId ? [{
+          OR: [
+            { home_team_season_id: teamSeasonId },
+            { away_team_season_id: teamSeasonId }
+          ]
+        }] : [])
+      ]
     },
     include: {
       game_events_major: {
@@ -1209,7 +1267,7 @@ export async function getTeamSeasonRecords(
     teamSeasonId: number;
     teamName: string;
     clubName: string;
-    leagueNodeSeasonId: number;
+    leagueNodeSeasonId: number | null;
     wins: number;
     losses: number;
     draws: number;
@@ -1218,6 +1276,26 @@ export async function getTeamSeasonRecords(
     gamesPlayed: number;
     points: number;
   }>();
+
+  // Initialize with enrolled teams
+  if (leagueNodeSeasonId) {
+    enrolledTeamSeasonsMap.forEach((ts, tsId) => {
+      const key = `${tsId}_${leagueNodeSeasonId}`;
+      recordsMap.set(key, {
+        teamSeasonId: tsId,
+        teamName: ts.teams.team_name,
+        clubName: ts.teams.clubs.name,
+        leagueNodeSeasonId: leagueNodeSeasonId,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        gamesPlayed: 0,
+        points: 0,
+      });
+    });
+  }
 
   const getOrCreateRecord = (tsId: number, lnId: number, teamSeasonObj: any) => {
     const key = `${tsId}_${lnId}`;
@@ -1260,16 +1338,22 @@ export async function getTeamSeasonRecords(
     const targetNodes = nodes.length > 0 ? nodes : [0];
 
     targetNodes.forEach(lnId => {
-      if (leagueNodeSeasonId && lnId !== leagueNodeSeasonId) return;
+      const targetLnId = leagueNodeSeasonId || lnId;
+
+      if (leagueNodeSeasonId) {
+        if (!enrolledTeamSeasonsMap.has(g.home_team_season_id) || !enrolledTeamSeasonsMap.has(g.away_team_season_id)) {
+          return;
+        }
+      }
 
       const homeRec = getOrCreateRecord(
         g.home_team_season_id,
-        lnId,
+        targetLnId,
         g.team_seasons_games_home_team_season_idToteam_seasons
       );
       const awayRec = getOrCreateRecord(
         g.away_team_season_id,
-        lnId,
+        targetLnId,
         g.team_seasons_games_away_team_season_idToteam_seasons
       );
 
@@ -1664,6 +1748,162 @@ export async function getTeamLeagueEnrollments(): Promise<TeamLeagueEnrollmentRe
     leagueNodeSeasonId: e.league_node_season_id,
     isActive: !!e.is_active,
   }));
+}
+
+export interface TeamLeagueLink {
+  leagueId: number;
+  leagueName: string;
+  leagueNodeId: number;
+  leagueNodeName: string;
+  leagueNodeSeasonId: number;
+  leagueAbbreviation?: string | null;
+}
+
+export async function getLeaguesForTeamSeason(teamSeasonId: number): Promise<TeamLeagueLink[]> {
+  const enrollments = await prisma.team_league_enrollments.findMany({
+    where: { team_season_id: teamSeasonId, is_active: true },
+    include: {
+      league_node_seasons: {
+        include: {
+          league_nodes: {
+            include: { leagues: true },
+          },
+        },
+      },
+    },
+  });
+
+  return enrollments.map((e) => ({
+    leagueId: e.league_node_seasons.league_nodes.league_id,
+    leagueName: e.league_node_seasons.league_nodes.leagues.name,
+    leagueNodeId: e.league_node_seasons.league_node_id,
+    leagueNodeName: e.league_node_seasons.league_nodes.name,
+    leagueNodeSeasonId: e.league_node_season_id,
+    leagueAbbreviation: e.league_node_seasons.league_nodes.leagues.abbreviation ?? null,
+  }));
+}
+
+export interface GuestPlayerOption {
+  personId: number;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  clubName: string;
+  teamName: string;
+  ageGroupName: string | null;
+}
+
+export async function getGuestPlayerOptions(filters?: {
+  clubId?: number;
+  ageGroupId?: number;
+  teamId?: number;
+  searchQuery?: string;
+}): Promise<GuestPlayerOption[]> {
+  const whereClause: any = {};
+  
+  if (filters?.teamId) {
+    whereClause.team_seasons = { team_id: filters.teamId };
+  } else if (filters?.clubId) {
+    whereClause.team_seasons = { teams: { club_id: filters.clubId } };
+  }
+  
+  if (filters?.ageGroupId) {
+    if (!whereClause.team_seasons) whereClause.team_seasons = {};
+    whereClause.team_seasons.age_group = filters.ageGroupId;
+  }
+  
+  if (filters?.searchQuery) {
+    const q = filters.searchQuery.trim().toLowerCase();
+    whereClause.people = {
+      OR: [
+        { first_name: { contains: q } },
+        { last_name: { contains: q } },
+        { email: { contains: q } }
+      ]
+    };
+  }
+
+  const rostered = await prisma.player_teams.findMany({
+    where: whereClause,
+    include: {
+      people: true,
+      team_seasons: {
+        include: {
+          teams: { include: { clubs: true } },
+          age_groups: true
+        }
+      }
+    },
+    orderBy: [
+      { people: { last_name: "asc" } },
+      { people: { first_name: "asc" } }
+    ]
+  });
+
+  const seen = new Set<number>();
+  const deduped: GuestPlayerOption[] = [];
+  
+  rostered.forEach(r => {
+    if (seen.has(r.player_id)) return;
+    seen.add(r.player_id);
+    deduped.push({
+      personId: r.player_id,
+      firstName: r.people.first_name,
+      lastName: r.people.last_name,
+      email: r.people.email,
+      clubName: r.team_seasons.teams.clubs.name,
+      teamName: r.team_seasons.teams.team_name,
+      ageGroupName: r.team_seasons.age_groups?.name ?? null
+    });
+  });
+  
+  return deduped;
+}
+
+export interface ExistingGuestPlayer {
+  playerGameId: number;
+  gameId: number;
+  personId: number;
+  firstName: string;
+  lastName: string;
+  jerseyNumber: number | null;
+  teamSeasonId: number;
+  teamName: string;
+}
+
+export async function getExistingGuestPlayers(gameIds: number[]): Promise<ExistingGuestPlayer[]> {
+  if (gameIds.length === 0) return [];
+
+  const pgRows = await prisma.player_games.findMany({
+    where: {
+      game_id: { in: gameIds },
+      is_guest: true,
+    },
+    include: {
+      people: {
+        include: {
+          player_teams: true
+        }
+      },
+      team_seasons: {
+        include: { teams: true }
+      }
+    }
+  });
+
+  return pgRows.map(r => {
+    const pt = r.people.player_teams.find(p => p.team_season_id === r.team_season_id);
+    return {
+      playerGameId: r.id,
+      gameId: r.game_id,
+      personId: r.player_id,
+      firstName: r.people.first_name,
+      lastName: r.people.last_name,
+      jerseyNumber: pt?.jersey_number ?? null,
+      teamSeasonId: r.team_season_id,
+      teamName: r.team_seasons?.teams?.team_name ?? "",
+    };
+  });
 }
 
 

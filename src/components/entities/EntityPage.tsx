@@ -78,12 +78,32 @@ export function EntityPage<T extends Record<string, unknown>>({
     );
   }, [data, statusFilter, statusCol]);
 
+  const buildDisplayPatch = (formData: Record<string, string>) => {
+    const displayPatch: Record<string, unknown> = {};
+    config.form.fields.forEach((f) => {
+      const val = formData[f.valueKey ?? f.key]; // formData now uses valueKey
+      if (val === undefined) return;
+
+      if (f.type === "toggle" || f.type === "checkbox") {
+        displayPatch[f.key] = val === "true" ? 1 : 0;
+      } else if (f.type === "select" && f.options) {
+        const match = f.options.find((o) => String(o.value) === String(val));
+        displayPatch[f.key] = match ? match.label : val; // restore label to display key
+        if (f.valueKey) displayPatch[f.valueKey] = val; // also keep the id
+      } else {
+        displayPatch[f.key] = val;
+      }
+    });
+    return displayPatch;
+  };
+
   const handleCreate = async (formData: Record<string, string>) => {
     try {
       await onCreate(formData);
+      const displayPatch = buildDisplayPatch(formData);
       setData((prev) => [
         ...prev,
-        { ...formData, id: Date.now() } as unknown as T,
+        { ...displayPatch, id: Date.now() } as unknown as T,
       ]);
       setShowForm(false);
       toast.success(`${config.singular} created successfully`);
@@ -99,26 +119,12 @@ export function EntityPage<T extends Record<string, unknown>>({
     const id = (editRecord as Record<string, unknown>).id;
     try {
       await onUpdate(id, formData);
-      const displayPatch: Record<string, unknown> = {};
-      config.form.fields.forEach((f) => {
-        const val = formData[f.valueKey ?? f.key]; // formData now uses valueKey
-        if (val === undefined) return;
-
-        if (f.type === "toggle" || f.type === "checkbox") {
-          displayPatch[f.key] = val === "true" ? 1 : 0;
-        } else if (f.type === "select" && f.options) {
-          const match = f.options.find((o) => String(o.value) === String(val));
-          displayPatch[f.key] = match ? match.label : val; // restore label to display key
-          if (f.valueKey) displayPatch[f.valueKey] = val; // also keep the id
-        } else {
-          displayPatch[f.key] = val;
-        }
-      });
+      const displayPatch = buildDisplayPatch(formData);
 
       setData((prev) =>
         prev.map((row) =>
           (row as Record<string, unknown>).id === id
-            ? { ...row, ...formData }
+            ? { ...row, ...displayPatch }
             : row,
         ),
       );
@@ -280,7 +286,7 @@ export function EntityPage<T extends Record<string, unknown>>({
         <GenericForm
           config={config}
           initialData={editRecord}
-          onSubmit={editRecord ? handleUpdate : handleCreate}
+          onSubmit={(editRecord ? handleUpdate : handleCreate) as any}
           onCancel={() => {
             setShowForm(false);
             setEditRecord(null);

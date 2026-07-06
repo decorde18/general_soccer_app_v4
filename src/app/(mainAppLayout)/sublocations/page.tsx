@@ -21,11 +21,11 @@ export default async function SubLocationsPage() {
     <div className='p-6 max-w-6xl mx-auto'>
       <EntityShell
         config={config}
-        data={subLocations}
+        data={subLocations as any}
         stats={stats}
-        onCreate={createSubLocation}
-        onUpdate={updateSubLocation}
-        onDelete={deleteSubLocation}
+        onCreate={createSubLocation as any}
+        onUpdate={updateSubLocation as any}
+        onDelete={deleteSubLocation as any}
       />
     </div>
   );

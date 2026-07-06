@@ -29,7 +29,7 @@ export function getAccessibleTeams(
     allowedTeamSeasonIds = activeRoles.parentTeamIds || [];
   }
 
-  return teamSeasons.filter((ts) => allowedTeamSeasonIds.includes(ts.id));
+  return teamSeasons.filter((ts) => allowedTeamSeasonIds.includes(ts.teamId));
 }
 
 export function getAccessibleClubs(accessibleTeams: TeamSeason[], clubs: Club[]): Club[] {

@@ -1,16 +1,19 @@
 import React from "react";
 import { format, parseISO } from "date-fns";
 import { Calendar, MapPin, Clock, Trophy, Users, ShieldAlert, Activity, ArrowRight, Sparkles } from "lucide-react";
-import { getTeamSeasons, getLeagues, getGames, getTeamSeasonById, getLeagueById } from "@/lib/data/queries";
+import { getTeamSeasons, getLeagues, getGames, getTeamSeasonById, getLeagueById, getLeaguesForTeamSeason } from "@/lib/data/queries";
 import LandingSelectors from "@/components/layout/LandingSelectors";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
+import { getServerAuthSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 interface PageProps {
   searchParams: Promise<{
     teamSeasonId?: string;
     leagueId?: string;
+    clubType?: string;
   }>;
 }
 
@@ -39,18 +42,45 @@ function formatGameTime(timeStr: string | null) {
 }
 
 export default async function LandingPage({ searchParams }: PageProps) {
+  const session = await getServerAuthSession();
+  if (session?.user) {
+    redirect("/dashboard");
+  }
+
   const resolvedParams = await searchParams;
   const selectedTeamSeasonId = resolvedParams.teamSeasonId ? Number(resolvedParams.teamSeasonId) : undefined;
   const selectedLeagueId = resolvedParams.leagueId ? Number(resolvedParams.leagueId) : undefined;
+  const selectedClubType = resolvedParams.clubType || "";
 
   // Fetch data for dropdowns
-  const rawTeamSeasons = await getTeamSeasons();
-  const rawLeagues = await getLeagues();
+  let rawTeamSeasons = await getTeamSeasons();
+  if (selectedClubType) {
+    rawTeamSeasons = rawTeamSeasons.filter((ts) => ts.clubType === selectedClubType);
+  }
+
+  let rawLeagues;
+  if (selectedTeamSeasonId) {
+    const enrolled = await getLeaguesForTeamSeason(selectedTeamSeasonId);
+    rawLeagues = enrolled.map((e) => ({
+      id: e.leagueId,
+      name: e.leagueName,
+      abbreviation: e.leagueAbbreviation || null,
+    }));
+    // Remove duplicates
+    const seen = new Set();
+    rawLeagues = rawLeagues.filter((l) => {
+      const isDup = seen.has(l.id);
+      seen.add(l.id);
+      return !isDup;
+    });
+  } else {
+    rawLeagues = await getLeagues();
+  }
 
   // Map data to selector format
   const teamSeasonOptions = rawTeamSeasons.map((ts) => ({
     value: String(ts.id),
-    label: `${ts.teamName} (${ts.seasonName})`,
+    label: `${ts.clubName} - ${ts.teamName} (${ts.seasonName})`,
   }));
 
   const leagueOptions = rawLeagues.map((l) => ({
@@ -74,25 +104,29 @@ export default async function LandingPage({ searchParams }: PageProps) {
       filterTitle = `${l.name}`;
       filterSubtitle = `${l.abbreviation || "League"} - Schedule & Results`;
     }
+  } else if (selectedClubType) {
+    filterTitle = selectedClubType === "high_school" ? "High School Matches" : "Club Matches";
+    filterSubtitle = `Showing fixtures and results for ${selectedClubType === "high_school" ? "high school" : "club / travel"} teams.`;
   }
 
   // Fetch games based on filters
   let games = await getGames({
     teamSeasonId: selectedTeamSeasonId,
     leagueId: selectedLeagueId,
+    clubType: selectedClubType ? selectedClubType : undefined,
   });
 
   // Split games into schedule (upcoming/in-progress) and results (completed)
   let recentResults = games
     .filter((g) => g.status === "completed")
     .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()); // newest results first
-
+ 
   let upcomingFixtures = games
     .filter((g) => g.status !== "completed")
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()); // nearest fixtures first
-
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(a.startDate).getTime()); // nearest fixtures first
+ 
   // If no filters are active, show a curated dashboard (top 5 results and top 5 fixtures)
-  const isFiltered = !!(selectedTeamSeasonId || selectedLeagueId);
+  const isFiltered = !!(selectedTeamSeasonId || selectedLeagueId || selectedClubType);
   if (!isFiltered) {
     recentResults = recentResults.slice(0, 5);
     upcomingFixtures = upcomingFixtures.slice(0, 5);
@@ -239,8 +273,40 @@ export default async function LandingPage({ searchParams }: PageProps) {
                   const isHomeWinner = (game.homeScore ?? 0) > (game.awayScore ?? 0);
                   const isAwayWinner = (game.awayScore ?? 0) > (game.homeScore ?? 0);
                   
+                  let cardClass = "border-border/80 bg-surface/50";
+                  let resultBadge = null;
+
+                  if (selectedTeamSeasonId && game.homeScore !== null && game.awayScore !== null) {
+                    const isHome = game.homeTeamSeasonId === selectedTeamSeasonId;
+                    const won = isHome ? isHomeWinner : isAwayWinner;
+                    const lost = isHome ? isAwayWinner : isHomeWinner;
+
+                    if (won) {
+                      cardClass = "border-success/30 hover:border-success/60 bg-success/[0.03] shadow-sm";
+                      resultBadge = (
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-success bg-success/15 border border-success/30 px-2 py-0.5 rounded">
+                          Win
+                        </span>
+                      );
+                    } else if (lost) {
+                      cardClass = "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm";
+                      resultBadge = (
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-danger bg-danger/15 border border-danger/30 px-2 py-0.5 rounded">
+                          Loss
+                        </span>
+                      );
+                    } else {
+                      cardClass = "border-border/80 bg-surface/50";
+                      resultBadge = (
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-muted bg-muted/15 border border-border px-2 py-0.5 rounded">
+                          Draw
+                        </span>
+                      );
+                    }
+                  }
+                  
                   return (
-                    <Card key={game.id} variant="hover" padding="md" className="border-border/80 bg-surface/50">
+                    <Card key={game.id} variant="hover" padding="md" className={`transition-all duration-200 ${cardClass}`}>
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         {/* Matchup and Scores */}
                         <div className="flex-1 min-w-0 space-y-3">
@@ -249,6 +315,12 @@ export default async function LandingPage({ searchParams }: PageProps) {
                               <span className="font-semibold text-primary">{game.seasonName}</span>
                               <span>•</span>
                               <span className="capitalize">{game.gameType} Match</span>
+                              {resultBadge && (
+                                <>
+                                  <span>•</span>
+                                  {resultBadge}
+                                </>
+                              )}
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded">
                               Final

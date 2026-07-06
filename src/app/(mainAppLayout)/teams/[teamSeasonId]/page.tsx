@@ -5,7 +5,8 @@ import {
   getTeamStaff, 
   getGames, 
   getPlayerStatsByTeamSeason, 
-  getTeamSeasonRecords 
+  getTeamSeasonRecords,
+  getLeaguesForTeamSeason
 } from "@/lib/data/queries";
 import TeamPageClient from "@/components/team/TeamPageClient";
 import { Card } from "@/components/ui/Card";
@@ -49,6 +50,7 @@ export default async function TeamPage({ params }: PageProps) {
     games,
     stats,
     records,
+    leagueLinks,
   ] = await Promise.all([
     getTeamSeasonById(idNumber),
     getPlayersByTeamSeason(idNumber),
@@ -56,6 +58,7 @@ export default async function TeamPage({ params }: PageProps) {
     getGames({ teamSeasonId: idNumber }),
     getPlayerStatsByTeamSeason(idNumber),
     getTeamSeasonRecords(undefined, idNumber),
+    getLeaguesForTeamSeason(idNumber),
   ]);
 
   // Handle case where team season doesn't exist
@@ -119,6 +122,7 @@ export default async function TeamPage({ params }: PageProps) {
         games={games}
         stats={stats}
         record={record}
+        leagueLinks={leagueLinks}
       />
     </main>
   );

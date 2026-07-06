@@ -44,6 +44,7 @@ export interface TableColumn {
   sortable?: boolean;
   options?: Record<string, "green" | "amber" | "red" | "gray" | "blue">;
   hiddenOnMobile?: boolean;
+  linkPattern?: string;
 }
 
 export interface EntityConfig {

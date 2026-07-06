@@ -14,6 +14,7 @@ export interface TeamSeason {
   id: number;
   clubId: number;
   teamName: string;
+  teamId: number;
 }
 
 export interface ViewOption {
