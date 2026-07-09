@@ -9,3 +9,6 @@
 [x] In league nodes, I need the ability to add nodes or rearrange nodes. There may be nodes for gender/age, division, subdivision(s)
 
 [x] Add guest player management page allowing bulk assignments, filtering roster players by club/team/age/search, date-range filtering games, and safe removal
+
+not yet, but eventually, I have to figure out how to do guest player roster number. So maybe another column for roster number if different  than regular number, then i need to incorporate that for all games, they are a a part of 
+

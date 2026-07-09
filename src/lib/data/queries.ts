@@ -26,7 +26,6 @@ function toDateTimeString(val: unknown): string | null {
 
 /**
  * Maps leagues.is_active (boolean) → UI status enum.
- * Once you run the status migration (is_active → status enum),
  * update this to just: return val as LeagueStatus
  */
 function mapLeagueStatus(val: unknown): LeagueStatus {
@@ -199,6 +198,9 @@ export interface Game {
   notes: string | null;
   videoLink: string | null;
   timezoneLabel: string | null;
+  settings: {
+    playersOnField: number;
+  };
 }
 
 export interface Player {
@@ -874,6 +876,15 @@ export async function getGames(filters?: {
           game_events_goals: true,
           game_events_penalties: true,
         }
+      },
+      game_league_nodes: {
+        include: {
+          league_node_seasons: {
+            include: {
+              league_nodes: true
+            }
+          }
+        }
       }
     },
     orderBy: [
@@ -901,6 +912,15 @@ export async function getGameById(id: number): Promise<Game | null> {
           game_events_goals: true,
           game_events_penalties: true,
         }
+      },
+      game_league_nodes: {
+        include: {
+          league_node_seasons: {
+            include: {
+              league_nodes: true
+            }
+          }
+        }
       }
     },
   });
@@ -914,7 +934,7 @@ function mapGameRow(r: any): Game {
   const awayTeam = awayTeamSeason?.teams;
 
   const isPlayed = r.status === "completed" || r.status === "in_progress";
-  
+
   let homeScore: number | null = null;
   let awayScore: number | null = null;
   let homePenaltyScore: number | null = null;
@@ -924,7 +944,7 @@ function mapGameRow(r: any): Game {
   if (isPlayed) {
     homeScore = 0;
     awayScore = 0;
-    
+
     let hasShootout = false;
 
     r.game_events_major?.forEach((major: any) => {
@@ -973,6 +993,10 @@ function mapGameRow(r: any): Game {
     }
   }
 
+  const primaryNode = r.game_league_nodes?.find((n: any) => n.is_primary) || r.game_league_nodes?.[0];
+  const nodeName = primaryNode?.league_node_seasons?.league_nodes?.name || "";
+  const playersOnField = getPlayersOnFieldFromNodeName(nodeName);
+
   return {
     id: r.id,
     seasonId: r.season_id,
@@ -999,7 +1023,22 @@ function mapGameRow(r: any): Game {
     notes: r.notes ?? null,
     videoLink: r.video_link ?? null,
     timezoneLabel: r.timezone_label ?? null,
+    settings: {
+      playersOnField
+    }
   };
+}
+
+function getPlayersOnFieldFromNodeName(nodeName?: string): number {
+  if (!nodeName) return 11;
+  const name = nodeName.toLowerCase();
+  if (name.includes("u9") || name.includes("u10") || name.includes("7v7") || name.includes("7 v 7")) {
+    return 7;
+  }
+  if (name.includes("u11") || name.includes("u12") || name.includes("9v9") || name.includes("9 v 9")) {
+    return 9;
+  }
+  return 11;
 }
 
 // ─── Player Season Stats ──────────────────────────────────────────────────────
@@ -1064,7 +1103,7 @@ async function getStatsForRoster(roster: any[], teamSeasonId: number): Promise<P
   });
 
   const gameIds = Array.from(new Set(playerGames.map(pg => pg.game_id)));
-  
+
   const games = await prisma.games.findMany({
     where: { id: { in: gameIds } },
     include: {
@@ -1105,7 +1144,7 @@ async function getStatsForRoster(roster: any[], teamSeasonId: number): Promise<P
 
   return roster.map(r => {
     const pgs = pgMap.get(r.player_id) || [];
-    
+
     let goals = 0;
     let assists = 0;
     let yellowCards = 0;
@@ -1733,7 +1772,7 @@ export async function getTeamLeagueEnrollments(): Promise<TeamLeagueEnrollmentRe
     ],
   });
 
-  
+
   return enrollments.map((e) => ({
     id: e.id,
     teamSeasonId: e.team_season_id,
@@ -1800,18 +1839,18 @@ export async function getGuestPlayerOptions(filters?: {
   searchQuery?: string;
 }): Promise<GuestPlayerOption[]> {
   const whereClause: any = {};
-  
+
   if (filters?.teamId) {
     whereClause.team_seasons = { team_id: filters.teamId };
   } else if (filters?.clubId) {
     whereClause.team_seasons = { teams: { club_id: filters.clubId } };
   }
-  
+
   if (filters?.ageGroupId) {
     if (!whereClause.team_seasons) whereClause.team_seasons = {};
     whereClause.team_seasons.age_group = filters.ageGroupId;
   }
-  
+
   if (filters?.searchQuery) {
     const q = filters.searchQuery.trim().toLowerCase();
     whereClause.people = {
@@ -1842,7 +1881,7 @@ export async function getGuestPlayerOptions(filters?: {
 
   const seen = new Set<number>();
   const deduped: GuestPlayerOption[] = [];
-  
+
   rostered.forEach(r => {
     if (seen.has(r.player_id)) return;
     seen.add(r.player_id);
@@ -1856,7 +1895,7 @@ export async function getGuestPlayerOptions(filters?: {
       ageGroupName: r.team_seasons.age_groups?.name ?? null
     });
   });
-  
+
   return deduped;
 }
 
