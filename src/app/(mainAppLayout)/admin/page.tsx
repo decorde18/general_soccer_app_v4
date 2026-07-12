@@ -9,6 +9,7 @@ import {
   MapPin,
   Map,
   ArrowRight,
+  Building,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 
@@ -24,10 +25,19 @@ export default async function AdminDashboardPage() {
         "from-blue-500/10 to-indigo-500/10 border-blue-500/20 text-blue-500",
     },
     {
+      title: "Clubs & Teams",
+      description:
+        "Manage soccer club profiles, high school configurations, and create or edit active playing teams.",
+      route: "/admin/clubs",
+      icon: Building,
+      color:
+        "from-indigo-500/10 to-blue-500/10 border-indigo-500/20 text-indigo-500",
+    },
+    {
       title: "Club & Team Roles",
       description:
         "Assign club administrators, directors, head/assistant coaches, team managers, and stats keepers.",
-      route: "/admin/clubs",
+      route: "/admin/club-staff",
       icon: Shield,
       color:
         "from-emerald-500/10 to-teal-500/10 border-emerald-500/20 text-emerald-500",

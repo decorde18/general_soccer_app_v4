@@ -26,7 +26,7 @@ export async function createClub(data: Record<string, string>) {
       },
     });
 
-    revalidatePath("/clubs");
+    revalidatePath("/admin/clubs");
     return newClub;
   } catch (error) {
     console.error("Error creating club:", error);
@@ -58,7 +58,7 @@ export async function updateClub(id: unknown, data: Record<string, string>) {
     },
   });
 
-  revalidatePath("/clubs");
+  revalidatePath("/admin/clubs");
 }
 
 export async function deleteClub(id: unknown) {
@@ -70,5 +70,5 @@ export async function deleteClub(id: unknown) {
     where: { id: numId },
   });
 
-  revalidatePath("/clubs");
+  revalidatePath("/admin/clubs");
 }

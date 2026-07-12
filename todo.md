@@ -10,5 +10,8 @@
 
 [x] Add guest player management page allowing bulk assignments, filtering roster players by club/team/age/search, date-range filtering games, and safe removal
 
+[x] In Locations admin, I need to be able to add crud sublocations
+[x] In clubs, I need to be able to crud teams
+[x] Restructure routes: move Clubs & Teams CRUD to /admin/clubs and Staff Assignments Roles CRUD to /admin/club-staff, updating links and actions
 not yet, but eventually, I have to figure out how to do guest player roster number. So maybe another column for roster number if different  than regular number, then i need to incorporate that for all games, they are a a part of 
 

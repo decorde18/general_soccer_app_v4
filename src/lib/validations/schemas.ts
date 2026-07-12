@@ -120,4 +120,14 @@ export const teamEnrollmentSchema = z.object({
   seasonId: z.coerce.number(),
   leagueNodeId: z.coerce.number(),
   isActive: z.string().optional().transform((v) => v === "true"),
+});
+
+export const teamSchema = z.object({
+  teamName: z.string().min(2, "Team name must be at least 2 characters"),
+  clubId: z.coerce.number(),
+  gender: z.enum(["Men", "Women", "Mixed"]).default("Mixed"),
+  isActive: z
+    .string()
+    .optional()
+    .transform((v) => v === "true"),
 });

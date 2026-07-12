@@ -1945,4 +1945,118 @@ export async function getExistingGuestPlayers(gameIds: number[]): Promise<Existi
   });
 }
 
+export interface ChildPlayer {
+  personId: number;
+  firstName: string;
+  lastName: string;
+  teamSeasons: {
+    teamSeasonId: number;
+    teamName: string;
+    clubName: string;
+    seasonName: string;
+  }[];
+}
+
+export async function getParentChildren(parentPersonId: number): Promise<ChildPlayer[]> {
+  const rels = await prisma.player_relationships.findMany({
+    where: {
+      related_person_id: parentPersonId,
+      relationship: { in: ["Parent", "Guardian"] }
+    },
+    include: {
+      people_player_relationships_player_idTopeople: {
+        include: {
+          player_teams: {
+            include: {
+              team_seasons: {
+                include: {
+                  teams: { include: { clubs: true } },
+                  seasons: true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  return rels.map(r => {
+    const child = r.people_player_relationships_player_idTopeople;
+    return {
+      personId: r.player_id,
+      firstName: child.first_name,
+      lastName: child.last_name,
+      teamSeasons: child.player_teams.map(pt => ({
+        teamSeasonId: pt.team_season_id,
+        teamName: pt.team_seasons.teams.team_name,
+        clubName: pt.team_seasons.teams.clubs.name,
+        seasonName: pt.team_seasons.seasons.season_name,
+      }))
+    };
+  });
+}
+
+export async function getDashboardTeamSeasons(teamIds: number[]): Promise<TeamSeason[]> {
+  if (teamIds.length === 0) return [];
+  const teamSeasons = await prisma.team_seasons.findMany({
+    where: {
+      team_id: { in: teamIds },
+      is_active: true
+    },
+    include: {
+      teams: {
+        include: { clubs: true }
+      },
+      seasons: true
+    },
+    orderBy: [
+      { seasons: { start_date: 'desc' } }
+    ]
+  });
+
+  return teamSeasons.map((r) => ({
+    id: r.id,
+    teamId: r.team_id,
+    teamName: r.teams.team_name,
+    clubId: r.teams.club_id,
+    clubName: r.teams.clubs.name,
+    seasonId: r.season_id,
+    seasonName: r.seasons.season_name,
+    ageGroup: r.age_group ?? null,
+    isActive: !!r.is_active,
+    clubType: r.teams.clubs.type
+  }));
+}
+
+export async function getPlayerTeamSeasons(personId: number): Promise<TeamSeason[]> {
+  const ptRows = await prisma.player_teams.findMany({
+    where: { player_id: personId, is_active: true },
+    include: {
+      team_seasons: {
+        include: {
+          teams: { include: { clubs: true } },
+          seasons: true
+        }
+      }
+    }
+  });
+
+  return ptRows.map(pt => {
+    const ts = pt.team_seasons;
+    return {
+      id: ts.id,
+      teamId: ts.team_id,
+      teamName: ts.teams.team_name,
+      clubId: ts.teams.club_id,
+      clubName: ts.teams.clubs.name,
+      seasonId: ts.season_id,
+      seasonName: ts.seasons.season_name,
+      ageGroup: ts.age_group ?? null,
+      isActive: !!ts.is_active,
+      clubType: ts.teams.clubs.type
+    };
+  });
+}
+
 

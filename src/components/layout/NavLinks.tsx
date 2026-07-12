@@ -37,7 +37,10 @@ export default function NavLinks({ pathname, showDashboard, isAdmin }: NavLinksP
               <span className="font-medium text-left">User Management</span>
             </Link>
             <Link href="/admin/clubs" className={linkClass(pathname === "/admin/clubs")}>
-              <span className="font-medium text-left">Club & Team Roles</span>
+              <span className="font-medium text-left">Clubs & Teams</span>
+            </Link>
+            <Link href="/admin/club-staff" className={linkClass(pathname === "/admin/club-staff")}>
+              <span className="font-medium text-left">Staff Roles</span>
             </Link>
             <Link href="/admin/seasons" className={linkClass(pathname === "/admin/seasons")}>
               <span className="font-medium text-left">Seasons Lifecycle</span>

@@ -40,7 +40,7 @@ export async function createClubStaff(data: Record<string, string>) {
     },
   });
 
-  revalidatePath("/admin/clubs");
+  revalidatePath("/admin/club-staff");
   return staff;
 }
 
@@ -62,7 +62,7 @@ export async function updateClubStaff(id: unknown, data: Record<string, string>)
     },
   });
 
-  revalidatePath("/admin/clubs");
+  revalidatePath("/admin/club-staff");
 }
 
 export async function deleteClubStaff(id: unknown) {
@@ -74,5 +74,5 @@ export async function deleteClubStaff(id: unknown) {
     where: { id: numId },
   });
 
-  revalidatePath("/admin/clubs");
+  revalidatePath("/admin/club-staff");
 }
