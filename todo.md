@@ -18,7 +18,7 @@
 [x] In clubs, I need to be able to crud teams
 [x] Restructure routes: move Clubs & Teams CRUD to /admin/clubs and Staff Assignments Roles CRUD to /admin/club-staff, updating links and actions
 in standings, we need to have filters that we can send in the url showing specific division etc. Then the page should have the filter with those either clicked or not
-team page should have a consistent width regardless of which tab is clicked. Similarly for all admin pages like club. Also for standings, etc
+team page should have a consistent width regardless of which tab is clicked. Similarly for all admin pages like club. Also for standings, etc (and it should span the width of the available area with some padding)
 in schedule on team page, we need to have a better view of wheterh the game was lost or won, color of score and or W - L - T would help
 schedule needs the ability for team admin to delete, cancel, enter score (enter score will need a page. This needs to be done too in the future)
 make sure season record in team header and in season record does not include games without scores (or not completed)
