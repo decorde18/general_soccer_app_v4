@@ -1,7 +1,7 @@
+import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getServerSession } from "next-auth/next";
+import type { Session, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
-import type { NextAuthOptions, Session, User } from "next-auth";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { getUserRolesAndTeams, UserRoles } from "@/lib/auth/auth-utils";
@@ -40,7 +40,7 @@ const defaultRoles: UserRoles = {
   clubAdminTeamIds: [],
 };
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -75,7 +75,7 @@ export const authOptions: NextAuthOptions = {
             const user = rows[0];
             const hash = user.password_hash || undefined;
             const match = await bcrypt.compare(
-              credentials.password,
+              credentials.password as string,
               hash || "",
             );
             if (match) {
@@ -131,7 +131,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         (session.user as any).personId = token.personId;
-        
+
         let roles = token.roles ?? { ...defaultRoles };
         if (process.env.NODE_ENV === "development") {
           try {
@@ -163,11 +163,14 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-};
+});
 
-export function applyActiveViewOverride(roles: UserRoles, activeView: string | undefined): UserRoles {
+export function applyActiveViewOverride(
+  roles: UserRoles,
+  activeView: string | undefined,
+): UserRoles {
   if (!activeView) return roles;
-  
+
   const defaultRoles: UserRoles = {
     isAdmin: false,
     clubAdmin: false,
@@ -201,35 +204,53 @@ export function applyActiveViewOverride(roles: UserRoles, activeView: string | u
     return {
       ...defaultRoles,
       clubAdmin: true,
-      clubAdminTeamIds: roles.isAdmin ? mockAccessTeams : roles.clubAdminTeamIds,
+      clubAdminTeamIds: roles.isAdmin
+        ? mockAccessTeams
+        : roles.clubAdminTeamIds,
     };
   }
   if (activeView === "coach") {
     return {
       ...defaultRoles,
       coach: true,
-      coachTeamIds: roles.isAdmin ? mockAccessTeams : roles.coachTeamIds.length > 0 ? roles.coachTeamIds : mockAccessTeams,
+      coachTeamIds: roles.isAdmin
+        ? mockAccessTeams
+        : roles.coachTeamIds.length > 0
+          ? roles.coachTeamIds
+          : mockAccessTeams,
     };
   }
   if (activeView === "team_admin") {
     return {
       ...defaultRoles,
       teamAdmin: true,
-      teamAdminTeamIds: roles.isAdmin ? mockAccessTeams : roles.teamAdminTeamIds.length > 0 ? roles.teamAdminTeamIds : mockAccessTeams,
+      teamAdminTeamIds: roles.isAdmin
+        ? mockAccessTeams
+        : roles.teamAdminTeamIds.length > 0
+          ? roles.teamAdminTeamIds
+          : mockAccessTeams,
     };
   }
   if (activeView === "player") {
     return {
       ...defaultRoles,
       player: true,
-      playerTeamIds: roles.isAdmin ? [1] : roles.playerTeamIds.length > 0 ? roles.playerTeamIds : [1],
+      playerTeamIds: roles.isAdmin
+        ? [1]
+        : roles.playerTeamIds.length > 0
+          ? roles.playerTeamIds
+          : [1],
     };
   }
   if (activeView === "parent") {
     return {
       ...defaultRoles,
       parent: true,
-      parentTeamIds: roles.isAdmin ? [1] : roles.parentTeamIds.length > 0 ? roles.parentTeamIds : [1],
+      parentTeamIds: roles.isAdmin
+        ? [1]
+        : roles.parentTeamIds.length > 0
+          ? roles.parentTeamIds
+          : [1],
     };
   }
 
@@ -238,7 +259,7 @@ export function applyActiveViewOverride(roles: UserRoles, activeView: string | u
 
 export function getMockSessionForRole(role: string): any {
   const expires = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
-  
+
   const defaultRoles: UserRoles = {
     isAdmin: false,
     clubAdmin: false,
@@ -344,7 +365,10 @@ export async function getServerAuthSession(): Promise<Session | null> {
         if (mock) {
           const activeView = cookieStore.get("active-role-view")?.value;
           mock.user.originalRoles = { ...mock.user.roles };
-          mock.user.roles = applyActiveViewOverride(mock.user.roles, activeView);
+          mock.user.roles = applyActiveViewOverride(
+            mock.user.roles,
+            activeView,
+          );
           return mock as Session;
         }
       }
@@ -354,7 +378,7 @@ export async function getServerAuthSession(): Promise<Session | null> {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (session?.user) {
       try {
         const { cookies } = await import("next/headers");
@@ -374,7 +398,10 @@ export async function getServerAuthSession(): Promise<Session | null> {
           clubAdminTeamIds: [],
         };
         (session.user as any).originalRoles = { ...currentRoles };
-        (session.user as any).roles = applyActiveViewOverride(currentRoles, activeView);
+        (session.user as any).roles = applyActiveViewOverride(
+          currentRoles,
+          activeView,
+        );
       } catch (e) {}
     }
     return session;

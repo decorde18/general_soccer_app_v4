@@ -3,7 +3,6 @@ import "@/styles/globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getServerAuthSession } from "@/lib/auth";
 
-
 import { Toaster } from "sonner";
 import AuthProvider from "@/components/AuthProvider";
 
@@ -36,9 +35,8 @@ export default async function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider session={session}>
-       {children}
+          {children}
           <Toaster richColors closeButton position='top-right' />
-
         </AuthProvider>
       </body>
     </html>
