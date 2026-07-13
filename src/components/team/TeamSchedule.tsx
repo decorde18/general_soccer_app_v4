@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
-import { Calendar, MapPin, Clock, Trophy, Play, ShieldAlert, Award } from "lucide-react";
+import { Calendar, MapPin, Clock, Trophy, Play, ShieldAlert, SquareChevronRight } from "lucide-react";
 import { format } from "date-fns";
 
 interface Game {
@@ -148,12 +149,17 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
             let cardOutlineClass = "border-border/80 bg-surface/50";
             let resultTag = null;
 
+            let scoreBadgeClass = "bg-background text-muted border border-border";
+            let scoreLabel = "Pending";
+
             if (isCompleted && game.homeScore !== null && game.awayScore !== null) {
               const teamScore = isHome ? game.homeScore : game.awayScore;
               const oppScore = isHome ? game.awayScore : game.homeScore;
 
               if (teamScore > oppScore) {
                 cardOutlineClass = "border-success/30 hover:border-success/60 bg-success/5 shadow-sm";
+                scoreBadgeClass = "bg-success text-white border-success/30";
+                scoreLabel = "W";
                 resultTag = (
                   <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-success bg-success/15 border border-success/30 px-2.5 py-0.5 rounded shadow-inner">
                     Win
@@ -161,6 +167,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 );
               } else if (teamScore < oppScore) {
                 cardOutlineClass = "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm";
+                scoreBadgeClass = "bg-danger text-white border-danger/30";
+                scoreLabel = "L";
                 resultTag = (
                   <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-danger bg-danger/15 border border-danger/30 px-2.5 py-0.5 rounded shadow-inner">
                     Loss
@@ -168,6 +176,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 );
               } else {
                 cardOutlineClass = "border-border/80 hover:border-muted/50 bg-surface/50";
+                scoreBadgeClass = "bg-muted/15 text-muted border-border";
+                scoreLabel = "D";
                 resultTag = (
                   <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-muted bg-muted/15 border border-border px-2.5 py-0.5 rounded">
                     Draw
@@ -246,17 +256,24 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                       <span>{formatDate(game.startDate)}</span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
-                      <Clock size={14} />
-                      <span>{formatTime(game.startTime)}</span>
+                    <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${scoreBadgeClass}`}>
+                      <Trophy size={11} />
+                      <span>{scoreLabel}</span>
                     </div>
-
                     {game.locationName && (
                       <div className="flex items-center gap-1.5 text-xs text-muted max-w-[155px] truncate" title={game.locationName}>
                         <MapPin size={14} />
                         <span>{game.locationName}</span>
                       </div>
                     )}
+
+                    <Link
+                      href={`/gameStats/${teamSeasonId}/${game.id}`}
+                      className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-accent-hover transition-colors"
+                    >
+                      <SquareChevronRight size={13} />
+                      <span>{isCompleted ? "View Game Center" : "Open Match Center"}</span>
+                    </Link>
 
                     {game.videoLink && (
                       <a 

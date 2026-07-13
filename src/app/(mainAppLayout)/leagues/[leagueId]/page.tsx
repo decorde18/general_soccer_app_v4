@@ -115,7 +115,7 @@ export default async function LeagueDetailsPage({ params }: PageProps) {
   const activeDivisions = allDivisionsData.filter(d => d.standings.length > 0);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Back Button */}
       <div>
         <Link href="/">

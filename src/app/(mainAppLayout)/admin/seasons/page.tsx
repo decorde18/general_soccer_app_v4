@@ -23,7 +23,7 @@ export default async function AdminSeasonsPage() {
   ];
 
   return (
-    <div className='p-6 max-w-6xl mx-auto'>
+    <div className='mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8'>
       <EntityShell
         config={seasonConfig}
         data={seasons as any}

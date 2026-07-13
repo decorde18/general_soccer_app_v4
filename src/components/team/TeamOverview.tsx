@@ -89,6 +89,7 @@ export default function TeamOverview({
   onViewTab,
 }: TeamOverviewProps) {
   const totalGames = record ? record.wins + record.losses + record.draws : 0;
+  const winningPct = totalGames > 0 ? (record!.wins + record!.draws / 2) / totalGames : 0;
   
   // Sort stats to find top scorers and assist leaders
   const topScorers = [...stats]
@@ -304,13 +305,13 @@ export default function TeamOverview({
                   <div>
                     <div className="flex justify-between text-xs font-bold text-muted mb-2">
                       <span>WINNING PERCENTAGE</span>
-                      <span className="text-success">{Math.round((record.wins / totalGames) * 100)}%</span>
+                      <span className="text-success">{Math.round(winningPct * 100)}%</span>
                     </div>
                     
                     {/* Compound Progress Bar */}
                     <div className="h-3 w-full rounded-full bg-border overflow-hidden flex">
                       <div 
-                        style={{ width: `${(record.wins / totalGames) * 100}%` }} 
+                        style={{ width: `${winningPct * 100}%` }} 
                         className="h-full bg-success"
                         title={`Wins: ${record.wins}`}
                       />

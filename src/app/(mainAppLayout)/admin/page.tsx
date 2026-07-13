@@ -88,7 +88,7 @@ export default async function AdminDashboardPage() {
   ];
 
   return (
-    <div className='p-6 max-w-6xl mx-auto space-y-8'>
+    <div className='mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8'>
       {/* Header Banner */}
       <div className='relative overflow-hidden rounded-2xl border border-border bg-surface/50 p-8 shadow-sm backdrop-blur-sm'>
         <div className='absolute inset-y-0 right-0 w-1/3 bg-linear-to-l from-primary/5 to-transparent pointer-events-none' />

@@ -152,7 +152,7 @@ export default function TeamPageClient({
   ];
 
   return (
-    <div className='space-y-8'>
+    <div className='w-full space-y-8'>
       {/* Visual Header Banner */}
       <TeamHeader
         teamName={teamSeason.teamName}
@@ -167,7 +167,7 @@ export default function TeamPageClient({
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId)}
-        className='-mx-4 px-4 sm:mx-0 sm:px-0'
+        className='w-full'
       />
 
       {/* Tab Panels with smooth transitions */}

@@ -4,7 +4,7 @@ import type { Session, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { getUserRolesAndTeams, UserRoles } from "@/lib/auth/auth-utils";
+import type { UserRoles } from "@/lib/auth/auth-utils";
 
 interface AuthUserRow {
   person_id: number;
@@ -80,6 +80,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             );
             if (match) {
               const personId = user.person_id;
+              const { getUserRolesAndTeams } = await import(
+                "@/lib/auth/auth-utils"
+              );
               const roles = await getUserRolesAndTeams(personId);
               return {
                 id: personId.toString(),
@@ -378,7 +381,12 @@ export async function getServerAuthSession(): Promise<Session | null> {
   }
 
   try {
-    const session = await auth();
+    const authHandler = typeof auth === "function" ? auth : null;
+    if (!authHandler) {
+      return null;
+    }
+
+    const session = await authHandler();
     if (session?.user) {
       try {
         const { cookies } = await import("next/headers");

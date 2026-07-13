@@ -45,7 +45,7 @@ export default async function AdminLeaguesPage() {
   const defaultSeasonId = activeSeason ? String(activeSeason.id) : "";
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <LeaguesStructureClient
         leaguesData={leaguesData}
         leagueNodesOptionsData={leagueNodesOptionsData}

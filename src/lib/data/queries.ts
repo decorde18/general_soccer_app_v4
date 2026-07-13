@@ -1440,8 +1440,21 @@ export async function getTeamSeasonRecords(
       }
     });
 
+    const hasScoredResult =
+      homeScore !== null && awayScore !== null && homeScore + awayScore > 0;
+
+    if (!hasScoredResult) {
+      return;
+    }
+
     const nodes = g.game_league_nodes.map((n) => n.league_node_id);
-    const targetNodes = nodes.length > 0 ? nodes : [0];
+    const targetNodes = leagueNodeSeasonId
+      ? [leagueNodeSeasonId]
+      : teamSeasonId
+        ? [null]
+        : nodes.length > 0
+          ? nodes
+          : [0];
 
     targetNodes.forEach((lnId) => {
       const targetLnId = leagueNodeSeasonId || lnId;
@@ -1455,37 +1468,53 @@ export async function getTeamSeasonRecords(
         }
       }
 
-      const homeRec = getOrCreateRecord(
-        g.home_team_season_id,
-        targetLnId,
-        g.team_seasons_games_home_team_season_idToteam_seasons,
-      );
-      const awayRec = getOrCreateRecord(
-        g.away_team_season_id,
-        targetLnId,
-        g.team_seasons_games_away_team_season_idToteam_seasons,
-      );
+      const homeRec =
+        !teamSeasonId || g.home_team_season_id === teamSeasonId
+          ? getOrCreateRecord(
+              g.home_team_season_id,
+              Number(targetLnId ?? leagueNodeSeasonId ?? 0),
+              g.team_seasons_games_home_team_season_idToteam_seasons,
+            )
+          : null;
+      const awayRec =
+        !teamSeasonId || g.away_team_season_id === teamSeasonId
+          ? getOrCreateRecord(
+              g.away_team_season_id,
+              Number(targetLnId ?? leagueNodeSeasonId ?? 0),
+              g.team_seasons_games_away_team_season_idToteam_seasons,
+            )
+          : null;
 
-      homeRec.gamesPlayed++;
-      awayRec.gamesPlayed++;
-      homeRec.goalsFor += homeScore;
-      homeRec.goalsAgainst += awayScore;
-      awayRec.goalsFor += awayScore;
-      awayRec.goalsAgainst += homeScore;
+      if (homeRec) {
+        homeRec.gamesPlayed++;
+        homeRec.goalsFor += homeScore;
+        homeRec.goalsAgainst += awayScore;
 
-      if (homeScore > awayScore) {
-        homeRec.wins++;
-        homeRec.points += 3;
-        awayRec.losses++;
-      } else if (homeScore < awayScore) {
-        awayRec.wins++;
-        awayRec.points += 3;
-        homeRec.losses++;
-      } else {
-        homeRec.draws++;
-        homeRec.points += 1;
-        awayRec.draws++;
-        awayRec.points += 1;
+        if (homeScore > awayScore) {
+          homeRec.wins++;
+          homeRec.points += 3;
+        } else if (homeScore < awayScore) {
+          homeRec.losses++;
+        } else {
+          homeRec.draws++;
+          homeRec.points += 1;
+        }
+      }
+
+      if (awayRec) {
+        awayRec.gamesPlayed++;
+        awayRec.goalsFor += awayScore;
+        awayRec.goalsAgainst += homeScore;
+
+        if (homeScore < awayScore) {
+          awayRec.wins++;
+          awayRec.points += 3;
+        } else if (homeScore > awayScore) {
+          awayRec.losses++;
+        } else {
+          awayRec.draws++;
+          awayRec.points += 1;
+        }
       }
     });
   });

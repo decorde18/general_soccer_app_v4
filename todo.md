@@ -17,11 +17,11 @@
 [x] In Locations admin, I need to be able to add crud sublocations
 [x] In clubs, I need to be able to crud teams
 [x] Restructure routes: move Clubs & Teams CRUD to /admin/clubs and Staff Assignments Roles CRUD to /admin/club-staff, updating links and actions
+
+
 in standings, we need to have filters that we can send in the url showing specific division etc. Then the page should have the filter with those either clicked or not
-team page should have a consistent width regardless of which tab is clicked. Similarly for all admin pages like club. Also for standings, etc
-in schedule on team page, we need to have a better view of wheterh the game was lost or won, color of score and or W - L - T would help
-schedule needs the ability for team admin to delete, cancel, enter score (enter score will need a page. This needs to be done too in the future)
-make sure season record in team header and in season record does not include games without scores (or not completed)
+
+
 
 future - enter score page simple score entry or more complex goal scored by, assisted, goal scored against - when entered, game needs to show completed
 not yet, but eventually, I have to figure out how to do guest player roster number. So maybe another column for roster number if different than regular number, then i need to incorporate that for all games, they are a a part of

@@ -94,15 +94,19 @@ export default async function TeamPage({ params }: PageProps) {
   // Consolidate standings record or calculate as a fallback from games
   let record = { wins: 0, losses: 0, draws: 0, points: 0 };
   if (records && records.length > 0) {
-    records.forEach((r) => {
-      record.wins += r.wins;
-      record.losses += r.losses;
-      record.draws += r.draws;
-      record.points += r.points;
-    });
+    records
+      .filter((r) => r.leagueNodeSeasonId === null || r.leagueNodeSeasonId === undefined)
+      .forEach((r) => {
+        record.wins += r.wins;
+        record.losses += r.losses;
+        record.draws += r.draws;
+        record.points += r.points;
+      });
   } else {
-    // Fallback: Compute record from games in case records aren't generated yet
-    const completedGames = games.filter((g) => g.status === "completed");
+    // Fallback: Compute record from scored completed games only.
+    const completedGames = games.filter(
+      (g) => g.status === "completed" && (g.homeScore ?? 0) + (g.awayScore ?? 0) > 0,
+    );
     completedGames.forEach((g) => {
       const isHome = g.homeTeamSeasonId === idNumber;
       const teamScore = isHome ? g.homeScore : g.awayScore;
@@ -153,7 +157,7 @@ export default async function TeamPage({ params }: PageProps) {
   );
 
   return (
-    <main className='mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8'>
+    <main className='mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8'>
       <TeamPageClient
         teamSeason={teamSeason}
         players={players}

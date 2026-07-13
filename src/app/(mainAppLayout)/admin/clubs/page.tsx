@@ -8,7 +8,7 @@ export default async function AdminClubsPage() {
   ]);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <ClubsDashboardClient
         initialClubs={clubs as any}
         initialTeams={teams as any}
