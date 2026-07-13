@@ -16,6 +16,7 @@ import {
   deleteTeamStaff,
 } from "@/lib/actions/teamStaff-actions";
 import { injectOptions } from "@/lib/utils/formHelpers";
+import TabbedPanel, { type TabItem } from "@/components/ui/TabbedPanel";
 
 interface ClubsStaffClientProps {
   clubsData: { label: string; value: string }[];
@@ -32,7 +33,9 @@ export default function ClubsStaffClient({
   clubStaffRecords,
   teamStaffRecords,
 }: ClubsStaffClientProps) {
-  const [activeTab, setActiveTab] = useState<"club-staff" | "team-staff">("club-staff");
+  const [activeTab, setActiveTab] = useState<"club-staff" | "team-staff">(
+    "club-staff",
+  );
 
   // Inject options into configs dynamically
   const clubConfig = useMemo(() => {
@@ -78,47 +81,33 @@ export default function ClubsStaffClient({
     ];
   }, [teamStaffRecords]);
 
-  const tabs = [
+  const tabs: readonly TabItem<"club-staff" | "team-staff">[] = [
     { id: "club-staff", label: "Club Staff Assignments", icon: Building },
     { id: "team-staff", label: "Team Staff Assignments", icon: Users },
-  ] as const;
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-text">Club & Team Roles</h1>
-        <p className="text-muted text-sm mt-1">
-          Assign role levels like Club Admin, Director, Coach, or Team Admin to people in the organization.
+        <h1 className='text-3xl font-bold tracking-tight text-text'>
+          Club & Team Roles
+        </h1>
+        <p className='text-muted text-sm mt-1'>
+          Assign role levels like Club Admin, Director, Coach, or Team Admin to
+          people in the organization.
         </p>
       </div>
 
-      {/* Tabs list */}
-      <div className="border-b border-border/80 overflow-x-auto scrollbar-none flex -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex space-x-6 min-w-max pb-0.5">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 py-3.5 px-1 border-b-2 font-bold text-sm transition-all focus:outline-none ${
-                  isActive
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted hover:text-text hover:border-border"
-                }`}
-              >
-                <Icon size={16} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <TabbedPanel
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId)}
+        className='-mx-4 px-4 sm:mx-0 sm:px-0'
+      />
 
       {/* Active Tab Panel */}
-      <div className="transition-all duration-200">
+      <div className='transition-all duration-200'>
         {activeTab === "club-staff" && (
           <EntityPage
             config={clubConfig}

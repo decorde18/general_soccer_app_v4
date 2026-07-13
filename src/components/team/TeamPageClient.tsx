@@ -7,6 +7,10 @@ import TeamOverview from "./TeamOverview";
 import TeamRoster from "./TeamRoster";
 import TeamSchedule from "./TeamSchedule";
 import TeamStats from "./TeamStats";
+import TeamCompetitions, {
+  type TeamCompetitionSummary,
+} from "./TeamCompetitions";
+import TabbedPanel, { type TabItem } from "@/components/ui/TabbedPanel";
 
 interface Game {
   id: number;
@@ -75,6 +79,7 @@ interface TeamSeason {
   seasonId: number;
   seasonName: string;
   ageGroup: string | number | null;
+  ageGroupName?: string | null;
   isActive: boolean;
 }
 
@@ -102,64 +107,71 @@ export default function TeamPageClient({
   record,
   leagueLinks,
 }: TeamPageClientProps) {
-  const [activeTab, setActiveTab] = useState<"overview" | "roster" | "schedule" | "stats">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "competitions" | "roster" | "schedule" | "stats"
+  >("overview");
 
   // Determine next match & recent matches
-  const nextMatch = games
-    .filter((g) => g.status !== "completed")
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0] || null;
+  const nextMatch =
+    games
+      .filter((g) => g.status !== "completed")
+      .sort(
+        (a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+      )[0] || null;
 
   const recentResults = games
     .filter((g) => g.status === "completed")
-    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
+    )
     .slice(0, 3); // Get top 3 latest results
 
-  const tabs = [
+  const competitions: TeamCompetitionSummary[] = (leagueLinks ?? []).map(
+    (link) => ({
+      leagueId: link.leagueId,
+      leagueName: link.leagueName,
+      leagueNodeId: link.leagueNodeId,
+      leagueNodeName: link.leagueNodeName,
+      leagueNodeSeasonId: link.leagueNodeSeasonId,
+      isTournament: link.isTournament ?? false,
+      record: link.record ?? null,
+      position: link.position ?? null,
+    }),
+  );
+
+  const tabs: readonly TabItem<
+    "overview" | "competitions" | "roster" | "schedule" | "stats"
+  >[] = [
     { id: "overview", label: "Overview", icon: Activity },
+    { id: "competitions", label: "Competitions", icon: Trophy },
     { id: "roster", label: "Roster", icon: Users },
     { id: "schedule", label: "Schedule", icon: Calendar },
     { id: "stats", label: "Stats", icon: Trophy },
-  ] as const;
+  ];
 
   return (
-    <div className="space-y-8">
+    <div className='space-y-8'>
       {/* Visual Header Banner */}
       <TeamHeader
         teamName={teamSeason.teamName}
         clubName={teamSeason.clubName}
         seasonName={teamSeason.seasonName}
         ageGroup={teamSeason.ageGroup}
+        ageGroupName={teamSeason.ageGroupName}
         record={record}
-        rosterCount={players.length}
-        leagueLinks={leagueLinks}
       />
 
-      {/* Tabs bar with horizontal scrolling for mobile */}
-      <div className="border-b border-border/80 overflow-x-auto scrollbar-none flex -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex space-x-6 min-w-max pb-0.5">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 py-3.5 px-1 border-b-2 font-bold text-sm transition-all focus:outline-none ${
-                  isActive
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted hover:text-text hover:border-border"
-                }`}
-              >
-                <Icon size={16} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <TabbedPanel
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId)}
+        className='-mx-4 px-4 sm:mx-0 sm:px-0'
+      />
 
       {/* Tab Panels with smooth transitions */}
-      <div className="transition-all duration-200">
+      <div className='transition-all duration-200'>
         {activeTab === "overview" && (
           <TeamOverview
             teamSeasonId={teamSeason.id}
@@ -170,6 +182,10 @@ export default function TeamPageClient({
             staff={staff}
             onViewTab={(tab) => setActiveTab(tab as any)}
           />
+        )}
+
+        {activeTab === "competitions" && (
+          <TeamCompetitions competitions={competitions} />
         )}
 
         {activeTab === "roster" && <TeamRoster players={players} />}

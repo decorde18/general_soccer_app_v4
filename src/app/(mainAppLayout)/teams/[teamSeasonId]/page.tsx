@@ -1,12 +1,12 @@
 import React from "react";
-import { 
-  getTeamSeasonById, 
-  getPlayersByTeamSeason, 
-  getTeamStaff, 
-  getGames, 
-  getPlayerStatsByTeamSeason, 
+import {
+  getTeamSeasonById,
+  getPlayersByTeamSeason,
+  getTeamStaff,
+  getGames,
+  getPlayerStatsByTeamSeason,
   getTeamSeasonRecords,
-  getLeaguesForTeamSeason
+  getLeaguesForTeamSeason,
 } from "@/lib/data/queries";
 import TeamPageClient from "@/components/team/TeamPageClient";
 import { Card } from "@/components/ui/Card";
@@ -24,15 +24,23 @@ export default async function TeamPage({ params }: PageProps) {
 
   if (isNaN(idNumber)) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16">
-        <Card variant="outlined" padding="lg" className="text-center bg-surface/30">
-          <ShieldAlert size={48} className="mx-auto text-danger mb-4" />
-          <h2 className="text-xl font-bold text-text mb-2">Invalid Team ID</h2>
-          <p className="text-sm text-muted mb-6">
-            The team identifier provided is invalid. Please double check the URL or return home.
+      <div className='mx-auto max-w-2xl px-4 py-16'>
+        <Card
+          variant='outlined'
+          padding='lg'
+          className='text-center bg-surface/30'
+        >
+          <ShieldAlert size={48} className='mx-auto text-danger mb-4' />
+          <h2 className='text-xl font-bold text-text mb-2'>Invalid Team ID</h2>
+          <p className='text-sm text-muted mb-6'>
+            The team identifier provided is invalid. Please double check the URL
+            or return home.
           </p>
-          <Link href="/">
-            <Button variant="primary" className="inline-flex flex-row items-center gap-2 text-sm px-4 py-2">
+          <Link href='/'>
+            <Button
+              variant='primary'
+              className='inline-flex flex-row items-center gap-2 text-sm px-4 py-2'
+            >
               <ArrowLeft size={16} />
               <span>Back to Match Center</span>
             </Button>
@@ -43,36 +51,37 @@ export default async function TeamPage({ params }: PageProps) {
   }
 
   // Fetch all necessary data in parallel
-  const [
-    teamSeason,
-    players,
-    staff,
-    games,
-    stats,
-    records,
-    leagueLinks,
-  ] = await Promise.all([
-    getTeamSeasonById(idNumber),
-    getPlayersByTeamSeason(idNumber),
-    getTeamStaff(idNumber),
-    getGames({ teamSeasonId: idNumber }),
-    getPlayerStatsByTeamSeason(idNumber),
-    getTeamSeasonRecords(undefined, idNumber),
-    getLeaguesForTeamSeason(idNumber),
-  ]);
+  const [teamSeason, players, staff, games, stats, records, leagueLinks] =
+    await Promise.all([
+      getTeamSeasonById(idNumber),
+      getPlayersByTeamSeason(idNumber),
+      getTeamStaff(idNumber),
+      getGames({ teamSeasonId: idNumber }),
+      getPlayerStatsByTeamSeason(idNumber),
+      getTeamSeasonRecords(undefined, idNumber),
+      getLeaguesForTeamSeason(idNumber),
+    ]);
 
   // Handle case where team season doesn't exist
   if (!teamSeason) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16">
-        <Card variant="outlined" padding="lg" className="text-center bg-surface/30">
-          <ShieldAlert size={48} className="mx-auto text-danger mb-4" />
-          <h2 className="text-xl font-bold text-text mb-2">Team Not Found</h2>
-          <p className="text-sm text-muted mb-6">
-            We couldn't find the team season you were looking for. It may have been removed or the ID is incorrect.
+      <div className='mx-auto max-w-2xl px-4 py-16'>
+        <Card
+          variant='outlined'
+          padding='lg'
+          className='text-center bg-surface/30'
+        >
+          <ShieldAlert size={48} className='mx-auto text-danger mb-4' />
+          <h2 className='text-xl font-bold text-text mb-2'>Team Not Found</h2>
+          <p className='text-sm text-muted mb-6'>
+            We couldn't find the team season you were looking for. It may have
+            been removed or the ID is incorrect.
           </p>
-          <Link href="/">
-            <Button variant="primary" className="inline-flex flex-row items-center gap-2 text-sm px-4 py-2">
+          <Link href='/'>
+            <Button
+              variant='primary'
+              className='inline-flex flex-row items-center gap-2 text-sm px-4 py-2'
+            >
               <ArrowLeft size={16} />
               <span>Back to Match Center</span>
             </Button>
@@ -113,8 +122,38 @@ export default async function TeamPage({ params }: PageProps) {
     });
   }
 
+  const leagueLinksWithStandings = await Promise.all(
+    leagueLinks.map(async (link) => {
+      const competitionRecords = await getTeamSeasonRecords(
+        link.leagueNodeSeasonId,
+        idNumber,
+      );
+      const teamCompetitionRecord = competitionRecords.find(
+        (item) => item.teamSeasonId === idNumber,
+      );
+      const position = teamCompetitionRecord
+        ? competitionRecords.findIndex(
+            (item) => item.teamSeasonId === idNumber,
+          ) + 1
+        : null;
+
+      return {
+        ...link,
+        record: teamCompetitionRecord
+          ? {
+              wins: teamCompetitionRecord.wins,
+              losses: teamCompetitionRecord.losses,
+              draws: teamCompetitionRecord.draws,
+              points: teamCompetitionRecord.points,
+            }
+          : null,
+        position,
+      };
+    }),
+  );
+
   return (
-    <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+    <main className='mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8'>
       <TeamPageClient
         teamSeason={teamSeason}
         players={players}
@@ -122,7 +161,7 @@ export default async function TeamPage({ params }: PageProps) {
         games={games}
         stats={stats}
         record={record}
-        leagueLinks={leagueLinks}
+        leagueLinks={leagueLinksWithStandings}
       />
     </main>
   );
