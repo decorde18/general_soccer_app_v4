@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { Session, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
@@ -40,7 +40,7 @@ const defaultRoles: UserRoles = {
   clubAdminTeamIds: [],
 };
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -166,7 +166,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-});
+};
 
 export function applyActiveViewOverride(
   roles: UserRoles,
@@ -381,12 +381,7 @@ export async function getServerAuthSession(): Promise<Session | null> {
   }
 
   try {
-    const authHandler = typeof auth === "function" ? auth : null;
-    if (!authHandler) {
-      return null;
-    }
-
-    const session = await authHandler();
+    const session = await getServerSession(authOptions);
     if (session?.user) {
       try {
         const { cookies } = await import("next/headers");

@@ -1,9 +1,12 @@
+import NextAuth from "next-auth";
 import {
-  handlers,
+  authOptions,
   getMockSessionForRole,
   applyActiveViewOverride,
 } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+
+const handler = NextAuth(authOptions);
 
 async function GET(req: NextRequest, ctx: any) {
   if (
@@ -20,11 +23,11 @@ async function GET(req: NextRequest, ctx: any) {
       }
     }
   }
-  return handlers.GET(req, ctx);
+  return handler(req, ctx);
 }
 
 async function POST(req: NextRequest, ctx: any) {
-  return handlers.POST(req, ctx);
+  return handler(req, ctx);
 }
 
 export { GET, POST };
