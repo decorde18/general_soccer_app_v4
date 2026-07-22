@@ -161,6 +161,6 @@ export async function saveGameLineup(
   await prisma.$transaction(operations);
 
   // Revalidate cache paths
-  revalidatePath(`/gameStats/${teamSeasonId}/${gameId}`);
+  revalidatePath(`/gamestats/${teamSeasonId}/${gameId}`);
   return { success: true };
 }

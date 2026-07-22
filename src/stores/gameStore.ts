@@ -352,6 +352,14 @@ const useGameStore = create<GameStoreState>((set, get) => {
             ? `${dbGame.home_club_name} ${dbGame.home_team_name}`
             : `${dbGame.away_club_name} ${dbGame.away_team_name}`,
           teamStatTotals: teamStatTotals as TeamStatTotals,
+
+          // camelCase aliases for consistent component access
+          homeTeamName: dbGame.home_team_name,
+          awayTeamName: dbGame.away_team_name,
+          startDate: dbGame.start_date,
+          startTime: dbGame.start_time,
+          locationName: dbGame.location_name,
+          gameType: dbGame.game_type,
         };
 
         set({

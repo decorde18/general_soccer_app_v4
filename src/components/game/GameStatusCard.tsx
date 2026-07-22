@@ -3,20 +3,22 @@
 import type { ReactNode } from "react";
 import GameHeader from "@/components/layout/gameLayout/GameHeader";
 
+
 interface GameStatusCardProps {
   icon: ReactNode;
   title: string;
   subtitle: string;
-  /** Tailwind gradient stops, e.g. "from-amber-500 to-orange-600" */
   accentColor: string;
+
 }
 
 export default function GameStatusCard({
   icon,
   title,
   subtitle,
-  accentColor,
+  accentColor
 }: GameStatusCardProps) {
+
   return (
     <div
       className={`relative overflow-hidden rounded-3xl bg-gradient-to-br p-6 text-white shadow-lg ${accentColor}`}
@@ -33,8 +35,7 @@ export default function GameStatusCard({
         <p className='mb-6 font-medium text-white/80'>{subtitle}</p>
 
         <div className='w-full'>
-          //TODO: GameHeader
-          {/* <GameHeader className="!border-white/20 !bg-white/10 !p-3 !shadow-none !backdrop-blur-md" /> */}
+          <GameHeader className="!border-white/20 !bg-white/10 !p-3 !shadow-none !backdrop-blur-md"/>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import GameProvider from "@/components/game/GameProvider";
 export default async function page() {
   return (
     <GameProvider>
-    <GameMenuPage />
+      <GameMenuPage />
     </GameProvider>
   );
 }

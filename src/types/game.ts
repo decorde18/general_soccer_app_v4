@@ -146,6 +146,14 @@ export interface Game {
   status: string;
   default_reg_periods?: number | string;
 
+  // camelCase aliases — mapped explicitly in initializeGame() for consistent component access
+  homeTeamName?: string;
+  awayTeamName?: string;
+  startDate?: string | null;
+  startTime?: string | null;
+  locationName?: string | null;
+  gameType?: string | null;
+
   // Derived/computed by initializeGame()
   opponentId: number | string;
   opponentClub?: string;

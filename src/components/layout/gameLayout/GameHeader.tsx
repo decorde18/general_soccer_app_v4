@@ -1,16 +1,20 @@
 import React from "react";
-import { Game } from "@/lib/data/queries";
 import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
+import useGameStore from "@/stores/gameStore";
 
 interface GameHeaderProps {
-  game: Game;
   backUrl?: string;
+  className?: string;
 }
 
-export default function GameHeader({ game, backUrl }: GameHeaderProps) {
+export default function GameHeader({ backUrl, className }: GameHeaderProps) {
+  const game = useGameStore((s) => s.game);
+
+  if (!game) return null;
+
   return (
-    <div className="bg-surface border-b border-border p-4 shadow-sm">
+    <div className={`bg-surface border-b border-border p-4 shadow-sm ${className ?? ""}`}>
       <div className="flex items-center gap-4 max-w-7xl mx-auto">
         {backUrl && (
           <Link href={backUrl} className="text-muted hover:text-text transition-colors">

@@ -42,7 +42,7 @@ export default function LineupFooter() {
       if (res.success) {
         toast.success("Lineup confirmed and saved!");
         // Route to the live match center or overview
-        router.push(`/gameStats/${teamSeasonId}/${id}/live`);
+        router.push(`/gamestats/${teamSeasonId}/${id}/live`);
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to save lineup");

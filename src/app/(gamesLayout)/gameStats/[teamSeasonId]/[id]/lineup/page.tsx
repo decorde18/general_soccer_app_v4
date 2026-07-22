@@ -1,6 +1,6 @@
-import { getGameById } from "@/lib/data/queries";
 import { loadGameLineup } from "@/lib/actions/gameLineup-actions";
 import GameLineupClientPage from "./GameLineupClientPage";
+import GameProvider from "@/components/game/GameProvider";
 import { notFound } from "next/navigation";
 
 interface PageProps {
@@ -19,21 +19,14 @@ export default async function LineupPage({ params }: PageProps) {
     return notFound();
   }
 
-  const [game, initialPlayers] = await Promise.all([
-    getGameById(gameIdNum),
-    loadGameLineup(gameIdNum, teamSeasonIdNum),
-  ]);
-
-  if (!game) {
-    return notFound();
-  }
+  const initialPlayers = await loadGameLineup(gameIdNum, teamSeasonIdNum);
 
   return (
-    <GameLineupClientPage
-      game={game}
-      initialPlayers={initialPlayers}
-      teamSeasonId={teamSeasonIdNum}
-      gameId={gameIdNum}
-    />
+    <GameProvider>
+      <GameLineupClientPage
+        initialPlayers={initialPlayers}
+        teamSeasonId={teamSeasonIdNum}
+      />
+    </GameProvider>
   );
 }

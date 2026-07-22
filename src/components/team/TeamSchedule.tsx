@@ -268,7 +268,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                     )}
 
                     <Link
-                      href={`/gameStats/${teamSeasonId}/${game.id}`}
+                      href={`/gamestats/${teamSeasonId}/${game.id}`}
                       className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-accent-hover transition-colors"
                     >
                       <SquareChevronRight size={13} />
