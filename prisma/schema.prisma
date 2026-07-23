@@ -23,11 +23,15 @@ model addresses {
 }
 
 model age_groups {
-  id           Int            @id @default(autoincrement())
-  name         String         @db.VarChar(50)
-  begin_date   DateTime?      @db.Date
-  end_date     DateTime?      @db.Date
-  team_seasons team_seasons[]
+  id                      Int            @id @default(autoincrement())
+  name                    String         @db.VarChar(50)
+  begin_date              DateTime?      @db.Date
+  end_date                DateTime?      @db.Date
+  default_period_duration Int?           @default(2400)
+  default_ot_if_tied      Boolean?       @default(false)
+  default_ot_duration     Int?           @default(600)
+  default_so_if_tied      Boolean?       @default(true)
+  team_seasons            team_seasons[]
 }
 
 model club_staff {
@@ -312,8 +316,12 @@ model games {
   game_type                                            games_game_type?             @default(league)
   notes                                                String?                      @db.Text
   created_at                                           DateTime?                    @default(now()) @db.DateTime(0)
-  modified_at                                          DateTime?                    @default(now()) @db.DateTime(0)
+  modified_at                                           DateTime?                    @default(now()) @db.DateTime(0)
   default_reg_periods                                  Int                          @default(2) @db.TinyInt
+  period_duration                                      Int                          @default(2400)
+  ot_if_tied                                           Boolean                      @default(false)
+  ot_duration                                          Int                          @default(600)
+  so_if_tied                                           Boolean                      @default(true)
   video_link                                           String?                      @db.VarChar(500)
   location_id                                          Int?
   google_cal_id                                        String?                      @db.VarChar(255)
@@ -424,6 +432,11 @@ model leagues {
   modified_at       DateTime?         @db.DateTime(0)
   description       String?           @db.Text
   is_tournament     Boolean?          @default(false)
+  period_duration   Int?
+  reg_periods       Int?
+  ot_if_tied        Boolean?
+  ot_duration       Int?
+  so_if_tied        Boolean?
   league_nodes      league_nodes[]
   governing_bodies  governing_bodies? @relation(fields: [governing_body_id], references: [id], onUpdate: Restrict, map: "fk_leagues_governing_body")
 

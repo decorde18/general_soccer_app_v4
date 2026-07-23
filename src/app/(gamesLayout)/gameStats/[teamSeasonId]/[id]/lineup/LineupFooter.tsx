@@ -33,7 +33,7 @@ export default function LineupFooter() {
     setIsSaving(true);
     try {
       const playerStatuses = players.map((p) => ({
-        id: p.id,
+        id: Number(p.id),
         gameStatus: p.gameStatus,
         isGuest: p.isGuest,
       }));

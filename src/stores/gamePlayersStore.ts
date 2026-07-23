@@ -6,7 +6,14 @@ import { apiFetch } from "@/app/api/fetcher";
 
 // ==================== TYPES ====================
 
-export type GameStatus = "dressed" | "starter" | "goalkeeper";
+export type GameStatus =
+  | "dressed"
+  | "starter"
+  | "goalkeeper"
+  | "not_dressed"
+  | "injured"
+  | "suspended"
+  | "unavailable";
 
 export type FieldStatus =
   | "onBench"
@@ -769,7 +776,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
     try {
       const { default: useGamePlayerTimeStore } =
         await import("./gamePlayerTimeStore");
-      const gamePlayerTimeStore = useGamePlayerTimeStore.getState();
+      const gamePlayerTimeStore = useGamePlayerTimeStore.getState() as any;
 
       const plusMinusMap = gamePlayerTimeStore.calculateAllPlusMinus(gameId);
 
@@ -846,7 +853,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
         await import("./gamePlayerTimeStore");
 
       const gameStore = useGameStore.getState();
-      const gamePlayerTimeStore = useGamePlayerTimeStore.getState();
+      const gamePlayerTimeStore = useGamePlayerTimeStore.getState() as any;
       const currentGameTime = gameStore.getGameTime();
 
       const gkTimeMap = gamePlayerTimeStore.calculateAllGoalkeeperTime(

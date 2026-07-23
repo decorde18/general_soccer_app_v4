@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Trophy, Calendar, Shield, Clock, MapPin, Search, Filter } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 interface StandingsRow {
   teamSeasonId: number;
@@ -57,9 +58,45 @@ export default function LeaguePageClient({
   description,
   divisions,
 }: LeaguePageClientProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedGender, setSelectedGender] = useState<"all" | "boys" | "girls">("all");
-  const [selectedAge, setSelectedAge] = useState<string>("all");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Read initial states from URL query parameters
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") || "");
+  const [selectedGender, setSelectedGender] = useState<"all" | "boys" | "girls">(() => {
+    const gender = searchParams.get("gender");
+    if (gender === "boys" || gender === "girls") return gender;
+    return "all";
+  });
+  const [selectedAge, setSelectedAge] = useState(() => searchParams.get("age") || "all");
+
+  // Keep state and URL query params in sync
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (searchQuery) {
+      params.set("q", searchQuery);
+    } else {
+      params.delete("q");
+    }
+
+    if (selectedGender !== "all") {
+      params.set("gender", selectedGender);
+    } else {
+      params.delete("gender");
+    }
+
+    if (selectedAge !== "all") {
+      params.set("age", selectedAge);
+    } else {
+      params.delete("age");
+    }
+
+    const query = params.toString();
+    const dest = query ? `${pathname}?${query}` : pathname;
+    router.replace(dest, { scroll: false });
+  }, [searchQuery, selectedGender, selectedAge, pathname, router, searchParams]);
 
   // Dynamically extract unique age groups from active division names
   const availableAges = useMemo(() => {

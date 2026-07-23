@@ -53,7 +53,7 @@ export default function PlayerStatusSections() {
   const [activeHoverSection, setActiveHoverSection] = useState<string | null>(null);
 
   const handleStatus = (playerId: number, action: string) => {
-    updateGameStatus(playerId, action);
+    updateGameStatus(playerId, action as any);
   };
 
   const starterLength = roster.filter(

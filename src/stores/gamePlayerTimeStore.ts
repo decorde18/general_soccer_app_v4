@@ -1,23 +1,27 @@
-// stores/gamePlayerTimeStore.js
+// stores/gamePlayerTimeStore.ts
 // Player time calculations with stoppage time handling and period boundary fixes
 
 import { create } from "zustand";
 import useGameStore from "./gameStore";
-import useGamePlayersStore from "./gamePlayersStore";
+import useGamePlayersStore, { Player } from "./gamePlayersStore";
 
 /* ==================== HELPERS ==================== */
 
-const normalizeSubs = (subs) =>
+const normalizeSubs = (subs: any[]): any[] =>
   (subs || [])
     .filter((sub) => sub.gameTime !== null)
-    .sort((a, b) => a.gameTime - b.gameTime);
+    .sort((a, b) => (a.gameTime ?? 0) - (b.gameTime ?? 0));
 
 /**
  * Splits a game_time segment into chunks that fall within actual periods
  * Excludes time between periods (breaks)
  */
-const splitSegmentByPeriods = (segment, periods, gameStartTime) => {
-  const chunks = [];
+const splitSegmentByPeriods = (
+  segment: { start: number; end: number },
+  periods: any[],
+  gameStartTime: number,
+) => {
+  const chunks: { start: number; end: number; periodNumber: number }[] = [];
 
   periods.forEach((period) => {
     if (!period.startTime) return;
@@ -49,10 +53,10 @@ const splitSegmentByPeriods = (segment, periods, gameStartTime) => {
  * Assumes stoppage start/end are already in game_time seconds
  */
 const calculateStoppageTimeInRange = (
-  stoppages,
-  rangeStart,
-  rangeEnd,
-  periodNumber,
+  stoppages: any[],
+  rangeStart: number,
+  rangeEnd: number,
+  periodNumber: number,
 ) =>
   stoppages
     .filter((s) => s.periodNumber === periodNumber && s.endTime !== null)
@@ -67,7 +71,7 @@ const calculateStoppageTimeInRange = (
 /**
  * Determine if a player is currently on the field
  */
-const isPlayerOnFieldNow = (player) => {
+const isPlayerOnFieldNow = (player: Player) => {
   const ins = normalizeSubs(player.ins);
   const outs = normalizeSubs(player.outs);
 
@@ -84,7 +88,22 @@ const isPlayerOnFieldNow = (player) => {
 
 /* ==================== STORE ==================== */
 
-const useGamePlayerTimeStore = create((set, get) => ({
+export interface GamePlayerTimeStoreState {
+  calculateTotalTimeOnField: (player: Player, currentGameTime: number) => number;
+  calculateCurrentTimeOnField: (player: Player, currentGameTime: number) => number;
+  calculateCurrentTimeOffField: (player: Player, currentGameTime: number) => number;
+  isPlayerOnField: (player: Player) => boolean;
+  isPlayerOnFieldAtTime: (player: Player, gameTime: number) => boolean;
+  calculatePlusMinus: (player: Player, gameId: string | number) => number;
+  calculateAllPlusMinus: (gameId: string | number) => Record<string | number, number>;
+  getPlayersOnField: () => Player[];
+  getPlayersOnBench: () => Player[];
+  calculateGoalkeeperTime: (player: Player, currentGameTime: number) => number;
+  isPlayerCurrentlyGoalkeeper: (player: Player) => boolean;
+  calculateAllGoalkeeperTime: (gameId: string | number, currentGameTime: number) => Record<string | number, number>;
+}
+
+const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
   /* ==================== FIELD PLAYER TIME ==================== */
 
   calculateTotalTimeOnField: (player, currentGameTime) => {
@@ -96,10 +115,10 @@ const useGamePlayerTimeStore = create((set, get) => ({
     const ins = normalizeSubs(player.ins);
     const outs = normalizeSubs(player.outs);
     const periods = game.periods || [];
-    const stoppages = game.stoppages || [];
+    const stoppages = (game.stoppages as any) || [];
 
     const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
-    const segments = [];
+    const segments: { start: number; end: number }[] = [];
 
     if (isStarter) {
       const firstOut = outs[0];
@@ -127,7 +146,7 @@ const useGamePlayerTimeStore = create((set, get) => ({
       const chunks = splitSegmentByPeriods(
         segment,
         periods,
-        game.gameStartTime,
+        game.gameStartTime as number,
       );
 
       chunks.forEach((chunk) => {
@@ -158,10 +177,10 @@ const useGamePlayerTimeStore = create((set, get) => ({
     if (!lastIn) return 0;
 
     const periods = game.periods || [];
-    const stoppages = game.stoppages || [];
+    const stoppages = (game.stoppages as any) || [];
 
     const segment = { start: lastIn.gameTime, end: currentGameTime };
-    const chunks = splitSegmentByPeriods(segment, periods, game.gameStartTime);
+    const chunks = splitSegmentByPeriods(segment, periods, game.gameStartTime as number);
 
     let total = 0;
 
@@ -219,7 +238,7 @@ const useGamePlayerTimeStore = create((set, get) => ({
 
     let plusMinus = 0;
 
-    (game.gameEventsGoals || []).forEach((goal) => {
+    (game.gameEventsGoals || []).forEach((goal: any) => {
       if (get().isPlayerOnFieldAtTime(player, goal.game_time)) {
         plusMinus += goal.team_season_id === player.teamSeasonId ? 1 : -1;
       }
@@ -230,12 +249,12 @@ const useGamePlayerTimeStore = create((set, get) => ({
 
   calculateAllPlusMinus: (gameId) => {
     const game = useGameStore.getState().game;
-
     const players = useGamePlayersStore.getState().players;
-    const map = {};
+    const map: Record<string | number, number> = {};
+    
     players.forEach(
       (player) =>
-        (map[player.id] = get().calculatePlusMinus(player, game.game_id)),
+        (map[player.id] = get().calculatePlusMinus(player, game ? game.game_id : gameId)),
     );
     return map;
   },
@@ -263,9 +282,9 @@ const useGamePlayerTimeStore = create((set, get) => ({
     const periods = game.periods || [];
 
     const stoppages =
-      game.gameEventsMajor?.filter((e) => e.clock_should_run === 0) || [];
+      game.gameEventsMajor?.filter((e: any) => e.clock_should_run === 0) || [];
 
-    const gkSegments = [];
+    const gkSegments: { start: number; end: number }[] = [];
     const startedAsGK = player.gameStatus === "goalkeeper";
 
     const gkIns = ins.filter((s) => s.gkSub);
@@ -291,7 +310,7 @@ const useGamePlayerTimeStore = create((set, get) => ({
       const chunks = splitSegmentByPeriods(
         segment,
         periods,
-        game.gameStartTime,
+        game.gameStartTime as number,
       );
 
       chunks.forEach((chunk) => {
@@ -321,7 +340,7 @@ const useGamePlayerTimeStore = create((set, get) => ({
 
   calculateAllGoalkeeperTime: (gameId, currentGameTime) => {
     const players = useGamePlayersStore.getState().players;
-    const map = {};
+    const map: Record<string | number, number> = {};
     players.forEach(
       (p) => (map[p.id] = get().calculateGoalkeeperTime(p, currentGameTime)),
     );

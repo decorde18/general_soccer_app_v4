@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { getLeagueById, getLeagueNodeSeasons, getTeamSeasonRecords, getGames } from "@/lib/data/queries";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -126,13 +126,15 @@ export default async function LeagueDetailsPage({ params }: PageProps) {
         </Link>
       </div>
 
-      <LeaguePageClient
-        leagueName={league.name}
-        governingBodyName={league.governingBodyName}
-        abbreviation={league.abbreviation}
-        description={league.description}
-        divisions={activeDivisions}
-      />
+      <Suspense fallback={<div className="text-center py-8 text-muted">Loading filters and standings...</div>}>
+        <LeaguePageClient
+          leagueName={league.name}
+          governingBodyName={league.governingBodyName}
+          abbreviation={league.abbreviation}
+          description={league.description}
+          divisions={activeDivisions}
+        />
+      </Suspense>
     </main>
   );
 }

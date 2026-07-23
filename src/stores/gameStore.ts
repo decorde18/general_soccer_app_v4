@@ -278,14 +278,16 @@ const useGameStore = create<GameStoreState>((set, get) => {
         const settings: GameSettings = {
           ...DEFAULT_GAME_SETTINGS,
           periodCount: parseInt(dbGame.default_reg_periods) || 2,
-          hasOvertime: otConfig?.ot_if_tied === 1,
-          overtimePeriods: otConfig?.max_ot_periods
-            ? parseInt(String(otConfig.max_ot_periods))
-            : DEFAULT_GAME_SETTINGS.overtimePeriods,
-          overtimeDuration: otConfig?.default_ot_1_minutes
-            ? parseInt(String(otConfig.default_ot_1_minutes)) * 60
-            : DEFAULT_GAME_SETTINGS.overtimeDuration,
-          hasShootout: otConfig?.so_if_tied === 1,
+          periodDuration: dbGame.period_duration !== undefined && dbGame.period_duration !== null
+            ? Number(dbGame.period_duration)
+            : DEFAULT_GAME_SETTINGS.periodDuration,
+          hasOvertime: dbGame.ot_if_tied ?? (otConfig?.ot_if_tied === 1),
+          overtimeDuration: dbGame.ot_duration !== undefined && dbGame.ot_duration !== null
+            ? Number(dbGame.ot_duration)
+            : (otConfig?.default_ot_1_minutes
+                ? parseInt(String(otConfig.default_ot_1_minutes)) * 60
+                : DEFAULT_GAME_SETTINGS.overtimeDuration),
+          hasShootout: dbGame.so_if_tied ?? (otConfig?.so_if_tied === 1),
         };
 
         // Build periods array (all timestamps are Unix ms from DB BIGINT)
@@ -594,16 +596,15 @@ const useGameStore = create<GameStoreState>((set, get) => {
 
         // Auto-confirm any pending subs at time 0 of new period
         const gameSubsStore = useGameSubsStore.getState();
-        const pendingSubs = await gameSubsStore.getPendingSubs(game.game_id);
+        const pendingSubs = await gameSubsStore.getPendingSubs();
         const completeSubs = pendingSubs.filter(
           (sub: { isComplete: boolean }) => sub.isComplete,
         );
 
         if (completeSubs.length > 0) {
-          const gameTime = get().getGameTime();
           await Promise.all(
             completeSubs.map((sub: { subId: number | string }) =>
-              gameSubsStore.confirmSub(sub.subId, gameTime),
+              gameSubsStore.confirmSub(sub.subId),
             ),
           );
         }

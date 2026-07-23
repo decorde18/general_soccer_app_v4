@@ -2,11 +2,11 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Button from "@/components/ui/Button";
-import { LineupPlayer } from "@/lib/actions/gameLineup-actions";
+import { Player } from "@/stores/gamePlayersStore";
 import useGameStore from "@/stores/gameStore";
 
 interface PlayerRowProps {
-  player: LineupPlayer;
+  player: Player;
   handleStatus: (playerId: number, action: string) => void;
   section: string;
   starterLength: number;
@@ -140,7 +140,7 @@ export default function PlayerRow({
             variant={action.variant}
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
-              handleStatus(player.id, action.gameStatus);
+              handleStatus(Number(player.id), action.gameStatus);
             }}
             disabled={
               (starterLength === totalFieldPlayers && action.gameStatus === "starter") ||
@@ -184,7 +184,7 @@ export default function PlayerRow({
                       className="w-full text-left px-3 py-1 text-xs transition-colors hover:bg-muted/50 text-text flex items-center justify-between border-none shadow-none group"
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
-                        handleStatus(player.id, option.value);
+                        handleStatus(Number(player.id), option.value);
                         setShowDropdown(false);
                       }}
                     >

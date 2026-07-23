@@ -145,6 +145,10 @@ export interface Game {
   away_team_name?: string;
   status: string;
   default_reg_periods?: number | string;
+  period_duration?: number;
+  ot_if_tied?: boolean;
+  ot_duration?: number;
+  so_if_tied?: boolean;
 
   // camelCase aliases — mapped explicitly in initializeGame() for consistent component access
   homeTeamName?: string;
