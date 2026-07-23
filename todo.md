@@ -20,8 +20,8 @@
 
 
 [x] in standings, we need to have filters that we can send in the url showing specific division etc. Then the page should have the filter with those either clicked or not
-when creating games, we need a settings for period length, overtime rules if needed, shootout if needed, etc. This will be tournament/league age group or division specific. There should be a default based on the age group, then on top of that, for each league or tournament, we should be able to set these rules. Each game should be able to override the league/tournament rule.
-in the game managemment page, we need to be able to change the settings of that game.
+[x] when creating games, we need a settings for period length, overtime rules if needed, shootout if needed, etc. This will be tournament/league age group or division specific. There should be a default based on the age group, then on top of that, for each league or tournament, we should be able to set these rules. Each game should be able to override the league/tournament rule.
+[x] in the game managemment page, we need to be able to change the settings of that game.
 
 For team names, do we need a hook that combines the club name with the team name? This can be long (full club) or short (abbreviation for club). That will be the way the team will be refered to everywhere. Not sure this is the best way to do it - something to think about
 
