@@ -265,19 +265,34 @@ export async function POST(req: Request, context: RouteContext) {
   const values = cols.map((c) => body[c]);
 
   const sql = `INSERT INTO \`${table}\` (${colSQL}) VALUES (${placeholders})`;
-  const result = await prisma.$executeRawUnsafe(sql, ...values);
 
-  // Fetch the newly created row by last insert ID
-  const [insertedRow] = await prisma.$queryRawUnsafe<{ id: number }[]>(
-    `SELECT LAST_INSERT_ID() as id`
-  );
-  const newId = insertedRow?.id;
+  try {
+    const result = await prisma.$executeRawUnsafe(sql, ...values);
 
-  if (!newId) {
-    return NextResponse.json({ success: true, rowsAffected: result });
+    // Fetch the newly created row by last insert ID
+    const [insertedRow] = await prisma.$queryRawUnsafe<{ id: number }[]>(
+      `SELECT LAST_INSERT_ID() as id`
+    );
+    const newId = insertedRow?.id;
+
+    if (!newId) {
+      return NextResponse.json({ success: true, rowsAffected: result });
+    }
+
+    return NextResponse.json({ success: true, id: newId });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // MySQL duplicate-entry error code 1062
+    const isDuplicate = msg.includes("1062") || msg.toLowerCase().includes("duplicate");
+    if (isDuplicate) {
+      return NextResponse.json(
+        { error: `Duplicate entry for table "${table}": ${msg}` },
+        { status: 409 }
+      );
+    }
+    console.error(`[POST /${table}] DB error:`, msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true, id: newId });
 }
 
 // ─── PUT ─────────────────────────────────────────────────────────────────────
