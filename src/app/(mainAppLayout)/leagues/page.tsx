@@ -1,64 +1,30 @@
-import { EntityShell } from "@/components/entities/EntityShell";
-import { leagueConfig } from "@/lib/entities/configs/league.config";
-import { governingBodyConfig } from "@/lib/entities/configs/governingBody.config";
-import {
-  createLeague,
-  updateLeague,
-  deleteLeague,
-} from "@/lib/actions/league-actions";
-import { createGoverningBody } from "@/lib/actions/governingBody-actions";
-import { getLeagues, getGoverningBodies } from "@/lib/data/queries";
-import { injectOptions, attachCreatable } from "@/lib/utils/formHelpers";
+import React from "react";
+import { getLeagues, getLeagueNodeSeasons } from "@/lib/data/queries";
+import LeaguesListClient from "@/components/league/LeaguesListClient";
 
 export default async function LeaguesPage() {
   const leagues = await getLeagues();
-  const governingBodies = await getGoverningBodies();
 
-  const stats = [
-    { label: "Total", value: leagues.length },
-    {
-      label: "Active",
-      value: leagues.filter((l) => l.status === "active").length,
-    },
-    {
-      label: "Upcoming",
-      value: leagues.filter((l) => l.status === "upcoming").length,
-    },
-    {
-      label: "Inactive",
-      value: leagues.filter((l) => l.status === "inactive").length,
-    },
-  ];
-
-  const handleCreateGoverningBody = async (data: Record<string, string>) => {
-    "use server";
-    await createGoverningBody(data);
-    return { value: String(data.id || data.name), label: data.name };
-  };
-
-  let config = { ...leagueConfig };
-  config = injectOptions(
-    config, 
-    "governingBodyName", 
-    governingBodies.map(gb => ({ label: gb.name, value: String(gb.id) }))
-  );
-  config = attachCreatable(
-    config, 
-    "governingBodyName", 
-    governingBodyConfig, 
-    handleCreateGoverningBody
+  const leaguesWithCounts = await Promise.all(
+    leagues.map(async (league) => {
+      const nodeSeasons = await getLeagueNodeSeasons(league.id);
+      return {
+        id: league.id,
+        name: league.name,
+        abbreviation: league.abbreviation,
+        governingBodyName: league.governingBodyName,
+        description: league.description,
+        isTournament: league.isTournament,
+        status: league.status,
+        divisionsCount: nodeSeasons.length,
+      };
+    })
   );
 
   return (
-    <div className='p-6 max-w-6xl mx-auto'>
-      <EntityShell
-        config={config}
-        data={leagues as any}
-        stats={stats}
-        onCreate={createLeague as any}
-        onUpdate={updateLeague as any}
-        onDelete={deleteLeague as any}
-      />
-    </div>
+    <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <LeaguesListClient leagues={leaguesWithCounts} />
+    </main>
   );
 }
+

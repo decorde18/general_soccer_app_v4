@@ -85,6 +85,14 @@ export default async function AdminDashboardPage() {
       icon: Map,
       color: "from-cyan-500/10 to-sky-500/10 border-cyan-500/20 text-cyan-500",
     },
+    {
+      title: "Parent & Guardian Links",
+      description:
+        "Map parent/guardian users to child players for restricted parent dashboard access.",
+      route: "/admin/player-relationships",
+      icon: Users,
+      color: "from-emerald-500/10 to-teal-500/10 border-emerald-500/20 text-emerald-500",
+    },
   ];
 
   return (

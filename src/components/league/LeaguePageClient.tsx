@@ -71,10 +71,22 @@ export default function LeaguePageClient({
   });
   const [selectedAge, setSelectedAge] = useState(() => searchParams.get("age") || "all");
 
-  // Keep state and URL query params in sync
+  // Keep state and URL query params in sync without infinite loops
   useEffect(() => {
+    const currentQ = searchParams.get("q") || "";
+    const currentGender = searchParams.get("gender") || "all";
+    const currentAge = searchParams.get("age") || "all";
+
+    if (
+      currentQ === searchQuery &&
+      currentGender === selectedGender &&
+      currentAge === selectedAge
+    ) {
+      return;
+    }
+
     const params = new URLSearchParams(searchParams.toString());
-    
+
     if (searchQuery) {
       params.set("q", searchQuery);
     } else {
@@ -257,22 +269,22 @@ export default function LeaguePageClient({
                   <table className="w-full text-left border-collapse min-w-[500px]">
                     <thead>
                       <tr className="border-b border-border bg-background/50 text-[10px] font-bold uppercase tracking-wider text-muted">
-                        <th className="py-3 px-4 w-12 text-center">Pos</th>
-                        <th className="py-3 px-4">Club / Team</th>
-                        <th className="py-3 px-3 text-center">GP</th>
-                        <th className="py-3 px-2 text-center">W</th>
-                        <th className="py-3 px-2 text-center">L</th>
-                        <th className="py-3 px-2 text-center">D</th>
-                        <th className="py-3 px-2 text-center">GF</th>
-                        <th className="py-3 px-2 text-center font-normal">GA</th>
-                        <th className="py-3 px-2 text-center font-normal">GD</th>
-                        <th className="py-3 px-4 text-center text-primary font-black">Pts</th>
+                        <th className="py-1.5 px-3 w-12 text-center">Pos</th>
+                        <th className="py-1.5 px-3">Club / Team</th>
+                        <th className="py-1.5 px-2 text-center">GP</th>
+                        <th className="py-1.5 px-2 text-center">W</th>
+                        <th className="py-1.5 px-2 text-center">L</th>
+                        <th className="py-1.5 px-2 text-center">D</th>
+                        <th className="py-1.5 px-2 text-center">GF</th>
+                        <th className="py-1.5 px-2 text-center font-normal">GA</th>
+                        <th className="py-1.5 px-2 text-center font-normal">GD</th>
+                        <th className="py-1.5 px-3 text-center text-primary font-black">Pts</th>
                       </tr>
                     </thead>
                     <tbody>
                       {division.standings.length === 0 ? (
                         <tr>
-                          <td colSpan={10} className="py-8 text-center text-sm text-muted font-medium">
+                          <td colSpan={10} className="py-4 text-center text-sm text-muted font-medium">
                             No match results reported for this division yet.
                           </td>
                         </tr>
@@ -284,28 +296,28 @@ export default function LeaguePageClient({
                               key={team.teamSeasonId}
                               className="border-b border-border/60 hover:bg-background/25 last:border-none transition-colors"
                             >
-                              <td className="py-3.5 px-4 font-bold text-center text-muted/80 text-sm">
+                              <td className="py-1.5 px-3 font-bold text-center text-muted/80 text-xs sm:text-sm">
                                 {index + 1}
                               </td>
-                              <td className="py-3.5 px-4">
+                              <td className="py-1.5 px-3">
                                 <Link
                                   href={`/teams/${team.teamSeasonId}`}
-                                  className="font-bold text-text hover:text-primary transition-colors text-sm sm:text-base block"
+                                  className="font-bold text-text hover:text-primary transition-colors text-xs sm:text-sm leading-tight block"
                                 >
-                                  {team.clubName && <span className="font-semibold text-xs text-muted block">{team.clubName}</span>}
+                                  {team.clubName && <span className="font-semibold text-[10px] text-muted block">{team.clubName}</span>}
                                   {team.teamName}
                                 </Link>
                               </td>
-                              <td className="py-3.5 px-3 text-center text-sm font-medium">{team.gamesPlayed}</td>
-                              <td className="py-3.5 px-2 text-center text-sm font-semibold text-success">{team.wins}</td>
-                              <td className="py-3.5 px-2 text-center text-sm font-semibold text-danger">{team.losses}</td>
-                              <td className="py-3.5 px-2 text-center text-sm font-semibold text-muted">{team.draws}</td>
-                              <td className="py-3.5 px-2 text-center text-sm text-text/75">{team.goalsFor}</td>
-                              <td className="py-3.5 px-2 text-center text-sm text-muted/75">{team.goalsAgainst}</td>
-                              <td className={`py-3.5 px-2 text-center text-sm font-bold ${gd > 0 ? "text-success" : gd < 0 ? "text-danger" : "text-muted"}`}>
+                              <td className="py-1.5 px-2 text-center text-xs sm:text-sm font-medium">{team.gamesPlayed}</td>
+                              <td className="py-1.5 px-2 text-center text-xs sm:text-sm font-semibold text-success">{team.wins}</td>
+                              <td className="py-1.5 px-2 text-center text-xs sm:text-sm font-semibold text-danger">{team.losses}</td>
+                              <td className="py-1.5 px-2 text-center text-xs sm:text-sm font-semibold text-muted">{team.draws}</td>
+                              <td className="py-1.5 px-2 text-center text-xs sm:text-sm text-text/75">{team.goalsFor}</td>
+                              <td className="py-1.5 px-2 text-center text-xs sm:text-sm text-muted/75">{team.goalsAgainst}</td>
+                              <td className={`py-1.5 px-2 text-center text-xs sm:text-sm font-bold ${gd > 0 ? "text-success" : gd < 0 ? "text-danger" : "text-muted"}`}>
                                 {gd > 0 ? `+${gd}` : gd}
                               </td>
-                              <td className="py-3.5 px-4 text-center font-extrabold text-primary text-base">{team.points}</td>
+                              <td className="py-1.5 px-3 text-center font-extrabold text-primary text-sm sm:text-base">{team.points}</td>
                             </tr>
                           );
                         })

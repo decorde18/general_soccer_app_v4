@@ -1356,6 +1356,7 @@ export async function getTeamSeasonRecords(
         include: { teams: { include: { clubs: true } } },
       },
       game_league_nodes: true,
+      game_standings_inclusions: true,
     },
   });
 
@@ -1421,7 +1422,7 @@ export async function getTeamSeasonRecords(
     return recordsMap.get(key)!;
   };
 
-  gamesData.forEach((g) => {
+  gamesData.forEach((g: any) => {
     let homeScore = 0;
     let awayScore = 0;
     g.game_events_major?.forEach((major: any) => {
@@ -1440,14 +1441,7 @@ export async function getTeamSeasonRecords(
       }
     });
 
-    const hasScoredResult =
-      homeScore !== null && awayScore !== null && homeScore + awayScore > 0;
-
-    if (!hasScoredResult) {
-      return;
-    }
-
-    const nodes = g.game_league_nodes.map((n) => n.league_node_id);
+    const nodes = g.game_league_nodes.map((n: any) => n.league_node_id);
     const targetNodes = leagueNodeSeasonId
       ? [leagueNodeSeasonId]
       : teamSeasonId
@@ -1456,8 +1450,18 @@ export async function getTeamSeasonRecords(
           ? nodes
           : [0];
 
-    targetNodes.forEach((lnId) => {
+    targetNodes.forEach((lnId: number | null) => {
       const targetLnId = leagueNodeSeasonId || lnId;
+
+      // Check game_standings_inclusions for target node if applicable
+      if (targetLnId && g.game_standings_inclusions?.length > 0) {
+        const inclusion = g.game_standings_inclusions.find(
+          (inc: any) => inc.league_node_id === targetLnId,
+        );
+        if (inclusion && inclusion.counts_for_standings === false) {
+          return;
+        }
+      }
 
       if (leagueNodeSeasonId) {
         if (
@@ -2196,3 +2200,115 @@ export async function getPlayerTeamSeasons(
     };
   });
 }
+
+// ─── Player Relationships & Admin Helpers ─────────────────────────────────────
+
+export async function getPlayerRelationships() {
+  const rels = await prisma.player_relationships.findMany({
+    include: {
+      people_player_relationships_player_idTopeople: true,
+      people_player_relationships_related_person_idTopeople: true,
+    },
+    orderBy: { id: "desc" },
+  });
+  return rels.map((r) => ({
+    id: r.id,
+    player_id: r.player_id,
+    playerName: `${r.people_player_relationships_player_idTopeople.first_name} ${r.people_player_relationships_player_idTopeople.last_name}`,
+    related_person_id: r.related_person_id,
+    parentName: `${r.people_player_relationships_related_person_idTopeople.first_name} ${r.people_player_relationships_related_person_idTopeople.last_name}`,
+    relationship: r.relationship,
+    created_at: toDateTimeString(r.created_at),
+  }));
+}
+
+export async function getAllPeople() {
+  const people = await prisma.people.findMany({
+    orderBy: [{ last_name: "asc" }, { first_name: "asc" }],
+  });
+  return people.map((p) => ({
+    id: p.id,
+    name: `${p.first_name} ${p.last_name}`,
+    email: p.email ?? "",
+  }));
+}
+
+export async function getTeamEventsAndGames(teamSeasonIds: number[]) {
+  if (teamSeasonIds.length === 0) return { games: [], events: [] };
+
+  const [gamesData, eventsData] = await Promise.all([
+    prisma.games.findMany({
+      where: {
+        OR: [
+          { home_team_season_id: { in: teamSeasonIds } },
+          { away_team_season_id: { in: teamSeasonIds } },
+        ],
+      },
+      include: {
+        seasons: true,
+        team_seasons_games_home_team_season_idToteam_seasons: {
+          include: { teams: { include: { clubs: true } } },
+        },
+        team_seasons_games_away_team_season_idToteam_seasons: {
+          include: { teams: { include: { clubs: true } } },
+        },
+        locations: true,
+      },
+      orderBy: [{ start_date: "asc" }, { start_time: "asc" }],
+    }),
+    prisma.events.findMany({
+      where: {
+        team_season_id: { in: teamSeasonIds },
+      },
+      include: {
+        locations: true,
+        event_types: true,
+      },
+      orderBy: { start_datetime: "asc" },
+    }),
+  ]);
+
+  return {
+    games: gamesData.map(mapGameRow),
+    events: eventsData.map((e) => ({
+      id: e.id,
+      title: e.title,
+      description: e.description,
+      startDatetime: toDateTimeString(e.start_datetime),
+      endDatetime: toDateTimeString(e.end_datetime),
+      isAllDay: !!e.is_all_day,
+      locationName: e.locations?.name ?? null,
+      eventType: e.event_types?.name ?? "Event",
+      teamSeasonId: e.team_season_id,
+    })),
+  };
+}
+
+export async function getParentStaffContacts(teamSeasonIds: number[]) {
+  if (teamSeasonIds.length === 0) return [];
+  const staff = await prisma.team_staff.findMany({
+    where: {
+      team_season_id: { in: teamSeasonIds },
+      is_active: true,
+    },
+    include: {
+      people: true,
+      team_seasons: {
+        include: { teams: { include: { clubs: true } } },
+      },
+    },
+  });
+
+  return staff.map((s) => ({
+    id: s.id,
+    personId: s.person_id,
+    firstName: s.people.first_name,
+    lastName: s.people.last_name,
+    email: s.people.email,
+    phone: s.people.phone,
+    role: s.role,
+    teamName: s.team_seasons.teams.team_name,
+    clubName: s.team_seasons.teams.clubs.name,
+  }));
+}
+

@@ -36,7 +36,9 @@ interface DashboardClientProps {
   };
   playerTeams?: any[];
   playerStats?: any[];
+  playerSchedule?: { games: any[]; events: any[] };
   childrenList?: any[];
+  parentStaffContacts?: any[];
   coachTeams?: any[];
 }
 
@@ -44,7 +46,9 @@ export default function DashboardClient({
   user,
   playerTeams = [],
   playerStats = [],
+  playerSchedule = { games: [], events: [] },
   childrenList = [],
+  parentStaffContacts = [],
   coachTeams = [],
 }: DashboardClientProps) {
   // State for coach team selection
@@ -180,6 +184,30 @@ export default function DashboardClient({
                 </div>
                 <Link href="/admin/club-staff" className="text-[11px] font-bold text-primary flex items-center gap-1 mt-2">
                   <span>Manage Staff Roles</span>
+                  <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </Card>
+            )}
+
+            {/* Parent & Guardian Links */}
+            {user.roles.isAdmin && (
+              <Card variant="default" padding="md" className="hover:border-primary/40 hover:shadow-sm transition-all group flex flex-col justify-between h-36">
+                <div>
+                  <div className="flex justify-between items-start">
+                    <Users className="text-emerald-500" size={24} />
+                    <span className="text-[10px] uppercase font-bold text-muted bg-border px-1.5 py-0.5 rounded">
+                      Parents
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-sm text-text mt-3 group-hover:text-primary transition-colors">
+                    Parent-Player Links
+                  </h4>
+                  <p className="text-[11px] text-muted mt-1 leading-normal">
+                    Map parent/guardian user profiles to roster players for restricted parent access.
+                  </p>
+                </div>
+                <Link href="/admin/player-relationships" className="text-[11px] font-bold text-primary flex items-center gap-1 mt-2">
+                  <span>Manage Parent Links</span>
                   <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </Card>
@@ -352,7 +380,7 @@ export default function DashboardClient({
           <div className="flex items-center gap-2 border-b border-border/40 pb-2">
             <Star size={18} className="text-primary" />
             <h2 className="font-bold text-base text-text uppercase tracking-wider">
-              Player Hub (My Metrics & Schedules)
+              Player Hub (My Metrics & Schedule)
             </h2>
           </div>
 
@@ -397,33 +425,73 @@ export default function DashboardClient({
               </Card>
             </div>
 
-            {/* Player team list */}
-            <div className="lg:col-span-2 space-y-4">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted">
-                My Team Selections
-              </h4>
-              {playerTeams.length === 0 ? (
-                <Card variant="outlined" padding="lg" className="bg-surface/30 text-center py-10 text-xs text-muted border-dashed">
-                  No roster connections found for this account.
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {playerTeams.map((t) => (
-                    <Card key={t.id} variant="default" padding="md" className="hover:border-primary/30 transition-all flex items-center justify-between shadow-sm">
-                      <div>
-                        <h4 className="font-bold text-sm text-text">{t.teamName}</h4>
-                        <p className="text-[10px] text-muted">{t.clubName} • {t.seasonName}</p>
+            {/* Player team list & Upcoming schedule */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="space-y-3">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted">
+                  My Team Selections
+                </h4>
+                {playerTeams.length === 0 ? (
+                  <Card variant="outlined" padding="lg" className="bg-surface/30 text-center py-10 text-xs text-muted border-dashed">
+                    No roster connections found for this account.
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {playerTeams.map((t) => (
+                      <Card key={t.id} variant="default" padding="md" className="hover:border-primary/30 transition-all flex items-center justify-between shadow-sm">
+                        <div>
+                          <h4 className="font-bold text-sm text-text">{t.teamName}</h4>
+                          <p className="text-[10px] text-muted">{t.clubName} • {t.seasonName}</p>
+                        </div>
+                        <Link href={`/teams/${t.id}`}>
+                          <Button variant="outline" size="xs" className="flex items-center gap-1 font-bold text-[10px]">
+                            <span>Team</span>
+                            <ArrowRight size={10} />
+                          </Button>
+                        </Link>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Personalized Calendar Schedule */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted flex items-center gap-1.5">
+                  <Calendar size={14} className="text-primary" />
+                  <span>My Match Calendar & Events</span>
+                </h4>
+
+                {playerSchedule.games.length === 0 && playerSchedule.events.length === 0 ? (
+                  <Card variant="outlined" padding="md" className="text-center py-8 text-xs text-muted bg-surface/30">
+                    No upcoming matches or training events scheduled on your calendar.
+                  </Card>
+                ) : (
+                  <div className="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
+                    {playerSchedule.games.map((g) => (
+                      <div key={g.id} className="p-3 bg-surface border border-border/80 rounded-xl flex items-center justify-between text-xs">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-text">{g.homeTeamName} vs {g.awayTeamName}</span>
+                            <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                              {g.status}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-muted flex items-center gap-2">
+                            <span>📅 {g.startDate} {g.startTime || ""}</span>
+                            {g.locationName && <span>📍 {g.locationName}</span>}
+                          </p>
+                        </div>
+                        {g.status === "completed" && (
+                          <span className="font-bold text-xs bg-background px-2 py-1 rounded border">
+                            {g.homeScore} - {g.awayScore}
+                          </span>
+                        )}
                       </div>
-                      <Link href={`/teams/${t.id}`}>
-                        <Button variant="outline" size="xs" className="flex items-center gap-1 font-bold text-[10px]">
-                          <span>Team Overview</span>
-                          <ArrowRight size={10} />
-                        </Button>
-                      </Link>
-                    </Card>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -435,7 +503,7 @@ export default function DashboardClient({
           <div className="flex items-center gap-2 border-b border-border/40 pb-2">
             <Star size={18} className="text-primary" />
             <h2 className="font-bold text-base text-text uppercase tracking-wider">
-              Parent Dashboard (Child Connections)
+              Parent Dashboard (Child Profiles & Staff Directory)
             </h2>
           </div>
 
@@ -515,9 +583,43 @@ export default function DashboardClient({
                 </div>
               </div>
             ))}
+
+            {/* Team Staff Contacts Section for Parents */}
+            {parentStaffContacts.length > 0 && (
+              <div className="bg-surface border border-border p-5 rounded-2xl shadow-sm space-y-4">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted flex items-center gap-1.5">
+                  <Users size={16} className="text-primary" />
+                  <span>Team Staff Directory (Coaches & Contacts)</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {parentStaffContacts.map((s) => (
+                    <div key={s.id} className="p-3 bg-background/35 border border-border/60 rounded-xl space-y-1 text-xs">
+                      <div className="flex justify-between items-start">
+                        <span className="font-bold text-text">{s.firstName} {s.lastName}</span>
+                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-primary/10 text-primary capitalize">
+                          {s.role.replace("_", " ")}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted">{s.teamName} ({s.clubName})</p>
+                      {s.email && (
+                        <a href={`mailto:${s.email}`} className="text-[10px] text-primary hover:underline block truncate">
+                          ✉️ {s.email}
+                        </a>
+                      )}
+                      {s.phone && (
+                        <a href={`tel:${s.phone}`} className="text-[10px] text-muted hover:underline block">
+                          📞 {s.phone}
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}
     </div>
   );
 }
+

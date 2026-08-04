@@ -5,6 +5,8 @@ import {
   getDashboardTeamSeasons,
   getPlayerTeamSeasons,
   getPlayerStatsByPerson,
+  getTeamEventsAndGames,
+  getParentStaffContacts,
 } from "@/lib/data/queries";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 
@@ -17,7 +19,9 @@ export default async function DashboardPage() {
   // 2. Fetch data in parallel based on active role flags
   let playerTeams: any[] = [];
   let playerStats: any[] = [];
+  let playerSchedule: { games: any[]; events: any[] } = { games: [], events: [] };
   let childrenList: any[] = [];
+  let parentStaffContacts: any[] = [];
   let coachTeams: any[] = [];
 
   const promises: Promise<any>[] = [];
@@ -25,8 +29,12 @@ export default async function DashboardPage() {
   // Player role data
   if (user.roles.player) {
     promises.push(
-      getPlayerTeamSeasons(personId).then((res) => {
+      getPlayerTeamSeasons(personId).then(async (res) => {
         playerTeams = res;
+        const teamSeasonIds = res.map((t) => t.id);
+        if (teamSeasonIds.length > 0) {
+          playerSchedule = await getTeamEventsAndGames(teamSeasonIds);
+        }
       })
     );
     promises.push(
@@ -46,6 +54,18 @@ export default async function DashboardPage() {
             return { ...child, stats };
           })
         );
+
+        const childTeamSeasonIds = Array.from(
+          new Set(
+            childrenList.flatMap((c) =>
+              c.teamSeasons.map((ts: any) => ts.teamSeasonId)
+            )
+          )
+        );
+
+        if (childTeamSeasonIds.length > 0) {
+          parentStaffContacts = await getParentStaffContacts(childTeamSeasonIds);
+        }
       })
     );
   }
@@ -78,9 +98,12 @@ export default async function DashboardPage() {
         }}
         playerTeams={playerTeams}
         playerStats={playerStats}
+        playerSchedule={playerSchedule}
         childrenList={childrenList}
+        parentStaffContacts={parentStaffContacts}
         coachTeams={coachTeams}
       />
     </main>
   );
 }
+

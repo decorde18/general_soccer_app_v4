@@ -228,18 +228,18 @@ export function EntityPage<T extends Record<string, unknown>>({
       {/* Table card */}
       <div className='bg-surface border border-border rounded-xl overflow-hidden'>
         {/* Toolbar */}
-        <div className='flex items-center gap-3 px-4 py-3 border-b border-border'>
+        <div className='flex items-center gap-3 px-3 py-1.5 border-b border-border'>
           <div className='relative flex-1 max-w-xs'>
             <Search
-              size={14}
-              className='absolute left-3 top-1/2 -translate-y-1/2 text-muted/60'
+              size={13}
+              className='absolute left-2.5 top-1/2 -translate-y-1/2 text-muted/60'
             />
             <input
               type='text'
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder={`Search ${config.plural?.toLowerCase() ?? config.title.toLowerCase()}...`}
-              className='w-full pl-8 pr-3 py-2 text-sm border border-border rounded-xl bg-surface text-text placeholder:text-muted/60 focus:outline-none focus:border-border focus:ring-2 focus:ring-primary/10 transition-colors'
+              className='w-full pl-7 pr-3 py-1 text-xs border border-border rounded-lg bg-surface text-text placeholder:text-muted/60 focus:outline-none focus:border-border focus:ring-2 focus:ring-primary/10 transition-colors'
             />
           </div>
 

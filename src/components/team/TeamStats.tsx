@@ -16,13 +16,14 @@ interface PlayerSeasonStats {
   gamesPlayed: number;
   gamesStarted: number;
   minutesPlayed: number;
+  cleanSheets?: number;
 }
 
 interface TeamStatsProps {
   stats: PlayerSeasonStats[];
 }
 
-type SortKey = "name" | "goals" | "assists" | "points" | "gamesPlayed" | "gamesStarted" | "yellowCards" | "redCards" | "minutesPlayed";
+type SortKey = "name" | "goals" | "assists" | "points" | "cleanSheets" | "gamesPlayed" | "gamesStarted" | "yellowCards" | "redCards" | "minutesPlayed";
 type SortDirection = "asc" | "desc";
 
 export default function TeamStats({ stats }: TeamStatsProps) {
@@ -46,6 +47,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
   const sortedStats = useMemo(() => {
     let list = stats.map(s => ({
       ...s,
+      cleanSheets: s.cleanSheets ?? 0,
       points: s.goals + s.assists // Standard points calculation: G + A
     }));
 
@@ -124,7 +126,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
               <tr className="border-b border-border bg-background/50 text-[11px] font-bold uppercase tracking-wider text-muted select-none">
                 <th 
                   onClick={() => handleSort("name")}
-                  className="py-3.5 px-4 cursor-pointer hover:bg-background/80 transition-colors group"
+                  className="py-1.5 px-4 cursor-pointer hover:bg-background/80 transition-colors group"
                 >
                   <span className="flex items-center">
                     Player Name <SortIcon column="name" />
@@ -132,7 +134,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                 </th>
                 <th 
                   onClick={() => handleSort("goals")}
-                  className="py-3.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20"
+                  className="py-1.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20"
                 >
                   <span className="flex items-center justify-center">
                     Goals <SortIcon column="goals" />
@@ -140,7 +142,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                 </th>
                 <th 
                   onClick={() => handleSort("assists")}
-                  className="py-3.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20"
+                  className="py-1.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20"
                 >
                   <span className="flex items-center justify-center">
                     Assists <SortIcon column="assists" />
@@ -148,15 +150,23 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                 </th>
                 <th 
                   onClick={() => handleSort("points")}
-                  className="py-3.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-24"
+                  className="py-1.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-24"
                 >
                   <span className="flex items-center justify-center">
                     Pts (G+A) <SortIcon column="points" />
                   </span>
                 </th>
                 <th 
+                  onClick={() => handleSort("cleanSheets")}
+                  className="py-1.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20"
+                >
+                  <span className="flex items-center justify-center">
+                    CS <SortIcon column="cleanSheets" />
+                  </span>
+                </th>
+                <th 
                   onClick={() => handleSort("gamesPlayed")}
-                  className="py-3.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20"
+                  className="py-1.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20"
                 >
                   <span className="flex items-center justify-center">
                     GP <SortIcon column="gamesPlayed" />
@@ -164,7 +174,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                 </th>
                 <th 
                   onClick={() => handleSort("gamesStarted")}
-                  className="py-3.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20 hidden md:table-cell"
+                  className="py-1.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-20 hidden md:table-cell"
                 >
                   <span className="flex items-center justify-center">
                     Starts <SortIcon column="gamesStarted" />
@@ -172,7 +182,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                 </th>
                 <th 
                   onClick={() => handleSort("minutesPlayed")}
-                  className="py-3.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-24 hidden lg:table-cell"
+                  className="py-1.5 px-3 cursor-pointer hover:bg-background/80 transition-colors text-center group w-24 hidden lg:table-cell"
                 >
                   <span className="flex items-center justify-center">
                     Mins <SortIcon column="minutesPlayed" />
@@ -180,7 +190,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                 </th>
                 <th 
                   onClick={() => handleSort("yellowCards")}
-                  className="py-3.5 px-2 cursor-pointer hover:bg-background/80 transition-colors text-center group w-16 hidden sm:table-cell"
+                  className="py-1.5 px-2 cursor-pointer hover:bg-background/80 transition-colors text-center group w-16 hidden sm:table-cell"
                 >
                   <span className="flex items-center justify-center">
                     YC <SortIcon column="yellowCards" />
@@ -188,7 +198,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                 </th>
                 <th 
                   onClick={() => handleSort("redCards")}
-                  className="py-3.5 px-2 cursor-pointer hover:bg-background/80 transition-colors text-center group w-16 hidden sm:table-cell"
+                  className="py-1.5 px-2 cursor-pointer hover:bg-background/80 transition-colors text-center group w-16 hidden sm:table-cell"
                 >
                   <span className="flex items-center justify-center">
                     RC <SortIcon column="redCards" />
@@ -202,28 +212,31 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                   key={row.id} 
                   className="border-b border-border/60 hover:bg-background/25 last:border-none transition-colors"
                 >
-                  <td className="py-3 px-4 font-bold text-text">
+                  <td className="py-1.5 px-4 font-bold text-text text-xs sm:text-sm">
                     {row.firstName} {row.lastName}
                   </td>
-                  <td className="py-3 px-3 text-center text-sm font-extrabold text-primary bg-primary/[0.02]">
+                  <td className="py-1.5 px-3 text-center text-xs sm:text-sm font-extrabold text-primary bg-primary/[0.02]">
                     {row.goals}
                   </td>
-                  <td className="py-3 px-3 text-center text-sm font-extrabold text-accent bg-accent/[0.02]">
+                  <td className="py-1.5 px-3 text-center text-xs sm:text-sm font-extrabold text-accent bg-accent/[0.02]">
                     {row.assists}
                   </td>
-                  <td className="py-3 px-3 text-center text-sm font-extrabold text-text bg-background/30">
+                  <td className="py-1.5 px-3 text-center text-xs sm:text-sm font-extrabold text-text bg-background/30">
                     {row.points}
                   </td>
-                  <td className="py-3 px-3 text-center text-sm text-text/80 font-semibold">
+                  <td className="py-1.5 px-3 text-center text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/[0.03]">
+                    {row.cleanSheets ?? 0}
+                  </td>
+                  <td className="py-1.5 px-3 text-center text-xs sm:text-sm text-text/80 font-semibold">
                     {row.gamesPlayed}
                   </td>
-                  <td className="py-3 px-3 text-center text-sm text-muted font-medium hidden md:table-cell">
+                  <td className="py-1.5 px-3 text-center text-xs sm:text-sm text-muted font-medium hidden md:table-cell">
                     {row.gamesStarted}
                   </td>
-                  <td className="py-3 px-3 text-center text-sm text-muted font-medium hidden lg:table-cell">
+                  <td className="py-1.5 px-3 text-center text-xs sm:text-sm text-muted font-medium hidden lg:table-cell">
                     {row.minutesPlayed}
                   </td>
-                  <td className="py-3 px-2 text-center hidden sm:table-cell">
+                  <td className="py-1.5 px-2 text-center hidden sm:table-cell">
                     {row.yellowCards > 0 ? (
                       <span className="inline-block h-5 w-4 rounded bg-yellow-400 font-bold text-xs text-yellow-950 text-center leading-5 shadow-sm">
                         {row.yellowCards}
@@ -232,7 +245,7 @@ export default function TeamStats({ stats }: TeamStatsProps) {
                       <span className="text-muted/40 text-xs">-</span>
                     )}
                   </td>
-                  <td className="py-3 px-2 text-center hidden sm:table-cell">
+                  <td className="py-1.5 px-2 text-center hidden sm:table-cell">
                     {row.redCards > 0 ? (
                       <span className="inline-block h-5 w-4 rounded bg-red-600 font-bold text-xs text-white text-center leading-5 shadow-sm">
                         {row.redCards}

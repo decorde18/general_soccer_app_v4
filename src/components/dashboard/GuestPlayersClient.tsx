@@ -295,20 +295,20 @@ export default function GuestPlayersClient({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: PLAYER FILTER & SELECT (6 cols) */}
-        <div className="lg:col-span-6 bg-surface border border-border/80 rounded-2xl p-5 shadow-sm space-y-4 flex flex-col max-h-[78vh]">
-          <div className="flex items-center gap-2 border-b border-border/50 pb-2">
-            <Users size={16} className="text-primary" />
-            <h3 className="font-bold text-sm text-text uppercase tracking-wider">
+        {/* LEFT COLUMN: PLAYER SELECT (6 cols) */}
+        <div className="lg:col-span-6 bg-surface border border-border/80 rounded-2xl p-4 shadow-sm space-y-2.5 flex flex-col max-h-[88vh]">
+          <div className="flex items-center gap-2 border-b border-border/50 pb-1.5">
+            <Users size={15} className="text-primary" />
+            <h3 className="font-bold text-xs text-text uppercase tracking-wider">
               Step 1: Select Roster Players
             </h3>
           </div>
 
           {/* Player Filters Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {/* Club Filter */}
             <div>
-              <label className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-1">
+              <label className="text-[9px] font-bold text-muted uppercase tracking-wider block mb-0.5">
                 Club Organization
               </label>
               <select
@@ -317,7 +317,7 @@ export default function GuestPlayersClient({
                   setSelectedClubId(e.target.value);
                   setSelectedTeamId("");
                 }}
-                className="w-full text-xs py-1.5 px-2 bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-text"
+                className="w-full text-[11px] py-1 px-2 bg-background border border-border/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-text"
               >
                 <option value="">All Clubs</option>
                 {clubs.map((c) => (
@@ -330,13 +330,13 @@ export default function GuestPlayersClient({
 
             {/* Team Filter */}
             <div>
-              <label className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-1">
+              <label className="text-[9px] font-bold text-muted uppercase tracking-wider block mb-0.5">
                 Roster Team
               </label>
               <select
                 value={selectedTeamId}
                 onChange={(e) => setSelectedTeamId(e.target.value)}
-                className="w-full text-xs py-1.5 px-2 bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-text"
+                className="w-full text-[11px] py-1 px-2 bg-background border border-border/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-text"
               >
                 <option value="">All Teams</option>
                 {filteredTeams.map((t) => (
@@ -349,13 +349,13 @@ export default function GuestPlayersClient({
 
             {/* Age Group Filter */}
             <div>
-              <label className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-1">
+              <label className="text-[9px] font-bold text-muted uppercase tracking-wider block mb-0.5">
                 Age Bracket
               </label>
               <select
                 value={selectedAgeGroupId}
                 onChange={(e) => setSelectedAgeGroupId(e.target.value)}
-                className="w-full text-xs py-1.5 px-2 bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-text"
+                className="w-full text-[11px] py-1 px-2 bg-background border border-border/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-text"
               >
                 <option value="">All Ages</option>
                 {ageGroups.map((ag) => (
@@ -369,26 +369,26 @@ export default function GuestPlayersClient({
 
           {/* Player Search Input */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
               placeholder="Search player name or email..."
               value={playerSearchQuery}
               onChange={(e) => setPlayerSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-text placeholder:text-muted/60"
+              className="w-full pl-8 pr-3 py-1 text-[11px] bg-background border border-border/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 text-text placeholder:text-muted/60"
             />
           </div>
 
           {/* Players Selection Header / Count */}
-          <div className="flex items-center justify-between text-xs font-semibold text-muted bg-background/50 border border-border/40 px-3 py-1.5 rounded-xl">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-muted bg-background/50 border border-border/40 px-2.5 py-1 rounded-lg">
             <button
               onClick={handleSelectAllPlayers}
               className="flex items-center gap-1.5 hover:text-text text-left transition-colors"
             >
               {selectedPlayerIds.size === playersList.length && playersList.length > 0 ? (
-                <CheckSquare size={14} className="text-primary" />
+                <CheckSquare size={13} className="text-primary" />
               ) : (
-                <Square size={14} />
+                <Square size={13} />
               )}
               <span>Select All Players ({playersList.length})</span>
             </button>
@@ -396,10 +396,10 @@ export default function GuestPlayersClient({
           </div>
 
           {/* Players List Container */}
-          <div className="flex-1 overflow-y-auto pr-1 space-y-1 min-h-[30vh]">
+          <div className="flex-1 overflow-y-auto pr-1 space-y-0.5 min-h-[420px]">
             {isPlayersLoading ? (
               <div className="flex justify-center items-center py-16 gap-2 text-xs text-muted">
-                <Loader2 className="animate-spin text-primary" size={16} />
+                <Loader2 className="animate-spin text-primary" size={15} />
                 <span>Loading players...</span>
               </div>
             ) : playersList.length === 0 ? (
@@ -413,34 +413,32 @@ export default function GuestPlayersClient({
                   <div
                     key={player.personId}
                     onClick={() => togglePlayerSelect(player.personId)}
-                    className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                    className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border cursor-pointer select-none transition-all ${
                       isSelected
-                        ? "bg-primary/5 border-primary/25 shadow-sm"
-                        : "bg-background/40 hover:bg-background/70 border-border/40 hover:border-border/80"
+                        ? "bg-primary/10 border-primary/30 text-primary font-bold shadow-2xs"
+                        : "bg-background/40 hover:bg-background/80 border-border/40 hover:border-border/80"
                     }`}
                   >
                     <div className="shrink-0 text-muted">
                       {isSelected ? (
-                        <CheckSquare size={16} className="text-primary" />
+                        <CheckSquare size={13} className="text-primary" />
                       ) : (
-                        <Square size={16} />
+                        <Square size={13} />
                       )}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex justify-between items-baseline">
-                        <span className="font-bold text-xs text-text truncate">
-                          {player.firstName} {player.lastName}
-                        </span>
-                        {player.ageGroupName && (
-                          <span className="text-[9px] px-1 bg-border rounded-full scale-90 text-muted font-semibold">
-                            {player.ageGroupName}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-muted truncate mt-0.5">
+                    <div className="min-w-0 flex-1 flex items-center justify-between gap-2 text-xs">
+                      <span className="font-bold text-text truncate text-[11px]">
+                        {player.firstName} {player.lastName}
+                      </span>
+                      <span className="text-[10px] text-muted truncate font-normal">
                         {player.clubName} • {player.teamName}
-                      </div>
+                      </span>
                     </div>
+                    {player.ageGroupName && (
+                      <span className="text-[9px] px-1 bg-border/80 rounded text-muted font-semibold shrink-0">
+                        {player.ageGroupName}
+                      </span>
+                    )}
                   </div>
                 );
               })
@@ -520,7 +518,7 @@ export default function GuestPlayersClient({
           </div>
 
           {/* Games List Container */}
-          <div className="flex-1 overflow-y-auto pr-1 space-y-2 min-h-[30vh]">
+          <div className="flex-1 overflow-y-auto pr-1 space-y-1.5 min-h-[30vh]">
             {!targetTeamSeasonId ? (
               <div className="text-center py-16 text-xs text-muted font-medium bg-background/25 border border-dashed border-border rounded-xl">
                 Please select a target team season above to load available games.
@@ -542,7 +540,7 @@ export default function GuestPlayersClient({
                   <div
                     key={game.id}
                     onClick={() => toggleGameSelect(game.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer select-none transition-all ${
+                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border cursor-pointer select-none transition-all ${
                       isSelected
                         ? "bg-primary/5 border-primary/25 shadow-sm"
                         : "bg-background/40 hover:bg-background/70 border-border/40 hover:border-border/80"
@@ -550,12 +548,12 @@ export default function GuestPlayersClient({
                   >
                     <div className="shrink-0 text-muted">
                       {isSelected ? (
-                        <CheckSquare size={16} className="text-primary" />
+                        <CheckSquare size={14} className="text-primary" />
                       ) : (
-                        <Square size={16} />
+                        <Square size={14} />
                       )}
                     </div>
-                    <div className="min-w-0 flex-1 space-y-1">
+                    <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="flex justify-between items-center text-[10px] text-muted">
                         <span className="font-semibold">{game.startDate} {game.startTime || ""}</span>
                         <span className={`px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90 ${
@@ -634,7 +632,7 @@ export default function GuestPlayersClient({
               {existingGuests.map((guest) => (
                 <div
                   key={guest.playerGameId}
-                  className="flex justify-between items-center p-3 hover:bg-background/35 transition-colors text-xs"
+                  className="flex justify-between items-center px-3 py-1.5 hover:bg-background/35 transition-colors text-xs"
                 >
                   <div className="min-w-0">
                     <span className="font-bold text-text block truncate">
@@ -647,7 +645,7 @@ export default function GuestPlayersClient({
                   
                   <button
                     onClick={() => handleRemoveGuest(guest.playerGameId, `${guest.firstName} ${guest.lastName}`)}
-                    className="p-1.5 hover:bg-danger/10 text-muted hover:text-danger rounded-lg transition-colors flex items-center gap-1 font-bold text-[10px] border border-transparent hover:border-danger/15"
+                    className="p-1 hover:bg-danger/10 text-muted hover:text-danger rounded-lg transition-colors flex items-center gap-1 font-bold text-[10px] border border-transparent hover:border-danger/15"
                   >
                     <XCircle size={12} />
                     <span>Unassign</span>

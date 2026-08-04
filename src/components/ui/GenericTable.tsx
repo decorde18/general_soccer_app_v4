@@ -85,7 +85,7 @@ export function GenericTable<T extends Record<string, unknown>>({
             const style = BADGE_STYLES[col.options[val] ?? "gray"];
             return (
               <span
-                className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${style}`}
+                className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full leading-none ${style}`}
               >
                 {val}
               </span>
@@ -99,19 +99,19 @@ export function GenericTable<T extends Record<string, unknown>>({
           }
           if (col.type === "boolean") {
             return val == 1 || val === true || val === "true" ? (
-              <span className='text-xs font-medium text-success'>Yes</span>
+              <span className='text-xs font-medium text-success leading-none'>Yes</span>
             ) : (
-              <span className='text-xs text-muted'>No</span>
+              <span className='text-xs text-muted leading-none'>No</span>
             );
           }
 
-          return <span className='text-sm'>{val ?? "—"}</span>;
+          return <span className='text-xs leading-none'>{val ?? "—"}</span>;
         })();
 
         if (col.linkPattern && row.original && (row.original as any).id) {
           const href = col.linkPattern.replace("{id}", String((row.original as any).id));
           return (
-            <Link href={href} className="text-primary hover:underline font-semibold">
+            <Link href={href} className="text-primary hover:underline font-semibold leading-none">
               {cellContent}
             </Link>
           );
@@ -127,23 +127,23 @@ export function GenericTable<T extends Record<string, unknown>>({
         header: "",
         enableSorting: false,
         cell: ({ row }) => (
-          <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end'>
+          <div className='flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity justify-end leading-none'>
             {canEdit && (
               <button
                 onClick={() => onEdit(row.original)}
-                className='p-1.5 rounded-md text-muted hover:text-text hover:bg-muted/10 transition-colors'
+                className='p-0.5 rounded text-muted hover:text-text hover:bg-muted/10 transition-colors inline-flex items-center justify-center leading-none'
                 title='Edit'
               >
-                <Pencil size={14} />
+                <Pencil size={12} />
               </button>
             )}
             {canDelete && (
               <button
                 onClick={() => onDelete(row.original)}
-                className='p-1.5 rounded-md text-muted hover:text-danger hover:bg-danger/10 transition-colors'
+                className='p-0.5 rounded text-muted hover:text-danger hover:bg-danger/10 transition-colors inline-flex items-center justify-center leading-none'
                 title='Delete'
               >
-                <Trash2 size={14} />
+                <Trash2 size={12} />
               </button>
             )}
           </div>
@@ -171,24 +171,24 @@ export function GenericTable<T extends Record<string, unknown>>({
   return (
     <div>
       <div className='overflow-x-auto'>
-        <table className='w-full text-sm border-collapse'>
+        <table className='w-full text-xs border-collapse'>
           <thead>
             {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id} className='border-b border-border'>
+              <tr key={hg.id} className='border-b border-border h-6'>
                 {hg.headers.map((header) => {
                   const col = columns.find((c) => c.key === header.id);
                   return (
                     <th
                       key={header.id}
                       className={`
-                        px-3 py-2 text-left text-xs font-semibold text-muted uppercase tracking-wide whitespace-nowrap
+                        px-2.5 py-0.5 text-left text-[10px] font-bold text-muted uppercase tracking-wide whitespace-nowrap leading-none align-middle h-6
                         ${col?.hiddenOnMobile ? "hidden md:table-cell" : ""}
-                        ${header.id === "_actions" ? "w-16" : ""}
+                        ${header.id === "_actions" ? "w-12 text-right" : ""}
                       `}
                     >
                       {header.isPlaceholder ? null : (
                         <div
-                          className={`flex items-center gap-1 ${header.column.getCanSort() ? "cursor-pointer select-none hover:text-text-label" : ""}`}
+                          className={`inline-flex items-center gap-0.5 leading-none ${header.column.getCanSort() ? "cursor-pointer select-none hover:text-text-label" : ""}`}
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           {flexRender(
@@ -196,13 +196,13 @@ export function GenericTable<T extends Record<string, unknown>>({
                             header.getContext(),
                           )}
                           {header.column.getCanSort() && (
-                            <span className='text-muted/40'>
+                            <span className='text-muted/40 leading-none inline-flex items-center'>
                               {header.column.getIsSorted() === "asc" ? (
-                                <ChevronUp size={12} />
+                                <ChevronUp size={10} />
                               ) : header.column.getIsSorted() === "desc" ? (
-                                <ChevronDown size={12} />
+                                <ChevronDown size={10} />
                               ) : (
-                                <ChevronsUpDown size={12} />
+                                <ChevronsUpDown size={10} />
                               )}
                             </span>
                           )}
@@ -219,7 +219,7 @@ export function GenericTable<T extends Record<string, unknown>>({
               <tr>
                 <td
                   colSpan={tanstackColumns.length}
-                  className='px-4 py-6 text-center text-sm text-muted'
+                  className='px-3 py-3 text-center text-xs text-muted align-middle h-8'
                 >
                   No results found.
                 </td>
@@ -228,7 +228,7 @@ export function GenericTable<T extends Record<string, unknown>>({
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className='group border-b border-border last:border-0 hover:bg-muted/5 transition-colors'
+                  className='group border-b border-border last:border-0 hover:bg-muted/5 transition-colors h-6'
                 >
                   {row.getVisibleCells().map((cell) => {
                     const col = columns.find((c) => c.key === cell.column.id);
@@ -236,7 +236,7 @@ export function GenericTable<T extends Record<string, unknown>>({
                       <td
                         key={cell.id}
                         className={`
-                          px-3 py-2 text-text
+                          px-2.5 py-0.5 text-text text-xs leading-none align-middle h-6
                           ${cell.column.id === "name" ? "font-semibold text-text" : ""}
                           ${col?.hiddenOnMobile ? "hidden md:table-cell" : ""}
                         `}

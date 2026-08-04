@@ -5,6 +5,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+// Ensure BigInt JSON serialization works seamlessly for all responses
+if (typeof BigInt !== "undefined" && !(BigInt.prototype as any).toJSON) {
+  (BigInt.prototype as any).toJSON = function (this: bigint) {
+    return Number(this);
+  };
+}
+
 // ─── Allowlist ───────────────────────────────────────────────────────────────
 // Only allow known tables & views to prevent SQL-injection via the table name.
 const ALLOWED_TABLES = new Set([
@@ -33,6 +40,8 @@ const ALLOWED_TABLES = new Set([
   "locations",
   "people",
   "player_games",
+  "player_relationships",
+  "player_teams",
   "players",
   "positions",
   "seasons",
@@ -270,10 +279,11 @@ export async function POST(req: Request, context: RouteContext) {
     const result = await prisma.$executeRawUnsafe(sql, ...values);
 
     // Fetch the newly created row by last insert ID
-    const [insertedRow] = await prisma.$queryRawUnsafe<{ id: number }[]>(
+    const [insertedRow] = await prisma.$queryRawUnsafe<{ id: number | bigint }[]>(
       `SELECT LAST_INSERT_ID() as id`
     );
-    const newId = insertedRow?.id;
+    const rawId = insertedRow?.id;
+    const newId = rawId !== undefined && rawId !== null ? Number(rawId) : 0;
 
     if (!newId) {
       return NextResponse.json({ success: true, rowsAffected: result });

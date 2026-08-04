@@ -23,7 +23,7 @@ interface TeamRosterProps {
 }
 
 export default function TeamRoster({ players }: TeamRosterProps) {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter roster based on search input
@@ -94,47 +94,48 @@ export default function TeamRoster({ players }: TeamRosterProps) {
               key={player.id} 
               variant="hover" 
               padding="none" 
-              className="relative overflow-hidden border-border/80 bg-surface flex flex-col h-full"
+              className="relative overflow-hidden border-border/80 bg-surface flex flex-col h-full group"
             >
-              {/* Card top banner accent */}
-              <div className="h-2 w-full bg-gradient-to-r from-primary to-accent" />
-              
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+              {/* Photo / Avatar Placeholder Header */}
+              <div className="relative w-full h-32 bg-gradient-to-b from-primary/10 via-surface/60 to-surface flex items-center justify-center border-b border-border/40 overflow-hidden">
+                <div className="h-16 w-16 rounded-full bg-surface/90 border-2 border-primary/20 flex items-center justify-center text-muted/60 shadow-inner group-hover:scale-105 transition-transform">
+                  <User size={32} className="text-muted/40" />
+                </div>
                 
-                {/* Header details */}
-                <div className="flex justify-between items-start gap-2">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 font-black text-lg">
-                    {player.jerseyNumber !== null ? `#${player.jerseyNumber}` : "--"}
-                  </div>
-                  
-                  {/* Captain / Status Badge */}
-                  <div className="flex flex-col gap-1 items-end">
-                    {player.captain && (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full shadow-sm">
-                        <Star size={10} className="fill-amber-500 text-amber-500" />
-                        <span>Captain</span>
-                      </span>
-                    )}
-                    {!player.isActive && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-muted bg-background border border-border px-2 py-0.5 rounded-full">
-                        Inactive
-                      </span>
-                    )}
-                  </div>
+                {/* Jersey Badge Overlay */}
+                <div className="absolute top-2.5 left-2.5 flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white font-black text-xs shadow-sm">
+                  {player.jerseyNumber !== null ? `#${player.jerseyNumber}` : "--"}
                 </div>
 
+                {/* Status / Captain Badges */}
+                <div className="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end">
+                  {player.captain && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full shadow-sm">
+                      <Star size={10} className="fill-amber-500 text-amber-500" />
+                      <span>Captain</span>
+                    </span>
+                  )}
+                  {!player.isActive && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted bg-background/90 border border-border px-2 py-0.5 rounded-full">
+                      Inactive
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                 {/* Name and Position */}
                 <div>
-                  <h3 className="font-extrabold text-text text-base sm:text-lg leading-snug">
+                  <h3 className="font-extrabold text-text text-base leading-snug">
                     {player.firstName} {player.lastName}
                     {player.nickname && (
-                      <span className="text-muted text-sm font-normal italic block mt-0.5">
+                      <span className="text-muted text-xs font-normal italic block mt-0.5">
                         "{player.nickname}"
                       </span>
                     )}
                   </h3>
                   
-                  <div className="flex flex-wrap gap-1.5 mt-2.5">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
                     {player.position && (
                       <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">
                         {player.position}
@@ -156,14 +157,14 @@ export default function TeamRoster({ players }: TeamRosterProps) {
         
         /* TABLE/LIST LAYOUT */
         <div className="overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-sm">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-border bg-background/50 text-[11px] font-bold uppercase tracking-wider text-muted">
-                <th className="py-3 px-4 w-16 text-center">Jersey</th>
-                <th className="py-3 px-4">Name</th>
-                <th className="py-3 px-4">Position</th>
-                <th className="py-3 px-4">Class/Grade</th>
-                <th className="py-3 px-4 w-28 text-center">Roles</th>
+              <tr className="border-b border-border bg-background/50 text-[10px] font-bold uppercase tracking-wider text-muted leading-tight">
+                <th className="py-1 px-2.5 w-14 text-center">Jersey</th>
+                <th className="py-1 px-2.5">Name</th>
+                <th className="py-1 px-2.5">Position</th>
+                <th className="py-1 px-2.5">Class/Grade</th>
+                <th className="py-1 px-2.5 w-24 text-center">Roles</th>
               </tr>
             </thead>
             <tbody>
@@ -172,26 +173,26 @@ export default function TeamRoster({ players }: TeamRosterProps) {
                   key={player.id} 
                   className="border-b border-border/60 hover:bg-background/25 last:border-none transition-colors"
                 >
-                  <td className="py-3.5 px-4 font-black text-primary text-center">
+                  <td className="py-0.5 px-2.5 font-black text-primary text-center text-xs leading-tight">
                     {player.jerseyNumber !== null ? `#${player.jerseyNumber}` : "--"}
                   </td>
-                  <td className="py-3.5 px-4">
-                    <div className="font-bold text-text">
+                  <td className="py-0.5 px-2.5">
+                    <div className="font-bold text-text text-xs leading-tight">
                       {player.firstName} {player.lastName}
                       {player.nickname && (
-                        <span className="text-muted text-xs font-normal italic ml-1.5">
+                        <span className="text-muted text-[10px] font-normal italic ml-1">
                           ({player.nickname})
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="py-3.5 px-4 text-sm text-text/80 font-medium">
+                  <td className="py-0.5 px-2.5 text-xs text-text/80 font-medium leading-tight">
                     {player.position || "--"}
                   </td>
-                  <td className="py-3.5 px-4 text-sm text-text/80 font-medium">
+                  <td className="py-0.5 px-2.5 text-xs text-text/80 font-medium leading-tight">
                     {player.grade ? `Grade ${player.grade}` : "--"}
                   </td>
-                  <td className="py-3.5 px-4 text-center">
+                  <td className="py-0.5 px-2.5 text-center leading-tight">
                     <div className="flex items-center justify-center gap-1.5">
                       {player.captain && (
                         <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 px-2 py-0.5 rounded-full">

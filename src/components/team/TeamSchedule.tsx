@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Calendar, MapPin, Clock, Trophy, Play, ShieldAlert, SquareChevronRight } from "lucide-react";
@@ -53,9 +53,19 @@ function formatTime(timeStr: string | null) {
   }
 }
 
+/** Check if a game date is strictly in the past (prior to today) */
+function isPastGameDate(dateStr: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const gameDate = new Date(dateStr);
+  gameDate.setHours(0, 0, 0, 0);
+  return gameDate.getTime() < today.getTime();
+}
+
 export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps) {
   const [statusFilter, setStatusFilter] = useState<"all" | "fixtures" | "results">("all");
   const [venueFilter, setVenueFilter] = useState<"all" | "home" | "away">("all");
+  const dividerRef = useRef<HTMLDivElement | null>(null);
 
   // Sort and filter games
   const processedGames = useMemo(() => {
@@ -75,19 +85,30 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
       list = list.filter((g) => g.awayTeamSeasonId === teamSeasonId);
     }
 
-    // Sort: results sorted newest first, fixtures nearest first
+    // Sort: Oldest game at top, progressing chronologically to recent and upcoming
     list.sort((a, b) => {
       const dateA = new Date(a.startDate).getTime();
       const dateB = new Date(b.startDate).getTime();
-      
-      if (a.status === "completed" && b.status === "completed") {
-        return dateB - dateA; // Newest results first
-      }
-      return dateA - dateB; // Nearest upcoming fixtures first
+      if (dateA !== dateB) return dateA - dateB;
+      const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
+      const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
+      return timeA - timeB;
     });
 
     return list;
   }, [games, statusFilter, venueFilter, teamSeasonId]);
+
+  // Index of the first upcoming game (game today or in future)
+  const firstUpcomingIndex = useMemo(() => {
+    return processedGames.findIndex((g) => !isPastGameDate(g.startDate));
+  }, [processedGames]);
+
+  // Auto-scroll smoothly to the upcoming divider or recent match on load
+  useEffect(() => {
+    if (dividerRef.current) {
+      dividerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [processedGames]);
 
   return (
     <div className="space-y-6">
@@ -141,12 +162,16 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
         </Card>
       ) : (
         <div className="space-y-4">
-          {processedGames.map((game) => {
+          {processedGames.map((game, index) => {
             const isHome = game.homeTeamSeasonId === teamSeasonId;
             const isCompleted = game.status === "completed";
+            const isPast = isPastGameDate(game.startDate);
+            const isFirstUpcoming = index === firstUpcomingIndex && firstUpcomingIndex > 0;
             
             // Win/Loss status indicator class
-            let cardOutlineClass = "border-border/80 bg-surface/50";
+            let cardOutlineClass = isPast
+              ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100"
+              : "border-border/80 bg-surface/50 opacity-100";
             let resultTag = null;
 
             let scoreBadgeClass = "bg-background text-muted border border-border";
@@ -157,7 +182,9 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
               const oppScore = isHome ? game.awayScore : game.homeScore;
 
               if (teamScore > oppScore) {
-                cardOutlineClass = "border-success/30 hover:border-success/60 bg-success/5 shadow-sm";
+                cardOutlineClass = isPast
+                  ? "border-success/25 bg-success/[0.03] opacity-70 grayscale-[20%] hover:grayscale-0 hover:opacity-100 shadow-sm"
+                  : "border-success/30 hover:border-success/60 bg-success/5 shadow-sm";
                 scoreBadgeClass = "bg-success text-white border-success/30";
                 scoreLabel = "W";
                 resultTag = (
@@ -166,7 +193,9 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                   </span>
                 );
               } else if (teamScore < oppScore) {
-                cardOutlineClass = "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm";
+                cardOutlineClass = isPast
+                  ? "border-danger/20 bg-danger/[0.015] opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100 shadow-sm"
+                  : "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm";
                 scoreBadgeClass = "bg-danger text-white border-danger/30";
                 scoreLabel = "L";
                 resultTag = (
@@ -175,7 +204,9 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                   </span>
                 );
               } else {
-                cardOutlineClass = "border-border/80 hover:border-muted/50 bg-surface/50";
+                cardOutlineClass = isPast
+                  ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100"
+                  : "border-border/80 hover:border-muted/50 bg-surface/50";
                 scoreBadgeClass = "bg-muted/15 text-muted border-border";
                 scoreLabel = "D";
                 resultTag = (
@@ -187,116 +218,132 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
             }
 
             return (
-              <Card 
-                key={game.id} 
-                variant="hover" 
-                padding="md" 
-                className={`transition-all duration-200 ${cardOutlineClass}`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                  
-                  {/* Game Meta & Matchup */}
-                  <div className="flex-1 min-w-0 space-y-3.5">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted font-semibold">
-                      <span className="text-primary">{game.seasonName}</span>
-                      <span>•</span>
-                      <span className="capitalize">{game.gameType} Match</span>
-                      <span>•</span>
-                      <span className="text-accent">{isHome ? "Home Game" : "Away Game"}</span>
-                      {isCompleted && (
-                        <>
-                          <span>•</span>
-                          {resultTag}
-                        </>
-                      )}
-                    </div>
-
-                    <div className="space-y-2.5">
-                      {/* Home Team */}
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="h-6 w-6 rounded bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-xs text-primary flex-shrink-0">
-                            H
-                          </div>
-                          <span className={`text-sm sm:text-base truncate ${isCompleted && game.homeScore !== null && game.awayScore !== null && game.homeScore > game.awayScore ? "font-bold text-text" : "font-medium text-text/80"}`}>
-                            {game.homeClubName} {game.homeTeamName}
-                          </span>
-                        </div>
-                        {isCompleted && (
-                          <span className={`text-sm sm:text-base font-extrabold px-2.5 py-0.5 rounded-md ${game.homeScore !== null && game.awayScore !== null && game.homeScore > game.awayScore ? "bg-primary text-white" : "bg-background text-muted border border-border"}`}>
-                            {game.homeScore}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Away Team */}
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="h-6 w-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center font-bold text-xs text-accent flex-shrink-0">
-                            A
-                          </div>
-                          <span className={`text-sm sm:text-base truncate ${isCompleted && game.homeScore !== null && game.awayScore !== null && game.awayScore > game.homeScore ? "font-bold text-text" : "font-medium text-text/80"}`}>
-                            {game.awayClubName} {game.awayTeamName}
-                          </span>
-                        </div>
-                        {isCompleted && (
-                          <span className={`text-sm sm:text-base font-extrabold px-2.5 py-0.5 rounded-md ${game.homeScore !== null && game.awayScore !== null && game.awayScore > game.homeScore ? "bg-primary text-white" : "bg-background text-muted border border-border"}`}>
-                            {game.awayScore}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+              <React.Fragment key={game.id}>
+                {/* Divider Line before upcoming games */}
+                {isFirstUpcoming && (
+                  <div ref={dividerRef} className="relative py-4 flex items-center justify-center">
+                    <div className="w-full border-t-2 border-dashed border-primary/35" />
                   </div>
+                )}
 
-                  {/* Schedule/Venue Panel */}
-                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-border/50 pt-3.5 sm:pt-0 sm:pl-6 gap-2 text-right">
+                <Card 
+                  variant="hover" 
+                  padding="md" 
+                  className={`transition-all duration-200 ${cardOutlineClass}`}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-text bg-background sm:bg-transparent px-2.5 py-1 sm:p-0 rounded border sm:border-0 border-border">
-                      <Calendar size={14} className="text-primary" />
-                      <span>{formatDate(game.startDate)}</span>
-                    </div>
-
-                    <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${scoreBadgeClass}`}>
-                      <Trophy size={11} />
-                      <span>{scoreLabel}</span>
-                    </div>
-                    {game.locationName && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted max-w-[155px] truncate" title={game.locationName}>
-                        <MapPin size={14} />
-                        <span>{game.locationName}</span>
+                    {/* Game Meta & Matchup */}
+                    <div className="flex-1 min-w-0 space-y-3.5">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted font-semibold">
+                        <span className="text-primary">{game.seasonName}</span>
+                        <span>•</span>
+                        <span className="capitalize">{game.gameType} Match</span>
+                        <span>•</span>
+                        <span className="text-accent">{isHome ? "Home Game" : "Away Game"}</span>
+                        {isCompleted && (
+                          <>
+                            <span>•</span>
+                            {resultTag}
+                          </>
+                        )}
+                        {isPast && (
+                          <>
+                            <span>•</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted/70 bg-background/80 border border-border px-2 py-0.5 rounded">
+                              Past Match
+                            </span>
+                          </>
+                        )}
                       </div>
-                    )}
 
-                    <Link
-                      href={`/gamestats/${teamSeasonId}/${game.id}`}
-                      className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-accent-hover transition-colors"
-                    >
-                      <SquareChevronRight size={13} />
-                      <span>{isCompleted ? "View Game Center" : "Open Match Center"}</span>
-                    </Link>
+                      <div className="space-y-2.5">
+                        {/* Home Team */}
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-6 w-6 rounded bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-xs text-primary flex-shrink-0">
+                              H
+                            </div>
+                            <span className={`text-sm sm:text-base truncate ${isCompleted && game.homeScore !== null && game.awayScore !== null && game.homeScore > game.awayScore ? "font-bold text-text" : "font-medium text-text/80"}`}>
+                              {game.homeClubName} {game.homeTeamName}
+                            </span>
+                          </div>
+                          {isCompleted && (
+                            <span className={`text-sm sm:text-base font-extrabold px-2.5 py-0.5 rounded-md ${game.homeScore !== null && game.awayScore !== null && game.homeScore > game.awayScore ? "bg-primary text-white" : "bg-background text-muted border border-border"}`}>
+                              {game.homeScore}
+                            </span>
+                          )}
+                        </div>
 
-                    {game.videoLink && (
-                      <a 
-                        href={game.videoLink} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="mt-1 flex items-center gap-1.5 text-xs font-bold text-accent hover:text-accent-hover transition-colors"
+                        {/* Away Team */}
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-6 w-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center font-bold text-xs text-accent flex-shrink-0">
+                              A
+                            </div>
+                            <span className={`text-sm sm:text-base truncate ${isCompleted && game.homeScore !== null && game.awayScore !== null && game.awayScore > game.homeScore ? "font-bold text-text" : "font-medium text-text/80"}`}>
+                              {game.awayClubName} {game.awayTeamName}
+                            </span>
+                          </div>
+                          {isCompleted && (
+                            <span className={`text-sm sm:text-base font-extrabold px-2.5 py-0.5 rounded-md ${game.homeScore !== null && game.awayScore !== null && game.awayScore > game.homeScore ? "bg-primary text-white" : "bg-background text-muted border border-border"}`}>
+                              {game.awayScore}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Schedule/Venue Panel */}
+                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-border/50 pt-3.5 sm:pt-0 sm:pl-6 gap-2 text-right">
+                      
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-text bg-background sm:bg-transparent px-2.5 py-1 sm:p-0 rounded border sm:border-0 border-border">
+                        <Calendar size={14} className="text-primary" />
+                        <span>{formatDate(game.startDate)}</span>
+                      </div>
+
+                      <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${scoreBadgeClass}`}>
+                        <Trophy size={11} />
+                        <span>{scoreLabel}</span>
+                      </div>
+                      {game.locationName && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted max-w-[155px] truncate" title={game.locationName}>
+                          <MapPin size={14} />
+                          <span>{game.locationName}</span>
+                        </div>
+                      )}
+
+                      <Link
+                        href={`/gamestats/${teamSeasonId}/${game.id}`}
+                        className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-accent-hover transition-colors"
                       >
-                        <Play size={12} className="fill-accent stroke-accent" />
-                        <span>Watch Highlights</span>
-                      </a>
-                    )}
+                        <SquareChevronRight size={13} />
+                        <span>{isCompleted ? "View Game Center" : "Open Match Center"}</span>
+                      </Link>
 
-                    {isCompleted && game.finalStatus && game.finalStatus !== "regulation" && (
-                      <span className="text-[10px] text-muted/75 font-semibold capitalize mt-1.5">
-                        ({game.finalStatus.replace("_", " ")})
-                      </span>
-                    )}
+                      {game.videoLink && (
+                        <a 
+                          href={game.videoLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="mt-1 flex items-center gap-1.5 text-xs font-bold text-accent hover:text-accent-hover transition-colors"
+                        >
+                          <Play size={12} className="fill-accent stroke-accent" />
+                          <span>Watch Highlights</span>
+                        </a>
+                      )}
+
+                      {isCompleted && game.finalStatus && game.finalStatus !== "regulation" && (
+                        <span className="text-[10px] text-muted/75 font-semibold capitalize mt-1.5">
+                          ({game.finalStatus.replace("_", " ")})
+                        </span>
+                      )}
+
+                    </div>
 
                   </div>
-
-                </div>
-              </Card>
+                </Card>
+              </React.Fragment>
             );
           })}
         </div>
@@ -305,3 +352,4 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
     </div>
   );
 }
+
