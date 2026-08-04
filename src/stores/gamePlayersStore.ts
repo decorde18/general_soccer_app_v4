@@ -501,9 +501,16 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
         })) ||
         [];
 
-      const createdPlayerGames = await Promise.all(
-        teamPlayers.map((p) =>
-          apiFetch<PlayerGameDbRow>("player_games", "POST", {
+      /**
+       * Attempt to INSERT a player_game row. If the DB rejects it as a
+       * duplicate (409 from the API route), fall back to fetching the
+       * already-existing row so the caller still gets a valid object.
+       */
+      const upsertPlayerGame = async (
+        p: RosterPlayerRow,
+      ): Promise<PlayerGameDbRow> => {
+        try {
+          return await apiFetch<PlayerGameDbRow>("player_games", "POST", {
             game_id: gameId,
             player_id: p.player_id,
             team_season_id: p.team_season_id,
@@ -511,8 +518,29 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             started: 0,
             game_status: "dressed",
             is_guest: p.is_guest === 1 || p.is_guest === true ? 1 : 0,
-          }),
-        ),
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          const isDuplicate =
+            msg.includes("409") ||
+            msg.toLowerCase().includes("duplicate");
+          if (isDuplicate) {
+            // Row already exists — fetch it
+            const existing = await apiFetch<PlayerGameDbRow[]>(
+              "player_games",
+              "GET",
+              null,
+              null,
+              { filters: { game_id: gameId, player_id: p.player_id } },
+            );
+            if (existing && existing.length > 0) return existing[0];
+          }
+          throw err;
+        }
+      };
+
+      const createdPlayerGames = await Promise.all(
+        teamPlayers.map((p) => upsertPlayerGame(p)),
       );
 
       const players: Player[] = createdPlayerGames.map((pg, i) => {
