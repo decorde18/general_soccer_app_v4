@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Trophy, Calendar, Shield, Clock, MapPin, Search, Filter } from "lucide-react";
+import { Trophy, Calendar, Shield, Clock, MapPin, Search, Filter, Plus, Edit3 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
+import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
 
 interface StandingsRow {
   teamSeasonId: number;
@@ -58,9 +61,15 @@ export default function LeaguePageClient({
   description,
   divisions,
 }: LeaguePageClientProps) {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+
+  const [quickScoreGame, setQuickScoreGame] = useState<Game | null>(null);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
+  const canManage = Boolean(session?.user);
 
   // Read initial states from URL query parameters
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") || "");
@@ -115,7 +124,6 @@ export default function LeaguePageClient({
     const ages = new Set<string>();
     divisions.forEach((d) => {
       const name = d.leagueNodeName.toLowerCase();
-      // Match things like U13, U14, 13U, 14U
       const match = name.match(/\b(u\d+|\d+u)\b/);
       if (match) {
         ages.add(match[1].toUpperCase());
@@ -129,21 +137,17 @@ export default function LeaguePageClient({
     return divisions.filter((d) => {
       const name = d.leagueNodeName.toLowerCase();
       
-      // 1. Search Query Filter
       if (searchQuery && !name.includes(searchQuery.toLowerCase())) {
         return false;
       }
 
-      // 2. Gender Filter
       if (selectedGender === "girls" && !name.includes("girl") && !name.includes("female")) {
         return false;
       }
       if (selectedGender === "boys" && !name.includes("boy") && !name.includes("male") && !name.includes("coed")) {
-        // High School Varsity/JV matches are usually boys if not specified as girls
         if (name.includes("girl")) return false;
       }
 
-      // 3. Age Filter
       if (selectedAge !== "all") {
         const queryAge = selectedAge.toLowerCase();
         if (!name.includes(queryAge)) {
@@ -161,9 +165,9 @@ export default function LeaguePageClient({
       <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-surface shadow-md">
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary/5 to-accent/5" />
         <div className="absolute right-0 top-0 -z-10 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
-        <div className="p-6 sm:p-8">
+        <div className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-inner flex-shrink-0">
               <Trophy size={36} className="stroke-[1.5]" />
             </div>
             <div>
@@ -187,6 +191,16 @@ export default function LeaguePageClient({
               )}
             </div>
           </div>
+
+          {canManage && (
+            <button
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-md transition-all self-start sm:self-auto"
+            >
+              <Plus size={16} />
+              <span>Schedule Match</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -371,12 +385,20 @@ export default function LeaguePageClient({
                               </div>
                             </div>
 
-                            {!isCompleted && (
-                              <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted">
-                                <span className="flex items-center gap-1"><Clock size={10} /> {game.startTime || "TBD"}</span>
-                                {game.locationName && <span className="flex items-center gap-1 truncate max-w-[90px]"><MapPin size={10} /> {game.locationName}</span>}
-                              </div>
-                            )}
+                            <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted">
+                              <span className="flex items-center gap-1"><Clock size={10} /> {game.startTime || "TBD"}</span>
+
+                              {canManage && (
+                                <button
+                                  onClick={() => setQuickScoreGame(game)}
+                                  className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400 hover:underline"
+                                  title="Enter or update match score"
+                                >
+                                  <Edit3 size={11} />
+                                  <span>Quick Score</span>
+                                </button>
+                              )}
+                            </div>
                           </Card>
                         );
                       })}
@@ -388,6 +410,25 @@ export default function LeaguePageClient({
           ))
         )}
       </div>
+
+      {/* QUICK SCORE MODAL */}
+      {quickScoreGame && (
+        <QuickScoreModal
+          gameId={quickScoreGame.id}
+          homeTeamName={`${quickScoreGame.homeClubName || ""} ${quickScoreGame.homeTeamName}`}
+          awayTeamName={`${quickScoreGame.awayClubName || ""} ${quickScoreGame.awayTeamName}`}
+          currentHomeScore={quickScoreGame.homeScore}
+          currentAwayScore={quickScoreGame.awayScore}
+          onClose={() => setQuickScoreGame(null)}
+        />
+      )}
+
+      {/* GAME SCHEDULER MODAL */}
+      {isScheduleModalOpen && (
+        <GameSchedulerModal
+          onClose={() => setIsScheduleModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -116,6 +116,7 @@ export default function GuestPlayersClient({
           ageGroupId: selectedAgeGroupId ? Number(selectedAgeGroupId) : undefined,
           teamId: selectedTeamId ? Number(selectedTeamId) : undefined,
           searchQuery: playerSearchQuery || undefined,
+          excludeTeamSeasonId: targetTeamSeasonId ? Number(targetTeamSeasonId) : undefined,
         });
         if (active) {
           setPlayersList(players);
@@ -132,7 +133,7 @@ export default function GuestPlayersClient({
       active = false;
       clearTimeout(timer);
     };
-  }, [selectedClubId, selectedAgeGroupId, selectedTeamId, playerSearchQuery]);
+  }, [selectedClubId, selectedAgeGroupId, selectedTeamId, playerSearchQuery, targetTeamSeasonId]);
 
   // Load games on target team season or date range changes
   useEffect(() => {

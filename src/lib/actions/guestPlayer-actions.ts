@@ -144,6 +144,7 @@ export async function getGuestPlayerOptionsAction(filters?: {
   ageGroupId?: number;
   teamId?: number;
   searchQuery?: string;
+  excludeTeamSeasonId?: number;
 }) {
   await requireSession();
   return await getGuestPlayerOptions(filters);

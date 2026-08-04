@@ -7,6 +7,7 @@ import {
   Calendar,
   Users,
   Shield,
+  Plus,
   PlusCircle,
   ArrowRight,
   Settings,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
 
 interface DashboardClientProps {
   user: {
@@ -51,6 +53,8 @@ export default function DashboardClient({
   parentStaffContacts = [],
   coachTeams = [],
 }: DashboardClientProps) {
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
   // State for coach team selection
   const [selectedCoachTeamId, setSelectedCoachTeamId] = useState<string>(
     coachTeams[0]?.id ? String(coachTeams[0].id) : ""
@@ -96,11 +100,21 @@ export default function DashboardClient({
             </h1>
             <p className="text-xs text-muted font-medium">{user.email}</p>
           </div>
-          <div className="flex items-center gap-4 bg-background/50 border border-border/40 p-4 rounded-xl shadow-inner max-w-xs">
-            <Activity className="text-primary shrink-0" size={24} />
-            <div className="text-xs">
-              <span className="font-semibold block text-text/80">Account Status</span>
-              <span className="text-success font-bold">Active & Secure</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-md transition-all"
+            >
+              <Plus size={16} />
+              <span>Schedule Match</span>
+            </button>
+
+            <div className="flex items-center gap-4 bg-background/50 border border-border/40 p-3.5 rounded-xl shadow-inner">
+              <Activity className="text-primary shrink-0" size={20} />
+              <div className="text-xs">
+                <span className="font-semibold block text-text/80">Account Status</span>
+                <span className="text-success font-bold">Active & Secure</span>
+              </div>
             </div>
           </div>
         </div>
@@ -618,6 +632,13 @@ export default function DashboardClient({
             )}
           </div>
         </section>
+      )}
+
+      {/* GAME SCHEDULER MODAL */}
+      {isScheduleModalOpen && (
+        <GameSchedulerModal
+          onClose={() => setIsScheduleModalOpen(false)}
+        />
       )}
     </div>
   );

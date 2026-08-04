@@ -3,8 +3,11 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
-import { Calendar, MapPin, Clock, Trophy, Play, ShieldAlert, SquareChevronRight } from "lucide-react";
+import { Calendar, MapPin, Clock, Trophy, Play, ShieldAlert, SquareChevronRight, Edit3, Plus } from "lucide-react";
 import { format } from "date-fns";
+import { useSession } from "next-auth/react";
+import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
+import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
 
 interface Game {
   id: number;
@@ -40,20 +43,6 @@ function formatDate(dateStr: string) {
   }
 }
 
-function formatTime(timeStr: string | null) {
-  if (!timeStr) return "TBD";
-  try {
-    const date = new Date(timeStr);
-    if (!isNaN(date.getTime())) {
-      return format(date, "h:mm a");
-    }
-    return timeStr;
-  } catch (e) {
-    return timeStr;
-  }
-}
-
-/** Check if a game date is strictly in the past (prior to today) */
 function isPastGameDate(dateStr: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -63,29 +52,31 @@ function isPastGameDate(dateStr: string) {
 }
 
 export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps) {
+  const { data: session } = useSession();
   const [statusFilter, setStatusFilter] = useState<"all" | "fixtures" | "results">("all");
   const [venueFilter, setVenueFilter] = useState<"all" | "home" | "away">("all");
+  const [quickScoreGame, setQuickScoreGame] = useState<Game | null>(null);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const dividerRef = useRef<HTMLDivElement | null>(null);
+
+  const canManage = Boolean(session?.user);
 
   // Sort and filter games
   const processedGames = useMemo(() => {
     let list = [...games];
 
-    // Filter by status (fixtures vs results)
     if (statusFilter === "fixtures") {
       list = list.filter((g) => g.status !== "completed");
     } else if (statusFilter === "results") {
       list = list.filter((g) => g.status === "completed");
     }
 
-    // Filter by Venue (home vs away)
     if (venueFilter === "home") {
       list = list.filter((g) => g.homeTeamSeasonId === teamSeasonId);
     } else if (venueFilter === "away") {
       list = list.filter((g) => g.awayTeamSeasonId === teamSeasonId);
     }
 
-    // Sort: Oldest game at top, progressing chronologically to recent and upcoming
     list.sort((a, b) => {
       const dateA = new Date(a.startDate).getTime();
       const dateB = new Date(b.startDate).getTime();
@@ -98,12 +89,10 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
     return list;
   }, [games, statusFilter, venueFilter, teamSeasonId]);
 
-  // Index of the first upcoming game (game today or in future)
   const firstUpcomingIndex = useMemo(() => {
     return processedGames.findIndex((g) => !isPastGameDate(g.startDate));
   }, [processedGames]);
 
-  // Auto-scroll smoothly to the upcoming divider or recent match on load
   useEffect(() => {
     if (dividerRef.current) {
       dividerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -134,21 +123,33 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
           </div>
         </div>
 
-        {/* Venue Filter Toggle */}
-        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
-          <span className="text-xs font-bold text-muted uppercase tracking-wider mr-2 hidden sm:inline">Venue</span>
-          <div className="inline-flex rounded-xl bg-background border border-border/60 p-1 w-full sm:w-auto">
-            {(["all", "home", "away"] as const).map((opt) => (
-              <button
-                key={opt}
-                onClick={() => setVenueFilter(opt)}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
-                  venueFilter === opt ? "bg-accent text-white shadow-sm" : "text-muted hover:text-text"
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
+        {/* Venue Filter Toggle & Schedule Action */}
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          {canManage && (
+            <button
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-sm transition-all"
+            >
+              <Plus size={15} />
+              <span>Schedule Match</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider mr-1 hidden sm:inline">Venue</span>
+            <div className="inline-flex rounded-xl bg-background border border-border/60 p-1 w-full sm:w-auto">
+              {(["all", "home", "away"] as const).map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => setVenueFilter(opt)}
+                  className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+                    venueFilter === opt ? "bg-accent text-white shadow-sm" : "text-muted hover:text-text"
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -168,7 +169,6 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
             const isPast = isPastGameDate(game.startDate);
             const isFirstUpcoming = index === firstUpcomingIndex && firstUpcomingIndex > 0;
             
-            // Win/Loss status indicator class
             let cardOutlineClass = isPast
               ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100"
               : "border-border/80 bg-surface/50 opacity-100";
@@ -219,7 +219,6 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
             return (
               <React.Fragment key={game.id}>
-                {/* Divider Line before upcoming games */}
                 {isFirstUpcoming && (
                   <div ref={dividerRef} className="relative py-4 flex items-center justify-center">
                     <div className="w-full border-t-2 border-dashed border-primary/35" />
@@ -313,31 +312,26 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                         </div>
                       )}
 
-                      <Link
-                        href={`/gamestats/${teamSeasonId}/${game.id}`}
-                        className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-accent-hover transition-colors"
-                      >
-                        <SquareChevronRight size={13} />
-                        <span>{isCompleted ? "View Game Center" : "Open Match Center"}</span>
-                      </Link>
+                      <div className="flex items-center gap-2 mt-1">
+                        {canManage && (
+                          <button
+                            onClick={() => setQuickScoreGame(game)}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg transition-colors"
+                            title="Quick Score Entry"
+                          >
+                            <Edit3 size={13} />
+                            <span>Quick Score</span>
+                          </button>
+                        )}
 
-                      {game.videoLink && (
-                        <a 
-                          href={game.videoLink} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="mt-1 flex items-center gap-1.5 text-xs font-bold text-accent hover:text-accent-hover transition-colors"
+                        <Link
+                          href={`/gamestats/${teamSeasonId}/${game.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-accent-hover transition-colors"
                         >
-                          <Play size={12} className="fill-accent stroke-accent" />
-                          <span>Watch Highlights</span>
-                        </a>
-                      )}
-
-                      {isCompleted && game.finalStatus && game.finalStatus !== "regulation" && (
-                        <span className="text-[10px] text-muted/75 font-semibold capitalize mt-1.5">
-                          ({game.finalStatus.replace("_", " ")})
-                        </span>
-                      )}
+                          <SquareChevronRight size={13} />
+                          <span>{isCompleted ? "Match Center" : "Track Game"}</span>
+                        </Link>
+                      </div>
 
                     </div>
 
@@ -349,7 +343,26 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
         </div>
       )}
 
+      {/* QUICK SCORE MODAL */}
+      {quickScoreGame && (
+        <QuickScoreModal
+          gameId={quickScoreGame.id}
+          homeTeamName={`${quickScoreGame.homeClubName} ${quickScoreGame.homeTeamName}`}
+          awayTeamName={`${quickScoreGame.awayClubName} ${quickScoreGame.awayTeamName}`}
+          currentHomeScore={quickScoreGame.homeScore}
+          currentAwayScore={quickScoreGame.awayScore}
+          onClose={() => setQuickScoreGame(null)}
+        />
+      )}
+
+      {/* GAME SCHEDULER MODAL */}
+      {isScheduleModalOpen && (
+        <GameSchedulerModal
+          defaultHomeTeamSeasonId={teamSeasonId}
+          onClose={() => setIsScheduleModalOpen(false)}
+        />
+      )}
+
     </div>
   );
 }
-

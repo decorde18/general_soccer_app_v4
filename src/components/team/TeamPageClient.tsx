@@ -188,7 +188,13 @@ export default function TeamPageClient({
           <TeamCompetitions competitions={competitions} />
         )}
 
-        {activeTab === "roster" && <TeamRoster players={players} />}
+        {activeTab === "roster" && (
+          <TeamRoster
+            teamSeasonId={teamSeason.id}
+            players={players}
+            staff={staff}
+          />
+        )}
 
         {activeTab === "schedule" && (
           <TeamSchedule teamSeasonId={teamSeason.id} games={games} />

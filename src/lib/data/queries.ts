@@ -1967,8 +1967,20 @@ export async function getGuestPlayerOptions(filters?: {
   ageGroupId?: number;
   teamId?: number;
   searchQuery?: string;
+  excludeTeamSeasonId?: number;
 }): Promise<GuestPlayerOption[]> {
   const whereClause: any = {};
+
+  if (filters?.excludeTeamSeasonId) {
+    const existingRoster = await prisma.player_teams.findMany({
+      where: { team_season_id: filters.excludeTeamSeasonId, is_active: true },
+      select: { player_id: true },
+    });
+    const excludeIds = existingRoster.map((r) => r.player_id);
+    if (excludeIds.length > 0) {
+      whereClause.player_id = { notIn: excludeIds };
+    }
+  }
 
   if (filters?.teamId) {
     whereClause.team_seasons = { team_id: filters.teamId };

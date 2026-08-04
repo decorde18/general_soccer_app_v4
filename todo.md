@@ -77,8 +77,8 @@ _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 
 [ ] **4.1 Team Roster Adjustments** _(blueprint §4, route: Roster & Staff Management)_
 
-- Add players to a team roster
-- Edit player jersey numbers
+- Add players to a team roster (`player_teams`)
+- Edit player jersey numbers & positions
 - Add/remove team staff (head coach, assistant, stats keeper)
 - Location: `/dashboard/roster` or integrated into `TeamPageClient` for authorized coach roles
 
@@ -88,7 +88,22 @@ _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 - Prevent double-booking warning indicators on fields/venues
 - Location: server actions + scheduling modals
 
-[ ] **4.3 Match Statistics Logger (Live Game Tracker)** _(blueprint §1.4, §4 — route: Score Reporting / Event Logging)_
+[ ] **4.3 Team Name Formatting & Display Hook** _(promoted from future considerations / blueprint)_
+
+- Reusable hook/utility to construct standardized team display names (e.g. Club Name + Team Name in long vs. short abbreviation formats across all tables/cards)
+
+[ ] **4.4 Quick Score Entry & Standings Inclusions Toggle** _(promoted from future considerations)_
+
+- Simple score entry page/modal for quick match results (home/away score, status update to completed)
+- Toggle UI for `game_standings_inclusions` per game to control if match counts in league standings
+
+---
+
+## Step 5: Advanced Live Match Operations & Offline Engine
+
+_(blueprint §1.4, §4, §5.5 — intense tracking module)_
+
+[ ] **5.1 Match Statistics Logger (Live Game Tracker)** _(blueprint §1.4, §4 — route: Score Reporting / Event Logging)_
 
 - Start/stop period clocks (`game_periods`: start/end/run-time per half or OT)
 - Substitutions logger (`game_subs`: who in, who out, game minute, GK flag)
@@ -99,14 +114,19 @@ _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 - Team-wide events (`game_events_team`: timeouts, team fouls) _(blueprint §1.4)_
 - Location: game stats page / `/dashboard/games/[gameId]/edit`
 
-[ ] **4.4 Offline-Capable Logging** _(blueprint §5.5)_
+[ ] **5.2 Offline-Capable Logging & Synchronization Engine** _(blueprint §5.5)_
 
-- Provide client-side logging helpers for coaches recording games in areas with weak cellular service
-- Queue events locally and sync when connection is restored
+- IndexedDB / LocalStorage client-side persistence for game events recorded offline
+- Optimistic UI updates with background network status detection
+- Event sync queue & conflict resolution handler when reconnecting
+
+[ ] **5.3 Guest Player In-Game Assignment & Number Management** _(promoted from future considerations)_
+
+- Support for assigning guest players directly within the live match logger with temporary jersey numbers
 
 ---
 
-## Step 5: Verification & Automated Tests
+## Step 6: Verification & Automated Tests
 
 [ ] Run automated Next.js build compilation and fix any type/compile errors
 [ ] Verify navigation redirects and role switches work correctly
@@ -116,7 +136,9 @@ _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 
 ## Notes / Future Considerations
 
-- For team names, consider a hook that combines club name + team name in long (full club) or short (abbreviation) format — consistent across the app _(blueprint mentions this as a display concern)_
-- future: simple score entry page or detailed (goal scorer, assist, etc.) — when entered, game shows as completed
-- future: guest player roster number — possibly a separate column if different from regular number, incorporated across all games they participate in
-- future: `game_standings_inclusions` admin UI — allow per-game toggle of whether a match counts toward league standings
+- Advanced live match stream / video link embeds (`games.video_link`)
+- Historical season archiving and player career stats aggregation
+
+Create import for teams for tournaments and leagues - teams need to map to current team/club if exists or create new team/club, and also for the schedule. Possible to enter only the schedule and then create teams if they don't exist, and map them to a club. Need to make sure that existing teams are not duplicated, so check existing team names, logos, city, state, etc. and try to map them to existing teams. If there is a match to an existing team, then use that team, otherwise create a new team. Also for the schedule, need to make sure that existing games are not duplicated, so check existing game dates, times, locations, and teams and try to map them to existing games. If there is a match to an existing game, then use that game, otherwise create a new game. - then we need to verify league/tournament structure including divisions, groups etc so we can show standings correctly
+
+On guest player assignment, we should not see players already assigned to team and guest players already assigned should show as such
