@@ -21,9 +21,14 @@ export default function NavLinks({ pathname, showDashboard, isAdmin }: NavLinksP
           <span className="font-medium text-left">Home Match Center</span>
         </Link>
         {showDashboard && (
-          <Link href="/dashboard" className={linkClass(pathname === "/dashboard")}>
-            <span className="font-medium text-left">My Dashboard</span>
-          </Link>
+          <>
+            <Link href="/dashboard" className={linkClass(pathname === "/dashboard")}>
+              <span className="font-medium text-left">My Dashboard</span>
+            </Link>
+            <Link href="/dashboard/scores" className={linkClass(pathname === "/dashboard/scores")}>
+              <span className="font-medium text-left">Score Reporting Center</span>
+            </Link>
+          </>
         )}
         {isAdmin && (
           <>

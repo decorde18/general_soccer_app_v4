@@ -75,29 +75,42 @@ _(blueprint §2.1 — roles: PLAYER, PARENT)_
 
 _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 
-[ ] **4.1 Team Roster Adjustments** _(blueprint §4, route: Roster & Staff Management)_
+[x] **4.1 Team Roster Adjustments** _(blueprint §4, route: Roster & Staff Management)_
 
 - Add players to a team roster (`player_teams`)
 - Edit player jersey numbers & positions
 - Add/remove team staff (head coach, assistant, stats keeper)
 - Location: `/dashboard/roster` or integrated into `TeamPageClient` for authorized coach roles
 
-[ ] **4.2 Game Scheduling & Venue Booking**
+[x] **4.2 Game Scheduling & Venue Booking**
 
 - Add new matches with date, time, opponent, location, and sublocation
 - Prevent double-booking warning indicators on fields/venues
 - Location: server actions + scheduling modals
 
-[ ] **4.3 Team Name Formatting & Display Hook** _(promoted from future considerations / blueprint)_
+[x] **4.3 Team Name Formatting & Display Hook** _(promoted from future considerations / blueprint)_
 
 - Reusable hook/utility to construct standardized team display names (e.g. Club Name + Team Name in long vs. short abbreviation formats across all tables/cards)
 
-[ ] **4.4 Quick Score Entry & Standings Inclusions Toggle** _(promoted from future considerations)_
+[x] **4.4 Quick Score Entry & Standings Inclusions Toggle** _(promoted from future considerations)_
 
 - Simple score entry page/modal for quick match results (home/away score, status update to completed)
 - Toggle UI for `game_standings_inclusions` per game to control if match counts in league standings
 
 ---
+
+## Game Scheduling
+[x] It currently assumes the team scheduling is home. that is wrong, we need to be able to select the opponent then select if the team scheduling is home or away (toggle component). 
+[x] if the game is a league, we need to know which league it is, this is missing from the game details. The game could count for more than one (for instance a tournament game counts as a tournament but also a separate league game)
+[x] if the league is not listed, we need to either assign the team to the league or create a new league if needed. 
+[x] the same for the tournament
+[x] if the game is a playoff, we still need to know which league/tournament (Playoff games default to not counting in standings, with toggle to override).
+[x] opponent should allow for new team (allows selecting Club -> Team with inline modal to add new Club or Team if needed).
+[x] same for Location if not listed (+ Add Location inline modal).
+[x] same for the field (+ Add Field inline modal).
+[x] time should allow for different time zones (EST, CST, MST, PST, UTC timezone selector).
+[x] the game should also have settings. (Game Rules & Duration Overrides tab for periods, period length, overtime, and shootout rules).
+[x] Multi-tab wizard UI utilizing TabbedPanel to step through Teams, Competitions, Schedule & Venue, and Game Rules.
 
 ## Step 5: Advanced Live Match Operations & Offline Engine
 
@@ -142,3 +155,26 @@ _(blueprint §1.4, §4, §5.5 — intense tracking module)_
 Create import for teams for tournaments and leagues - teams need to map to current team/club if exists or create new team/club, and also for the schedule. Possible to enter only the schedule and then create teams if they don't exist, and map them to a club. Need to make sure that existing teams are not duplicated, so check existing team names, logos, city, state, etc. and try to map them to existing teams. If there is a match to an existing team, then use that team, otherwise create a new team. Also for the schedule, need to make sure that existing games are not duplicated, so check existing game dates, times, locations, and teams and try to map them to existing games. If there is a match to an existing game, then use that game, otherwise create a new game. - then we need to verify league/tournament structure including divisions, groups etc so we can show standings correctly
 
 On guest player assignment, we should not see players already assigned to team and guest players already assigned should show as such
+
+please check for consistency in my app. We should always use my components. For exmple, i have a DateSelect component, but I am using a custom date picker in the GameSchedulerModal. I should use my DateSelect component instead. Also check for consistency in date and time formats, using 12 hour format with AM/PM, and also with date formats, using mm/dd/yyyy for dates. Modals, Selects, Inputs, Checkbox, Tabs etc. Any dialogue box, errors etc need to come from my components, not the browser. for example error dialogs, confirmation dialogs, alerts, etc. need to come from my components, not the browser.
+
+perhaps we need to think differently (counts towards league standings) - is this in the games table? all games should foreign key to the league tournaments (multiple is possible ie a game is played in a tournament that counts toward the tournament but also separate league). If there is no key, that means it doesn't count.
+Foreign key constraint violated: `league_node_id`
+    at async recordQuickScore (src\lib\actions\quickScore-actions.ts:110:7)
+  108 |   if (game.game_league_nodes && game.game_league_nodes.length > 0) {
+  109 |     for (const node of game.game_league_nodes) {
+> 110 |       await prisma.game_standings_inclusions.upsert({
+      |       ^
+  111 |         where: {
+  112 |           game_id_league_node_id: {
+  113 |             game_id: gameId, {
+  code: 'P2003',
+  clientVersion: '5.22.0',
+  meta: {
+    modelName: 'game_standings_inclusions',
+    field_name: 'league_node_id'
+  },
+  digest: '3133929545'
+}
+ POST /dashboard/scores 500 in 5.5s (next.js: 10ms, application-code: 5.5s)
+  └─ ƒ recordQuickScore({"awayScore":0,"countsForStandings":true,"gameId":870,"...":"1 item not stringified"}) in 4799ms .

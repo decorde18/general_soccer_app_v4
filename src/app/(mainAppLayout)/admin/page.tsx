@@ -93,6 +93,14 @@ export default async function AdminDashboardPage() {
       icon: Users,
       color: "from-emerald-500/10 to-teal-500/10 border-emerald-500/20 text-emerald-500",
     },
+    {
+      title: "Master Score Entry Center",
+      description:
+        "Report, edit, and manage scores for any game across leagues, tournaments, friendlies, and playoffs.",
+      route: "/dashboard/scores",
+      icon: Trophy,
+      color: "from-amber-500/10 to-yellow-500/10 border-amber-500/20 text-amber-500",
+    },
   ];
 
   return (

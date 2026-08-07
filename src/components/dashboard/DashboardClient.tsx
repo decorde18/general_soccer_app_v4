@@ -361,6 +361,12 @@ export default function DashboardClient({
 
                   {/* Actions shortcuts */}
                   <div className="space-y-2 pt-2">
+                    <Link href={`/dashboard/scores`} className="block">
+                      <Button variant="primary" size="sm" className="w-full text-xs flex justify-between items-center group font-bold">
+                        <span>Master Score Entry Portal</span>
+                        <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                      </Button>
+                    </Link>
                     <Link href={`/dashboard/guest-players`} className="block">
                       <Button variant="outline" size="sm" className="w-full text-xs flex justify-between items-center group font-bold">
                         <span>Assign Guest Players</span>

@@ -310,3 +310,27 @@ export async function verifyTeamAccess(teamId: number | string) {
 
   return true;
 }
+
+export async function verifyScoreReportingAccess() {
+  const session = await getServerAuthSession();
+  if (!session || !session.user) {
+    throw new Error("Unauthorized: Not logged in.");
+  }
+
+  const user = session.user as AppSessionUser;
+  const roles = user.roles;
+  const isAuthorized = Boolean(
+    roles?.isAdmin ||
+      roles?.clubAdmin ||
+      roles?.teamAdmin ||
+      roles?.coach
+  );
+
+  if (!isAuthorized) {
+    throw new Error(
+      "Forbidden: Score reporting requires Coach, Team Admin, Club Admin, or System Admin privileges."
+    );
+  }
+
+  return true;
+}

@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { requireSession, verifyTeamAccess } from "@/lib/auth/auth-utils";
+import { requireSession, verifyScoreReportingAccess } from "@/lib/auth/auth-utils";
 
 export interface QuickScoreInput {
   gameId: number;
@@ -22,6 +22,7 @@ export async function recordQuickScore({
   countsForStandings = true,
 }: QuickScoreInput) {
   await requireSession();
+  await verifyScoreReportingAccess();
 
   const game = await prisma.games.findUnique({
     where: { id: gameId },
@@ -31,9 +32,6 @@ export async function recordQuickScore({
   });
 
   if (!game) throw new Error("Game not found");
-
-  // Verify access for home or away team
-  await verifyTeamAccess(game.home_team_season_id);
 
   // 1. Delete previous synthetic major goal events if editing quick score
   const existingGoals = await prisma.game_events_major.findMany({
@@ -146,6 +144,7 @@ export async function toggleStandingsInclusion(
   countsForStandings: boolean
 ) {
   await requireSession();
+  await verifyScoreReportingAccess();
 
   const inclusion = await prisma.game_standings_inclusions.upsert({
     where: {

@@ -1,8 +1,9 @@
-"use client";
-
 import React, { useState, useTransition } from "react";
-import { Trophy, CheckCircle, AlertTriangle, X } from "lucide-react";
+import { Trophy, CheckCircle, AlertTriangle } from "lucide-react";
 import { recordQuickScore } from "@/lib/actions/quickScore-actions";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
 
 interface QuickScoreModalProps {
   gameId: number;
@@ -52,20 +53,30 @@ export default function QuickScoreModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-5 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1 text-muted hover:text-text rounded-lg transition-colors"
-        >
-          <X size={18} />
-        </button>
-
-        <div className="flex items-center gap-2 text-primary">
-          <Trophy size={20} />
-          <h3 className="font-extrabold text-base text-text">Quick Score Entry</h3>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Quick Score Entry"
+      size="md"
+      footer={
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSubmit}
+            disabled={isPending}
+            className="inline-flex items-center gap-1.5"
+          >
+            <CheckCircle size={15} />
+            <span>{isPending ? "Saving..." : "Save Match Score"}</span>
+          </Button>
         </div>
-
+      }
+    >
+      <div className="space-y-4">
         {errorMsg && (
           <div className="flex items-center gap-2 p-3 text-xs bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl">
             <AlertTriangle size={15} />
@@ -105,38 +116,15 @@ export default function QuickScoreModal({
           </div>
 
           {/* Standings Inclusion Toggle */}
-          <div className="flex items-center justify-between p-3 bg-background/40 border border-border/60 rounded-xl">
-            <div>
-              <p className="text-xs font-bold text-text">Counts for League Standings</p>
-              <p className="text-[10px] text-muted">Include this match result in official standings calculations</p>
-            </div>
-            <input
-              type="checkbox"
+          <div className="p-3 bg-background/40 border border-border/60 rounded-xl">
+            <Checkbox
+              label="Counts for League Standings (Include this match result in official standings calculations)"
               checked={countsForStandings}
-              onChange={(e) => setCountsForStandings(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+              onChange={(e: any) => setCountsForStandings(e.target.checked)}
             />
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-muted hover:text-text rounded-xl"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 rounded-xl shadow-sm transition-all"
-            >
-              <CheckCircle size={15} />
-              <span>{isPending ? "Saving..." : "Save Match Score"}</span>
-            </button>
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
