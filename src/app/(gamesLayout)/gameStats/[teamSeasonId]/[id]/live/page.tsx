@@ -1,13 +1,6 @@
-import ToBeCreated from "@/components/ui/ToBeCreated";
 import React from "react";
+import LiveGameTrackerClient from "@/components/game/LiveGameTrackerClient";
 
-function page() {
-  return (
-    <ToBeCreated
-      title='Live Game Page — Coming Soon'
-      description='Live game stats are on the way.'
-    />
-  );
+export default function LiveGamePage() {
+  return <LiveGameTrackerClient />;
 }
-
-export default page;

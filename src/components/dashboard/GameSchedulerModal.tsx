@@ -857,7 +857,7 @@ export default function GameSchedulerModal({
           {activeTab === "schedule" && (
             <div className="space-y-3 pt-1">
               {/* DATE, KICKOFF TIME & TIMEZONE IN A CLEAN 3-COLUMN GRID WITHOUT POSITIONAL OFFSETS */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
                 {/* Match Date (Required) */}
                 <DateSelect
                   label="Match Date *"

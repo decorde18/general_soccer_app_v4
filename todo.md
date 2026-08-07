@@ -122,29 +122,10 @@ _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 
 _(blueprint §1.4, §4, §5.5 — intense tracking module)_
 
-[ ] **5.1 Match Statistics Logger (Live Game Tracker)** _(blueprint §1.4, §4 — route: Score Reporting / Event Logging)_
-
-- Start/stop period clocks (`game_periods`: start/end/run-time per half or OT)
-- Substitutions logger (`game_subs`: who in, who out, game minute, GK flag)
-- Goal recorder (`game_events_goals`: scorer, assist, opposing GK, own-goal, type: header/free kick/penalty/etc.)
-- Penalty shootout logger (`game_events_penalties`)
-- Discipline logs (`game_events_discipline`: yellow/red card, reason, duration)
-- Player micro-stats (`game_events_player_actions`: shots, saves, fouls — per player) _(blueprint §1.4)_
-- Team-wide events (`game_events_team`: timeouts, team fouls) _(blueprint §1.4)_
-- Location: game stats page / `/dashboard/games/[gameId]/edit`
-
-[ ] **5.2 Offline-Capable Logging & Synchronization Engine** _(blueprint §5.5)_
-
-- IndexedDB / LocalStorage client-side persistence for game events recorded offline
-- Optimistic UI updates with background network status detection
-- Event sync queue & conflict resolution handler when reconnecting
-
-[ ] **5.3 Guest Player In-Game Assignment & Number Management** _(promoted from future considerations)_
-
-- Support for assigning guest players directly within the live match logger with temporary jersey numbers
-
----
-redo the game page to look/feel like my current components 
+[x] **5.1 Match Statistics Logger (Live Game Tracker)**: Built live game tracker at `/gamestats/[teamSeasonId]/[id]/live` featuring period clock controls, quick action bar (+GOAL, SUB IN/OUT, CARD, CORNER, OFFSIDE, +GUEST), on-field vs bench rosters, micro-player stats (shots, saves, fouls), and team events.
+[x] **5.2 Offline-Capable Logging & Synchronization Engine**: Implemented `src/lib/offline/offlineSync.ts` with LocalStorage/IndexedDB action queueing, offline status badge indicator, and automatic background flush on network reconnection (`window.addEventListener("online")`).
+[x] **5.3 Guest Player In-Game Assignment**: Support for adding guest players directly within the live match tracker with temporary jersey numbers.
+[x] **Design System Overhaul**: Redesigned Game Menu dashboard, Game Status Card, Match Config Card, and Game Action Cards to match app design system (`Card`, `Button`, `Modal`, `Select`, `Input`, `Checkbox`, `Dialog`, CSS design tokens). 
 
 ## Step 6: Verification & Automated Tests
 

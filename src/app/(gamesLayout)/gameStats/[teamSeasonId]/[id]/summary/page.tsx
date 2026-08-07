@@ -1,13 +1,6 @@
-import ToBeCreated from "@/components/ui/ToBeCreated";
 import React from "react";
+import GameSummaryClient from "@/components/game/GameSummaryClient";
 
-function page() {
-  return (
-    <ToBeCreated
-      title='Game Summary Page — Coming Soon'
-      description='Game Summary is on the way.'
-    />
-  );
+export default function GameSummaryPage() {
+  return <GameSummaryClient />;
 }
-
-export default page;

@@ -1,13 +1,6 @@
-import ToBeCreated from "@/components/ui/ToBeCreated";
 import React from "react";
+import GameManageClient from "@/components/game/GameManageClient";
 
-function page() {
-  return (
-    <ToBeCreated
-      title='Game Management Page — Coming Soon'
-      description='Game Management are on the way.'
-    />
-  );
+export default function GameManagePage() {
+  return <GameManageClient />;
 }
-
-export default page;
