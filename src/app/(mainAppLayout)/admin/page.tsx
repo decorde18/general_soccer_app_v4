@@ -101,6 +101,14 @@ export default async function AdminDashboardPage() {
       icon: Trophy,
       color: "from-amber-500/10 to-yellow-500/10 border-amber-500/20 text-amber-500",
     },
+    {
+      title: "Teams & Schedule Importer",
+      description:
+        "Batch import teams, clubs, and schedule fixtures from CSV or raw text with smart deduplication.",
+      route: "/admin/importer",
+      icon: Calendar,
+      color: "from-blue-500/10 to-indigo-500/10 border-blue-500/20 text-blue-500",
+    },
   ];
 
   return (

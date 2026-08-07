@@ -13,6 +13,8 @@ import {
   searchPeople,
 } from "@/lib/actions/roster-actions";
 
+import Dialog from "@/components/ui/Dialog";
+
 interface Player {
   id: number;
   personId: number;
@@ -47,6 +49,10 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  // Dialog state for removals
+  const [playerToRemove, setPlayerToRemove] = useState<number | null>(null);
+  const [staffToRemove, setStaffToRemove] = useState<number | null>(null);
 
   // Edit player modal state
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
@@ -107,11 +113,22 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
     });
   };
 
-  const handleRemovePlayer = (playerTeamId: number) => {
-    if (!confirm("Are you sure you want to remove this player from the roster?")) return;
+  const confirmRemovePlayer = () => {
+    if (!playerToRemove) return;
+    const pId = playerToRemove;
+    setPlayerToRemove(null);
     startTransition(async () => {
-      await removePlayerFromRoster(playerTeamId);
+      await removePlayerFromRoster(pId);
       setEditingPlayer(null);
+    });
+  };
+
+  const confirmRemoveStaff = () => {
+    if (!staffToRemove) return;
+    const sId = staffToRemove;
+    setStaffToRemove(null);
+    startTransition(async () => {
+      await removeTeamStaff(sId);
     });
   };
 
@@ -147,13 +164,6 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
       setIsAddStaffOpen(false);
       setSelectedStaffPerson(null);
       setPersonSearch("");
-    });
-  };
-
-  const handleRemoveStaff = (staffId: number) => {
-    if (!confirm("Remove staff member?")) return;
-    startTransition(async () => {
-      await removeTeamStaff(staffId);
     });
   };
 
@@ -233,7 +243,7 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                 </div>
                 {canManage && (
                   <button
-                    onClick={() => handleRemoveStaff(s.id)}
+                    onClick={() => setStaffToRemove(s.id)}
                     className="p-1 text-muted hover:text-rose-500 rounded-lg hover:bg-rose-500/10 transition-colors"
                     title="Remove staff"
                   >
@@ -459,7 +469,7 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
             <div className="flex items-center justify-between pt-4 border-t border-border">
               <button
                 type="button"
-                onClick={() => handleRemovePlayer(editingPlayer.id)}
+                onClick={() => setPlayerToRemove(editingPlayer.id)}
                 disabled={isPending}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors"
               >
@@ -676,6 +686,29 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
           </div>
         </div>
       )}
+
+      {/* CONFIRMATION DIALOGS */}
+      <Dialog
+        isOpen={Boolean(playerToRemove)}
+        onClose={() => setPlayerToRemove(null)}
+        title="Remove Player from Roster"
+        message="Are you sure you want to remove this player from the team roster?"
+        type="warning"
+        confirmText="Yes, Remove"
+        cancelText="Cancel"
+        onConfirm={confirmRemovePlayer}
+      />
+
+      <Dialog
+        isOpen={Boolean(staffToRemove)}
+        onClose={() => setStaffToRemove(null)}
+        title="Remove Team Staff Member"
+        message="Are you sure you want to remove this staff member from the team?"
+        type="warning"
+        confirmText="Yes, Remove"
+        cancelText="Cancel"
+        onConfirm={confirmRemoveStaff}
+      />
 
     </div>
   );

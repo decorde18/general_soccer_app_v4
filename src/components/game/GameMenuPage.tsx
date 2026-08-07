@@ -1,18 +1,17 @@
 "use client";
 
-import { ChevronRight, Zap, Shield } from "lucide-react";
-import Button from "../ui/Button";
-
+import React from "react";
 import { useRouter, useParams } from "next/navigation";
+import { ChevronRight, Zap, Shield } from "lucide-react";
+import Button from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { useGameStageInfo } from "@/hooks/useGameStageInfo";
 import useGameStore from "@/stores/gameStore";
-
 import { FullScreenLoader } from "@/components/shared/FullScreenState";
 
 import GameStatusCard from "@/components/game/GameStatusCard";
 import MatchConfigCard from "@/components/game/MatchConfigCard";
 import GameActionCard from "@/components/game/GameActionCard";
-
 
 export default function GameMenuPage() {
   const router = useRouter();
@@ -20,94 +19,104 @@ export default function GameMenuPage() {
     id: string;
     teamSeasonId: string;
   }>();
- 
+
   const game = useGameStore((s) => s.game);
-    const gameStage = useGameStore((s) => s.getGameStage());
-    const GAME_STAGES = useGameStore((s) => s.GAME_STAGES);
-    const currentPeriodLabel = useGameStore((s) => s.getCurrentPeriodLabel());
+  const gameStage = useGameStore((s) => s.getGameStage());
+  const GAME_STAGES = useGameStore((s) => s.GAME_STAGES);
+  const currentPeriodLabel = useGameStore((s) => s.getCurrentPeriodLabel());
 
-    const baseGamePath = `/gamestats/${teamSeasonId}/${id}`;
+  const baseGamePath = `/gamestats/${teamSeasonId}/${id}`;
 
-    const stageInfo = useGameStageInfo({
-      gameStage,
-      gameStages: GAME_STAGES,
-      currentPeriodLabel,
-      baseGamePath,
-    });
+  const stageInfo = useGameStageInfo({
+    gameStage,
+    gameStages: GAME_STAGES,
+    currentPeriodLabel,
+    baseGamePath,
+  });
 
   if (!game) {
-    return <FullScreenLoader message='Loading game data...' />;
+    return <FullScreenLoader message="Loading game data..." />;
   }
+
   return (
-    <div className='min-h-screen bg-slate-50 p-4 md:p-6 lg:p-8'>
-      <div className='mx-auto max-w-4xl'>
-        {/* Top Header Section */}
-        <div className='mb-8 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center'>
-          <div>
-            <Button variant='outline' onClick={() => router.push("/games")}>
-              <ChevronRight className='h-4 w-4 rotate-180' />
-              Back to Games
+    <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* HEADER BANNER */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface p-6 sm:p-8 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/teams/${teamSeasonId}`)}
+              className="inline-flex items-center gap-1.5"
+            >
+              <ChevronRight className="h-4 w-4 rotate-180" />
+              <span>Back to Team Schedule</span>
             </Button>
-            <h1 className='text-3xl font-bold text-slate-900'>
-              Match Dashboard
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
+              Match Command Dashboard
             </h1>
-            <p className='text-slate-500'>Manage your game from here</p>
+            <p className="text-xs text-muted max-w-xl">
+              {game.ourName} vs {game.opponentName} — Live match control, lineup adjustments, and statistics logging.
+            </p>
           </div>
-          <div className='hidden items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm md:flex'>
-            <div
-              className={`h-3 w-3 animate-pulse rounded-full ${stageInfo.statusColor}`}
-            />
-            <span className='font-semibold text-slate-700'>
+
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-border bg-background shadow-xs">
+            <div className={`h-2.5 w-2.5 rounded-full animate-pulse ${stageInfo.statusColor}`} />
+            <span className="font-extrabold text-xs text-text uppercase tracking-wider">
               {stageInfo.title}
             </span>
           </div>
         </div>
-        <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-          {/* Left Column: Game Status + Config */}
-          <div className='space-y-6 lg:col-span-1'>
-            <GameStatusCard
-              icon={stageInfo.icon}
-              title={stageInfo.title}
-              subtitle={stageInfo.subtitle}
-              accentColor={stageInfo.accentColor}
-                />
-               <MatchConfigCard settings={game.settings} />
+      </div>
 
-          </div>
-          {/* Right Column: Actions Grid */}
-          <div className='lg:col-span-2'>
-            <h3 className='mb-4 flex items-center gap-2 text-lg font-bold text-slate-800'>
-              <Zap className='h-5 w-5 text-amber-500' />
-              Quick Actions
+      {/* DASHBOARD GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT COLUMN: STATUS & CONFIG */}
+        <div className="space-y-6 lg:col-span-1">
+          <GameStatusCard
+            icon={stageInfo.icon}
+            title={stageInfo.title}
+            subtitle={stageInfo.subtitle}
+            accentColor={stageInfo.accentColor}
+          />
+          <MatchConfigCard settings={game.settings} />
+        </div>
+
+        {/* RIGHT COLUMN: ACTIONS GRID */}
+        <div className="space-y-6 lg:col-span-2">
+          <div className="flex items-center gap-2 border-b border-border/70 pb-3">
+            <Zap className="h-5 w-5 text-primary" />
+            <h3 className="text-sm font-extrabold text-text uppercase tracking-wider">
+              Quick Match Actions
             </h3>
-            <div className='grid grid-cols-2 gap-4'>
-
-              {stageInfo.actions.map((action) => (
-                 <GameActionCard
-                  key={action.label}
-                   action={action}
-                   onSelect={(path) => router.push(path)}
-                 />
-              ))} 
-            </div>
-             {/* Additional Help / Context */}
-            <div className='mt-8 flex gap-4 rounded-xl border border-blue-100 bg-blue-50/50 p-4'>
-           
-              <div className='h-fit rounded-lg bg-blue-100 p-2 text-blue-600'>
-                <Shield className='h-5 w-5' />
-              </div>
-              <div>
-                <h4 className='text-sm font-bold text-blue-900'>Need Help?</h4>
-                <p className='mt-1 text-xs leading-relaxed text-blue-700'>
-                  Make sure your lineup is set before starting the game. You can
-                  always adjust settings or fix clock issues in the &quot;Game
-                  Management&quot; section.
-                </p>
-              </div>
-            </div>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {stageInfo.actions.map((action) => (
+              <GameActionCard
+                key={action.label}
+                action={action}
+                onSelect={(path) => router.push(path)}
+              />
+            ))}
+          </div>
+
+          {/* HELP TIP */}
+          <Card variant="outlined" padding="md" className="bg-primary/5 border-primary/20 flex gap-4 items-start">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+              <Shield className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold text-text uppercase">Match Day Tip</h4>
+              <p className="text-xs text-muted leading-relaxed">
+                Confirm your starting 11 and bench substitutions in the <strong>Lineup</strong> section prior to starting the period clock.
+              </p>
+            </div>
+          </Card>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

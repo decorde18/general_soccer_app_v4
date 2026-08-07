@@ -27,7 +27,11 @@ export async function recordQuickScore({
   const game = await prisma.games.findUnique({
     where: { id: gameId },
     include: {
-      game_league_nodes: true,
+      game_league_nodes: {
+        include: {
+          league_node_seasons: true,
+        },
+      },
     },
   });
 
@@ -107,22 +111,32 @@ export async function recordQuickScore({
   // 5. Update/Upsert game_standings_inclusions for associated league nodes
   if (game.game_league_nodes && game.game_league_nodes.length > 0) {
     for (const node of game.game_league_nodes) {
-      await prisma.game_standings_inclusions.upsert({
-        where: {
-          game_id_league_node_id: {
-            game_id: gameId,
-            league_node_id: node.league_node_id,
-          },
-        },
-        create: {
-          game_id: gameId,
-          league_node_id: node.league_node_id,
-          counts_for_standings: countsForStandings,
-        },
-        update: {
-          counts_for_standings: countsForStandings,
-        },
+      const realNodeId = node.league_node_seasons?.league_node_id || node.league_node_id;
+      
+      // Verify league_node exists in league_nodes table before upserting
+      const validNode = await prisma.league_nodes.findUnique({
+        where: { id: realNodeId },
+        select: { id: true },
       });
+
+      if (validNode) {
+        await prisma.game_standings_inclusions.upsert({
+          where: {
+            game_id_league_node_id: {
+              game_id: gameId,
+              league_node_id: validNode.id,
+            },
+          },
+          create: {
+            game_id: gameId,
+            league_node_id: validNode.id,
+            counts_for_standings: countsForStandings,
+          },
+          update: {
+            counts_for_standings: countsForStandings,
+          },
+        });
+      }
     }
   }
 

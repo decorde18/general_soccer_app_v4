@@ -53,6 +53,9 @@ export default function NavLinks({ pathname, showDashboard, isAdmin }: NavLinksP
             <Link href="/admin/leagues" className={linkClass(pathname === "/admin/leagues")}>
               <span className="font-medium text-left">League Structure</span>
             </Link>
+            <Link href="/admin/importer" className={linkClass(pathname === "/admin/importer")}>
+              <span className="font-medium text-left">Batch Data Importer</span>
+            </Link>
           </>
         )}
       </div>

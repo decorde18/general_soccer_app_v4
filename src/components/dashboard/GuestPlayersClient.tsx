@@ -24,6 +24,8 @@ import {
   getExistingGuestPlayersAction,
 } from "@/lib/actions/guestPlayer-actions";
 
+import Dialog from "@/components/ui/Dialog";
+
 interface GuestPlayersClientProps {
   clubs: { id: number; name: string }[];
   ageGroups: { id: number; name: string }[];
@@ -92,6 +94,9 @@ export default function GuestPlayersClient({
   // Selection states
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<number>>(new Set());
   const [selectedGameIds, setSelectedGameIds] = useState<Set<number>>(new Set());
+
+  // Dialog state for unassigning guest
+  const [guestToRemove, setGuestToRemove] = useState<{ playerGameId: number; name: string } | null>(null);
 
   // Pending states
   const [isPending, startTransition] = useTransition();
@@ -269,8 +274,9 @@ export default function GuestPlayersClient({
   };
 
   // Unassign guest player action
-  const handleRemoveGuest = async (playerGameId: number, name: string) => {
-    if (!confirm(`Are you sure you want to remove guest player ${name}?`)) return;
+  const confirmRemoveGuest = async () => {
+    if (!guestToRemove) return;
+    const { playerGameId, name } = guestToRemove;
 
     try {
       await removeGuestPlayerFromGame(playerGameId, Number(targetTeamSeasonId));
@@ -280,23 +286,39 @@ export default function GuestPlayersClient({
       setExistingGuests(guests);
     } catch (err: any) {
       toast.error("Failed to remove guest player: " + err.message);
+    } finally {
+      setGuestToRemove(null);
     }
   };
 
+  const existingGuestPersonIds = React.useMemo(() => {
+    return new Set(existingGuests.map((g) => g.personId));
+  }, [existingGuests]);
+
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-text">
-          Guest Player Assignment
-        </h1>
-        <p className="text-muted text-sm mt-1">
-          Search for rostered players from any club, select target matches, and add them as guest players in bulk.
-        </p>
+      {/* HEADER BANNER */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-md">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
+              <Shield size={14} />
+              <span>Match Operations</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
+              Guest Player Roster Assignments
+            </h1>
+            <p className="text-xs text-muted max-w-2xl">
+              Borrow rostered players from other teams/clubs as guest players for upcoming matches.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: PLAYER SELECT (6 cols) */}
+      {/* TWO-COLUMN GRID SETUP */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* LEFT COLUMN: PLAYER SELECTION (6 cols) */}
         <div className="lg:col-span-6 bg-surface border border-border/80 rounded-2xl p-4 shadow-sm space-y-2.5 flex flex-col max-h-[88vh]">
           <div className="flex items-center gap-2 border-b border-border/50 pb-1.5">
             <Users size={15} className="text-primary" />
@@ -410,6 +432,7 @@ export default function GuestPlayersClient({
             ) : (
               playersList.map((player) => {
                 const isSelected = selectedPlayerIds.has(player.personId);
+                const isAlreadyGuest = existingGuestPersonIds.has(player.personId);
                 return (
                   <div
                     key={player.personId}
@@ -435,6 +458,11 @@ export default function GuestPlayersClient({
                         {player.clubName} • {player.teamName}
                       </span>
                     </div>
+                    {isAlreadyGuest && (
+                      <span className="text-[9px] px-1.5 py-0.2 bg-amber-500/15 text-amber-600 dark:text-amber-300 font-bold rounded-full border border-amber-500/20 shrink-0">
+                        Assigned Guest
+                      </span>
+                    )}
                     {player.ageGroupName && (
                       <span className="text-[9px] px-1 bg-border/80 rounded text-muted font-semibold shrink-0">
                         {player.ageGroupName}
@@ -645,7 +673,7 @@ export default function GuestPlayersClient({
                   </div>
                   
                   <button
-                    onClick={() => handleRemoveGuest(guest.playerGameId, `${guest.firstName} ${guest.lastName}`)}
+                    onClick={() => setGuestToRemove({ playerGameId: guest.playerGameId, name: `${guest.firstName} ${guest.lastName}` })}
                     className="p-1 hover:bg-danger/10 text-muted hover:text-danger rounded-lg transition-colors flex items-center gap-1 font-bold text-[10px] border border-transparent hover:border-danger/15"
                   >
                     <XCircle size={12} />
@@ -657,6 +685,18 @@ export default function GuestPlayersClient({
           )}
         </Card>
       )}
+
+      {/* CONFIRMATION DIALOG */}
+      <Dialog
+        isOpen={Boolean(guestToRemove)}
+        onClose={() => setGuestToRemove(null)}
+        title="Unassign Guest Player"
+        message={`Are you sure you want to remove guest player ${guestToRemove?.name || ""} from this match?`}
+        type="warning"
+        confirmText="Yes, Unassign"
+        cancelText="Cancel"
+        onConfirm={confirmRemoveGuest}
+      />
     </div>
   );
 }
