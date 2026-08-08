@@ -1,42 +1,28 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Play,
-  PauseCircle,
-  StopCircle,
-  Trophy,
-  Users,
-  Shield,
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  RotateCcw,
-  Wifi,
-  WifiOff,
-  UserPlus,
-  Plus,
-  X,
-  Target,
-  Zap,
-} from "lucide-react";
-import { Card } from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
-import Modal from "@/components/ui/Modal";
-import Select from "@/components/ui/Select";
-import Input from "@/components/ui/Input";
-import Checkbox from "@/components/ui/Checkbox";
-import Dialog from "@/components/ui/Dialog";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
 import useGameSubsStore from "@/stores/gameSubsStore";
-import { useOnlineStatus, enqueueOfflineAction } from "@/lib/offline/offlineSync";
-import { addGuestPlayersToGames } from "@/lib/actions/guestPlayer-actions";
+import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
+import { useOnlineStatus } from "@/lib/offline/offlineSync";
+import { formatTeamName } from "@/lib/utils/teamName";
+
+import LineupValidationBanner from "./live/LineupValidationBanner";
+import BroadcastScoreboard from "./live/BroadcastScoreboard";
+import OnFieldPlayersPanel from "./live/OnFieldPlayersPanel";
+import BenchReservesPanel from "./live/BenchReservesPanel";
+import TeamCountersPanel from "./live/TeamCountersPanel";
+import UpcomingSubsPanel from "./live/UpcomingSubsPanel";
+import RecentEventsPanel from "./live/RecentEventsPanel";
+import MajorEventModal from "./live/MajorEventModal";
+import LiveNavigationDrawer from "./live/LiveNavigationDrawer";
 
 export default function LiveGameTrackerClient() {
   const router = useRouter();
+  const { id, teamSeasonId } = useParams<{ id: string; teamSeasonId: string }>();
   const { isOnline, queueCount } = useOnlineStatus();
   const [isPending, startTransition] = useTransition();
 
@@ -52,67 +38,77 @@ export default function LiveGameTrackerClient() {
   const addPlayerAction = useGameStore((s) => s.addPlayerAction);
   const addTeamEvent = useGameStore((s) => s.addTeamEvent);
   const getCurrentPeriodLabel = useGameStore((s) => s.getCurrentPeriodLabel);
+  const initializeGame = useGameStore((s) => s.initializeGame);
 
   const players = useGamePlayersStore((s) => s.players);
-  const setPlayers = useGamePlayersStore((s) => s.setPlayers);
-  const { createPendingSub, confirmSub } = useGameSubsStore();
+  const {
+    createPendingSub,
+    updatePendingSub,
+    confirmSub,
+    cancelSub,
+    confirmAllPendingSubs,
+    getPendingSubsSync,
+  } = useGameSubsStore();
 
-  // Clock local tick counter for UI smoothness
+  // Time calculations
+  const calculateTotalTimeOnField = useGamePlayerTimeStore((s) => s.calculateTotalTimeOnField);
+  const calculateCurrentTimeOnField = useGamePlayerTimeStore((s) => s.calculateCurrentTimeOnField);
+  const calculateCurrentTimeOffField = useGamePlayerTimeStore((s) => s.calculateCurrentTimeOffField);
+
+  // Clock local tick counter for UI smoothness & shift calculations
   const [gameTimeSeconds, setGameTimeSeconds] = useState<number>(0);
+  const [, setTick] = useState<number>(0);
 
-  // Modals visibility states
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
-  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
-  const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
-  const [isShootoutModalOpen, setIsShootoutModalOpen] = useState(false);
+  // Modals & Navigation Drawer visibility
+  const [isMajorEventModalOpen, setIsMajorEventModalOpen] = useState(false);
+  const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false);
 
-  // Goal modal inputs
-  const [goalScorerId, setGoalScorerId] = useState<string>("");
-  const [goalAssistId, setGoalAssistId] = useState<string>("");
-  const [goalType, setGoalType] = useState<string>("foot");
-  const [isOpponentGoal, setIsOpponentGoal] = useState<boolean>(false);
+  // Recent Event deletion confirmation state
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Card modal inputs
-  const [cardPlayerId, setCardPlayerId] = useState<string>("");
-  const [cardType, setCardType] = useState<"yellow" | "red" | "yellow_red">("yellow");
-  const [cardReason, setCardReason] = useState<string>("");
-
-  // Sub modal inputs
-  const [subInPlayerId, setSubInPlayerId] = useState<string>("");
-  const [subOutPlayerId, setSubOutPlayerId] = useState<string>("");
-  const [isGkSub, setIsGkSub] = useState<boolean>(false);
-
-  // Guest modal inputs
-  const [guestFirstName, setGuestFirstName] = useState<string>("");
-  const [guestLastName, setGuestLastName] = useState<string>("");
-  const [guestJersey, setGuestJersey] = useState<string>("");
-
-  // Penalty Shootout inputs
-  const [penaltyShooterId, setPenaltyShooterId] = useState<string>("");
-  const [penaltyOutcome, setPenaltyOutcome] = useState<"goal" | "saved" | "missed" | "hit_post">("goal");
-
-  // Filter on field vs bench players
-  const onFieldPlayers = React.useMemo(() => {
-    return players.filter(
-      (p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk" || p.gameStatus === "starter" || p.gameStatus === "goalkeeper"
-    );
-  }, [players]);
-
-  const benchPlayers = React.useMemo(() => {
-    return players.filter(
-      (p) => p.fieldStatus === "onBench" || p.gameStatus === "dressed"
-    );
-  }, [players]);
+  // Substitution Quick Tap states
+  const [subOutId, setSubOutId] = useState<string | null>(null);
+  const [subInId, setSubInId] = useState<string | null>(null);
 
   // Update tick
   useEffect(() => {
     const interval = setInterval(() => {
+      setTick((t) => t + 1);
       const storeTime = useGameStore.getState().getGameTime();
       setGameTimeSeconds(storeTime);
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Automatic sub queueing when both an on-field and bench player are selected (Strict-mode safe)
+  useEffect(() => {
+    if (subOutId && subInId) {
+      const outId = subOutId;
+      const inId = subInId;
+
+      setSubOutId(null);
+      setSubInId(null);
+
+      const executeAutoSub = async () => {
+        try {
+          const inPlayer = players.find((p) => String(p.id) === inId);
+          const outPlayer = players.find((p) => String(p.id) === outId);
+
+          if (inPlayer && outPlayer) {
+            await createPendingSub(
+              inPlayer.playerGameId,
+              outPlayer.playerGameId,
+              outPlayer.gameStatus === "goalkeeper"
+            );
+            toast.success(`Queued sub: ${outPlayer.fullName} 🔄 ${inPlayer.fullName}`);
+          }
+        } catch (err: any) {
+          toast.error("Failed to queue sub: " + err.message);
+        }
+      };
+      executeAutoSub();
+    }
+  }, [subOutId, subInId, players, createPendingSub]);
 
   if (!game) {
     return (
@@ -126,17 +122,92 @@ export default function LiveGameTrackerClient() {
   const currentStage = getGameStage();
   const periodLabel = getCurrentPeriodLabel();
 
-  // Helper to format seconds as MM:SS
-  const formatTime = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  // Validate starting lineup count
+  const lineupValid = () => {
+    if (!game?.settings?.playersOnField) return true;
+    const starterCount = players.filter((p) => p.gameStatus === "starter").length;
+    const gkCount = players.filter((p) => p.gameStatus === "goalkeeper").length;
+    return (starterCount + gkCount) === game.settings.playersOnField;
+  };
+  const isLineupConfigured = lineupValid();
+
+  // Team Short Names
+  const ourShortName = formatTeamName({
+    team_name: (game.isHome ? game.homeTeamName : game.awayTeamName) as string | null,
+    club: {
+      name: (game.isHome ? game.homeClubName : game.awayClubName) as string | null,
+      abbreviation: (game.isHome ? game.homeClubAbbreviation : game.awayClubAbbreviation) as string | null,
+    }
+  }, "short");
+
+  const opponentShortName = formatTeamName({
+    team_name: (game.isHome ? game.awayTeamName : game.homeTeamName) as string | null,
+    club: {
+      name: (game.isHome ? game.awayClubName : game.homeClubName) as string | null,
+      abbreviation: (game.isHome ? game.awayClubAbbreviation : game.homeClubAbbreviation) as string | null,
+    }
+  }, "short");
+
+  // Filter eligible players participating in the match (starters, goalkeeper, dressed reserves)
+  const eligiblePlayers = players.filter(
+    (p) => p.gameStatus === "starter" || p.gameStatus === "goalkeeper" || p.gameStatus === "dressed"
+  );
+
+  const onFieldPlayers = eligiblePlayers.filter(
+    (p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk"
+  );
+  const onFieldGks = onFieldPlayers.filter((p) => p.gameStatus === "goalkeeper" || p.fieldStatus === "onFieldGk");
+  const onFieldFlds = onFieldPlayers.filter((p) => p.gameStatus !== "goalkeeper" && p.fieldStatus !== "onFieldGk");
+  const gameChangers = eligiblePlayers.filter((p) => p.fieldStatus === "onBench" && p.gameStatus === "dressed");
+
+  // Modal open / close auto-stoppage logic
+  const handleOpenMajorEventModal = async () => {
+    if (currentStage === GAME_STAGES.DURING_PERIOD) {
+      try {
+        await startStoppage("Recording event", "stoppage");
+        toast.info("Clock paused automatically.");
+        await initializeGame(id, teamSeasonId);
+      } catch (err) {
+        console.error("Auto stoppage error:", err);
+      }
+    }
+    setIsMajorEventModalOpen(true);
+  };
+
+  const handleCloseMajorEventModal = async () => {
+    setIsMajorEventModalOpen(false);
+
+    const activeStoppage = game?.gameEventsMajor?.find(
+      (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
+    );
+    if (activeStoppage) {
+      try {
+        await endStoppage(activeStoppage.id);
+        toast.success("Clock resumed.");
+        await initializeGame(id, teamSeasonId);
+      } catch (err) {
+        console.error("Auto resume error:", err);
+      }
+    }
   };
 
   // Clock Actions
   const handleTogglePeriodClock = async () => {
     try {
-      if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
+      if (currentStage === GAME_STAGES.IN_STOPPAGE) {
+        const activeStoppage = game.gameEventsMajor.find(
+          (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
+        );
+        if (activeStoppage) {
+          await endStoppage(activeStoppage.id);
+          toast.success("Clock resumed from stoppage.");
+          await initializeGame(id, teamSeasonId);
+        }
+      } else if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
+        if (!isLineupConfigured) {
+          toast.error("Roster config mismatch. Set starting lineup first.");
+          return;
+        }
         await startNextPeriod();
         toast.success(`Started ${periodLabel}`);
       } else if (currentStage === GAME_STAGES.DURING_PERIOD) {
@@ -149,44 +220,54 @@ export default function LiveGameTrackerClient() {
   };
 
   // Record Goal Action
-  const handleRecordGoal = async () => {
-    if (!isOpponentGoal && !goalScorerId) {
+  const handleRecordGoal = async (data: {
+    scorerId: string;
+    assistId: string;
+    goalType: string;
+    isOpponentGoal: boolean;
+  }) => {
+    if (!data.isOpponentGoal && !data.scorerId) {
       toast.error("Please select the goal scorer.");
       return;
     }
 
     startTransition(async () => {
       try {
-        const scorer = players.find((p) => String(p.id) === goalScorerId);
-        const assist = players.find((p) => String(p.id) === goalAssistId);
+        const scorer = players.find((p) => String(p.id) === data.scorerId);
+        const assist = players.find((p) => String(p.id) === data.assistId);
+        const teamSeasonVal = data.isOpponentGoal ? game.opponentId : game.teamSeasonId;
 
-        const goalPayload = {
-          game_id: game.id,
-          team_season_id: isOpponentGoal ? game.opponentId : game.teamSeasonId,
-          scorer_player_game_id: scorer?.playerGameId || null,
-          assist_player_game_id: assist?.playerGameId || null,
-          is_own_goal: goalType === "own_goal",
-          goal_types: goalType,
+        const payload = {
+          game_id: Number(game.game_id || game.id),
+          team_season_id: Number(teamSeasonVal),
+          scorer_player_game_id: scorer?.playerGameId ? Number(scorer.playerGameId) : null,
+          assist_player_game_id: assist?.playerGameId ? Number(assist.playerGameId) : null,
+          is_own_goal: data.goalType === "own_goal",
+          goal_types: data.goalType,
           game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
         };
 
-        if (!isOnline) {
-          enqueueOfflineAction("goal", "game_events_goals", "POST", goalPayload);
-        } else {
-          // Add to store optimistic
+        const newGoal = await fetch(`/api/game_events_goals`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).then((r) => r.json());
+
+        if (newGoal?.id) {
           addGoalEvent(
             {
-              id: Date.now(),
-              major_event_id: Date.now(),
-              team_season_id: Number(goalPayload.team_season_id),
-              is_own_goal: goalType === "own_goal",
-              goal_types: goalType,
+              id: newGoal.id,
+              major_event_id: newGoal.major_event_id,
+              team_season_id: Number(teamSeasonVal),
+              is_own_goal: data.goalType === "own_goal",
+              goal_types: data.goalType,
               scorer_player_game_id: scorer?.playerGameId ? Number(scorer.playerGameId) : null,
               assist_player_game_id: assist?.playerGameId ? Number(assist.playerGameId) : null,
             } as any,
             {
-              id: Date.now(),
-              game_id: Number(game.id),
+              id: newGoal.major_event_id,
+              game_id: Number(game.game_id || game.id),
               period: game.currentPeriodIndex + 1,
               game_time: gameTimeSeconds,
               clock_should_run: 1,
@@ -194,11 +275,8 @@ export default function LiveGameTrackerClient() {
           );
         }
 
-        toast.success(`GOAL Recorded! (${isOpponentGoal ? game.opponentName : game.ourName})`);
-        setIsGoalModalOpen(false);
-        setGoalScorerId("");
-        setGoalAssistId("");
-        setIsOpponentGoal(false);
+        toast.success(`GOAL Recorded!`);
+        await handleCloseMajorEventModal();
       } catch (err: any) {
         toast.error("Failed to record goal: " + err.message);
       }
@@ -206,39 +284,48 @@ export default function LiveGameTrackerClient() {
   };
 
   // Record Card Action
-  const handleRecordCard = async () => {
-    if (!cardPlayerId) {
+  const handleRecordCard = async (data: {
+    playerId: string;
+    cardType: "yellow" | "red" | "yellow_red";
+    cardReason: string;
+  }) => {
+    if (!data.playerId) {
       toast.error("Please select a player for the card.");
       return;
     }
 
     startTransition(async () => {
       try {
-        const player = players.find((p) => String(p.id) === cardPlayerId);
-        const cardPayload = {
-          game_id: game.id,
-          team_season_id: game.teamSeasonId,
-          player_game_id: player?.playerGameId || null,
-          card_type: cardType,
-          card_reason: cardReason || null,
+        const player = players.find((p) => String(p.id) === data.playerId);
+        const payload = {
+          game_id: Number(game.game_id || game.id),
+          team_season_id: Number(game.teamSeasonId),
+          player_game_id: player?.playerGameId ? Number(player.playerGameId) : null,
+          card_type: data.cardType,
+          card_reason: data.cardReason || null,
           game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
         };
 
-        if (!isOnline) {
-          enqueueOfflineAction("discipline", "game_events_discipline", "POST", cardPayload);
-        } else {
+        const newCard = await fetch(`/api/game_events_discipline`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).then((r) => r.json());
+
+        if (newCard?.id) {
           addDisciplineEvent(
             {
-              id: Date.now(),
-              major_event_id: Date.now(),
+              id: newCard.id,
+              major_event_id: newCard.major_event_id,
               team_season_id: Number(game.teamSeasonId),
-              card_type: cardType,
-              card_reason: cardReason,
+              card_type: data.cardType,
+              card_reason: data.cardReason,
               player_game_id: player?.playerGameId ? Number(player.playerGameId) : null,
             } as any,
             {
-              id: Date.now(),
-              game_id: Number(game.id),
+              id: newCard.major_event_id,
+              game_id: Number(game.game_id || game.id),
               period: game.currentPeriodIndex + 1,
               game_time: gameTimeSeconds,
               clock_should_run: 1,
@@ -246,44 +333,36 @@ export default function LiveGameTrackerClient() {
           );
         }
 
-        toast.success(`${cardType.toUpperCase()} Card recorded for ${player?.fullName}`);
-        setIsCardModalOpen(false);
-        setCardPlayerId("");
-        setCardReason("");
+        toast.success(`${data.cardType.toUpperCase()} Card recorded!`);
+        await handleCloseMajorEventModal();
       } catch (err: any) {
         toast.error("Failed to record card: " + err.message);
       }
     });
   };
 
-  // Record Substitution Action
-  const handleRecordSub = async () => {
-    if (!subInPlayerId || !subOutPlayerId) {
-      toast.error("Select both an IN player and an OUT player.");
+  // Record Stoppage Action
+  const handleRecordStoppage = async (data: { reason: string }) => {
+    if (!data.reason) {
+      toast.error("Please specify a stoppage reason.");
       return;
     }
-
     startTransition(async () => {
       try {
-        const inPlayer = players.find((p) => String(p.id) === subInPlayerId);
-        const outPlayer = players.find((p) => String(p.id) === subOutPlayerId);
-
-        const sub = await createPendingSub(
-          inPlayer?.playerGameId || subInPlayerId,
-          outPlayer?.playerGameId || subOutPlayerId,
-          isGkSub
+        const activeStoppage = game?.gameEventsMajor?.find(
+          (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
         );
-
-        if (sub?.id) {
-          await confirmSub(sub.id);
+        if (activeStoppage) {
+          await fetch(`/api/game_events_major?id=${activeStoppage.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ details: data.reason }),
+          });
         }
-
-        toast.success(`Subbed IN ${inPlayer?.fullName} for ${outPlayer?.fullName}`);
-        setIsSubModalOpen(false);
-        setSubInPlayerId("");
-        setSubOutPlayerId("");
+        toast.success("Stoppage reason logged.");
+        await handleCloseMajorEventModal();
       } catch (err: any) {
-        toast.error("Failed to execute substitution: " + err.message);
+        toast.error("Failed to log stoppage: " + err.message);
       }
     });
   };
@@ -309,441 +388,311 @@ export default function LiveGameTrackerClient() {
     toast.success(`Recorded ${actionType.replace("_", " ")} for ${player.fullName}`);
   };
 
-  // Record Team Event
-  const handleQuickTeamEvent = (eventType: "corner" | "offside" | "foul" | "timeout") => {
-    addTeamEvent({
-      id: Date.now(),
-      game_id: Number(game.id),
-      team_season_id: Number(game.teamSeasonId),
-      event_type: eventType as any,
-      game_time: gameTimeSeconds,
-      period: game.currentPeriodIndex + 1,
-    } as any);
+  // Persistent team event increments & decrements
+  const handleAddTeamEvent = async (teamSeasonIdVal: number | string, eventType: "corner" | "offside" | "foul") => {
+    const tid = Number(teamSeasonIdVal);
+    if (!tid || isNaN(tid)) {
+      toast.error("Invalid team season ID for counter");
+      return;
+    }
 
-    toast.success(`Recorded Team ${eventType.toUpperCase()}`);
+    try {
+      const payload = {
+        game_id: Number(game.game_id || game.id),
+        team_season_id: tid,
+        event_type: eventType,
+        game_time: gameTimeSeconds,
+        period: game.currentPeriodIndex + 1,
+      };
+
+      const newEvent = await fetch(`/api/game_events_team`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).then((r) => r.json());
+
+      if (newEvent?.id) {
+        addTeamEvent({
+          id: newEvent.id,
+          game_id: Number(game.game_id || game.id),
+          team_season_id: tid,
+          event_type: eventType as any,
+          game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
+        } as any);
+        await initializeGame(id, teamSeasonId);
+      }
+    } catch (err: any) {
+      toast.error(`Failed to log team event: ${err.message}`);
+    }
   };
 
+  const handleRemoveTeamEvent = async (teamSeasonIdVal: number | string, eventType: "corner" | "offside" | "foul") => {
+    try {
+      const teamEvents = game.gameEventsTeam || [];
+      const matchEvents = teamEvents.filter(
+        (e) => Number(e.team_season_id) === Number(teamSeasonIdVal) && e.event_type === eventType
+      );
+      if (matchEvents.length === 0) return;
+
+      const lastEvent = matchEvents[matchEvents.length - 1];
+      const deleteEventFn = useGameStore.getState().deleteEvent;
+      await deleteEventFn(lastEvent.id, "team");
+      await initializeGame(id, teamSeasonId);
+      toast.success(`Removed team ${eventType.toUpperCase()}`);
+    } catch (err: any) {
+      toast.error(`Failed to remove team event: ${err.message}`);
+    }
+  };
+
+  // Substitution queue commands
+  const handleConfirmSingleSub = async (subId: string | number) => {
+    try {
+      await confirmSub(subId);
+      toast.success("Substitution entered.");
+    } catch (err: any) {
+      toast.error("Failed to enter sub: " + err.message);
+    }
+  };
+
+  const handleCancelSub = async (subId: string | number) => {
+    try {
+      await cancelSub(subId);
+      toast.success("Substitution cancelled.");
+    } catch (err: any) {
+      toast.error("Failed to cancel sub: " + err.message);
+    }
+  };
+
+  const handleConfirmAllSubs = async () => {
+    try {
+      await confirmAllPendingSubs();
+      toast.success("All pending substitutions entered.");
+    } catch (err: any) {
+      toast.error("Failed to enter subs: " + err.message);
+    }
+  };
+
+  // Delete event handler
+  const handleDeleteEvent = async (dbId: string | number, type: string) => {
+    try {
+      const deleteEventFn = useGameStore.getState().deleteEvent;
+      let eventTypeKey: any = "major";
+      if (type === "goal") eventTypeKey = "goal";
+      if (type === "discipline") eventTypeKey = "discipline";
+      if (type === "team") eventTypeKey = "team";
+
+      await deleteEventFn(dbId, eventTypeKey);
+      toast.success("Event deleted.");
+    } catch (err: any) {
+      toast.error("Failed to delete event: " + err.message);
+    } finally {
+      setConfirmDeleteId(null);
+      await initializeGame(id, teamSeasonId);
+    }
+  };
+
+  const handleEditSub = async (subId: string | number, inPlayerId: string | number, outPlayerId: string | number) => {
+    try {
+      await updatePendingSub(subId, {
+        in_player_id: inPlayerId ? Number(inPlayerId) : null,
+        out_player_id: outPlayerId ? Number(outPlayerId) : null,
+      });
+      toast.success("Pending substitution updated.");
+    } catch (err: any) {
+      toast.error("Failed to update sub: " + err.message);
+    }
+  };
+
+  // Derived stats counters
+  const ourId = Number(teamSeasonId || (game?.isHome ? game?.home_team_season_id : game?.away_team_season_id));
+  const oppId = Number(game?.isHome ? game?.away_team_season_id : game?.home_team_season_id);
+  const teamEvents = game.gameEventsTeam || [];
+
+  const ourCorners = teamEvents.filter((e) => Number(e.team_season_id) === ourId && e.event_type === "corner").length;
+  const oppCorners = teamEvents.filter((e) => Number(e.team_season_id) === oppId && e.event_type === "corner").length;
+  const ourOffsides = teamEvents.filter((e) => Number(e.team_season_id) === ourId && e.event_type === "offside").length;
+  const oppOffsides = teamEvents.filter((e) => Number(e.team_season_id) === oppId && e.event_type === "offside").length;
+  const ourFouls = teamEvents.filter((e) => Number(e.team_season_id) === ourId && e.event_type === "foul").length;
+  const oppFouls = teamEvents.filter((e) => Number(e.team_season_id) === oppId && e.event_type === "foul").length;
+
+  // Chronological recent event list
+  const recentEventsList = React.useMemo(() => {
+    const list: { id: string; dbId: string | number; time: number; type: string; desc: string }[] = [];
+
+    (game.gameEventsGoals || []).forEach((g: any) => {
+      const major = (game.gameEventsMajor || []).find((m) => Number(m.id) === Number(g.major_event_id));
+      const eventTime = g.game_time ?? major?.game_time ?? 0;
+      const scorer = players.find((p) => Number(p.playerGameId) === Number(g.scorer_player_game_id));
+      const teamName = Number(g.team_season_id) === ourId ? "Us" : "Opponent";
+      const desc = `Goal for ${teamName} by ${scorer ? scorer.fullName : "Unknown"}${g.is_own_goal ? " (OG)" : ""}`;
+      list.push({ id: `goal-${g.id || g.goal_id}`, dbId: g.id || g.goal_id, time: eventTime, type: "goal", desc });
+    });
+
+    (game.gameEventsDiscipline || []).forEach((d: any) => {
+      const major = (game.gameEventsMajor || []).find((m) => Number(m.id) === Number(d.major_event_id));
+      const eventTime = d.game_time ?? major?.game_time ?? 0;
+      const player = players.find((p) => Number(p.playerGameId) === Number(d.player_game_id));
+      const cardKind = String(d.card_type || d.card_color || "Card").toUpperCase();
+      const desc = `${cardKind} Card to ${player ? player.fullName : "Unknown"}`;
+      list.push({ id: `card-${d.id || d.discipline_id}`, dbId: d.id || d.discipline_id, time: eventTime, type: "discipline", desc });
+    });
+
+    (game.gameEventsTeam || []).forEach((t: any) => {
+      const teamName = Number(t.team_season_id) === ourId ? "Us" : "Opponent";
+      const desc = `Team ${t.event_type.toUpperCase()} for ${teamName}`;
+      list.push({ id: `team-${t.id}`, dbId: t.id, time: t.game_time ?? 0, type: "team", desc });
+    });
+
+    (game.gameEventsMajor || []).forEach((m: any) => {
+      if (m.details || m.event_type === "stoppage") {
+        const desc = m.details ? `Stoppage: ${m.details}` : `Stoppage Event`;
+        list.push({ id: `major-${m.id}`, dbId: m.id, time: m.game_time ?? 0, type: "major", desc });
+      }
+    });
+
+    return list.sort((a, b) => b.time - a.time);
+  }, [game.gameEventsGoals, game.gameEventsDiscipline, game.gameEventsTeam, game.gameEventsMajor, players, ourId]);
+
+  // Sync pending subs list
+  const pendingSubsList = getPendingSubsSync() || [];
+
+  // Derived player event stats helper
+  const getPlayerStats = (player: Player) => {
+    const pId = Number(player.playerGameId);
+    const playerActions = game.playerActions || [];
+    const goalsEvents = game.gameEventsGoals || [];
+    const disciplineEvents = game.gameEventsDiscipline || [];
+
+    const shots = playerActions.filter((a) => Number(a.player_game_id) === pId && (a.event_type === "shot" || a.event_type === "shot_on_target")).length;
+    const saves = playerActions.filter((a) => Number(a.player_game_id) === pId && a.event_type === "save").length;
+    const goals = goalsEvents.filter((g) => Number(g.scorer_player_game_id) === pId).length;
+    const assists = goalsEvents.filter((g) => Number(g.assist_player_game_id) === pId).length;
+    const yellowCards = disciplineEvents.filter((d) => Number(d.player_game_id) === pId && (d.card_type === "yellow" || d.card_color === "yellow")).length;
+    const redCards = disciplineEvents.filter((d) => Number(d.player_game_id) === pId && (d.card_type === "red" || d.card_type === "yellow_red" || d.card_color === "red")).length;
+    const goalsAgainst = goalsEvents.filter((g) => Number(g.defending_gk_player_game_id) === pId).length;
+
+    return { shots, saves, goals, assists, yellowCards, redCards, goalsAgainst };
+  };
+
+  const playerOptions = eligiblePlayers.map((p) => ({
+    value: String(p.id),
+    label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
+  }));
+
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* TOP SCOREBOARD HEADER */}
-      <div className="relative overflow-hidden rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-md">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* TEAM 1 (OUR TEAM) */}
-          <div className="flex items-center gap-4 text-left">
-            <div className="h-14 w-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center font-extrabold text-primary text-xl">
-              ⚽
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Home</span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-text">{game.ourName}</h2>
-            </div>
-          </div>
+    <div className="flex flex-col h-screen max-h-screen overflow-hidden p-3 gap-2 bg-background select-none text-xs">
+      {/* LINEUP VALIDATION WARNING */}
+      <LineupValidationBanner
+        isLineupConfigured={isLineupConfigured}
+        onFieldCount={onFieldPlayers.length}
+        playersOnFieldSetting={game.settings?.playersOnField || 11}
+        teamSeasonId={teamSeasonId}
+        gameId={id}
+      />
 
-          {/* SCORE & CLOCK */}
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <div className="flex items-center gap-4 font-mono font-black text-4xl sm:text-5xl text-text tracking-tighter">
-              <span>{game.goalsFor ?? 0}</span>
-              <span className="text-muted/40">:</span>
-              <span>{game.goalsAgainst ?? 0}</span>
-            </div>
+      {/* Broadcast Scoreboard Header */}
+      <BroadcastScoreboard
+        ourShortName={ourShortName}
+        opponentShortName={opponentShortName}
+        goalsFor={game.goalsFor ?? 0}
+        goalsAgainst={game.goalsAgainst ?? 0}
+        gameTimeSeconds={gameTimeSeconds}
+        periodLabel={periodLabel}
+        isOnline={isOnline}
+        queueCount={queueCount}
+        currentStage={currentStage}
+        GAME_STAGES={GAME_STAGES}
+        isLineupConfigured={isLineupConfigured}
+        onTogglePeriodClock={handleTogglePeriodClock}
+        onOpenMajorEventModal={handleOpenMajorEventModal}
+        onOpenNavDrawer={() => setIsNavDrawerOpen(true)}
+      />
 
-            {/* CLOCK DISPLAY */}
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-background border border-border/80 shadow-xs">
-              <Activity size={14} className="text-primary animate-pulse" />
-              <span className="font-mono text-sm font-extrabold text-text">
-                {formatTime(gameTimeSeconds)}
-              </span>
-              <span className="text-[10px] font-extrabold text-muted uppercase border-l border-border pl-2">
-                {periodLabel}
-              </span>
-            </div>
-          </div>
+      {/* Main split grid: Left 70% (Rosters Stacked), Right 30% (Feeds Stacked) */}
+      <div className="flex-1 min-h-0 flex gap-3">
+        {/* LEFT COLUMN: ROSTER PANELS (70% WIDTH) */}
+        <div className="w-[70%] flex flex-col gap-2.5 min-h-0">
+          <OnFieldPlayersPanel
+            onFieldGks={onFieldGks}
+            onFieldFlds={onFieldFlds}
+            onFieldCount={onFieldPlayers.length}
+            subOutId={subOutId}
+            pendingSubsList={pendingSubsList}
+            gameTimeSeconds={gameTimeSeconds}
+            calculateTotalTimeOnField={calculateTotalTimeOnField}
+            calculateCurrentTimeOnField={calculateCurrentTimeOnField}
+            getPlayerStats={getPlayerStats}
+            setSubOutId={setSubOutId}
+            handleQuickPlayerAction={handleQuickPlayerAction}
+          />
 
-          {/* TEAM 2 (OPPONENT) */}
-          <div className="flex items-center gap-4 text-right flex-row-reverse">
-            <div className="h-14 w-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center font-extrabold text-accent text-xl">
-              🛡️
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Away</span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-text">{game.opponentName}</h2>
-            </div>
-          </div>
+          <BenchReservesPanel
+            gameChangers={gameChangers}
+            subInId={subInId}
+            pendingSubsList={pendingSubsList}
+            gameTimeSeconds={gameTimeSeconds}
+            calculateTotalTimeOnField={calculateTotalTimeOnField}
+            calculateCurrentTimeOffField={calculateCurrentTimeOffField}
+            getPlayerStats={getPlayerStats}
+            setSubInId={setSubInId}
+          />
         </div>
 
-        {/* OFFLINE STATUS PILL */}
-        <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            {isOnline ? (
-              <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                <Wifi size={14} />
-                <span>Online (Live Sync Active)</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 text-amber-500 font-bold text-[11px]">
-                <WifiOff size={14} />
-                <span>Offline Mode ({queueCount} pending actions queued)</span>
-              </span>
-            )}
-          </div>
+        {/* RIGHT COLUMN: ACTION & FEED PANEL (30% WIDTH) */}
+        <div className="w-[30%] flex flex-col gap-2.5 min-h-0">
+          <TeamCountersPanel
+            ourShortName={ourShortName}
+            opponentShortName={opponentShortName}
+            ourId={ourId}
+            oppId={oppId}
+            ourCorners={ourCorners}
+            oppCorners={oppCorners}
+            ourOffsides={ourOffsides}
+            oppOffsides={oppOffsides}
+            ourFouls={ourFouls}
+            oppFouls={oppFouls}
+            onAddTeamEvent={handleAddTeamEvent}
+            onRemoveTeamEvent={handleRemoveTeamEvent}
+          />
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant={currentStage === GAME_STAGES.DURING_PERIOD ? "danger" : "success"}
-              size="sm"
-              onClick={handleTogglePeriodClock}
-              className="flex items-center gap-1.5 font-bold"
-            >
-              {currentStage === GAME_STAGES.DURING_PERIOD ? (
-                <>
-                  <PauseCircle size={14} />
-                  <span>Pause/End Period</span>
-                </>
-              ) : (
-                <>
-                  <Play size={14} />
-                  <span>Start Period Clock</span>
-                </>
-              )}
-            </Button>
-          </div>
+          <UpcomingSubsPanel
+            pendingSubsList={pendingSubsList}
+            players={players}
+            onConfirmSingleSub={handleConfirmSingleSub}
+            onCancelSub={handleCancelSub}
+            onConfirmAllSubs={handleConfirmAllSubs}
+            onEditSub={handleEditSub}
+          />
+
+          <RecentEventsPanel
+            recentEventsList={recentEventsList}
+            confirmDeleteId={confirmDeleteId}
+            setConfirmDeleteId={setConfirmDeleteId}
+            onDeleteEvent={handleDeleteEvent}
+          />
         </div>
       </div>
 
-      {/* QUICK ACTION TOOLBAR */}
-      <Card variant="default" padding="md" className="space-y-3">
-        <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted flex items-center gap-2">
-          <Zap size={14} className="text-primary" />
-          <span>Match Event Quick Bar</span>
-        </h3>
+      {/* UNIFIED MAJOR EVENT MODAL */}
+      <MajorEventModal
+        isOpen={isMajorEventModalOpen}
+        onClose={handleCloseMajorEventModal}
+        opponentShortName={opponentShortName}
+        playerOptions={playerOptions}
+        onRecordGoal={handleRecordGoal}
+        onRecordCard={handleRecordCard}
+        onRecordStoppage={handleRecordStoppage}
+        isPending={isPending}
+      />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-          <Button
-            variant="success"
-            size="sm"
-            onClick={() => setIsGoalModalOpen(true)}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <Trophy size={14} />
-            <span>+ GOAL</span>
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsSubModalOpen(true)}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <Users size={14} />
-            <span>SUB IN/OUT</span>
-          </Button>
-
-          <Button
-            variant="warning"
-            size="sm"
-            onClick={() => setIsCardModalOpen(true)}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <AlertTriangle size={14} />
-            <span>CARD</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleQuickTeamEvent("corner")}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <Target size={14} />
-            <span>CORNER</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleQuickTeamEvent("offside")}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <Shield size={14} />
-            <span>OFFSIDE</span>
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsGuestModalOpen(true)}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <UserPlus size={14} />
-            <span>+ GUEST</span>
-          </Button>
-        </div>
-      </Card>
-
-      {/* ON-FIELD VS BENCH PLAYER ROSTER LISTS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* ON-FIELD PLAYERS */}
-        <Card variant="outlined" padding="md" className="space-y-3 bg-surface shadow-xs">
-          <div className="flex items-center justify-between border-b border-border pb-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>Players On Field ({onFieldPlayers.length})</span>
-            </h3>
-          </div>
-
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-            {onFieldPlayers.length === 0 ? (
-              <p className="text-xs text-muted text-center py-6">No players currently on field.</p>
-            ) : (
-              onFieldPlayers.map((player) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background/50 hover:bg-background transition-colors text-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="h-7 w-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center font-mono font-bold text-primary text-xs">
-                      #{player.jerseyNumber || "?"}
-                    </span>
-                    <div>
-                      <p className="font-bold text-text">{player.fullName}</p>
-                      <span className="text-[10px] text-muted capitalize">{player.position || "Field"}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleQuickPlayerAction(player.id, "shot")}
-                      className="px-2 py-1 bg-surface border border-border hover:border-primary text-muted hover:text-primary rounded-lg font-bold text-[10px]"
-                      title="Record Shot"
-                    >
-                      SHOT
-                    </button>
-                    <button
-                      onClick={() => handleQuickPlayerAction(player.id, "save")}
-                      className="px-2 py-1 bg-surface border border-border hover:border-emerald-500 text-muted hover:text-emerald-500 rounded-lg font-bold text-[10px]"
-                      title="Record Save"
-                    >
-                      SAVE
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-
-        {/* BENCH PLAYERS */}
-        <Card variant="outlined" padding="md" className="space-y-3 bg-surface shadow-xs">
-          <div className="flex items-center justify-between border-b border-border pb-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              <span>Bench Reserves ({benchPlayers.length})</span>
-            </h3>
-          </div>
-
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-            {benchPlayers.length === 0 ? (
-              <p className="text-xs text-muted text-center py-6">No players currently on bench.</p>
-            ) : (
-              benchPlayers.map((player) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background/50 text-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="h-7 w-7 rounded-lg bg-surface border border-border flex items-center justify-center font-mono font-bold text-muted text-xs">
-                      #{player.jerseyNumber || "?"}
-                    </span>
-                    <div>
-                      <p className="font-bold text-text">{player.fullName}</p>
-                      <span className="text-[10px] text-muted">On Bench</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setSubInPlayerId(String(player.id));
-                      setIsSubModalOpen(true);
-                    }}
-                    className="px-2.5 py-1 bg-primary text-white hover:bg-primary/90 rounded-lg font-bold text-[10px]"
-                  >
-                    SUB IN
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* MODAL 1: GOAL RECORDING */}
-      <Modal
-        isOpen={isGoalModalOpen}
-        onClose={() => setIsGoalModalOpen(false)}
-        title="Record Match Goal"
-        subtitle="Log goal scorer, assist player, and goal type"
-      >
-        <div className="space-y-4 text-xs">
-          <Checkbox
-            label={`Goal for Opponent (${game.opponentName})`}
-            checked={isOpponentGoal}
-            onChange={(e: any) => setIsOpponentGoal(e.target.checked)}
-          />
-
-          {!isOpponentGoal && (
-            <>
-              <Select
-                label="Goal Scorer"
-                value={goalScorerId}
-                onChange={(e: any) => setGoalScorerId(e.target.value)}
-                options={players.map((p) => ({
-                  value: String(p.id),
-                  label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-                }))}
-                placeholder="Select Goal Scorer"
-                width="full"
-              />
-
-              <Select
-                label="Assist Player (Optional)"
-                value={goalAssistId}
-                onChange={(e: any) => setGoalAssistId(e.target.value)}
-                options={players.map((p) => ({
-                  value: String(p.id),
-                  label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-                }))}
-                placeholder="Select Assist Player (Optional)"
-                width="full"
-              />
-            </>
-          )}
-
-          <Select
-            label="Goal Type"
-            value={goalType}
-            onChange={(e: any) => setGoalType(e.target.value)}
-            options={[
-              { value: "foot", label: "Normal Shot / Foot" },
-              { value: "header", label: "Header" },
-              { value: "free_kick", label: "Direct Free Kick" },
-              { value: "penalty", label: "Penalty Kick" },
-              { value: "own_goal", label: "Own Goal" },
-            ]}
-            width="full"
-            showPlaceholder={false}
-          />
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" size="sm" onClick={() => setIsGoalModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="success" size="sm" onClick={handleRecordGoal} disabled={isPending}>
-              Confirm Goal
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* MODAL 2: CARD DISCIPLINE */}
-      <Modal
-        isOpen={isCardModalOpen}
-        onClose={() => setIsCardModalOpen(false)}
-        title="Record Card Discipline"
-        subtitle="Log yellow or red card for player"
-      >
-        <div className="space-y-4 text-xs">
-          <Select
-            label="Player"
-            value={cardPlayerId}
-            onChange={(e: any) => setCardPlayerId(e.target.value)}
-            options={players.map((p) => ({
-              value: String(p.id),
-              label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-            }))}
-            placeholder="Select Card Recipient"
-            width="full"
-          />
-
-          <Select
-            label="Card Type"
-            value={cardType}
-            onChange={(e: any) => setCardType(e.target.value)}
-            options={[
-              { value: "yellow", label: "Yellow Card" },
-              { value: "red", label: "Red Card" },
-              { value: "yellow_red", label: "Second Yellow (Red)" },
-            ]}
-            width="full"
-            showPlaceholder={false}
-          />
-
-          <Input
-            label="Reason / Notes (Optional)"
-            value={cardReason}
-            onChange={(e: any) => setCardReason(e.target.value)}
-            placeholder="e.g. Unsporting behavior, dangerous tackle"
-          />
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" size="sm" onClick={() => setIsCardModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="warning" size="sm" onClick={handleRecordCard} disabled={isPending}>
-              Issue Card
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* MODAL 3: SUBSTITUTION */}
-      <Modal
-        isOpen={isSubModalOpen}
-        onClose={() => setIsSubModalOpen(false)}
-        title="Player Substitution"
-        subtitle="Swap bench player IN for on-field player OUT"
-      >
-        <div className="space-y-4 text-xs">
-          <Select
-            label="Player Entering IN (Bench)"
-            value={subInPlayerId}
-            onChange={(e: any) => setSubInPlayerId(e.target.value)}
-            options={benchPlayers.map((p) => ({
-              value: String(p.id),
-              label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-            }))}
-            placeholder="Select Player Subbing IN"
-            width="full"
-          />
-
-          <Select
-            label="Player Exiting OUT (Field)"
-            value={subOutPlayerId}
-            onChange={(e: any) => setSubOutPlayerId(e.target.value)}
-            options={onFieldPlayers.map((p) => ({
-              value: String(p.id),
-              label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-            }))}
-            placeholder="Select Player Subbing OUT"
-            width="full"
-          />
-
-          <Checkbox
-            label="Goalkeeper Change"
-            checked={isGkSub}
-            onChange={(e: any) => setIsGkSub(e.target.checked)}
-          />
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" size="sm" onClick={() => setIsSubModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" size="sm" onClick={handleRecordSub} disabled={isPending}>
-              Execute Substitution
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
+      {/* COLLAPSIBLE SIDEBAR NAVIGATION DRAWER */}
+      <LiveNavigationDrawer
+        isOpen={isNavDrawerOpen}
+        onClose={() => setIsNavDrawerOpen(false)}
+        teamSeasonId={teamSeasonId}
+        gameId={id}
+      />
     </div>
   );
 }

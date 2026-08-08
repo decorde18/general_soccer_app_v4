@@ -618,16 +618,6 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
     const ins = player.ins || [];
     const outs = player.outs || [];
 
-    const lastIn = ins[ins.length - 1];
-    const lastOut = outs[outs.length - 1];
-    const hasPendingIn = Boolean(lastIn && lastIn.gameTime === null);
-    const hasPendingOut = Boolean(lastOut && lastOut.gameTime === null);
-
-    if (hasPendingIn) return "subbingIn";
-    if (hasPendingOut) {
-      return player.gameStatus === "goalkeeper" ? "subbingOutGk" : "subbingOut";
-    }
-
     const completedIns = ins.filter((sub) => sub.gameTime !== null).length;
     const completedOuts = outs.filter((sub) => sub.gameTime !== null).length;
 

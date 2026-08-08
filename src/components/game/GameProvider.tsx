@@ -106,8 +106,8 @@ export default function GameProvider({ children }: GameProviderProps) {
     );
   }
 
-  // Loading game data
-  if (gameIsLoading || playersIsLoading || !game || players.length === 0) {
+  // Loading game data (only initially, do not block subsequent background updates)
+  if (!game || players.length === 0) {
     return <FullScreenLoader message="Loading game data..." />;
   }
 

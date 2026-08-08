@@ -263,9 +263,11 @@ const useGameStore = create<GameStoreState>((set, get) => {
         // Build opponent info
         const { home_team_season_id, away_team_season_id } = dbGame;
         const isHome = teamSeasonId == home_team_season_id;
+
         const opponent = {
           opponentId: isHome ? away_team_season_id : home_team_season_id,
           opponentClub: isHome ? dbGame.away_club_name : dbGame.home_club_name,
+          opponentClubAbbreviation: isHome ? dbGame.awayClubAbbreviation : dbGame.homeClubAbbreviation,
           opponentTeamName: isHome
             ? dbGame.away_team_name
             : dbGame.home_team_name,
@@ -353,6 +355,7 @@ const useGameStore = create<GameStoreState>((set, get) => {
           ourName: isHome
             ? `${dbGame.home_club_name} ${dbGame.home_team_name}`
             : `${dbGame.away_club_name} ${dbGame.away_team_name}`,
+          ourClubAbbreviation: isHome ? dbGame.homeClubAbbreviation : dbGame.awayClubAbbreviation,
           teamStatTotals: teamStatTotals as TeamStatTotals,
 
           // camelCase aliases for consistent component access
@@ -855,7 +858,7 @@ const useGameStore = create<GameStoreState>((set, get) => {
               break;
             case "goal": {
               updates.gameEventsGoals = game.gameEventsGoals.filter(
-                (g) => g.goal_id !== eventId,
+                (g) => String(g.goal_id) !== String(eventId) && String(g.id) !== String(eventId),
               );
               const teamSeasonId = game.isHome
                 ? game.home_team_season_id
@@ -872,12 +875,12 @@ const useGameStore = create<GameStoreState>((set, get) => {
             }
             case "discipline":
               updates.gameEventsDiscipline = game.gameEventsDiscipline.filter(
-                (d) => d.discipline_id !== eventId,
+                (d) => String(d.discipline_id) !== String(eventId) && String(d.id) !== String(eventId),
               );
               break;
             case "penalty":
               updates.gameEventsPenalties = game.gameEventsPenalties.filter(
-                (p) => p.penalty_id !== eventId,
+                (p) => String(p.penalty_id) !== String(eventId) && String(p.id) !== String(eventId),
               );
               break;
             case "player_action":

@@ -65,7 +65,7 @@ export function formatTimeStandard(timeStr?: string | Date | null): string {
   try {
     let d: Date;
     if (typeof timeStr === "string") {
-      if (timeStr.includes(":")) {
+      if (timeStr.includes(":") && !timeStr.includes("T")) {
         const [hours, minutes] = timeStr.split(":").map(Number);
         d = new Date();
         d.setHours(hours, minutes, 0, 0);
