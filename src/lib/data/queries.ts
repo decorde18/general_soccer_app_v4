@@ -180,9 +180,11 @@ export interface Game {
   homeTeamSeasonId: number;
   homeTeamName: string;
   homeClubName: string;
+  homeClubAbbreviation?: string | null;
   awayTeamSeasonId: number;
   awayTeamName: string;
   awayClubName: string;
+  awayClubAbbreviation?: string | null;
   status: GameStatus;
   gameType: GameType;
   startDate: string;
@@ -202,6 +204,10 @@ export interface Game {
   settings: {
     playersOnField: number;
   };
+  ourName?: string;
+  opponentName?: string;
+  ourClubAbbreviation?: string | null;
+  opponentClubAbbreviation?: string | null;
 }
 
 export interface Player {
@@ -1005,9 +1011,11 @@ function mapGameRow(r: any): Game {
     homeTeamSeasonId: r.home_team_season_id,
     homeTeamName: homeTeam?.team_name ?? r.home_team_name,
     homeClubName: homeTeam?.clubs?.name ?? r.home_club_name,
+    homeClubAbbreviation: homeTeam?.clubs?.abbreviation ?? null,
     awayTeamSeasonId: r.away_team_season_id,
     awayTeamName: awayTeam?.team_name ?? r.away_team_name,
     awayClubName: awayTeam?.clubs?.name ?? r.away_club_name,
+    awayClubAbbreviation: awayTeam?.clubs?.abbreviation ?? null,
     status: r.status as GameStatus,
     gameType: r.game_type as GameType,
     startDate: toDateString(r.start_date)!,

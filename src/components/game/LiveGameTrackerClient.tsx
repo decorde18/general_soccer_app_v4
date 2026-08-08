@@ -1,26 +1,26 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   Play,
   PauseCircle,
-  StopCircle,
   Trophy,
   Users,
   Shield,
   Activity,
   AlertTriangle,
-  CheckCircle,
-  RotateCcw,
   Wifi,
   WifiOff,
-  UserPlus,
   Plus,
-  X,
   Target,
   Zap,
+  Trash2,
+  Check,
+  Edit2,
+  PlusCircle,
+  MinusCircle,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -28,15 +28,17 @@ import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
-import Dialog from "@/components/ui/Dialog";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
 import useGameSubsStore from "@/stores/gameSubsStore";
-import { useOnlineStatus, enqueueOfflineAction } from "@/lib/offline/offlineSync";
-import { addGuestPlayersToGames } from "@/lib/actions/guestPlayer-actions";
+import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
+import { useOnlineStatus } from "@/lib/offline/offlineSync";
+import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
+import { formatTeamName } from "@/lib/utils/teamName";
 
 export default function LiveGameTrackerClient() {
   const router = useRouter();
+  const { id, teamSeasonId } = useParams<{ id: string; teamSeasonId: string }>();
   const { isOnline, queueCount } = useOnlineStatus();
   const [isPending, startTransition] = useTransition();
 
@@ -52,67 +54,91 @@ export default function LiveGameTrackerClient() {
   const addPlayerAction = useGameStore((s) => s.addPlayerAction);
   const addTeamEvent = useGameStore((s) => s.addTeamEvent);
   const getCurrentPeriodLabel = useGameStore((s) => s.getCurrentPeriodLabel);
+  const initializeGame = useGameStore((s) => s.initializeGame);
 
   const players = useGamePlayersStore((s) => s.players);
-  const setPlayers = useGamePlayersStore((s) => s.setPlayers);
-  const { createPendingSub, confirmSub } = useGameSubsStore();
+  const {
+    createPendingSub,
+    confirmSub,
+    cancelSub,
+    confirmAllPendingSubs,
+    getPendingSubsSync,
+  } = useGameSubsStore();
 
-  // Clock local tick counter for UI smoothness
+  // Time calculations
+  const calculateTotalTimeOnField = useGamePlayerTimeStore((s) => s.calculateTotalTimeOnField);
+  const calculateCurrentTimeOnField = useGamePlayerTimeStore((s) => s.calculateCurrentTimeOnField);
+  const calculateCurrentTimeOffField = useGamePlayerTimeStore((s) => s.calculateCurrentTimeOffField);
+
+  // Clock local tick counter for UI smoothness & shift calculations
   const [gameTimeSeconds, setGameTimeSeconds] = useState<number>(0);
+  const [, setTick] = useState<number>(0);
 
-  // Modals visibility states
-  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
-  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
-  const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
-  const [isShootoutModalOpen, setIsShootoutModalOpen] = useState(false);
+  // Unified Major Event Modal visibility and fields
+  const [isMajorEventModalOpen, setIsMajorEventModalOpen] = useState(false);
+  const [majorEventType, setMajorEventType] = useState<"goal" | "card" | "stoppage">("goal");
 
-  // Goal modal inputs
+  // Recent Event deletion confirmation state
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Goal inputs
   const [goalScorerId, setGoalScorerId] = useState<string>("");
   const [goalAssistId, setGoalAssistId] = useState<string>("");
   const [goalType, setGoalType] = useState<string>("foot");
   const [isOpponentGoal, setIsOpponentGoal] = useState<boolean>(false);
 
-  // Card modal inputs
+  // Card inputs
   const [cardPlayerId, setCardPlayerId] = useState<string>("");
   const [cardType, setCardType] = useState<"yellow" | "red" | "yellow_red">("yellow");
   const [cardReason, setCardReason] = useState<string>("");
 
-  // Sub modal inputs
-  const [subInPlayerId, setSubInPlayerId] = useState<string>("");
-  const [subOutPlayerId, setSubOutPlayerId] = useState<string>("");
-  const [isGkSub, setIsGkSub] = useState<boolean>(false);
+  // Stoppage inputs
+  const [stoppageReason, setStoppageReason] = useState<string>("");
 
-  // Guest modal inputs
-  const [guestFirstName, setGuestFirstName] = useState<string>("");
-  const [guestLastName, setGuestLastName] = useState<string>("");
-  const [guestJersey, setGuestJersey] = useState<string>("");
-
-  // Penalty Shootout inputs
-  const [penaltyShooterId, setPenaltyShooterId] = useState<string>("");
-  const [penaltyOutcome, setPenaltyOutcome] = useState<"goal" | "saved" | "missed" | "hit_post">("goal");
-
-  // Filter on field vs bench players
-  const onFieldPlayers = React.useMemo(() => {
-    return players.filter(
-      (p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk" || p.gameStatus === "starter" || p.gameStatus === "goalkeeper"
-    );
-  }, [players]);
-
-  const benchPlayers = React.useMemo(() => {
-    return players.filter(
-      (p) => p.fieldStatus === "onBench" || p.gameStatus === "dressed"
-    );
-  }, [players]);
+  // Substitution Quick Tap states
+  const [subOutId, setSubOutId] = useState<string | null>(null); // player id
+  const [subInId, setSubInId] = useState<string | null>(null);   // player id
 
   // Update tick
   useEffect(() => {
     const interval = setInterval(() => {
+      setTick((t) => t + 1);
       const storeTime = useGameStore.getState().getGameTime();
       setGameTimeSeconds(storeTime);
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Automatic sub queueing when both an on-field and bench player are selected (Strict-mode safe)
+  useEffect(() => {
+    if (subOutId && subInId) {
+      const outId = subOutId;
+      const inId = subInId;
+
+      // Clear selection states immediately to prevent race conditions & duplicate trigger in StrictMode
+      setSubOutId(null);
+      setSubInId(null);
+
+      const executeAutoSub = async () => {
+        try {
+          const inPlayer = players.find((p) => String(p.id) === inId);
+          const outPlayer = players.find((p) => String(p.id) === outId);
+
+          if (inPlayer && outPlayer) {
+            await createPendingSub(
+              inPlayer.playerGameId,
+              outPlayer.playerGameId,
+              outPlayer.gameStatus === "goalkeeper"
+            );
+            toast.success(`Queued sub: ${outPlayer.fullName} 🔄 ${inPlayer.fullName}`);
+          }
+        } catch (err: any) {
+          toast.error("Failed to queue sub: " + err.message);
+        }
+      };
+      executeAutoSub();
+    }
+  }, [subOutId, subInId, players, createPendingSub]);
 
   if (!game) {
     return (
@@ -126,17 +152,100 @@ export default function LiveGameTrackerClient() {
   const currentStage = getGameStage();
   const periodLabel = getCurrentPeriodLabel();
 
-  // Helper to format seconds as MM:SS
-  const formatTime = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  // Validate starting lineup count
+  const lineupValid = () => {
+    if (!game?.settings?.playersOnField) return true;
+    const starterCount = players.filter((p) => p.gameStatus === "starter").length;
+    const gkCount = players.filter((p) => p.gameStatus === "goalkeeper").length;
+    return (starterCount + gkCount) === game.settings.playersOnField;
+  };
+  const isLineupConfigured = lineupValid();
+
+  // Short display names utilizing the teamName utility and abbreviation fields
+  const ourShortName = formatTeamName({
+    team_name: (game.isHome ? game.homeTeamName : game.awayTeamName) as string | null,
+    club: {
+      name: (game.isHome ? game.homeClubName : game.awayClubName) as string | null,
+      abbreviation: (game.isHome ? game.homeClubAbbreviation : game.awayClubAbbreviation) as string | null,
+    }
+  }, "short");
+
+  const opponentShortName = formatTeamName({
+    team_name: (game.isHome ? game.awayTeamName : game.homeTeamName) as string | null,
+    club: {
+      name: (game.isHome ? game.awayClubName : game.homeClubName) as string | null,
+      abbreviation: (game.isHome ? game.awayClubAbbreviation : game.homeClubAbbreviation) as string | null,
+    }
+  }, "short");
+
+  // Filter on field vs game changers (bench reserves)
+  const onFieldPlayers = players.filter(
+    (p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk" || p.gameStatus === "starter" || p.gameStatus === "goalkeeper"
+  );
+
+  // Group on-field goalkeeper separately
+  const onFieldGks = onFieldPlayers.filter((p) => p.gameStatus === "goalkeeper" || p.fieldStatus === "onFieldGk");
+  const onFieldFlds = onFieldPlayers.filter((p) => p.gameStatus !== "goalkeeper" && p.fieldStatus !== "onFieldGk");
+
+  const gameChangers = players.filter(
+    (p) => p.fieldStatus === "onBench" || p.gameStatus === "dressed"
+  );
+
+  // Auto-pause / start stoppage on event recording modal opening
+  const handleOpenMajorEventModal = async () => {
+    if (currentStage === GAME_STAGES.DURING_PERIOD) {
+      try {
+        await startStoppage("Recording event", "stoppage");
+        toast.info("Clock paused automatically.");
+        await initializeGame(id, teamSeasonId);
+      } catch (err) {
+        console.error("Auto stoppage error:", err);
+      }
+    }
+    setIsMajorEventModalOpen(true);
+  };
+
+  // Auto-resume / end stoppage when modal is closed
+  const handleCloseMajorEventModal = async () => {
+    setIsMajorEventModalOpen(false);
+    setStoppageReason("");
+    setGoalScorerId("");
+    setGoalAssistId("");
+    setIsOpponentGoal(false);
+    setCardPlayerId("");
+    setCardReason("");
+
+    const activeStoppage = game?.gameEventsMajor?.find(
+      (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
+    );
+    if (activeStoppage) {
+      try {
+        await endStoppage(activeStoppage.id);
+        toast.success("Clock resumed.");
+        await initializeGame(id, teamSeasonId);
+      } catch (err) {
+        console.error("Auto resume error:", err);
+      }
+    }
   };
 
   // Clock Actions
   const handleTogglePeriodClock = async () => {
     try {
-      if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
+      if (currentStage === GAME_STAGES.IN_STOPPAGE) {
+        const activeStoppage = game.gameEventsMajor.find(
+          (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
+        );
+        if (activeStoppage) {
+          await endStoppage(activeStoppage.id);
+          toast.success("Clock resumed from stoppage.");
+          await initializeGame(id, teamSeasonId);
+        }
+      } else if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
+        if (!isLineupConfigured) {
+          toast.error("Roster config mismatch. Set starting lineup first.");
+          return;
+        }
         await startNextPeriod();
         toast.success(`Started ${periodLabel}`);
       } else if (currentStage === GAME_STAGES.DURING_PERIOD) {
@@ -159,34 +268,39 @@ export default function LiveGameTrackerClient() {
       try {
         const scorer = players.find((p) => String(p.id) === goalScorerId);
         const assist = players.find((p) => String(p.id) === goalAssistId);
+        const teamSeasonVal = isOpponentGoal ? game.opponentId : game.teamSeasonId;
 
-        const goalPayload = {
-          game_id: game.id,
-          team_season_id: isOpponentGoal ? game.opponentId : game.teamSeasonId,
-          scorer_player_game_id: scorer?.playerGameId || null,
-          assist_player_game_id: assist?.playerGameId || null,
+        const payload = {
+          game_id: Number(game.game_id || game.id),
+          team_season_id: Number(teamSeasonVal),
+          scorer_player_game_id: scorer?.playerGameId ? Number(scorer.playerGameId) : null,
+          assist_player_game_id: assist?.playerGameId ? Number(assist.playerGameId) : null,
           is_own_goal: goalType === "own_goal",
           goal_types: goalType,
           game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
         };
 
-        if (!isOnline) {
-          enqueueOfflineAction("goal", "game_events_goals", "POST", goalPayload);
-        } else {
-          // Add to store optimistic
+        const newGoal = await fetch(`/api/game_events_goals`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).then((r) => r.json());
+
+        if (newGoal?.id) {
           addGoalEvent(
             {
-              id: Date.now(),
-              major_event_id: Date.now(),
-              team_season_id: Number(goalPayload.team_season_id),
+              id: newGoal.id,
+              major_event_id: newGoal.major_event_id,
+              team_season_id: Number(teamSeasonVal),
               is_own_goal: goalType === "own_goal",
               goal_types: goalType,
               scorer_player_game_id: scorer?.playerGameId ? Number(scorer.playerGameId) : null,
               assist_player_game_id: assist?.playerGameId ? Number(assist.playerGameId) : null,
             } as any,
             {
-              id: Date.now(),
-              game_id: Number(game.id),
+              id: newGoal.major_event_id,
+              game_id: Number(game.game_id || game.id),
               period: game.currentPeriodIndex + 1,
               game_time: gameTimeSeconds,
               clock_should_run: 1,
@@ -194,11 +308,8 @@ export default function LiveGameTrackerClient() {
           );
         }
 
-        toast.success(`GOAL Recorded! (${isOpponentGoal ? game.opponentName : game.ourName})`);
-        setIsGoalModalOpen(false);
-        setGoalScorerId("");
-        setGoalAssistId("");
-        setIsOpponentGoal(false);
+        toast.success(`GOAL Recorded!`);
+        await handleCloseMajorEventModal();
       } catch (err: any) {
         toast.error("Failed to record goal: " + err.message);
       }
@@ -215,30 +326,35 @@ export default function LiveGameTrackerClient() {
     startTransition(async () => {
       try {
         const player = players.find((p) => String(p.id) === cardPlayerId);
-        const cardPayload = {
-          game_id: game.id,
-          team_season_id: game.teamSeasonId,
-          player_game_id: player?.playerGameId || null,
+        const payload = {
+          game_id: Number(game.game_id || game.id),
+          team_season_id: Number(game.teamSeasonId),
+          player_game_id: player?.playerGameId ? Number(player.playerGameId) : null,
           card_type: cardType,
           card_reason: cardReason || null,
           game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
         };
 
-        if (!isOnline) {
-          enqueueOfflineAction("discipline", "game_events_discipline", "POST", cardPayload);
-        } else {
+        const newCard = await fetch(`/api/game_events_discipline`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).then((r) => r.json());
+
+        if (newCard?.id) {
           addDisciplineEvent(
             {
-              id: Date.now(),
-              major_event_id: Date.now(),
+              id: newCard.id,
+              major_event_id: newCard.major_event_id,
               team_season_id: Number(game.teamSeasonId),
               card_type: cardType,
               card_reason: cardReason,
               player_game_id: player?.playerGameId ? Number(player.playerGameId) : null,
             } as any,
             {
-              id: Date.now(),
-              game_id: Number(game.id),
+              id: newCard.major_event_id,
+              game_id: Number(game.game_id || game.id),
               period: game.currentPeriodIndex + 1,
               game_time: gameTimeSeconds,
               clock_should_run: 1,
@@ -246,44 +362,36 @@ export default function LiveGameTrackerClient() {
           );
         }
 
-        toast.success(`${cardType.toUpperCase()} Card recorded for ${player?.fullName}`);
-        setIsCardModalOpen(false);
-        setCardPlayerId("");
-        setCardReason("");
+        toast.success(`${cardType.toUpperCase()} Card recorded!`);
+        await handleCloseMajorEventModal();
       } catch (err: any) {
         toast.error("Failed to record card: " + err.message);
       }
     });
   };
 
-  // Record Substitution Action
-  const handleRecordSub = async () => {
-    if (!subInPlayerId || !subOutPlayerId) {
-      toast.error("Select both an IN player and an OUT player.");
+  // Record Stoppage Action
+  const handleRecordStoppage = async () => {
+    if (!stoppageReason) {
+      toast.error("Please specify a stoppage reason.");
       return;
     }
-
     startTransition(async () => {
       try {
-        const inPlayer = players.find((p) => String(p.id) === subInPlayerId);
-        const outPlayer = players.find((p) => String(p.id) === subOutPlayerId);
-
-        const sub = await createPendingSub(
-          inPlayer?.playerGameId || subInPlayerId,
-          outPlayer?.playerGameId || subOutPlayerId,
-          isGkSub
+        const activeStoppage = game?.gameEventsMajor?.find(
+          (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
         );
-
-        if (sub?.id) {
-          await confirmSub(sub.id);
+        if (activeStoppage) {
+          await fetch(`/api/game_events_major?id=${activeStoppage.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ details: stoppageReason }),
+          });
         }
-
-        toast.success(`Subbed IN ${inPlayer?.fullName} for ${outPlayer?.fullName}`);
-        setIsSubModalOpen(false);
-        setSubInPlayerId("");
-        setSubOutPlayerId("");
+        toast.success("Stoppage reason logged.");
+        await handleCloseMajorEventModal();
       } catch (err: any) {
-        toast.error("Failed to execute substitution: " + err.message);
+        toast.error("Failed to log stoppage: " + err.message);
       }
     });
   };
@@ -309,441 +417,878 @@ export default function LiveGameTrackerClient() {
     toast.success(`Recorded ${actionType.replace("_", " ")} for ${player.fullName}`);
   };
 
-  // Record Team Event
-  const handleQuickTeamEvent = (eventType: "corner" | "offside" | "foul" | "timeout") => {
-    addTeamEvent({
-      id: Date.now(),
-      game_id: Number(game.id),
-      team_season_id: Number(game.teamSeasonId),
-      event_type: eventType as any,
-      game_time: gameTimeSeconds,
-      period: game.currentPeriodIndex + 1,
-    } as any);
+  // Persistent team event increments (Corner, Offside, Foul)
+  const handleAddTeamEvent = async (teamSeasonIdVal: number | string, eventType: "corner" | "offside" | "foul") => {
+    try {
+      const payload = {
+        game_id: Number(game.game_id || game.id),
+        team_season_id: Number(teamSeasonIdVal),
+        event_type: eventType,
+        game_time: gameTimeSeconds,
+        period: game.currentPeriodIndex + 1,
+      };
 
-    toast.success(`Recorded Team ${eventType.toUpperCase()}`);
+      const newEvent = await fetch(`/api/game_events_team`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).then((r) => r.json());
+
+      if (newEvent?.id) {
+        addTeamEvent({
+          id: newEvent.id,
+          game_id: Number(game.game_id || game.id),
+          team_season_id: Number(teamSeasonIdVal),
+          event_type: eventType as any,
+          game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
+        } as any);
+        await initializeGame(id, teamSeasonId);
+      }
+    } catch (err: any) {
+      toast.error(`Failed to log team event: ${err.message}`);
+    }
   };
 
+  // Persistent team event decrements
+  const handleRemoveTeamEvent = async (teamSeasonIdVal: number | string, eventType: "corner" | "offside" | "foul") => {
+    try {
+      const teamEvents = game.gameEventsTeam || [];
+      const matchEvents = teamEvents.filter(
+        (e) => Number(e.team_season_id) === Number(teamSeasonIdVal) && e.event_type === eventType
+      );
+      if (matchEvents.length === 0) return;
+
+      const lastEvent = matchEvents[matchEvents.length - 1];
+      const deleteEventFn = useGameStore.getState().deleteEvent;
+      await deleteEventFn(lastEvent.id, "team");
+      await initializeGame(id, teamSeasonId);
+      toast.success(`Removed team ${eventType.toUpperCase()}`);
+    } catch (err: any) {
+      toast.error(`Failed to remove team event: ${err.message}`);
+    }
+  };
+
+  // Substitution commands for queue (Instant updates - no screen refresh)
+  const handleConfirmSingleSub = async (subId: string | number) => {
+    try {
+      await confirmSub(subId);
+      toast.success("Substitution entered.");
+    } catch (err: any) {
+      toast.error("Failed to enter sub: " + err.message);
+    }
+  };
+
+  const handleCancelSub = async (subId: string | number) => {
+    try {
+      await cancelSub(subId);
+      toast.success("Substitution cancelled.");
+    } catch (err: any) {
+      toast.error("Failed to cancel sub: " + err.message);
+    }
+  };
+
+  const handleConfirmAllSubs = async () => {
+    try {
+      await confirmAllPendingSubs();
+      toast.success("All pending substitutions entered.");
+    } catch (err: any) {
+      toast.error("Failed to enter subs: " + err.message);
+    }
+  };
+
+  // Delete event handler
+  const handleDeleteEvent = async (dbId: string | number, type: string) => {
+    try {
+      const deleteEventFn = useGameStore.getState().deleteEvent;
+      let eventTypeKey: any = "major";
+      if (type === "goal") eventTypeKey = "goal";
+      if (type === "discipline") eventTypeKey = "discipline";
+      if (type === "team") eventTypeKey = "team";
+
+      await deleteEventFn(dbId, eventTypeKey);
+      toast.success("Event deleted.");
+    } catch (err: any) {
+      toast.error("Failed to delete event: " + err.message);
+    } finally {
+      setConfirmDeleteId(null);
+      await initializeGame(id, teamSeasonId);
+    }
+  };
+
+  // Derived stats counters
+  const ourId = Number(game.teamSeasonId);
+  const oppId = Number(game.opponentId);
+  const teamEvents = game.gameEventsTeam || [];
+
+  const ourCorners = teamEvents.filter((e) => Number(e.team_season_id) === ourId && e.event_type === "corner").length;
+  const oppCorners = teamEvents.filter((e) => Number(e.team_season_id) === oppId && e.event_type === "corner").length;
+
+  const ourOffsides = teamEvents.filter((e) => Number(e.team_season_id) === ourId && e.event_type === "offside").length;
+  const oppOffsides = teamEvents.filter((e) => Number(e.team_season_id) === oppId && e.event_type === "offside").length;
+
+  const ourFouls = teamEvents.filter((e) => Number(e.team_season_id) === ourId && e.event_type === "foul").length;
+  const oppFouls = teamEvents.filter((e) => Number(e.team_season_id) === oppId && e.event_type === "foul").length;
+
+  // Chronological recent event list
+  const recentEventsList = React.useMemo(() => {
+    const list: { id: string; dbId: string | number; time: number; type: string; desc: string }[] = [];
+
+    (game.gameEventsGoals || []).forEach((g: any) => {
+      const scorer = players.find((p) => Number(p.playerGameId) === Number(g.scorer_player_game_id));
+      const teamName = Number(g.team_season_id) === ourId ? "Us" : "Opponent";
+      const desc = `Goal for ${teamName} by ${scorer ? scorer.fullName : "Unknown"}${g.is_own_goal ? " (OG)" : ""}`;
+      list.push({ id: `goal-${g.id || g.goal_id}`, dbId: g.id || g.goal_id, time: g.game_time ?? 0, type: "goal", desc });
+    });
+
+    (game.gameEventsDiscipline || []).forEach((d: any) => {
+      const player = players.find((p) => Number(p.playerGameId) === Number(d.player_game_id));
+      const desc = `${d.card_type.toUpperCase()} Card to ${player ? player.fullName : "Unknown"}`;
+      list.push({ id: `card-${d.id || d.discipline_id}`, dbId: d.id || d.discipline_id, time: d.game_time ?? 0, type: "discipline", desc });
+    });
+
+    (game.gameEventsTeam || []).forEach((t: any) => {
+      const teamName = Number(t.team_season_id) === ourId ? "Us" : "Opponent";
+      const desc = `Team ${t.event_type.toUpperCase()} for ${teamName}`;
+      list.push({ id: `team-${t.id}`, dbId: t.id, time: t.game_time ?? 0, type: "team", desc });
+    });
+
+    return list.sort((a, b) => b.time - a.time);
+  }, [game.gameEventsGoals, game.gameEventsDiscipline, game.gameEventsTeam, players, ourId]);
+
+  // Sync pending subs list
+  const pendingSubsList = getPendingSubsSync() || [];
+
+  // Derived player event stats helper (Corrected type conversions for all IDs)
+  const getPlayerStats = (player: Player) => {
+    const pId = player.playerGameId;
+    const playerActions = game.playerActions || [];
+    const goalsEvents = game.gameEventsGoals || [];
+    const disciplineEvents = game.gameEventsDiscipline || [];
+
+    const shots = playerActions.filter((a) => Number(a.player_game_id) === Number(pId) && (a.event_type === "shot" || a.event_type === "shot_on_target")).length;
+    const saves = playerActions.filter((a) => Number(a.player_game_id) === Number(pId) && a.event_type === "save").length;
+    const goals = goalsEvents.filter((g) => Number(g.scorer_player_game_id) === Number(pId)).length;
+    const assists = goalsEvents.filter((g) => Number(g.assist_player_game_id) === Number(pId)).length;
+    
+    const yellowCards = disciplineEvents.filter((d) => Number(d.player_game_id) === Number(pId) && d.card_type === "yellow").length;
+    const redCards = disciplineEvents.filter((d) => Number(d.player_game_id) === Number(pId) && (d.card_type === "red" || d.card_type === "yellow_red")).length;
+    
+    // GA: Goals conceded while this player was goalkeeper
+    const goalsAgainst = goalsEvents.filter((g) => Number(g.defending_gk_player_game_id) === Number(pId)).length;
+
+    return { shots, saves, goals, assists, yellowCards, redCards, goalsAgainst };
+  };
+
+  const playerOptions = players.map((p) => ({
+    value: String(p.id),
+    label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
+  }));
+
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* TOP SCOREBOARD HEADER */}
-      <div className="relative overflow-hidden rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-md">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* TEAM 1 (OUR TEAM) */}
-          <div className="flex items-center gap-4 text-left">
-            <div className="h-14 w-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center font-extrabold text-primary text-xl">
-              ⚽
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Home</span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-text">{game.ourName}</h2>
-            </div>
+    <div className="flex flex-col h-screen max-h-screen overflow-hidden p-3 gap-2 bg-background select-none text-xs">
+      
+      {/* LINEUP VALIDATION WARNING */}
+      {!isLineupConfigured && (
+        <div className="shrink-0 p-2 border-l-4 border-l-amber-500 bg-amber-500/5 text-amber-800 dark:text-amber-300 rounded-lg flex items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5 font-bold">
+            <AlertTriangle size={14} className="text-amber-600 shrink-0" />
+            <span>Roster setup required: starting lineup size mismatch ({onFieldPlayers.length}/{game.settings?.playersOnField || 11}).</span>
+          </div>
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => router.push(`/gamestats/${teamSeasonId}/${id}/lineup`)}
+            className="text-[10px] h-5 py-0 px-2 text-amber-700 dark:text-amber-300 border-amber-500/35 bg-amber-500/10 hover:bg-amber-500/20"
+          >
+            Configure Lineup
+          </Button>
+        </div>
+      )}
+
+      {/* Broadcast Scoreboard Header (NO Score Colors) */}
+      <div className="shrink-0 rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 text-white px-5 py-3 shadow-md flex flex-col gap-2 animate-in fade-in duration-200">
+        <div className="flex items-center justify-between gap-6">
+          {/* Home team */}
+          <div className="flex items-center justify-end gap-3 min-w-0 flex-1 text-right">
+            <span className="font-extrabold text-sm sm:text-base truncate tracking-tight">{ourShortName}</span>
+            <span className="text-[9px] font-black shrink-0 bg-primary/25 border border-primary/45 px-1.5 py-0.5 rounded text-white">HOME</span>
+            <span className="font-mono font-black text-3xl sm:text-4xl text-white pl-2">{game.goalsFor ?? 0}</span>
           </div>
 
-          {/* SCORE & CLOCK */}
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <div className="flex items-center gap-4 font-mono font-black text-4xl sm:text-5xl text-text tracking-tighter">
-              <span>{game.goalsFor ?? 0}</span>
-              <span className="text-muted/40">:</span>
-              <span>{game.goalsAgainst ?? 0}</span>
+          {/* LARGE MATCH TIME CLOCK */}
+          <div className="flex flex-col items-center justify-center bg-black/40 border border-slate-700/60 px-5 py-1.5 rounded-xl shadow-inner min-w-[150px] shrink-0">
+            <div className="flex items-center gap-1 font-mono font-black text-2xl sm:text-3xl text-yellow-400 tracking-tight">
+              <span>{formatSecondsToMmss(gameTimeSeconds)}</span>
             </div>
-
-            {/* CLOCK DISPLAY */}
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-background border border-border/80 shadow-xs">
-              <Activity size={14} className="text-primary animate-pulse" />
-              <span className="font-mono text-sm font-extrabold text-text">
-                {formatTime(gameTimeSeconds)}
-              </span>
-              <span className="text-[10px] font-extrabold text-muted uppercase border-l border-border pl-2">
-                {periodLabel}
-              </span>
-            </div>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mt-0.75">
+              {periodLabel}
+            </span>
           </div>
 
-          {/* TEAM 2 (OPPONENT) */}
-          <div className="flex items-center gap-4 text-right flex-row-reverse">
-            <div className="h-14 w-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center font-extrabold text-accent text-xl">
-              🛡️
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Away</span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-text">{game.opponentName}</h2>
-            </div>
+          {/* Away team */}
+          <div className="flex items-center justify-start gap-3 min-w-0 flex-1 text-left">
+            <span className="font-mono font-black text-3xl sm:text-4xl text-white pr-2">{game.goalsAgainst ?? 0}</span>
+            <span className="text-[9px] font-black shrink-0 bg-accent/25 border border-accent/45 px-1.5 py-0.5 rounded text-white">AWAY</span>
+            <span className="font-extrabold text-sm sm:text-base truncate tracking-tight">{opponentShortName}</span>
           </div>
         </div>
 
-        {/* OFFLINE STATUS PILL */}
-        <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
+        {/* System info bar and actions */}
+        <div className="flex items-center justify-between border-t border-slate-800/80 pt-2 text-[9px] text-slate-400 font-bold">
+          <div className="flex items-center gap-1.5">
             {isOnline ? (
-              <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
-                <Wifi size={14} />
-                <span>Online (Live Sync Active)</span>
+              <span className="inline-flex items-center gap-1 text-emerald-400">
+                <Wifi size={11} />
+                <span>Sync Active</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 text-amber-500 font-bold text-[11px]">
-                <WifiOff size={14} />
-                <span>Offline Mode ({queueCount} pending actions queued)</span>
+              <span className="inline-flex items-center gap-1 text-amber-400">
+                <WifiOff size={11} />
+                <span>Offline ({queueCount})</span>
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant={currentStage === GAME_STAGES.DURING_PERIOD ? "danger" : "success"}
-              size="sm"
+          <div className="flex gap-2">
+            <button
               onClick={handleTogglePeriodClock}
-              className="flex items-center gap-1.5 font-bold"
+              disabled={!isLineupConfigured && currentStage !== GAME_STAGES.DURING_PERIOD && currentStage !== GAME_STAGES.IN_STOPPAGE}
+              className="h-6 py-0 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[10px] font-black shadow-xs disabled:opacity-50 transition-colors"
             >
-              {currentStage === GAME_STAGES.DURING_PERIOD ? (
-                <>
-                  <PauseCircle size={14} />
-                  <span>Pause/End Period</span>
-                </>
+              {currentStage === GAME_STAGES.IN_STOPPAGE ? "Resume Clock" : currentStage === GAME_STAGES.DURING_PERIOD ? "End Period" : "Start Period"}
+            </button>
+            <button
+              onClick={handleOpenMajorEventModal}
+              className="h-6 py-0 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-[10px] font-black shadow-xs transition-colors"
+            >
+              Record Major Event
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main split grid: Left 70% (Rosters Stacked), Right 30% (Feeds Stacked) */}
+      <div className="flex-1 min-h-0 flex gap-3">
+        
+        {/* LEFT COLUMN: ROSTER PANELS (70% WIDTH) */}
+        <div className="w-[70%] flex flex-col gap-2.5 min-h-0">
+          
+          {/* PLAYERS ON FIELD card (TALL ENOUGH FOR 10 ROWS, NO SCROLLING) */}
+          <Card variant="outlined" padding="sm" className="shrink-0 flex flex-col bg-surface shadow-xs rounded-xl p-2.5 overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between border-b border-border/40 pb-1.5 px-1.5">
+              <h3 className="font-extrabold uppercase tracking-wider text-[10px] text-text flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Players On Field ({onFieldPlayers.length})</span>
+              </h3>
+              {subOutId && (
+                <span className="text-[8px] uppercase font-black text-rose-500 animate-pulse bg-rose-50 border border-rose-500/20 px-1.5 py-0.25 rounded">
+                  Select game changer row below to swap
+                </span>
+              )}
+            </div>
+
+            <div className="flex-1 min-h-0 flex flex-col gap-2.5 pt-2 overflow-hidden">
+              {/* GOALKEEPER SECTION (IF ANY) */}
+              {onFieldGks.length > 0 && (
+                <div className="shrink-0 space-y-1">
+                  <span className="text-[9px] uppercase font-black text-muted tracking-wider px-1">Goalkeeper</span>
+                  <div className="border border-border/60 bg-background/25 rounded-lg p-1.5">
+                    <table className="w-full text-left select-none border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-border/40 text-muted uppercase font-black text-[9px]">
+                          <th className="py-1 px-1 text-center w-8 align-middle">#</th>
+                          <th className="py-1 px-2 w-1/3 align-middle">Name</th>
+                          <th className="py-1 px-2 text-right w-12 align-middle">Saves</th>
+                          <th className="py-1 px-2 text-right w-12 align-middle">GA</th>
+                          <th className="py-1 px-2 text-center w-10 align-middle">+/-</th>
+                          <th className="py-1 px-2 text-right w-16 align-middle">Total Time</th>
+                          <th className="py-1 px-2 text-right w-16 align-middle">Shift Time</th>
+                          <th className="py-1 px-2 text-center w-40 align-middle">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {onFieldGks.map((player) => {
+                          const isSelected = subOutId === String(player.id);
+                          const totalTime = calculateTotalTimeOnField(player, gameTimeSeconds);
+                          const shiftTime = calculateCurrentTimeOnField(player, gameTimeSeconds);
+                          const stats = getPlayerStats(player);
+                          const isRedCarded = stats.redCards > 0 || stats.yellowCards >= 2;
+
+                          let rowClass = "hover:bg-background/60 transition-colors cursor-pointer text-text font-bold text-xs";
+                          if (isRedCarded) {
+                            rowClass = "opacity-40 bg-slate-100 dark:bg-slate-900 pointer-events-none text-xs font-bold text-muted-foreground";
+                          } else if (isSelected) {
+                            rowClass = "bg-rose-500/10 border-l-2 border-l-rose-500 font-extrabold text-rose-700 dark:text-rose-300 cursor-pointer text-xs";
+                          } else if (player.subStatus === "pendingOut") {
+                            rowClass = "bg-rose-500/5 text-rose-600 dark:text-rose-400 border-l-2 border-l-rose-400 font-bold cursor-pointer text-xs";
+                          }
+
+                          return (
+                            <tr
+                              key={player.id}
+                              className={rowClass}
+                              onClick={() => !isRedCarded && setSubOutId(isSelected ? null : String(player.id))}
+                            >
+                              <td className="py-1 px-1 text-center font-bold font-mono align-middle">
+                                {player.jerseyNumber || "—"}
+                              </td>
+                              <td className="py-1 px-2 font-bold truncate align-middle" title={player.fullName}>
+                                <div className="flex items-center gap-1.5">
+                                  <span>{player.fullName}</span>
+                                  {/* Card Indicator badges - style min sizes strictly */}
+                                  {Array.from({ length: stats.yellowCards }).map((_, idx) => (
+                                    <span
+                                      key={`y-${idx}`}
+                                      className="inline-block w-2.5 h-3.5 bg-amber-400 border border-amber-500 rounded-xs shrink-0 shadow-xs"
+                                      style={{ minWidth: "10px", minHeight: "14px" }}
+                                    />
+                                  ))}
+                                  {Array.from({ length: stats.redCards }).map((_, idx) => (
+                                    <span
+                                      key={`r-${idx}`}
+                                      className="inline-block w-2.5 h-3.5 bg-rose-500 border border-rose-600 rounded-xs shrink-0 shadow-xs"
+                                      style={{ minWidth: "10px", minHeight: "14px" }}
+                                    />
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="py-1 px-2 text-right font-mono font-bold text-emerald-600 align-middle">{stats.saves || "—"}</td>
+                              <td className="py-1 px-2 text-right font-mono font-bold text-rose-500 align-middle">{stats.goalsAgainst || "—"}</td>
+                              <td className="py-1 px-2 text-center font-mono font-black text-slate-600 align-middle">{player.plusMinus || 0}</td>
+                              <td className="py-1 px-2 text-right font-mono text-muted align-middle">{formatSecondsToMmss(totalTime)}</td>
+                              <td className="py-1 px-2 text-right font-mono font-black text-primary align-middle">{formatSecondsToMmss(shiftTime)}</td>
+                              <td className="py-1 px-2 text-center align-middle" onClick={(e) => e.stopPropagation()}>
+                                {!isRedCarded ? (
+                                  <div className="flex gap-2 justify-center items-center">
+                                    <button
+                                      onClick={() => handleQuickPlayerAction(player.id, "save")}
+                                      className="px-3 py-1 bg-background border border-border/80 hover:border-emerald-500 text-[10.5px] font-black rounded-md shadow-xs shrink-0"
+                                    >
+                                      SAVE
+                                    </button>
+                                    <button
+                                      onClick={() => setSubOutId(isSelected ? null : String(player.id))}
+                                      className={`px-3 py-1 border rounded-md text-[10.5px] font-black shadow-xs shrink-0 ${
+                                        isSelected ? "bg-rose-500 text-white border-rose-500" : "bg-background border-border text-rose-500 hover:bg-rose-500/10"
+                                      }`}
+                                    >
+                                      Sub Out
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-[9px] font-bold text-rose-600 uppercase">SENT OFF</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* FIELD PLAYERS SECTION (NO SCROLLBAR) */}
+              <div className="space-y-1">
+                <span className="text-[9px] uppercase font-black text-muted tracking-wider px-1">Field Players</span>
+                <div className="border border-border/60 bg-background/25 rounded-lg p-1.5 overflow-visible">
+                  <table className="w-full text-left select-none border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-border/40 text-muted uppercase font-black text-[9px]">
+                        <th className="py-1 px-1 text-center w-8 align-middle">#</th>
+                        <th className="py-1 px-2 w-1/3 align-middle">Name</th>
+                        <th className="py-1 px-2 text-right w-10 align-middle">Shots</th>
+                        <th className="py-1 px-2 text-right w-10 align-middle">Goals</th>
+                        <th className="py-1 px-2 text-right w-10 align-middle">Assts</th>
+                        <th className="py-1 px-2 text-center w-10 align-middle">+/-</th>
+                        <th className="py-1 px-2 text-right w-16 align-middle">Total Time</th>
+                        <th className="py-1 px-2 text-right w-16 align-middle">Shift Time</th>
+                        <th className="py-1 px-2 text-center w-40 align-middle">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/30">
+                      {onFieldFlds.map((player) => {
+                        const isSelected = subOutId === String(player.id);
+                        const totalTime = calculateTotalTimeOnField(player, gameTimeSeconds);
+                        const shiftTime = calculateCurrentTimeOnField(player, gameTimeSeconds);
+                        const stats = getPlayerStats(player);
+                        const isRedCarded = stats.redCards > 0 || stats.yellowCards >= 2;
+
+                        let rowClass = "hover:bg-background/60 transition-colors cursor-pointer text-text font-bold text-xs";
+                        if (isRedCarded) {
+                          rowClass = "opacity-40 bg-slate-100 dark:bg-slate-900 pointer-events-none text-xs font-bold text-muted-foreground";
+                        } else if (isSelected) {
+                          rowClass = "bg-rose-500/10 border-l-2 border-l-rose-500 font-extrabold text-rose-700 dark:text-rose-300 cursor-pointer text-xs";
+                        } else if (player.subStatus === "pendingOut") {
+                          rowClass = "bg-rose-500/5 text-rose-600 dark:text-rose-400 border-l-2 border-l-rose-400 font-bold cursor-pointer text-xs";
+                        }
+
+                        return (
+                          <tr
+                            key={player.id}
+                            className={rowClass}
+                            onClick={() => !isRedCarded && setSubOutId(isSelected ? null : String(player.id))}
+                          >
+                            <td className="py-1 px-1 text-center font-bold font-mono align-middle">
+                              {player.jerseyNumber || "—"}
+                            </td>
+                            <td className="py-1 px-2 font-bold truncate align-middle" title={player.fullName}>
+                              <div className="flex items-center gap-1.5">
+                                <span>{player.fullName}</span>
+                                {/* Card Indicator badges */}
+                                {Array.from({ length: stats.yellowCards }).map((_, idx) => (
+                                  <span
+                                    key={`y-${idx}`}
+                                    className="inline-block w-2.5 h-3.5 bg-amber-400 border border-amber-500 rounded-xs shrink-0 shadow-xs"
+                                    style={{ minWidth: "10px", minHeight: "14px" }}
+                                  />
+                                ))}
+                                {Array.from({ length: stats.redCards }).map((_, idx) => (
+                                  <span
+                                    key={`r-${idx}`}
+                                    className="inline-block w-2.5 h-3.5 bg-rose-500 border border-rose-600 rounded-xs shrink-0 shadow-xs"
+                                    style={{ minWidth: "10px", minHeight: "14px" }}
+                                  />
+                                ))}
+                              </div>
+                            </td>
+                            <td className="py-1 px-2 text-right font-mono font-bold text-muted align-middle">{stats.shots || "—"}</td>
+                            <td className="py-1 px-2 text-right font-mono font-bold text-primary align-middle">{stats.goals || "—"}</td>
+                            <td className="py-1 px-2 text-right font-mono font-bold text-blue-600 align-middle">{stats.assists || "—"}</td>
+                            <td className="py-1 px-2 text-center font-mono font-black text-slate-600 align-middle">{player.plusMinus || 0}</td>
+                            <td className="py-1 px-2 text-right font-mono text-muted align-middle">{formatSecondsToMmss(totalTime)}</td>
+                            <td className="py-1 px-2 text-right font-mono font-black text-primary align-middle">{formatSecondsToMmss(shiftTime)}</td>
+                            <td className="py-1 px-2 text-center align-middle" onClick={(e) => e.stopPropagation()}>
+                              {!isRedCarded ? (
+                                <div className="flex gap-2 justify-center items-center">
+                                  <button
+                                    onClick={() => handleQuickPlayerAction(player.id, "shot")}
+                                    className="px-3 py-1 bg-background border border-border/80 hover:border-primary text-[10.5px] font-black rounded-md shadow-xs shrink-0"
+                                  >
+                                    SHOT
+                                  </button>
+                                  <button
+                                    onClick={() => setSubOutId(isSelected ? null : String(player.id))}
+                                    className={`px-3 py-1 border rounded-md text-[10.5px] font-black shadow-xs shrink-0 ${
+                                      isSelected ? "bg-rose-500 text-white border-rose-500" : "bg-background border-border text-rose-500 hover:bg-rose-500/10"
+                                    }`}
+                                  >
+                                    Sub Out
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-[9px] font-bold text-rose-600 uppercase">SENT OFF</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* GAME CHANGERS (BENCH RESERVES) Table at bottom of left stack - fills remaining height and scrolls */}
+          <Card variant="outlined" padding="sm" className="flex-1 min-h-0 flex flex-col bg-surface shadow-xs rounded-xl overflow-hidden p-2.5">
+            <div className="shrink-0 flex items-center justify-between border-b border-border/40 pb-1.5 px-1.5">
+              <h3 className="font-extrabold uppercase tracking-wider text-[10px] text-text flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                <span>Game Changers (Bench Reserves) ({gameChangers.length})</span>
+              </h3>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto border border-border/60 bg-background/25 rounded-lg p-1.5 mt-2">
+              <table className="w-full text-left select-none border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-border/40 text-muted uppercase font-black text-[9px]">
+                    <th className="py-1 px-1 text-center w-8 align-middle">#</th>
+                    <th className="py-1 px-2 w-1/3 align-middle">Name</th>
+                    <th className="py-1 px-2 text-right w-10 align-middle">Shots</th>
+                    <th className="py-1 px-2 text-right w-10 align-middle">Goals</th>
+                    <th className="py-1 px-2 text-right w-10 align-middle">Assts</th>
+                    <th className="py-1 px-2 text-center w-10 align-middle">+/-</th>
+                    <th className="py-1 px-2 text-right w-16 align-middle">Total Time</th>
+                    <th className="py-1 px-2 text-right w-16 align-middle">Bench Time</th>
+                    <th className="py-1 px-2 text-center w-28 align-middle">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {gameChangers.map((player) => {
+                    const isSelected = subInId === String(player.id);
+                    const totalTime = calculateTotalTimeOnField(player, gameTimeSeconds);
+                    const benchTime = calculateCurrentTimeOffField(player, gameTimeSeconds);
+                    const stats = getPlayerStats(player);
+
+                    let rowClass = "hover:bg-background/60 transition-colors cursor-pointer text-text font-bold text-xs";
+                    if (isSelected) {
+                      rowClass = "bg-emerald-500/10 border-l-2 border-l-emerald-500 font-extrabold text-emerald-700 dark:text-emerald-300 cursor-pointer text-xs";
+                    } else if (player.subStatus === "pendingIn") {
+                      rowClass = "bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-l-2 border-l-emerald-400 font-bold cursor-pointer text-xs";
+                    }
+
+                    return (
+                      <tr
+                        key={player.id}
+                        className={rowClass}
+                        onClick={() => setSubInId(isSelected ? null : String(player.id))}
+                      >
+                        <td className="py-1 px-1 text-center font-bold font-mono align-middle">
+                          {player.jerseyNumber || "—"}
+                        </td>
+                        <td className="py-1 px-2 font-bold truncate align-middle" title={player.fullName}>
+                          <div className="flex items-center gap-1.5">
+                            <span>{player.fullName}</span>
+                            {/* Card Indicator badges */}
+                            {Array.from({ length: stats.yellowCards }).map((_, idx) => (
+                              <span
+                                key={`y-${idx}`}
+                                className="inline-block w-2.5 h-3.5 bg-amber-400 border border-amber-500 rounded-xs shrink-0 shadow-xs"
+                                style={{ minWidth: "10px", minHeight: "14px" }}
+                              />
+                            ))}
+                            {Array.from({ length: stats.redCards }).map((_, idx) => (
+                              <span
+                                key={`r-${idx}`}
+                                className="inline-block w-2.5 h-3.5 bg-rose-500 border border-rose-600 rounded-xs shrink-0 shadow-xs"
+                                style={{ minWidth: "10px", minHeight: "14px" }}
+                              />
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-1 px-2 text-right font-mono font-bold text-muted align-middle">{stats.shots || "—"}</td>
+                        <td className="py-1 px-2 text-right font-mono font-bold text-primary align-middle">{stats.goals || "—"}</td>
+                        <td className="py-1 px-2 text-right font-mono font-bold text-blue-600 align-middle">{stats.assists || "—"}</td>
+                        <td className="py-1 px-2 text-center font-mono font-black text-slate-600 align-middle">{player.plusMinus || 0}</td>
+                        <td className="py-1 px-2 text-right font-mono text-muted align-middle">{formatSecondsToMmss(totalTime)}</td>
+                        <td className="py-1 px-2 text-right font-mono font-black text-amber-600 align-middle">{formatSecondsToMmss(benchTime)}</td>
+                        <td className="py-1 px-2 text-center align-middle" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => setSubInId(isSelected ? null : String(player.id))}
+                            className={`px-3 py-1 border rounded-md text-[10.5px] font-black shadow-xs shrink-0 ${
+                              isSelected
+                                ? "bg-emerald-500 text-white border-emerald-500"
+                                : "bg-primary text-white border-primary hover:bg-primary/95"
+                            }`}
+                          >
+                            {isSelected ? "Selected" : "Sub In"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+
+        {/* RIGHT COLUMN: ACTION & FEED PANEL (30% WIDTH) */}
+        <div className="w-[30%] flex flex-col gap-2.5 min-h-0">
+          
+          {/* Card 1: Team Counters (Enlarged to h-[165px] to fit three rows comfortably) */}
+          <Card variant="outlined" padding="sm" className="h-[165px] shrink-0 flex flex-col bg-surface shadow-xs rounded-xl overflow-hidden p-2.5">
+            <div className="flex items-center gap-1 border-b border-border/40 pb-1 px-1 shrink-0">
+              <Zap size={11} className="text-primary" />
+              <span className="font-extrabold uppercase tracking-wider text-[10px] text-text">Team Counters</span>
+            </div>
+
+            <div className="flex-1 grid grid-cols-2 gap-2 text-[10px] p-1.5 min-h-0 overflow-y-auto mt-1">
+              {/* Our Team */}
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-[9px] uppercase text-primary border-b border-primary/10 pb-0.5 truncate" title={game.ourName}>
+                  {ourShortName}
+                </h4>
+                <div className="space-y-1 font-semibold text-text">
+                  <div className="flex items-center justify-between">
+                    <span>Corners: {ourCorners}</span>
+                    <div className="flex gap-0.5">
+                      <button onClick={() => handleRemoveTeamEvent(ourId, "corner")} className="p-0.5 text-muted hover:text-danger"><MinusCircle size={12} /></button>
+                      <button onClick={() => handleAddTeamEvent(ourId, "corner")} className="p-0.5 text-primary hover:text-primary-hover"><PlusCircle size={12} /></button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Offsides: {ourOffsides}</span>
+                    <div className="flex gap-0.5">
+                      <button onClick={() => handleRemoveTeamEvent(ourId, "offside")} className="p-0.5 text-muted hover:text-danger"><MinusCircle size={12} /></button>
+                      <button onClick={() => handleAddTeamEvent(ourId, "offside")} className="p-0.5 text-primary hover:text-primary-hover"><PlusCircle size={12} /></button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Fouls: {ourFouls}</span>
+                    <div className="flex gap-0.5">
+                      <button onClick={() => handleRemoveTeamEvent(ourId, "foul")} className="p-0.5 text-muted hover:text-danger"><MinusCircle size={12} /></button>
+                      <button onClick={() => handleAddTeamEvent(ourId, "foul")} className="p-0.5 text-primary hover:text-primary-hover"><PlusCircle size={12} /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Opponent Team */}
+              <div className="space-y-1 border-l border-border/60 pl-2">
+                <h4 className="font-extrabold text-[9px] uppercase text-accent border-b border-accent/10 pb-0.5 truncate" title={game.opponentName}>
+                  {opponentShortName}
+                </h4>
+                <div className="space-y-1 font-semibold text-text">
+                  <div className="flex items-center justify-between">
+                    <span>Corners: {oppCorners}</span>
+                    <div className="flex gap-0.5">
+                      <button onClick={() => handleRemoveTeamEvent(oppId, "corner")} className="p-0.5 text-muted hover:text-danger"><MinusCircle size={12} /></button>
+                      <button onClick={() => handleAddTeamEvent(oppId, "corner")} className="p-0.5 text-accent hover:text-accent-hover"><PlusCircle size={12} /></button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Offsides: {oppOffsides}</span>
+                    <div className="flex gap-0.5">
+                      <button onClick={() => handleRemoveTeamEvent(oppId, "offside")} className="p-0.5 text-muted hover:text-danger"><MinusCircle size={12} /></button>
+                      <button onClick={() => handleAddTeamEvent(oppId, "offside")} className="p-0.5 text-accent hover:text-accent-hover"><PlusCircle size={12} /></button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Fouls: {oppFouls}</span>
+                    <div className="flex gap-0.5">
+                      <button onClick={() => handleRemoveTeamEvent(oppId, "foul")} className="p-0.5 text-muted hover:text-danger"><MinusCircle size={12} /></button>
+                      <button onClick={() => handleAddTeamEvent(oppId, "foul")} className="p-0.5 text-accent hover:text-accent-hover"><PlusCircle size={12} /></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Card 2: Upcoming Substitutions (FLEX-1: LONGER CARD) */}
+          <Card variant="outlined" padding="sm" className="flex-1 min-h-0 flex flex-col bg-surface shadow-xs rounded-xl overflow-hidden p-2.5">
+            <div className="flex items-center justify-between border-b border-border/40 pb-1 px-1 shrink-0">
+              <div className="flex items-center gap-1">
+                <Users size={11} className="text-primary" />
+                <span className="font-extrabold uppercase tracking-wider text-[10px] text-text">Upcoming Subs ({pendingSubsList.length})</span>
+              </div>
+              {pendingSubsList.length > 0 && (
+                <button
+                  onClick={handleConfirmAllSubs}
+                  className="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[9px] rounded-md transition-colors"
+                >
+                  Enter All
+                </button>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-1 mt-1.5 space-y-1.5 text-[9px] min-h-0">
+              {pendingSubsList.length === 0 ? (
+                <p className="text-muted text-center py-6">No pending subs in queue.</p>
               ) : (
+                pendingSubsList.map((sub) => {
+                  const inPl = players.find((p) => p.playerGameId === sub.inPlayerId);
+                  const outPl = players.find((p) => p.playerGameId === sub.outPlayerId);
+
+                  return (
+                    <div key={sub.subId} className="flex items-center justify-between gap-1.5 p-1.5 border border-border/30 bg-background/50 rounded animate-in slide-in-from-right duration-200">
+                      <span className="font-semibold text-text truncate flex-1 text-left">
+                        Out: {outPl?.fullName || "Unknown"} 🔄 In: {inPl?.fullName || "Unknown"}
+                      </span>
+                      <div className="flex gap-1 shrink-0">
+                        <button onClick={() => handleConfirmSingleSub(sub.subId)} className="p-1 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 rounded-md"><Check size={11} /></button>
+                        <button onClick={() => handleCancelSub(sub.subId)} className="p-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-md"><Trash2 size={11} /></button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </Card>
+
+          {/* Card 3: Recent Events (h-[160px] shrink-0: SHORTER) */}
+          <Card variant="outlined" padding="sm" className="h-[160px] shrink-0 flex flex-col bg-surface shadow-xs rounded-xl overflow-hidden p-2.5">
+            <div className="flex items-center gap-1 border-b border-border/40 pb-1 px-1 shrink-0">
+              <Trophy size={11} className="text-primary" />
+              <span className="font-extrabold uppercase tracking-wider text-[10px] text-text">Recent Events</span>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-1 mt-1.5 space-y-1.5 text-[9px] min-h-0">
+              {recentEventsList.length === 0 ? (
+                <p className="text-muted text-center py-8">No events logged yet.</p>
+              ) : (
+                recentEventsList.map((e) => (
+                  <div key={e.id} className="flex items-center justify-between gap-2 p-1.5 border border-border/20 bg-background/30 rounded">
+                    <span className="font-extrabold text-primary shrink-0 align-middle">
+                      {formatSecondsToMmss(e.time)}
+                    </span>
+                    <span className="truncate text-text font-semibold flex-1 text-left align-middle">{e.desc}</span>
+                    
+                    {/* Event Delete action with Inline Confirm */}
+                    <div className="flex gap-1 shrink-0 align-middle" onClick={(evt) => evt.stopPropagation()}>
+                      {confirmDeleteId === e.id ? (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleDeleteEvent(e.dbId, e.type)}
+                            className="px-1.5 py-0.5 bg-emerald-500 text-white font-bold text-[8px] rounded hover:bg-emerald-600 transition-colors"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-1.5 py-0.5 bg-slate-500 text-white font-bold text-[8px] rounded hover:bg-slate-600 transition-colors"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(e.id)}
+                          className="p-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded transition-colors"
+                          title="Delete Event"
+                        >
+                          <Trash2 size={10} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+        </div>
+      </div>
+
+      {/* UNIFIED MAJOR EVENT MODAL */}
+      <Modal
+        isOpen={isMajorEventModalOpen}
+        onClose={handleCloseMajorEventModal}
+        title="Record Major Match Event"
+        subtitle="Log goals, cards, and stoppages to the live match feed"
+      >
+        <div className="space-y-4 text-xs">
+          
+          <Select
+            label="Event Type"
+            value={majorEventType}
+            onChange={(val: string) => setMajorEventType(val as any)}
+            options={[
+              { value: "goal", label: "Goal" },
+              { value: "card", label: "Disciplinary Card" },
+              { value: "stoppage", label: "Stoppage / Pause" },
+            ]}
+          />
+
+          {/* Goal Event Fields */}
+          {majorEventType === "goal" && (
+            <div className="space-y-3.5 pt-2 border-t border-border/40">
+              <Checkbox
+                label={`Goal for Opponent (${opponentShortName})`}
+                checked={isOpponentGoal}
+                onChange={(checked: boolean) => {
+                  setIsOpponentGoal(checked);
+                  setGoalScorerId("");
+                  setGoalAssistId("");
+                }}
+              />
+
+              {!isOpponentGoal && (
                 <>
-                  <Play size={14} />
-                  <span>Start Period Clock</span>
+                  <Select
+                    label="Goal Scorer"
+                    value={goalScorerId}
+                    onChange={(val: string) => setGoalScorerId(val)}
+                    options={[{ value: "", label: "-- Scorer --" }, ...playerOptions]}
+                  />
+                  <Select
+                    label="Assist By"
+                    value={goalAssistId}
+                    onChange={(val: string) => setGoalAssistId(val)}
+                    options={[{ value: "", label: "-- None --" }, ...playerOptions]}
+                  />
                 </>
               )}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* QUICK ACTION TOOLBAR */}
-      <Card variant="default" padding="md" className="space-y-3">
-        <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted flex items-center gap-2">
-          <Zap size={14} className="text-primary" />
-          <span>Match Event Quick Bar</span>
-        </h3>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-          <Button
-            variant="success"
-            size="sm"
-            onClick={() => setIsGoalModalOpen(true)}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <Trophy size={14} />
-            <span>+ GOAL</span>
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsSubModalOpen(true)}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <Users size={14} />
-            <span>SUB IN/OUT</span>
-          </Button>
-
-          <Button
-            variant="warning"
-            size="sm"
-            onClick={() => setIsCardModalOpen(true)}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <AlertTriangle size={14} />
-            <span>CARD</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleQuickTeamEvent("corner")}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <Target size={14} />
-            <span>CORNER</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleQuickTeamEvent("offside")}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <Shield size={14} />
-            <span>OFFSIDE</span>
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsGuestModalOpen(true)}
-            className="flex items-center justify-center gap-1.5"
-          >
-            <UserPlus size={14} />
-            <span>+ GUEST</span>
-          </Button>
-        </div>
-      </Card>
-
-      {/* ON-FIELD VS BENCH PLAYER ROSTER LISTS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* ON-FIELD PLAYERS */}
-        <Card variant="outlined" padding="md" className="space-y-3 bg-surface shadow-xs">
-          <div className="flex items-center justify-between border-b border-border pb-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>Players On Field ({onFieldPlayers.length})</span>
-            </h3>
-          </div>
-
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-            {onFieldPlayers.length === 0 ? (
-              <p className="text-xs text-muted text-center py-6">No players currently on field.</p>
-            ) : (
-              onFieldPlayers.map((player) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background/50 hover:bg-background transition-colors text-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="h-7 w-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center font-mono font-bold text-primary text-xs">
-                      #{player.jerseyNumber || "?"}
-                    </span>
-                    <div>
-                      <p className="font-bold text-text">{player.fullName}</p>
-                      <span className="text-[10px] text-muted capitalize">{player.position || "Field"}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleQuickPlayerAction(player.id, "shot")}
-                      className="px-2 py-1 bg-surface border border-border hover:border-primary text-muted hover:text-primary rounded-lg font-bold text-[10px]"
-                      title="Record Shot"
-                    >
-                      SHOT
-                    </button>
-                    <button
-                      onClick={() => handleQuickPlayerAction(player.id, "save")}
-                      className="px-2 py-1 bg-surface border border-border hover:border-emerald-500 text-muted hover:text-emerald-500 rounded-lg font-bold text-[10px]"
-                      title="Record Save"
-                    >
-                      SAVE
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-
-        {/* BENCH PLAYERS */}
-        <Card variant="outlined" padding="md" className="space-y-3 bg-surface shadow-xs">
-          <div className="flex items-center justify-between border-b border-border pb-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              <span>Bench Reserves ({benchPlayers.length})</span>
-            </h3>
-          </div>
-
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-            {benchPlayers.length === 0 ? (
-              <p className="text-xs text-muted text-center py-6">No players currently on bench.</p>
-            ) : (
-              benchPlayers.map((player) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background/50 text-xs"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="h-7 w-7 rounded-lg bg-surface border border-border flex items-center justify-center font-mono font-bold text-muted text-xs">
-                      #{player.jerseyNumber || "?"}
-                    </span>
-                    <div>
-                      <p className="font-bold text-text">{player.fullName}</p>
-                      <span className="text-[10px] text-muted">On Bench</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setSubInPlayerId(String(player.id));
-                      setIsSubModalOpen(true);
-                    }}
-                    className="px-2.5 py-1 bg-primary text-white hover:bg-primary/90 rounded-lg font-bold text-[10px]"
-                  >
-                    SUB IN
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* MODAL 1: GOAL RECORDING */}
-      <Modal
-        isOpen={isGoalModalOpen}
-        onClose={() => setIsGoalModalOpen(false)}
-        title="Record Match Goal"
-        subtitle="Log goal scorer, assist player, and goal type"
-      >
-        <div className="space-y-4 text-xs">
-          <Checkbox
-            label={`Goal for Opponent (${game.opponentName})`}
-            checked={isOpponentGoal}
-            onChange={(e: any) => setIsOpponentGoal(e.target.checked)}
-          />
-
-          {!isOpponentGoal && (
-            <>
-              <Select
-                label="Goal Scorer"
-                value={goalScorerId}
-                onChange={(e: any) => setGoalScorerId(e.target.value)}
-                options={players.map((p) => ({
-                  value: String(p.id),
-                  label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-                }))}
-                placeholder="Select Goal Scorer"
-                width="full"
-              />
 
               <Select
-                label="Assist Player (Optional)"
-                value={goalAssistId}
-                onChange={(e: any) => setGoalAssistId(e.target.value)}
-                options={players.map((p) => ({
-                  value: String(p.id),
-                  label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-                }))}
-                placeholder="Select Assist Player (Optional)"
-                width="full"
+                label="Goal Type"
+                value={goalType}
+                onChange={(val: string) => setGoalType(val)}
+                options={[
+                  { value: "foot", label: "Standard Shot" },
+                  { value: "header", label: "Header" },
+                  { value: "penalty", label: "Penalty Kick" },
+                  { value: "free_kick", label: "Free Kick" },
+                  { value: "own_goal", label: "Own Goal" },
+                ]}
               />
-            </>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={handleCloseMajorEventModal}>
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={handleRecordGoal} disabled={isPending}>
+                  Record Goal
+                </Button>
+              </div>
+            </div>
           )}
 
-          <Select
-            label="Goal Type"
-            value={goalType}
-            onChange={(e: any) => setGoalType(e.target.value)}
-            options={[
-              { value: "foot", label: "Normal Shot / Foot" },
-              { value: "header", label: "Header" },
-              { value: "free_kick", label: "Direct Free Kick" },
-              { value: "penalty", label: "Penalty Kick" },
-              { value: "own_goal", label: "Own Goal" },
-            ]}
-            width="full"
-            showPlaceholder={false}
-          />
+          {/* Card Event Fields */}
+          {majorEventType === "card" && (
+            <div className="space-y-3.5 pt-2 border-t border-border/40">
+              <Select
+                label="Select Player"
+                value={cardPlayerId}
+                onChange={(val: string) => setCardPlayerId(val)}
+                options={[{ value: "", label: "-- Player --" }, ...playerOptions]}
+              />
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" size="sm" onClick={() => setIsGoalModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="success" size="sm" onClick={handleRecordGoal} disabled={isPending}>
-              Confirm Goal
-            </Button>
-          </div>
+              <Select
+                label="Card Type"
+                value={cardType}
+                onChange={(val: string) => setCardType(val as any)}
+                options={[
+                  { value: "yellow", label: "Yellow Card" },
+                  { value: "red", label: "Red Card" },
+                  { value: "yellow_red", label: "Second Yellow (Red)" },
+                ]}
+              />
+
+              <Input
+                label="Reason for Card (Optional)"
+                placeholder="e.g. Unsporting Behavior"
+                value={cardReason}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardReason(e.target.value)}
+              />
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={handleCloseMajorEventModal}>
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={handleRecordCard} disabled={isPending}>
+                  Record Card
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Stoppage Event Fields */}
+          {majorEventType === "stoppage" && (
+            <div className="space-y-3.5 pt-2 border-t border-border/40">
+              <Input
+                label="Reason for Stoppage / Timeout"
+                placeholder="e.g. Injury, Referee Timeout, Water break"
+                value={stoppageReason}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStoppageReason(e.target.value)}
+              />
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={handleCloseMajorEventModal}>
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={handleRecordStoppage} disabled={isPending}>
+                  Log Stoppage
+                </Button>
+              </div>
+            </div>
+          )}
+
         </div>
       </Modal>
-
-      {/* MODAL 2: CARD DISCIPLINE */}
-      <Modal
-        isOpen={isCardModalOpen}
-        onClose={() => setIsCardModalOpen(false)}
-        title="Record Card Discipline"
-        subtitle="Log yellow or red card for player"
-      >
-        <div className="space-y-4 text-xs">
-          <Select
-            label="Player"
-            value={cardPlayerId}
-            onChange={(e: any) => setCardPlayerId(e.target.value)}
-            options={players.map((p) => ({
-              value: String(p.id),
-              label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-            }))}
-            placeholder="Select Card Recipient"
-            width="full"
-          />
-
-          <Select
-            label="Card Type"
-            value={cardType}
-            onChange={(e: any) => setCardType(e.target.value)}
-            options={[
-              { value: "yellow", label: "Yellow Card" },
-              { value: "red", label: "Red Card" },
-              { value: "yellow_red", label: "Second Yellow (Red)" },
-            ]}
-            width="full"
-            showPlaceholder={false}
-          />
-
-          <Input
-            label="Reason / Notes (Optional)"
-            value={cardReason}
-            onChange={(e: any) => setCardReason(e.target.value)}
-            placeholder="e.g. Unsporting behavior, dangerous tackle"
-          />
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" size="sm" onClick={() => setIsCardModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="warning" size="sm" onClick={handleRecordCard} disabled={isPending}>
-              Issue Card
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* MODAL 3: SUBSTITUTION */}
-      <Modal
-        isOpen={isSubModalOpen}
-        onClose={() => setIsSubModalOpen(false)}
-        title="Player Substitution"
-        subtitle="Swap bench player IN for on-field player OUT"
-      >
-        <div className="space-y-4 text-xs">
-          <Select
-            label="Player Entering IN (Bench)"
-            value={subInPlayerId}
-            onChange={(e: any) => setSubInPlayerId(e.target.value)}
-            options={benchPlayers.map((p) => ({
-              value: String(p.id),
-              label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-            }))}
-            placeholder="Select Player Subbing IN"
-            width="full"
-          />
-
-          <Select
-            label="Player Exiting OUT (Field)"
-            value={subOutPlayerId}
-            onChange={(e: any) => setSubOutPlayerId(e.target.value)}
-            options={onFieldPlayers.map((p) => ({
-              value: String(p.id),
-              label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
-            }))}
-            placeholder="Select Player Subbing OUT"
-            width="full"
-          />
-
-          <Checkbox
-            label="Goalkeeper Change"
-            checked={isGkSub}
-            onChange={(e: any) => setIsGkSub(e.target.checked)}
-          />
-
-          <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" size="sm" onClick={() => setIsSubModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" size="sm" onClick={handleRecordSub} disabled={isPending}>
-              Execute Substitution
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
     </div>
   );
 }

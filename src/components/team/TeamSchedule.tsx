@@ -169,6 +169,9 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
             const isPast = isPastGameDate(game.startDate);
             const isFirstUpcoming = index === firstUpcomingIndex && firstUpcomingIndex > 0;
             
+            const isInProgress = game.status === "in_progress";
+            const isScheduled = game.status === "scheduled" || !game.status;
+
             let cardOutlineClass = isPast
               ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100"
               : "border-border/80 bg-surface/50 opacity-100";
@@ -177,14 +180,32 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
             let scoreBadgeClass = "bg-background text-muted border border-border";
             let scoreLabel = "Pending";
 
-            if (isCompleted && game.homeScore !== null && game.awayScore !== null) {
+            if (isInProgress) {
+              cardOutlineClass = "border-emerald-500/35 bg-emerald-500/[0.02] border-l-4 border-l-emerald-500 shadow-xs ring-1 ring-emerald-500/10";
+              scoreBadgeClass = "bg-emerald-500 text-white border-emerald-500/35 animate-pulse font-extrabold";
+              scoreLabel = "LIVE";
+              resultTag = (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 rounded shadow-inner animate-pulse">
+                  ● Live Match
+                </span>
+              );
+            } else if (isScheduled) {
+              cardOutlineClass = "border-border/80 bg-surface/50 border-l-4 border-l-amber-500/60";
+              scoreBadgeClass = "bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold";
+              scoreLabel = "SCHED";
+              resultTag = (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+                  Scheduled
+                </span>
+              );
+            } else if (isCompleted && game.homeScore !== null && game.awayScore !== null) {
               const teamScore = isHome ? game.homeScore : game.awayScore;
               const oppScore = isHome ? game.awayScore : game.homeScore;
 
               if (teamScore > oppScore) {
                 cardOutlineClass = isPast
-                  ? "border-success/25 bg-success/[0.03] opacity-70 grayscale-[20%] hover:grayscale-0 hover:opacity-100 shadow-sm"
-                  : "border-success/30 hover:border-success/60 bg-success/5 shadow-sm";
+                  ? "border-success/25 bg-success/[0.03] opacity-70 grayscale-[20%] hover:grayscale-0 hover:opacity-100 shadow-sm border-l-4 border-l-success"
+                  : "border-success/30 hover:border-success/60 bg-success/5 shadow-sm border-l-4 border-l-success";
                 scoreBadgeClass = "bg-success text-white border-success/30";
                 scoreLabel = "W";
                 resultTag = (
@@ -194,8 +215,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 );
               } else if (teamScore < oppScore) {
                 cardOutlineClass = isPast
-                  ? "border-danger/20 bg-danger/[0.015] opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100 shadow-sm"
-                  : "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm";
+                  ? "border-danger/20 bg-danger/[0.015] opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100 shadow-sm border-l-4 border-l-danger"
+                  : "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm border-l-4 border-l-danger";
                 scoreBadgeClass = "bg-danger text-white border-danger/30";
                 scoreLabel = "L";
                 resultTag = (
@@ -205,8 +226,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 );
               } else {
                 cardOutlineClass = isPast
-                  ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100"
-                  : "border-border/80 hover:border-muted/50 bg-surface/50";
+                  ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100 border-l-4 border-l-muted/40"
+                  : "border-border/80 hover:border-muted/50 bg-surface/50 border-l-4 border-l-muted/40";
                 scoreBadgeClass = "bg-muted/15 text-muted border-border";
                 scoreLabel = "D";
                 resultTag = (
@@ -240,13 +261,13 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                         <span className="capitalize">{game.gameType} Match</span>
                         <span>•</span>
                         <span className="text-accent">{isHome ? "Home Game" : "Away Game"}</span>
-                        {isCompleted && (
+                        {resultTag && (
                           <>
                             <span>•</span>
                             {resultTag}
                           </>
                         )}
-                        {isPast && (
+                        {isPast && !isCompleted && !isInProgress && (
                           <>
                             <span>•</span>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-muted/70 bg-background/80 border border-border px-2 py-0.5 rounded">
@@ -326,10 +347,12 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
                         <Link
                           href={`/gamestats/${teamSeasonId}/${game.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-accent-hover transition-colors"
                         >
                           <SquareChevronRight size={13} />
-                          <span>{isCompleted ? "Match Center" : "Track Game"}</span>
+                          <span>{isCompleted ? "Match Center" : isInProgress ? "Join Tracker (Live)" : "Track Game"}</span>
                         </Link>
                       </div>
 

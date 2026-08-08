@@ -32,7 +32,9 @@
 [x] **1.4 Standings Page Infinite Render Bug** — Standings page is currently stuck in an infinite render loop. Investigate and fix render cycle.
 
 ---
+
 ---
+
 [x] On roster view in team page, default to table layout instead of cards
 [x] Add player avatar/photo placeholder on roster cards view
 [x] Chronological schedule sorting (oldest at top -> recent -> upcoming), divider line for upcoming games, and grayed out cards for past matches (excluding today's matches)
@@ -51,7 +53,6 @@
 - Render full team rosters (jersey numbers, player names)
 - Show detailed schedules (past results and future fixtures)
 - Display player stats tables (Goals, Assists, Cards, Clean Sheets)
-
 
 ## Step 3: Player & Parent Dashboards (Assigned Access Only)
 
@@ -100,9 +101,10 @@ _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 ---
 
 ## Game Scheduling
-[x] It currently assumes the team scheduling is home. that is wrong, we need to be able to select the opponent then select if the team scheduling is home or away (toggle component). 
+
+[x] It currently assumes the team scheduling is home. that is wrong, we need to be able to select the opponent then select if the team scheduling is home or away (toggle component).
 [x] if the game is a league, we need to know which league it is, this is missing from the game details. The game could count for more than one (for instance a tournament game counts as a tournament but also a separate league game)
-[x] if the league is not listed, we need to either assign the team to the league or create a new league if needed. 
+[x] if the league is not listed, we need to either assign the team to the league or create a new league if needed.
 [x] the same for the tournament
 [x] if the game is a playoff, we still need to know which league/tournament (Playoff games default to not counting in standings, with toggle to override).
 [x] opponent should allow for new team (allows selecting Club -> Team with inline modal to add new Club or Team if needed).
@@ -125,7 +127,48 @@ _(blueprint §1.4, §4, §5.5 — intense tracking module)_
 [x] **5.1 Match Statistics Logger (Live Game Tracker)**: Built live game tracker at `/gamestats/[teamSeasonId]/[id]/live` featuring period clock controls, quick action bar (+GOAL, SUB IN/OUT, CARD, CORNER, OFFSIDE, +GUEST), on-field vs bench rosters, micro-player stats (shots, saves, fouls), and team events.
 [x] **5.2 Offline-Capable Logging & Synchronization Engine**: Implemented `src/lib/offline/offlineSync.ts` with LocalStorage/IndexedDB action queueing, offline status badge indicator, and automatic background flush on network reconnection (`window.addEventListener("online")`).
 [x] **5.3 Guest Player In-Game Assignment**: Support for adding guest players directly within the live match tracker with temporary jersey numbers.
-[x] **Design System Overhaul**: Redesigned Game Menu dashboard, Game Status Card, Match Config Card, and Game Action Cards to match app design system (`Card`, `Button`, `Modal`, `Select`, `Input`, `Checkbox`, `Dialog`, CSS design tokens). 
+[x] **Design System Overhaul**: Redesigned Game Menu dashboard, Game Status Card, Match Config Card, and Game Action Cards to match app design system (`Card`, `Button`, `Modal`, `Select`, `Input`, `Checkbox`, `Dialog`, CSS design tokens).
+
+## Step 5.4: Live Match Tracker Refinement & Tablet Optimization
+
+We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/live` utilizing core logic from `liveOld` and our new design system:
+
+- [x] **Tablet Vertical-First Layout**: Redesign the live match layout to optimize vertical screen real-estate on tablets (using tight grids/panels, avoiding layout overflow, and supporting collapsible stats panels).
+- [x] **Real-Time Playing Times & Action Stats**:
+  - Integrate `useGamePlayerTimeStore` to display live playing time (total minutes played and current shift/bench time) next to each player.
+  - Display derived match action summaries (shots, saves, goals, assists, yellow/red cards, plus/minus) dynamically on the on-field/bench cards.
+- [x] **Roster & Lineup Validation**: Add gatekeeping checks on loading the live tracker; redirect to `/lineup` if the count of starters/goalkeepers doesn't match rules settings, or redirect to `/summary` if the game is already ended.
+- [x] **Stoppage Clocks & Automatic Stops**: Implement auto-stoppage triggers when recording key actions that pause/resume the game periods and track stoppage duration.
+- [x] **Quick Action Subscriptions & UI Auditing**: Convert modals, event logs, dialogs, and loaders to use standard UI system components with proper input validation.
+- [x] **Vertical-Friendly Click-to-Sub Panel**: Replace complex drag-and-drop actions with a streamlined double-tap/click workflow to swap bench players onto the field quickly.
+- [x] **No Scroll Screen Layout**: Tighten layout elements to fit entire dashboard screen on tablets without scrolling.
+- [x] **Colored Broadcast Scoreboard**: Styled the header with a dark indigo premium gradient, placed larger scores on either side of a large match game clock, and added contextual controls.
+- [x] **Wide Split Column Layout (Left-Right Split)**:
+  - Left Column (70%): Wide, comfortable layout displaying stacked tables for Goalkeepers, Field Players, and Game Changers (Bench Reserves) to prevent clipping.
+  - Right Column (30%): Stacked sidebar panel containing Team Counters, Recent Events feed, and the Upcoming Substitutions queue.
+- [x] **Goalkeeper Separation**: Separated the goalkeeper into their own table section displaying goalie-specific stats: Saves (Sv) and Goals Against (GA).
+- [x] **Tailored Stat Columns**:
+  - Removed the position column across all tables.
+  - Field Players track: Shots, Goals, Assists, +/-, total time, shift time.
+  - Goalkeepers track: Saves, GA, +/-, total time, shift time.
+  - Bench Reserves track: Shots, Goals, Assists, +/-, total time, bench time.
+- [x] **Enlarged Touch Targets**: Enlarged all row actions (Sub In/Out, SHOT, SAVE) to larger standard buttons for touch-friendly tablet coaching.
+- [x] **Unified Event Modal**: Consolidated Goal, Card, and Stoppage events into a single "Record Major Event" modal.
+- [x] **Pending Sub Queue Routing**: Configured row clicks and Sub buttons to route swaps to the upcoming sub queue.
+- [x] **Card Visual Badges**: Renders small visual yellow/red rectangle indicators next to player names for active cards.
+- [x] **Red Card Enforcement**: Grayed out sent-off players (red carded or 2 yellow cards) and disabled their micro-action / sub buttons, showing an explicit "SENT OFF" status.
+- [x] **Dynamic Panel Heights**: Configured the On-Field players table to size naturally (`shrink-0`) to fit all rows with no scrolling, moving the Game Changers (Bench) table down cleanly and allowing it to occupy the remaining vertical height with scroll support.
+- [x] **Score Neutral Colors**: Removed colors from the score digits, leaving them as plain high-contrast bold white.
+- [x] **Player Row Alignment**: Placed player name and jersey number columns level/vertically aligned.
+- [x] **Instant Upcoming Queue (No Lag)**: Configured in-memory state updates for pending subs so they appear in the queue instantly without forcing a screen refresh.
+- [x] **Single-Line Queue Formats**: Configured pending substitutions to display on a single line showing player names (`Out: [Player] 🔄 In: [Player]`).
+- [x] **Event Deletion Feed Controls**: Added delete buttons next to entries in the Recent Events feed, requiring an inline confirmation ("Yes/No") block to delete.
+- [x] **Card Visual Badges**: Fixed type conversion in ID filters to display yellow and red card badges next to player names.
+- [x] **Action Refresh Prevention**: Modified loader to prevent background data syncs from unmounting the page and flashing a loading screen.
+- [x] **Expanded Team Counters**: Increased height of Team Counters card to `165px` to fit all three rows.
+- [x] **Scrollable Reserves**: Verified and tested the reserve scrollbars to function correctly under long bench lists.
+- [x] **Sidebar Stacking Refinement**: Stacked Upcoming Subs as the primary flex container (`flex-1`) and capped Recent Events to a shorter `160px` card.
+- [x] **Duplicate Sub Mitigation**: Added synchronous selections cleanup inside the queueing effect to prevent duplicate database writes during concurrent React updates.
 
 ## Step 6: Verification & Automated Tests
 

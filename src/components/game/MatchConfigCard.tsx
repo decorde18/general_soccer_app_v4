@@ -1,19 +1,24 @@
 "use client";
 
 import React from "react";
-import { Clock, RotateCcw, Activity } from "lucide-react";
+import Link from "next/link";
+import { Clock, RotateCcw, Activity, Settings } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 import type { GameSettings } from "@/types/game";
 
 interface MatchConfigCardProps {
   settings: GameSettings;
+  gameId: number | string;
+  teamSeasonId: number | string;
 }
 
-export default function MatchConfigCard({ settings }: MatchConfigCardProps) {
+export default function MatchConfigCard({ settings, gameId, teamSeasonId }: MatchConfigCardProps) {
   return (
-    <Card variant="outlined" padding="md" className="space-y-4 bg-surface shadow-xs">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-muted border-b border-border/50 pb-2">
-        Match Rules & Configuration
+    <Card variant="outlined" padding="md" className="space-y-4 bg-surface shadow-xs rounded-2xl">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-muted border-b border-border/50 pb-2 flex items-center gap-2">
+        <Settings className="h-3.5 w-3.5 text-primary" />
+        <span>Match Rules & Configuration</span>
       </h3>
 
       <div className="space-y-3.5 text-xs">
@@ -54,6 +59,19 @@ export default function MatchConfigCard({ settings }: MatchConfigCardProps) {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="pt-2 border-t border-border/50">
+        <Link href={`/gamestats/${teamSeasonId}/${gameId}/settings`}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full flex items-center justify-center gap-1.5 text-xs py-2 rounded-xl"
+          >
+            <Settings className="h-3.5 w-3.5" />
+            <span>Edit Settings</span>
+          </Button>
+        </Link>
       </div>
     </Card>
   );

@@ -3,6 +3,7 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 import type { QuickAction } from "@/types/game";
+import { Card } from "@/components/ui/Card";
 
 interface GameActionCardProps {
   action: QuickAction;
@@ -13,9 +14,13 @@ export default function GameActionCard({ action, onSelect }: GameActionCardProps
   const isPrimary = action.variant === "primary";
 
   return (
-    <button
+    <Card
+      variant="clickable"
       onClick={() => onSelect(action.path)}
-      className={`${action.span ?? "col-span-1"} group rounded-2xl border border-border bg-surface p-5 text-left shadow-xs transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5`}
+      padding="none"
+      className={`${
+        action.span ?? "col-span-1"
+      } group p-5 text-left border border-border shadow-xs hover:border-primary/50 transition-all duration-200 hover:-translate-y-0.5 rounded-2xl bg-surface`}
     >
       <div className="mb-3 flex items-start justify-between">
         <div
@@ -34,6 +39,6 @@ export default function GameActionCard({ action, onSelect }: GameActionCardProps
         {action.label}
       </h4>
       <p className="mt-1 text-xs text-muted leading-relaxed">{action.subLabel}</p>
-    </button>
+    </Card>
   );
 }

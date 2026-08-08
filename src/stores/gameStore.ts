@@ -263,9 +263,11 @@ const useGameStore = create<GameStoreState>((set, get) => {
         // Build opponent info
         const { home_team_season_id, away_team_season_id } = dbGame;
         const isHome = teamSeasonId == home_team_season_id;
+
         const opponent = {
           opponentId: isHome ? away_team_season_id : home_team_season_id,
           opponentClub: isHome ? dbGame.away_club_name : dbGame.home_club_name,
+          opponentClubAbbreviation: isHome ? dbGame.awayClubAbbreviation : dbGame.homeClubAbbreviation,
           opponentTeamName: isHome
             ? dbGame.away_team_name
             : dbGame.home_team_name,
@@ -353,6 +355,7 @@ const useGameStore = create<GameStoreState>((set, get) => {
           ourName: isHome
             ? `${dbGame.home_club_name} ${dbGame.home_team_name}`
             : `${dbGame.away_club_name} ${dbGame.away_team_name}`,
+          ourClubAbbreviation: isHome ? dbGame.homeClubAbbreviation : dbGame.awayClubAbbreviation,
           teamStatTotals: teamStatTotals as TeamStatTotals,
 
           // camelCase aliases for consistent component access
