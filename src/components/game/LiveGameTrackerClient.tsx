@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
@@ -23,6 +24,7 @@ import LiveNavigationDrawer from "./live/LiveNavigationDrawer";
 export default function LiveGameTrackerClient() {
   const router = useRouter();
   const { id, teamSeasonId } = useParams<{ id: string; teamSeasonId: string }>();
+  const { id, teamSeasonId } = useParams<{ id: string; teamSeasonId: string }>();
   const { isOnline, queueCount } = useOnlineStatus();
   const [isPending, startTransition] = useTransition();
 
@@ -38,6 +40,7 @@ export default function LiveGameTrackerClient() {
   const addPlayerAction = useGameStore((s) => s.addPlayerAction);
   const addTeamEvent = useGameStore((s) => s.addTeamEvent);
   const getCurrentPeriodLabel = useGameStore((s) => s.getCurrentPeriodLabel);
+  const initializeGame = useGameStore((s) => s.initializeGame);
   const initializeGame = useGameStore((s) => s.initializeGame);
 
   const players = useGamePlayersStore((s) => s.players);
@@ -56,6 +59,7 @@ export default function LiveGameTrackerClient() {
   const calculateCurrentTimeOffField = useGamePlayerTimeStore((s) => s.calculateCurrentTimeOffField);
 
   // Clock local tick counter for UI smoothness & shift calculations
+  // Clock local tick counter for UI smoothness & shift calculations
   const [gameTimeSeconds, setGameTimeSeconds] = useState<number>(0);
   const [, setTick] = useState<number>(0);
 
@@ -73,6 +77,7 @@ export default function LiveGameTrackerClient() {
   // Update tick
   useEffect(() => {
     const interval = setInterval(() => {
+      setTick((t) => t + 1);
       setTick((t) => t + 1);
       const storeTime = useGameStore.getState().getGameTime();
       setGameTimeSeconds(storeTime);
@@ -208,6 +213,20 @@ export default function LiveGameTrackerClient() {
           toast.error("Roster config mismatch. Set starting lineup first.");
           return;
         }
+      if (currentStage === GAME_STAGES.IN_STOPPAGE) {
+        const activeStoppage = game.gameEventsMajor.find(
+          (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
+        );
+        if (activeStoppage) {
+          await endStoppage(activeStoppage.id);
+          toast.success("Clock resumed from stoppage.");
+          await initializeGame(id, teamSeasonId);
+        }
+      } else if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
+        if (!isLineupConfigured) {
+          toast.error("Roster config mismatch. Set starting lineup first.");
+          return;
+        }
         await startNextPeriod();
         toast.success(`Started ${periodLabel}`);
       } else if (currentStage === GAME_STAGES.DURING_PERIOD) {
@@ -246,8 +265,16 @@ export default function LiveGameTrackerClient() {
           goal_types: data.goalType,
           game_time: gameTimeSeconds,
           period: game.currentPeriodIndex + 1,
+          period: game.currentPeriodIndex + 1,
         };
 
+        const newGoal = await fetch(`/api/game_events_goals`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).then((r) => r.json());
+
+        if (newGoal?.id) {
         const newGoal = await fetch(`/api/game_events_goals`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -268,6 +295,8 @@ export default function LiveGameTrackerClient() {
             {
               id: newGoal.major_event_id,
               game_id: Number(game.game_id || game.id),
+              id: newGoal.major_event_id,
+              game_id: Number(game.game_id || game.id),
               period: game.currentPeriodIndex + 1,
               game_time: gameTimeSeconds,
               clock_should_run: 1,
@@ -275,6 +304,8 @@ export default function LiveGameTrackerClient() {
           );
         }
 
+        toast.success(`GOAL Recorded!`);
+        await handleCloseMajorEventModal();
         toast.success(`GOAL Recorded!`);
         await handleCloseMajorEventModal();
       } catch (err: any) {
@@ -305,8 +336,16 @@ export default function LiveGameTrackerClient() {
           card_reason: data.cardReason || null,
           game_time: gameTimeSeconds,
           period: game.currentPeriodIndex + 1,
+          period: game.currentPeriodIndex + 1,
         };
 
+        const newCard = await fetch(`/api/game_events_discipline`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).then((r) => r.json());
+
+        if (newCard?.id) {
         const newCard = await fetch(`/api/game_events_discipline`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -318,12 +357,16 @@ export default function LiveGameTrackerClient() {
             {
               id: newCard.id,
               major_event_id: newCard.major_event_id,
+              id: newCard.id,
+              major_event_id: newCard.major_event_id,
               team_season_id: Number(game.teamSeasonId),
               card_type: data.cardType,
               card_reason: data.cardReason,
               player_game_id: player?.playerGameId ? Number(player.playerGameId) : null,
             } as any,
             {
+              id: newCard.major_event_id,
+              game_id: Number(game.game_id || game.id),
               id: newCard.major_event_id,
               game_id: Number(game.game_id || game.id),
               period: game.currentPeriodIndex + 1,
@@ -361,7 +404,10 @@ export default function LiveGameTrackerClient() {
         }
         toast.success("Stoppage reason logged.");
         await handleCloseMajorEventModal();
+        toast.success("Stoppage reason logged.");
+        await handleCloseMajorEventModal();
       } catch (err: any) {
+        toast.error("Failed to log stoppage: " + err.message);
         toast.error("Failed to log stoppage: " + err.message);
       }
     });

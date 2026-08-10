@@ -33,7 +33,9 @@
 
 ---
 
+
 ---
+
 
 [x] On roster view in team page, default to table layout instead of cards
 [x] Add player avatar/photo placeholder on roster cards view
@@ -103,7 +105,10 @@ _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 ## Game Scheduling
 
 [x] It currently assumes the team scheduling is home. that is wrong, we need to be able to select the opponent then select if the team scheduling is home or away (toggle component).
+
+[x] It currently assumes the team scheduling is home. that is wrong, we need to be able to select the opponent then select if the team scheduling is home or away (toggle component).
 [x] if the game is a league, we need to know which league it is, this is missing from the game details. The game could count for more than one (for instance a tournament game counts as a tournament but also a separate league game)
+[x] if the league is not listed, we need to either assign the team to the league or create a new league if needed.
 [x] if the league is not listed, we need to either assign the team to the league or create a new league if needed.
 [x] the same for the tournament
 [x] if the game is a playoff, we still need to know which league/tournament (Playoff games default to not counting in standings, with toggle to override).
