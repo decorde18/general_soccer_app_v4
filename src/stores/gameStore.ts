@@ -48,6 +48,7 @@ const DEFAULT_GAME_SETTINGS: GameSettings = {
   overtimeDuration: 600, // 10 minutes in seconds
   hasShootout: true,
   clockDirection: "up",
+  reentryRule: "unlimited",
 };
 
 interface CalculateTeamStatTotalsInput {
@@ -181,15 +182,25 @@ const useGameStore = create<GameStoreState>((set, get) => {
       set({ isLoading: true, error: null });
 
       try {
-        // Fetch game from DB
-        const [dbGame] = await apiFetch("v_games", "GET", null, null, {
-          filters: { game_id: gameId },
-        });
+        // Fetch game view and raw game record in parallel
+        const [dbGameViewResult, rawGameResult] = await Promise.all([
+          apiFetch("v_games", "GET", null, null, {
+            filters: { game_id: gameId },
+          }),
+          apiFetch("games", "GET", null, null, {
+            filters: { id: gameId },
+          }),
+        ]);
 
-        if (!dbGame) {
+        const dbGameView = Array.isArray(dbGameViewResult) ? dbGameViewResult[0] : dbGameViewResult;
+        const rawGameRecord = Array.isArray(rawGameResult) ? rawGameResult[0] : rawGameResult;
+
+        if (!dbGameView && !rawGameRecord) {
           set({ error: "Game not found", isLoading: false });
           return { notFound: true };
         }
+
+        const dbGame = { ...(rawGameRecord || {}), ...(dbGameView || {}) };
 
         // Fetch OT configuration
         const [otConfig]: OtConfig[] = await apiFetch(
@@ -290,6 +301,21 @@ const useGameStore = create<GameStoreState>((set, get) => {
                 ? parseInt(String(otConfig.default_ot_1_minutes)) * 60
                 : DEFAULT_GAME_SETTINGS.overtimeDuration),
           hasShootout: dbGame.so_if_tied ?? (otConfig?.so_if_tied === 1),
+          reentryRule: (() => {
+            if (dbGame.reentry_rule) return dbGame.reentry_rule;
+            if (dbGame.notes) {
+              try {
+                const parsed = JSON.parse(dbGame.notes);
+                if (parsed.reentryRule) return parsed.reentryRule;
+              } catch {
+                if (dbGame.notes.includes("reentryRule:")) {
+                  const match = dbGame.notes.match(/reentryRule:\s*([a_z_]+)/i);
+                  if (match?.[1]) return match[1];
+                }
+              }
+            }
+            return DEFAULT_GAME_SETTINGS.reentryRule;
+          })(),
         };
 
         // Build periods array (all timestamps are Unix ms from DB BIGINT)

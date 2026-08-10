@@ -3,24 +3,35 @@
 import React from "react";
 import { AlertTriangle } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import useGameStore from "@/stores/gameStore";
+import useGamePlayersStore from "@/stores/gamePlayersStore";
 
 interface LineupValidationBannerProps {
-  isLineupConfigured: boolean;
-  onFieldCount: number;
-  playersOnFieldSetting: number;
-  teamSeasonId: string;
-  gameId: string;
+  isLineupConfigured?: boolean;
+  onFieldCount?: number;
+  playersOnFieldSetting?: number;
+  teamSeasonId?: string;
+  gameId?: string;
 }
 
-export default function LineupValidationBanner({
-  isLineupConfigured,
-  onFieldCount,
-  playersOnFieldSetting,
-  teamSeasonId,
-  gameId,
-}: LineupValidationBannerProps) {
+export default function LineupValidationBanner(props: LineupValidationBannerProps) {
   const router = useRouter();
+  const rawParams = typeof useParams === "function" ? useParams() : null;
+  const params = (rawParams || {}) as { id?: string; teamSeasonId?: string };
+
+  const storeGame = useGameStore((s) => s.game);
+  const storePlayers = useGamePlayersStore((s) => s.players);
+
+  const teamSeasonId = props.teamSeasonId ?? params?.teamSeasonId ?? "";
+  const gameId = props.gameId ?? params?.id ?? "";
+  const playersOnFieldSetting = props.playersOnFieldSetting ?? storeGame?.settings?.playersOnField ?? 11;
+
+  const starterCount = storePlayers.filter((p) => p.gameStatus === "starter").length;
+  const gkCount = storePlayers.filter((p) => p.gameStatus === "goalkeeper").length;
+  const actualOnFieldCount = props.onFieldCount ?? (starterCount + gkCount);
+
+  const isLineupConfigured = props.isLineupConfigured ?? (actualOnFieldCount === playersOnFieldSetting);
 
   if (isLineupConfigured) return null;
 
@@ -29,7 +40,7 @@ export default function LineupValidationBanner({
       <div className="flex items-center gap-1.5 font-bold">
         <AlertTriangle size={14} className="text-amber-600 shrink-0" />
         <span>
-          Roster setup required: starting lineup size mismatch ({onFieldCount}/{playersOnFieldSetting}).
+          Roster setup required: starting lineup size mismatch ({actualOnFieldCount}/{playersOnFieldSetting}).
         </span>
       </div>
       <Button

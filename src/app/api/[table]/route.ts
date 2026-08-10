@@ -71,6 +71,39 @@ const READ_ONLY_TABLES = new Set([
   "v_game_events_penalties_complete",
 ]);
 
+const TABLE_ENUM_VALIDATIONS: Record<string, Record<string, string[]>> = {
+  game_events_discipline: {
+    card_type: ["yellow", "red", "yellow_red"],
+  },
+  game_events_team: {
+    event_type: ["foul", "corner", "offside", "throw_in", "goal_kick", "free_kick"],
+  },
+  game_events_penalties: {
+    outcome: ["goal", "saved", "missed", "hit_post"],
+  },
+  game_events_player_actions: {
+    event_type: ["shot", "shot_on_target", "shot_blocked", "save"],
+  },
+  event_types: {
+    category: ["training", "social", "team", "other"],
+  },
+};
+
+function validateEnumFields(table: string, body: Record<string, unknown>, isPost = false): string | null {
+  const tableValidations = TABLE_ENUM_VALIDATIONS[table];
+  if (!tableValidations) return null;
+
+  for (const [col, allowedValues] of Object.entries(tableValidations)) {
+    if (col in body || isPost) {
+      const val = body[col];
+      if (typeof val !== "string" || !allowedValues.includes(val)) {
+        return `Invalid or missing value for field "${col}" on table "${table}". Must be one of: ${allowedValues.join(", ")}`;
+      }
+    }
+  }
+  return null;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /** Safely escape an identifier (column / table name) for MySQL. */
@@ -269,6 +302,9 @@ export async function POST(req: Request, context: RouteContext) {
   const cols = Object.keys(body);
   if (cols.length === 0) return badRequest("No data provided");
 
+  const enumError = validateEnumFields(table, body, true);
+  if (enumError) return badRequest(enumError);
+
   const colSQL = cols.map(escapeIdentifier).join(", ");
   const placeholders = cols.map(() => "?").join(", ");
   const values = cols.map((c) => body[c]);
@@ -329,6 +365,9 @@ export async function PUT(req: Request, context: RouteContext) {
 
   const cols = Object.keys(body);
   if (cols.length === 0) return badRequest("No data provided");
+
+  const enumError = validateEnumFields(table, body, false);
+  if (enumError) return badRequest(enumError);
 
   const setSQL = cols.map((c) => `${escapeIdentifier(c)} = ?`).join(", ");
   const values = [...cols.map((c) => body[c]), Number(id)];

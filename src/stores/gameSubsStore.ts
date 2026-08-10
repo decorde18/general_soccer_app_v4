@@ -178,10 +178,10 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
     const players = useGamePlayersStore.getState().players;
 
     const inPlayer = inPlayerId
-      ? players.find((p) => p.playerGameId === inPlayerId)
+      ? players.find((p) => Number(p.playerGameId) === Number(inPlayerId))
       : null;
     const outPlayer = outPlayerId
-      ? players.find((p) => p.playerGameId === outPlayerId)
+      ? players.find((p) => Number(p.playerGameId) === Number(outPlayerId))
       : null;
 
     // Check if either player is the current GK
@@ -201,10 +201,10 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
     const players = useGamePlayersStore.getState().players;
 
     const inPlayer = inPlayerId
-      ? players.find((p) => p.playerGameId === inPlayerId)
+      ? players.find((p) => Number(p.playerGameId) === Number(inPlayerId))
       : null;
     const outPlayer = outPlayerId
-      ? players.find((p) => p.playerGameId === outPlayerId)
+      ? players.find((p) => Number(p.playerGameId) === Number(outPlayerId))
       : null;
 
     const inOnField =
@@ -254,25 +254,30 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
 
     players.forEach((player) => {
       (player.ins || []).forEach((sub) => {
-        if (sub.gameTime === null && !seenSubIds.has(sub.subId)) {
-          seenSubIds.add(sub.subId);
-          allSubs.push({
-            subId: sub.subId,
-            inPlayerId: player.playerGameId,
-            outPlayerId: null,
-            gkSub: sub.gkSub,
-            isComplete: false,
-          });
+        if (sub.gameTime === null) {
+          const existing = allSubs.find((s) => String(s.subId) === String(sub.subId));
+          if (existing) {
+            existing.inPlayerId = player.playerGameId;
+          } else if (!seenSubIds.has(String(sub.subId))) {
+            seenSubIds.add(String(sub.subId));
+            allSubs.push({
+              subId: sub.subId,
+              inPlayerId: player.playerGameId,
+              outPlayerId: null,
+              gkSub: sub.gkSub,
+              isComplete: false,
+            });
+          }
         }
       });
 
       (player.outs || []).forEach((sub) => {
         if (sub.gameTime === null) {
-          const existing = allSubs.find((s) => s.subId === sub.subId);
+          const existing = allSubs.find((s) => String(s.subId) === String(sub.subId));
           if (existing) {
             existing.outPlayerId = player.playerGameId;
-          } else if (!seenSubIds.has(sub.subId)) {
-            seenSubIds.add(sub.subId);
+          } else if (!seenSubIds.has(String(sub.subId))) {
+            seenSubIds.add(String(sub.subId));
             allSubs.push({
               subId: sub.subId,
               inPlayerId: null,
@@ -328,7 +333,7 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
           let updatedPlayer: Player = { ...player };
 
           // Add to ins
-          if (inPlayerId && player.playerGameId === inPlayerId) {
+          if (inPlayerId && Number(player.playerGameId) === Number(inPlayerId)) {
             updatedPlayer = {
               ...updatedPlayer,
               ins: [
@@ -339,7 +344,7 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
           }
 
           // Add to outs
-          if (outPlayerId && player.playerGameId === outPlayerId) {
+          if (outPlayerId && Number(player.playerGameId) === Number(outPlayerId)) {
             updatedPlayer = {
               ...updatedPlayer,
               outs: [

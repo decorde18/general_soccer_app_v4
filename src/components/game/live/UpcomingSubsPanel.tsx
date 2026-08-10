@@ -6,30 +6,80 @@ import { Card } from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
-import { Player } from "@/stores/gamePlayersStore";
-import { PendingSub } from "@/stores/gameSubsStore";
+import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
+import useGameSubsStore, { PendingSub } from "@/stores/gameSubsStore";
+import { toast } from "sonner";
 
 interface UpcomingSubsPanelProps {
-  pendingSubsList: PendingSub[];
-  players: Player[];
-  onConfirmSingleSub: (subId: string | number) => void;
-  onCancelSub: (subId: string | number) => void;
-  onConfirmAllSubs: () => void;
+  pendingSubsList?: PendingSub[];
+  players?: Player[];
+  onConfirmSingleSub?: (subId: string | number) => void;
+  onCancelSub?: (subId: string | number) => void;
+  onConfirmAllSubs?: () => void;
   onEditSub?: (subId: string | number, inPlayerId: string | number, outPlayerId: string | number) => void;
 }
 
-export default function UpcomingSubsPanel({
-  pendingSubsList,
-  players,
-  onConfirmSingleSub,
-  onCancelSub,
-  onConfirmAllSubs,
-  onEditSub,
-}: UpcomingSubsPanelProps) {
+export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
+  const storePlayers = useGamePlayersStore((s) => s.players);
+  const {
+    confirmSub,
+    cancelSub,
+    confirmAllPendingSubs,
+    updatePendingSub,
+    getPendingSubsSync,
+  } = useGameSubsStore();
+
   // Edit Pending Sub Modal state
   const [editingSub, setEditingSub] = useState<PendingSub | null>(null);
   const [editInId, setEditInId] = useState<string>("");
   const [editOutId, setEditOutId] = useState<string>("");
+
+  const pendingSubsList = props.pendingSubsList ?? (getPendingSubsSync() || []);
+  const players = props.players ?? storePlayers;
+
+  const defaultConfirmSingleSub = async (subId: string | number) => {
+    try {
+      await confirmSub(subId);
+      toast.success("Substitution entered.");
+    } catch (err: any) {
+      toast.error("Failed to enter sub: " + err.message);
+    }
+  };
+
+  const defaultCancelSub = async (subId: string | number) => {
+    try {
+      await cancelSub(subId);
+      toast.success("Substitution cancelled.");
+    } catch (err: any) {
+      toast.error("Failed to cancel sub: " + err.message);
+    }
+  };
+
+  const defaultConfirmAllSubs = async () => {
+    try {
+      await confirmAllPendingSubs();
+      toast.success("All pending substitutions entered.");
+    } catch (err: any) {
+      toast.error("Failed to enter subs: " + err.message);
+    }
+  };
+
+  const defaultEditSub = async (subId: string | number, inPlayerId: string | number, outPlayerId: string | number) => {
+    try {
+      await updatePendingSub(subId, {
+        in_player_id: inPlayerId ? Number(inPlayerId) : null,
+        out_player_id: outPlayerId ? Number(outPlayerId) : null,
+      });
+      toast.success("Pending substitution updated.");
+    } catch (err: any) {
+      toast.error("Failed to update sub: " + err.message);
+    }
+  };
+
+  const onConfirmSingleSub = props.onConfirmSingleSub ?? defaultConfirmSingleSub;
+  const onCancelSub = props.onCancelSub ?? defaultCancelSub;
+  const onConfirmAllSubs = props.onConfirmAllSubs ?? defaultConfirmAllSubs;
+  const onEditSub = props.onEditSub ?? defaultEditSub;
 
   const handleOpenEdit = (sub: PendingSub) => {
     setEditingSub(sub);
@@ -49,11 +99,11 @@ export default function UpcomingSubsPanel({
   );
 
   const onFieldOptions = eligiblePlayers
-    .filter((p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk" || p.gameStatus === "starter" || p.gameStatus === "goalkeeper")
+    .filter((p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk")
     .map((p) => ({ value: String(p.playerGameId), label: `#${p.jerseyNumber || "?"} ${p.fullName} (On Field)` }));
 
   const benchOptions = eligiblePlayers
-    .filter((p) => p.fieldStatus === "onBench" && p.gameStatus === "dressed")
+    .filter((p) => p.fieldStatus === "onBench")
     .map((p) => ({ value: String(p.playerGameId), label: `#${p.jerseyNumber || "?"} ${p.fullName} (Bench)` }));
 
   const getValue = (val: any) => (typeof val === "string" ? val : val?.target?.value ?? "");
@@ -102,7 +152,7 @@ export default function UpcomingSubsPanel({
                   <button
                     aria-label="Confirm Sub"
                     onClick={() => onConfirmSingleSub(sub.subId)}
-                    className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 rounded text-[9px] font-bold cursor-pointer transition-colors"
+                    className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[9px] font-bold cursor-pointer transition-colors"
                     title="Confirm Sub"
                   >
                     <Check size={10} /> Enter
@@ -110,10 +160,10 @@ export default function UpcomingSubsPanel({
                   <button
                     aria-label="Cancel Sub"
                     onClick={() => onCancelSub(sub.subId)}
-                    className="flex items-center gap-1 px-2 py-0.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded text-[9px] font-bold cursor-pointer transition-colors"
+                    className="p-1 text-muted hover:text-danger hover:bg-background rounded transition-colors cursor-pointer"
                     title="Cancel Sub"
                   >
-                    <Trash2 size={10} /> Cancel
+                    <Trash2 size={11} />
                   </button>
                 </div>
               </div>
@@ -122,40 +172,40 @@ export default function UpcomingSubsPanel({
         )}
       </div>
 
-      {/* Edit Pending Sub Modal */}
-      {editingSub && (
-        <Modal
-          isOpen={Boolean(editingSub)}
-          onClose={() => setEditingSub(null)}
-          title="Edit Pending Substitution"
-          subtitle="Change players for this queued substitution"
-        >
-          <div className="space-y-4 text-xs">
-            <Select
-              label="Player Going Out"
-              value={editOutId}
-              onChange={(e: any) => setEditOutId(getValue(e))}
-              options={[{ value: "", label: "-- Select Player Out --" }, ...onFieldOptions]}
-            />
+      {/* EDIT SUB MODAL */}
+      <Modal
+        isOpen={Boolean(editingSub)}
+        onClose={() => setEditingSub(null)}
+        title="Edit Pending Substitution"
+        subtitle="Adjust player entering or exiting"
+      >
+        <div className="space-y-4 text-xs">
+          <Select
+            label="Player Entering IN (Bench)"
+            value={editInId}
+            onChange={(e: any) => setEditInId(getValue(e))}
+            options={[{ value: "", label: "-- Keep Current --" }, ...benchOptions]}
+            width="full"
+          />
 
-            <Select
-              label="Player Coming In"
-              value={editInId}
-              onChange={(e: any) => setEditInId(getValue(e))}
-              options={[{ value: "", label: "-- Select Player In --" }, ...benchOptions]}
-            />
+          <Select
+            label="Player Exiting OUT (Field)"
+            value={editOutId}
+            onChange={(e: any) => setEditOutId(getValue(e))}
+            options={[{ value: "", label: "-- Keep Current --" }, ...onFieldOptions]}
+            width="full"
+          />
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setEditingSub(null)}>
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={handleSaveEdit}>
-                Save Changes
-              </Button>
-            </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-border">
+            <Button variant="outline" size="sm" onClick={() => setEditingSub(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" onClick={handleSaveEdit}>
+              Save Changes
+            </Button>
           </div>
-        </Modal>
-      )}
+        </div>
+      </Modal>
     </Card>
   );
 }

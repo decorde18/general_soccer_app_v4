@@ -19,7 +19,12 @@ export const GAME_STAGES = {
 
 export type GameStage = (typeof GAME_STAGES)[keyof typeof GAME_STAGES];
 
-// ==================== SETTINGS ====================
+export type ReentryRule =
+  | "unlimited"
+  | "one_per_half"
+  | "ncaa_college"
+  | "one_per_game"
+  | "no_reentry";
 
 export interface GameSettings {
   playersOnField: number;
@@ -30,6 +35,7 @@ export interface GameSettings {
   overtimeDuration: number; // seconds
   hasShootout: boolean;
   clockDirection: string; // e.g. "up" | "down"
+  reentryRule: ReentryRule;
 }
 
 // ==================== PERIODS ====================

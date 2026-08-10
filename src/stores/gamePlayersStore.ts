@@ -29,6 +29,7 @@ export interface PlayerSubEntry {
   gameTime: number | null;
   subId: string | number;
   gkSub: boolean;
+  period?: number;
 }
 
 export interface Player {
@@ -357,6 +358,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             gameTime: sub.sub_time,
             subId: sub.id,
             gkSub: sub.gk_sub === 1,
+            period: sub.period,
           }));
 
         const playerOuts: PlayerSubEntry[] = confirmedSubs
@@ -365,6 +367,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             gameTime: sub.sub_time,
             subId: sub.id,
             gkSub: sub.gk_sub === 1,
+            period: sub.period,
           }));
 
         const playerPendingIn = pendingSubs.find(
@@ -379,6 +382,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             gameTime: null,
             subId: playerPendingIn.id,
             gkSub: playerPendingIn.gk_sub === 1,
+            period: playerPendingIn.period,
           });
         }
         if (playerPendingOut) {
@@ -386,6 +390,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             gameTime: null,
             subId: playerPendingOut.id,
             gkSub: playerPendingOut.gk_sub === 1,
+            period: playerPendingOut.period,
           });
         }
 

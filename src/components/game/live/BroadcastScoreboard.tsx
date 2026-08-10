@@ -1,42 +1,119 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Wifi, WifiOff, Menu } from "lucide-react";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
+import { formatTeamName } from "@/lib/utils/teamName";
+import useGameStore from "@/stores/gameStore";
+import useGamePlayersStore from "@/stores/gamePlayersStore";
+import { useOnlineStatus } from "@/lib/offline/offlineSync";
+import { toast } from "sonner";
+import { useParams } from "next/navigation";
 
 interface BroadcastScoreboardProps {
-  ourShortName: string;
-  opponentShortName: string;
-  goalsFor: number;
-  goalsAgainst: number;
-  gameTimeSeconds: number;
-  periodLabel: string;
-  isOnline: boolean;
-  queueCount: number;
-  currentStage: number | string;
-  GAME_STAGES: Record<string, any>;
-  isLineupConfigured: boolean;
-  onTogglePeriodClock: () => void;
-  onOpenMajorEventModal: () => void;
+  ourShortName?: string;
+  opponentShortName?: string;
+  goalsFor?: number;
+  goalsAgainst?: number;
+  gameTimeSeconds?: number;
+  periodLabel?: string;
+  isOnline?: boolean;
+  queueCount?: number;
+  currentStage?: number | string;
+  GAME_STAGES?: Record<string, any>;
+  isLineupConfigured?: boolean;
+  onTogglePeriodClock?: () => void;
+  onOpenMajorEventModal?: () => void;
   onOpenNavDrawer?: () => void;
 }
 
-export default function BroadcastScoreboard({
-  ourShortName,
-  opponentShortName,
-  goalsFor,
-  goalsAgainst,
-  gameTimeSeconds,
-  periodLabel,
-  isOnline,
-  queueCount,
-  currentStage,
-  GAME_STAGES,
-  isLineupConfigured,
-  onTogglePeriodClock,
-  onOpenMajorEventModal,
-  onOpenNavDrawer,
-}: BroadcastScoreboardProps) {
+export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
+  const rawParams = typeof useParams === "function" ? useParams() : null;
+  const params = (rawParams || {}) as { id?: string; teamSeasonId?: string };
+
+  // Store & Hook subscriptions
+  const game = useGameStore((s) => s.game);
+  const getGameStage = useGameStore((s) => s.getGameStage);
+  const getCurrentPeriodLabel = useGameStore((s) => s.getCurrentPeriodLabel);
+  const GAME_STAGES_STORE = useGameStore((s) => s.GAME_STAGES);
+  const startNextPeriod = useGameStore((s) => s.startNextPeriod);
+  const endPeriod = useGameStore((s) => s.endPeriod);
+  const endStoppage = useGameStore((s) => s.endStoppage);
+
+  const players = useGamePlayersStore((s) => s.players);
+  const { isOnline: onlineStatus, queueCount: offlineQueueCount } = useOnlineStatus();
+
+  // Local timer tick for smooth scoreboard clock
+  const [storeGameTimeSeconds, setStoreGameTimeSeconds] = useState<number>(0);
+
+  useEffect(() => {
+    if (props.gameTimeSeconds !== undefined) return;
+    const interval = setInterval(() => {
+      setStoreGameTimeSeconds(useGameStore.getState().getGameTime());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [props.gameTimeSeconds]);
+
+  // Derived values with fallbacks
+  const gameTimeSeconds = props.gameTimeSeconds ?? storeGameTimeSeconds;
+  const currentStage = props.currentStage ?? (game ? getGameStage() : 0);
+  const GAME_STAGES = props.GAME_STAGES ?? GAME_STAGES_STORE;
+  const periodLabel = props.periodLabel ?? (game ? getCurrentPeriodLabel() : "");
+  const isOnline = props.isOnline ?? onlineStatus;
+  const queueCount = props.queueCount ?? offlineQueueCount;
+  const goalsFor = props.goalsFor ?? game?.goalsFor ?? 0;
+  const goalsAgainst = props.goalsAgainst ?? game?.goalsAgainst ?? 0;
+
+  const starterCount = players.filter((p) => p.gameStatus === "starter").length;
+  const gkCount = players.filter((p) => p.gameStatus === "goalkeeper").length;
+  const playersOnFieldSetting = game?.settings?.playersOnField || 11;
+  const isLineupConfigured = props.isLineupConfigured ?? ((starterCount + gkCount) === playersOnFieldSetting);
+
+  const ourShortName = props.ourShortName ?? (game ? formatTeamName({
+    team_name: (game.isHome ? game.homeTeamName : game.awayTeamName) as string | null,
+    club: {
+      name: (game.isHome ? game.homeClubName : game.awayClubName) as string | null,
+      abbreviation: (game.isHome ? game.homeClubAbbreviation : game.awayClubAbbreviation) as string | null,
+    }
+  }, "short") : "HOME");
+
+  const opponentShortName = props.opponentShortName ?? (game ? formatTeamName({
+    team_name: (game.isHome ? game.awayTeamName : game.homeTeamName) as string | null,
+    club: {
+      name: (game.isHome ? game.awayClubName : game.homeClubName) as string | null,
+      abbreviation: (game.isHome ? game.awayClubAbbreviation : game.homeClubAbbreviation) as string | null,
+    }
+  }, "short") : "AWAY");
+
+  const handleDefaultToggleClock = async () => {
+    if (!game) return;
+    try {
+      if (currentStage === GAME_STAGES.IN_STOPPAGE) {
+        const activeStoppage = game.gameEventsMajor?.find(
+          (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
+        );
+        if (activeStoppage) {
+          await endStoppage(activeStoppage.id);
+          toast.success("Clock resumed from stoppage.");
+        }
+      } else if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
+        if (!isLineupConfigured) {
+          toast.error("Roster config mismatch. Set starting lineup first.");
+          return;
+        }
+        await startNextPeriod();
+        toast.success(`Started ${periodLabel}`);
+      } else if (currentStage === GAME_STAGES.DURING_PERIOD) {
+        await endPeriod();
+        toast.info(`Ended ${periodLabel}`);
+      }
+    } catch (err: any) {
+      toast.error("Clock action error: " + err.message);
+    }
+  };
+
+  const onTogglePeriodClock = props.onTogglePeriodClock ?? handleDefaultToggleClock;
+
   const getClockButtonText = () => {
     if (currentStage === GAME_STAGES.IN_STOPPAGE) return "Resume Clock";
     if (currentStage === GAME_STAGES.DURING_PERIOD) return "End Period";
@@ -86,9 +163,9 @@ export default function BroadcastScoreboard({
             {opponentShortName}
           </span>
 
-          {onOpenNavDrawer && (
+          {props.onOpenNavDrawer && (
             <button
-              onClick={onOpenNavDrawer}
+              onClick={props.onOpenNavDrawer}
               aria-label="Open Navigation Menu"
               className="p-1.5 ml-2 rounded-lg bg-black/30 hover:bg-black/60 border border-slate-700/80 text-white transition-colors cursor-pointer shrink-0"
               title="Open Navigation Menu"
@@ -123,12 +200,14 @@ export default function BroadcastScoreboard({
           >
             {getClockButtonText()}
           </button>
-          <button
-            onClick={onOpenMajorEventModal}
-            className="h-6 py-0 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-[10px] font-black shadow-xs transition-colors cursor-pointer"
-          >
-            Record Major Event
-          </button>
+          {props.onOpenMajorEventModal && (
+            <button
+              onClick={props.onOpenMajorEventModal}
+              className="h-6 py-0 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-[10px] font-black shadow-xs transition-colors cursor-pointer"
+            >
+              Record Major Event
+            </button>
+          )}
         </div>
       </div>
     </div>

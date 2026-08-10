@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Settings, Clock, RotateCcw, Shield, Zap, CheckCircle, AlertCircle } from "lucide-react";
+import { Settings, Clock, RotateCcw, Shield, Zap, CheckCircle, AlertCircle, Users } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Toggle from "@/components/ui/Toggle";
@@ -57,6 +57,7 @@ export default function GameSettingsEditor({
       overtimeDuration: 600,
       hasShootout: true,
       clockDirection: "up",
+      reentryRule: "unlimited",
     }
   );
 
@@ -71,6 +72,7 @@ export default function GameSettingsEditor({
           hasOvertime: localSettings.hasOvertime,
           overtimeDuration: localSettings.overtimeDuration,
           hasShootout: localSettings.hasShootout,
+          reentryRule: localSettings.reentryRule,
         });
 
         // Sync to store
@@ -243,6 +245,41 @@ export default function GameSettingsEditor({
                 }`}
               >
                 {n}v{n}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* Substitution Re-Entry Rules */}
+      <Card variant="default" padding="md">
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/60">
+          <Users size={16} className="text-primary" />
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted">Substitution Re-Entry Rules</h3>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+            Re-Entry Policy
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {[
+              { value: "unlimited", label: "Unlimited Re-Entry", desc: "Youth standard — players can re-enter freely" },
+              { value: "one_per_half", label: "1 Re-Entry Per Half", desc: "NFHS / US Club — max 1 re-entry per half/period" },
+              { value: "ncaa_college", label: "NCAA College Rules", desc: "No 1st half re-entry; 1 2nd half re-entry; no OT re-entry" },
+              { value: "one_per_game", label: "1 Re-Entry Per Game", desc: "Max 1 re-entry for the entire match" },
+              { value: "no_reentry", label: "No Re-Entry", desc: "IFAB / FIFA adult rules — once subbed out, cannot return" },
+            ].map(({ value, label, desc }) => (
+              <button
+                key={value}
+                onClick={() => setLocalSettings((s) => ({ ...s, reentryRule: value as any }))}
+                className={`p-3 rounded-lg text-left border transition-all ${
+                  (localSettings.reentryRule || "unlimited") === value
+                    ? "bg-primary/10 border-primary text-text shadow-xs"
+                    : "bg-background border-border text-muted hover:border-primary/50"
+                }`}
+              >
+                <div className="text-xs font-bold text-text">{label}</div>
+                <div className="text-[10px] text-muted mt-0.5">{desc}</div>
               </button>
             ))}
           </div>

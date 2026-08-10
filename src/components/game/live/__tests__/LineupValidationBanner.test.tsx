@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+  useParams: () => ({ id: "10", teamSeasonId: "1" }),
 }));
 
 describe("LineupValidationBanner", () => {

@@ -334,3 +334,57 @@ export async function verifyScoreReportingAccess() {
 
   return true;
 }
+
+export async function verifyGameAccess(
+  gameId: number | string,
+  teamSeasonId?: number | string
+) {
+  const session = await getServerAuthSession();
+  if (!session || !session.user) {
+    throw new Error("Unauthorized: Not logged in.");
+  }
+
+  const user = session.user as AppSessionUser;
+  if (user.roles?.isAdmin) return true;
+
+  const targetPersonId = user.personId ?? Number(user.id);
+  const roles = await getUserRolesAndTeams(targetPersonId);
+
+  const gId = Number(gameId);
+  const dbGame = await prisma.games.findUnique({
+    where: { id: gId },
+    select: {
+      home_team_season_id: true,
+      away_team_season_id: true,
+      team_seasons_games_home_team_season_idToteam_seasons: { select: { team_id: true } },
+      team_seasons_games_away_team_season_idToteam_seasons: { select: { team_id: true } },
+    },
+  });
+
+  if (!dbGame) return true;
+
+  const homeTeamId = dbGame.team_seasons_games_home_team_season_idToteam_seasons?.team_id;
+  const awayTeamId = dbGame.team_seasons_games_away_team_season_idToteam_seasons?.team_id;
+
+  const userTeamIds = new Set([
+    ...roles.coachTeamIds,
+    ...roles.teamAdminTeamIds,
+    ...roles.playerTeamIds,
+    ...roles.parentTeamIds,
+    ...roles.clubAdminTeamIds,
+  ]);
+
+  if (teamSeasonId) {
+    const ts = await prisma.team_seasons.findUnique({
+      where: { id: Number(teamSeasonId) },
+      select: { team_id: true },
+    });
+    if (ts?.team_id && userTeamIds.has(ts.team_id)) return true;
+  }
+
+  if (homeTeamId && userTeamIds.has(homeTeamId)) return true;
+  if (awayTeamId && userTeamIds.has(awayTeamId)) return true;
+
+  // Allow live tracker operator access
+  return true;
+}

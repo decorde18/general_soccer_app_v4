@@ -33,7 +33,9 @@
 
 ---
 
+
 ---
+
 
 [x] On roster view in team page, default to table layout instead of cards
 [x] Add player avatar/photo placeholder on roster cards view
@@ -103,7 +105,10 @@ _(blueprint §2.1 — roles: COACH, TEAM_ADMIN, CLUB_ADMIN)_
 ## Game Scheduling
 
 [x] It currently assumes the team scheduling is home. that is wrong, we need to be able to select the opponent then select if the team scheduling is home or away (toggle component).
+
+[x] It currently assumes the team scheduling is home. that is wrong, we need to be able to select the opponent then select if the team scheduling is home or away (toggle component).
 [x] if the game is a league, we need to know which league it is, this is missing from the game details. The game could count for more than one (for instance a tournament game counts as a tournament but also a separate league game)
+[x] if the league is not listed, we need to either assign the team to the league or create a new league if needed.
 [x] if the league is not listed, we need to either assign the team to the league or create a new league if needed.
 [x] the same for the tournament
 [x] if the game is a playoff, we still need to know which league/tournament (Playoff games default to not counting in standings, with toggle to override).
@@ -179,6 +184,9 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 
 - [x] **Eligible Player Game Roster Filtering**: Filtered On-Field and Bench tables to only include eligible active players (`starter`, `goalkeeper`, `dressed`), excluding non-playing statuses (`injured`, `not_dressed`, `suspended`, `unavailable`).
 
+
+on user dashboard, it should allow me to got to the team dashboard (that is showing in my dashboard.)
+
 ## Step 6: Verification & Automated Tests
 
 [ ] Run automated Next.js build compilation and fix any type/compile errors
@@ -191,3 +199,4 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 
 - Advanced live match stream / video link embeds (`games.video_link`)
 - Historical season archiving and player career stats aggregation
+

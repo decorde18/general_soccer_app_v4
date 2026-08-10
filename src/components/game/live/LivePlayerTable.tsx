@@ -4,6 +4,8 @@ import React from "react";
 import { Player } from "@/stores/gamePlayersStore";
 import { PendingSub } from "@/stores/gameSubsStore";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
+import useGameStore from "@/stores/gameStore";
+import { checkPlayerSubEligibility } from "@/lib/utils/subRules";
 
 export interface LivePlayerTableProps {
   players: Player[];
@@ -22,8 +24,10 @@ export interface LivePlayerTableProps {
     redCards: number;
     goalsAgainst: number;
   };
-  onSelectPlayer: (id: string | null) => void;
+  onSelectPlayer?: (id: string | null) => void;
   onQuickAction?: (playerId: string | number, actionType: "shot" | "save") => void;
+  onAttemptIneligibleSelect?: (player: Player, reason: string) => void;
+  overridePlayerIds?: Set<string | number>;
 }
 
 export default function LivePlayerTable({
@@ -37,9 +41,15 @@ export default function LivePlayerTable({
   getPlayerStats,
   onSelectPlayer,
   onQuickAction,
+  onAttemptIneligibleSelect,
+  overridePlayerIds,
 }: LivePlayerTableProps) {
   const isGk = tableType === "gk";
   const isBench = tableType === "bench";
+
+  const gameStore = useGameStore.getState();
+  const currentPeriod = (gameStore.game?.currentPeriodIndex ?? 0) + 1;
+  const gameSettings = gameStore.game?.settings;
 
   return (
     <div className="border border-border/60 bg-background/25 rounded-lg p-1">
@@ -74,7 +84,14 @@ export default function LivePlayerTable({
             const totalTime = calculateTotalTimeOnField(player, gameTimeSeconds);
             const secondaryTime = calculateSecondaryTime(player, gameTimeSeconds);
             const stats = getPlayerStats(player);
+            (player as any).redCards = stats.redCards;
             const isRedCarded = stats.redCards > 0 || stats.yellowCards >= 2;
+
+            const eligibility = isBench
+              ? checkPlayerSubEligibility(player, gameSettings, currentPeriod, overridePlayerIds)
+              : { isEligible: true, reason: undefined };
+
+            const isExhausted = isBench && !eligibility.isEligible;
 
             // Instant pending check combining store state and pending queue
             const pGameId = Number(player.playerGameId);
@@ -88,6 +105,8 @@ export default function LivePlayerTable({
             let rowClass = "hover:bg-background/60 transition-colors cursor-pointer text-text font-bold text-[11px] h-6.5";
             if (isRedCarded) {
               rowClass = "opacity-40 bg-slate-100 dark:bg-slate-900 pointer-events-none text-muted-foreground font-bold text-[11px] h-6.5";
+            } else if (isExhausted) {
+              rowClass = "opacity-55 bg-slate-100/70 dark:bg-slate-900/40 text-muted font-bold text-[11px] h-6.5 cursor-pointer hover:bg-slate-200/80 dark:hover:bg-slate-800/80";
             } else if (isSelected) {
               rowClass = isBench
                 ? "bg-emerald-500/15 border-l-2 border-l-emerald-500 font-extrabold text-emerald-700 dark:text-emerald-300 cursor-pointer text-[11px] h-6.5"
@@ -104,7 +123,11 @@ export default function LivePlayerTable({
                 className={rowClass}
                 onClick={() => {
                   if (isRedCarded || isPendingOut || isPendingIn) return;
-                  onSelectPlayer(isSelected ? null : String(player.id));
+                  if (isExhausted) {
+                    onAttemptIneligibleSelect?.(player, eligibility.reason || "Re-entry limit reached");
+                    return;
+                  }
+                  onSelectPlayer?.(isSelected ? null : String(player.id));
                 }}
               >
                 <td className="py-0.5 px-1.5 text-center font-bold font-mono align-middle">
@@ -191,9 +214,17 @@ export default function LivePlayerTable({
                         <span className="inline-block text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-2 py-0.5 rounded uppercase tracking-tight">
                           Pending In
                         </span>
+                      ) : isExhausted ? (
+                        <button
+                          onClick={() => onAttemptIneligibleSelect?.(player, eligibility.reason || "Re-entry limit reached")}
+                          className="px-2 py-0.5 border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800 text-slate-500 text-[9px] font-bold rounded shadow-2xs hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+                          title={eligibility.reason || "Re-entry limit reached. Click to request ref override."}
+                        >
+                          Exhausted
+                        </button>
                       ) : (
                         <button
-                          onClick={() => onSelectPlayer(isSelected ? null : String(player.id))}
+                          onClick={() => onSelectPlayer?.(isSelected ? null : String(player.id))}
                           className={`px-2.5 py-0.5 border rounded-md text-[10px] font-black shadow-xs shrink-0 cursor-pointer ${
                             isBench
                               ? isSelected
