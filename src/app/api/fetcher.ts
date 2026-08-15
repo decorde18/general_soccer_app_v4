@@ -90,12 +90,24 @@ export async function apiFetch<T = any>(
   id: string | number | null = null,
   options: ApiOptions = {}
 ): Promise<T> {
-  let url = `${API_BASE_URL}/${table}`;
+  let cleanTable = table;
+  let targetId = id;
+
+  if (cleanTable.includes("?")) {
+    const [realTable, queryStr] = cleanTable.split("?");
+    cleanTable = realTable;
+    const parsedParams = new URLSearchParams(queryStr);
+    if (parsedParams.has("id") && !targetId) {
+      targetId = parsedParams.get("id");
+    }
+  }
+
+  let url = `${API_BASE_URL}/${cleanTable}`;
   const params = new URLSearchParams();
 
-  // Handle GET with ID
-  if (id && method === "GET") {
-    params.append("id", String(id));
+  // Handle GET, PUT, PATCH, DELETE with ID
+  if (targetId && (method === "GET" || method === "DELETE" || method === "PUT" || method === "PATCH")) {
+    params.append("id", String(targetId));
   }
 
   // Handle GET with filters, sorting, pagination, and grouping

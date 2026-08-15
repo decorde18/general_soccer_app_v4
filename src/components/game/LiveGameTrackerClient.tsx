@@ -77,33 +77,24 @@ export default function LiveGameTrackerClient() {
   const GAME_STAGES = useGameStore.getState().GAME_STAGES;
   const currentStage = getGameStage();
 
-  // Modal open / close auto-stoppage logic
-  const handleOpenMajorEventModal = async () => {
-    if (currentStage === GAME_STAGES.DURING_PERIOD) {
-      try {
-        await startStoppage("Recording event", "stoppage");
-        toast.info("Clock paused automatically.");
-      } catch (err) {
-        console.error("Auto stoppage error:", err);
-      }
+  // Auto-reopen MajorEventModal on reload/mount if active stoppage exists
+  useEffect(() => {
+    if (!game) return;
+    const activeStoppage = game.gameEventsMajor?.find(
+      (s) => s.end_time === null && s.period === (game.currentPeriodIndex || 0) + 1 && s.clock_should_run === 0
+    );
+    if (activeStoppage) {
+      setIsMajorEventModalOpen(true);
     }
+  }, [game?.gameEventsMajor, game?.currentPeriodIndex]);
+
+  // Modal open / close logic
+  const handleOpenMajorEventModal = async () => {
     setIsMajorEventModalOpen(true);
   };
 
   const handleCloseMajorEventModal = async () => {
     setIsMajorEventModalOpen(false);
-
-    const activeStoppage = game?.gameEventsMajor?.find(
-      (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
-    );
-    if (activeStoppage) {
-      try {
-        await endStoppage(activeStoppage.id);
-        toast.success("Clock resumed.");
-      } catch (err) {
-        console.error("Auto resume error:", err);
-      }
-    }
   };
 
   return (

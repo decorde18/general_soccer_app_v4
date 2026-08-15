@@ -11,6 +11,7 @@ interface GameSettingsInput {
   overtimeDuration: number;
   hasShootout: boolean;
   reentryRule?: string;
+  autoStopClockOnMajorEvent?: boolean;
 }
 
 export async function updateGameSettings(
@@ -41,6 +42,9 @@ export async function updateGameSettings(
 
   if (settings.reentryRule) {
     notesObj.reentryRule = settings.reentryRule;
+  }
+  if (typeof settings.autoStopClockOnMajorEvent === "boolean") {
+    notesObj.autoStopClockOnMajorEvent = settings.autoStopClockOnMajorEvent;
   }
 
   // 3. Update the game columns

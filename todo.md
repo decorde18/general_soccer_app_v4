@@ -185,12 +185,28 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **Pending Sub Editing & Multi-line Cards**: Added Edit button & modal to `UpcomingSubsPanel` and formatted pending sub items into 2 lines so player names are never cut off.
 - [x] **Disappearing Player Sub Bug Fix**: Modified `calculateFieldStatus` in `gamePlayersStore` so pending subs do not alter `fieldStatus` to `subbingIn`/`subbingOut`. Players remain in their respective table until confirmed.
 - [x] **Team Counter 500 Null Fix**: Resolved `Column 'team_season_id' cannot be null` error by deriving `ourId` and `oppId` from route params and fallback game properties with NaN guards.
-
-
 - [x] **Eligible Player Game Roster Filtering**: Filtered On-Field and Bench tables to only include eligible active players (`starter`, `goalkeeper`, `dressed`), excluding non-playing statuses (`injured`, `not_dressed`, `suspended`, `unavailable`).
+- [x] **User Dashboard Team Navigation**: Added direct links and primary "Go to Team Dashboard" action buttons to active team cards and dropdowns on the User Dashboard (`/dashboard`).
+- [x] **Enhanced Major Event Recording Modal**:
+  - **Immediate Pop-up & Icon Buttons**: Instant modal tabs for `Goal ⚽`, `Card 🟨`, `PK 🎯`, `Injury 🚑`, `Weather ⚡`, `VAR 📺`, `Other Stoppage ⏸️`.
+  - **Auto Clock Pause & Live Time Header**: `autoStopClockOnMajorEvent` game setting (High School rules) with live clock header (`12:34`) and instant Pause/Resume clock control.
+  - **Strict On-Field Scoping**: Scorer, Assist, and PK Taker dropdowns for "Our Team" strictly list on-field players only and bi-directionally exclude selecting the same player for Scorer and Assister.
+  - **Goal Methods & Opponent Jersey Inputs**: Method checkboxes (`Corner`, `Direct Free Kick`, `Indirect Free Kick`, `Throw-In`, `Header`, `Volley`, `Open Play`), `Own Goal` toggle, and optional jersey number inputs for opponent goals/cards.
+  - **Penalty Kick Workflow & Rebound Stoppage**: PK taker on-field filtering, outcome buttons (`Goal`, `Saved`, `Missed`, `Hit Post`), rebound goal follow-up option, and automatic transition to kickoff stoppage.
 
-
-on user dashboard, it should allow me to got to the team dashboard (that is showing in my dashboard.)
+- [x] **Complete Multi-Table Cascade Event Deletion**:
+  - Enhanced `deleteEvent` in `gameStore` to find and delete ALL linked parent and child records (`game_events_major`, `game_events_goals`, `game_events_discipline`, `game_events_penalties`) across database tables and Zustand state simultaneously.
+  - Canceling or deleting any major event or stoppage removes all traces of it as if it never happened.
+  - Filtered linked major events out of `RecentEventsPanel` to eliminate duplicate stoppage feed entries for logged goals and cards.
+- [x] **In-Event Substitutions, Immediate Execution & Exhausted Filtering**:
+  - Rendered substitution widget across all major event tabs (`Goal`, `Card`, `PK`, `Injury`, `Weather`, `VAR`, `Stoppage`).
+  - Added dual actions for selected players: `[Enter Sub Now ⚡]` (executes sub immediately during stoppage) and `[Queue for Restart]` (queues sub for restart).
+  - Added per-item `[Execute Now ⚡]` and `[Delete 🗑️]` buttons to queued pending subs list.
+  - Enforced exhausted player filtering on `Player IN` dropdown (excludes players who reached re-entry limit under active sub rules) with an optional `"Include Exhausted Players (Override)"` checkbox.
+in game adjustments 
+  - fix erroneous subs (time, player in, player out), delete sub
+  - fix erroneous events
+  
 
 ## Step 6: Verification & Automated Tests
 

@@ -49,6 +49,7 @@ const DEFAULT_GAME_SETTINGS: GameSettings = {
   hasShootout: true,
   clockDirection: "up",
   reentryRule: "unlimited",
+  autoStopClockOnMajorEvent: true,
 };
 
 interface CalculateTeamStatTotalsInput {
@@ -150,6 +151,7 @@ export interface GameStoreState {
     saveAction?: PlayerAction | null,
   ) => void;
 
+  addMajorEvent: (majorEvent: any) => void;
   addPlayerAction: (action: PlayerAction) => void;
   replacePlayerAction: (
     optimisticActionId: number | string,
@@ -315,6 +317,17 @@ const useGameStore = create<GameStoreState>((set, get) => {
               }
             }
             return DEFAULT_GAME_SETTINGS.reentryRule;
+          })(),
+          autoStopClockOnMajorEvent: (() => {
+            if (dbGame.notes) {
+              try {
+                const parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed.autoStopClockOnMajorEvent === "boolean") {
+                  return parsed.autoStopClockOnMajorEvent;
+                }
+              } catch {}
+            }
+            return DEFAULT_GAME_SETTINGS.autoStopClockOnMajorEvent;
           })(),
         };
 
@@ -711,12 +724,10 @@ const useGameStore = create<GameStoreState>((set, get) => {
       const gameTime = get().getGameTime();
 
       try {
-        await apiFetch(`game_events_major?id=${stoppageId}`, "PUT", {
-          end_time: gameTime,
-        });
+        await apiFetch("game_events_major", "PUT", { end_time: gameTime }, stoppageId);
 
-        const updatedStoppages = game.gameEventsMajor.map((s) =>
-          s.id === stoppageId ? { ...s, end_time: gameTime } : s,
+        const updatedStoppages = (game.gameEventsMajor || []).map((s) =>
+          String(s.id) === String(stoppageId) ? { ...s, end_time: gameTime } : s,
         );
 
         get().updateGame({ gameEventsMajor: updatedStoppages });
@@ -870,66 +881,134 @@ const useGameStore = create<GameStoreState>((set, get) => {
 
     deleteEvent: async (eventId, eventType = "major") => {
       try {
-        const table = EVENT_TABLE_MAP[eventType] || "game_events_major";
-        await apiFetch(`${table}?id=${eventId}`, "DELETE");
-
         const game = get().game;
-        if (game) {
-          const updates: Partial<Game> = {};
-          switch (eventType) {
-            case "major":
-              updates.gameEventsMajor = game.gameEventsMajor.filter(
-                (s) => s.id !== eventId,
-              );
-              break;
-            case "goal": {
-              updates.gameEventsGoals = game.gameEventsGoals.filter(
-                (g) => String(g.goal_id) !== String(eventId) && String(g.id) !== String(eventId),
-              );
-              const teamSeasonId = game.isHome
-                ? game.home_team_season_id
-                : game.away_team_season_id;
-              updates.goalsFor = updates.gameEventsGoals.filter(
-                (g) => g.team_season_id === teamSeasonId && !g.is_own_goal,
-              ).length;
-              updates.goalsAgainst = updates.gameEventsGoals.filter(
-                (g) =>
-                  (g.team_season_id !== teamSeasonId && !g.is_own_goal) ||
-                  (g.team_season_id === teamSeasonId && g.is_own_goal),
-              ).length;
-              break;
-            }
-            case "discipline":
-              updates.gameEventsDiscipline = game.gameEventsDiscipline.filter(
-                (d) => String(d.discipline_id) !== String(eventId) && String(d.id) !== String(eventId),
-              );
-              break;
-            case "penalty":
-              updates.gameEventsPenalties = game.gameEventsPenalties.filter(
-                (p) => String(p.penalty_id) !== String(eventId) && String(p.id) !== String(eventId),
-              );
-              break;
-            case "player_action":
-              updates.playerActions = game.playerActions.filter(
-                (a) => a.id !== eventId,
-              );
-              updates.teamStatTotals = get().calculateTeamStatTotals({
-                ...(game as unknown as CalculateTeamStatTotalsInput),
-                ...updates,
-              }) as TeamStatTotals;
-              break;
-            case "team":
-              updates.gameEventsTeam = game.gameEventsTeam.filter(
-                (t) => t.id !== eventId,
-              );
-              updates.teamStatTotals = get().calculateTeamStatTotals({
-                ...(game as unknown as CalculateTeamStatTotalsInput),
-                ...updates,
-              }) as TeamStatTotals;
-              break;
-          }
-          get().updateGame(updates);
+        if (!game) return;
+
+        let majorIdToDelete: number | string | null = null;
+        let goalIdToDelete: number | string | null = null;
+        let disciplineIdToDelete: number | string | null = null;
+        let penaltyIdToDelete: number | string | null = null;
+
+        if (eventType === "major") {
+          majorIdToDelete = eventId;
+          const linkedGoal = game.gameEventsGoals?.find(
+            (g) => String(g.major_event_id) === String(eventId)
+          );
+          if (linkedGoal) goalIdToDelete = linkedGoal.id ?? linkedGoal.goal_id ?? null;
+
+          const linkedDiscipline = game.gameEventsDiscipline?.find(
+            (d) => String(d.major_event_id) === String(eventId)
+          );
+          if (linkedDiscipline) disciplineIdToDelete = linkedDiscipline.id ?? linkedDiscipline.discipline_id ?? null;
+
+          const linkedPenalty = game.gameEventsPenalties?.find(
+            (p) => String(p.major_event_id) === String(eventId)
+          );
+          if (linkedPenalty) penaltyIdToDelete = linkedPenalty.id ?? linkedPenalty.penalty_id ?? null;
+        } else if (eventType === "goal") {
+          goalIdToDelete = eventId;
+          const goal = game.gameEventsGoals?.find(
+            (g) => String(g.id) === String(eventId) || String(g.goal_id) === String(eventId)
+          );
+          if ((goal as any)?.major_event_id) majorIdToDelete = (goal as any).major_event_id;
+        } else if (eventType === "discipline") {
+          disciplineIdToDelete = eventId;
+          const disc = game.gameEventsDiscipline?.find(
+            (d) => String(d.id) === String(eventId) || String(d.discipline_id) === String(eventId)
+          );
+          if ((disc as any)?.major_event_id) majorIdToDelete = (disc as any).major_event_id;
+        } else if (eventType === "penalty") {
+          penaltyIdToDelete = eventId;
+          const pen = game.gameEventsPenalties?.find(
+            (p) => String(p.id) === String(eventId) || String(p.penalty_id) === String(eventId)
+          );
+          if ((pen as any)?.major_event_id) majorIdToDelete = (pen as any).major_event_id;
         }
+
+        // Execute API deletions
+        const deletePromises: Promise<any>[] = [];
+
+        if (majorIdToDelete) {
+          deletePromises.push(apiFetch("game_events_major", "DELETE", null, majorIdToDelete));
+        }
+        if (goalIdToDelete) {
+          deletePromises.push(apiFetch("game_events_goals", "DELETE", null, goalIdToDelete));
+        }
+        if (disciplineIdToDelete) {
+          deletePromises.push(apiFetch("game_events_discipline", "DELETE", null, disciplineIdToDelete));
+        }
+        if (penaltyIdToDelete) {
+          deletePromises.push(apiFetch("game_events_penalties", "DELETE", null, penaltyIdToDelete));
+        }
+        if (eventType === "player_action") {
+          deletePromises.push(apiFetch("player_actions", "DELETE", null, eventId));
+        }
+        if (eventType === "team") {
+          deletePromises.push(apiFetch("game_events_team", "DELETE", null, eventId));
+        }
+
+        await Promise.all(deletePromises);
+
+        // Update Zustand game state synchronously
+        const updates: Partial<Game> = {};
+
+        if (majorIdToDelete) {
+          updates.gameEventsMajor = (game.gameEventsMajor || []).filter(
+            (s) => String(s.id) !== String(majorIdToDelete)
+          );
+        }
+        if (goalIdToDelete || eventType === "goal") {
+          const targetGoalId = goalIdToDelete || eventId;
+          const remainingGoals = (game.gameEventsGoals || []).filter(
+            (g) => String(g.goal_id) !== String(targetGoalId) && String(g.id) !== String(targetGoalId)
+          );
+          updates.gameEventsGoals = remainingGoals;
+          const teamSeasonId = game.isHome
+            ? game.home_team_season_id
+            : game.away_team_season_id;
+          updates.goalsFor = remainingGoals.filter(
+            (g) => g.team_season_id === teamSeasonId && !g.is_own_goal
+          ).length;
+          updates.goalsAgainst = remainingGoals.filter(
+            (g) =>
+              (g.team_season_id !== teamSeasonId && !g.is_own_goal) ||
+              (g.team_season_id === teamSeasonId && g.is_own_goal)
+          ).length;
+        }
+        if (disciplineIdToDelete || eventType === "discipline") {
+          const targetDiscId = disciplineIdToDelete || eventId;
+          updates.gameEventsDiscipline = (game.gameEventsDiscipline || []).filter(
+            (d) => String(d.discipline_id) !== String(targetDiscId) && String(d.id) !== String(targetDiscId)
+          );
+        }
+        if (penaltyIdToDelete || eventType === "penalty") {
+          const targetPenId = penaltyIdToDelete || eventId;
+          updates.gameEventsPenalties = (game.gameEventsPenalties || []).filter(
+            (p) => String(p.penalty_id) !== String(targetPenId) && String(p.id) !== String(targetPenId)
+          );
+        }
+        if (eventType === "player_action") {
+          const remainingActions = (game.playerActions || []).filter(
+            (a) => String(a.id) !== String(eventId)
+          );
+          updates.playerActions = remainingActions;
+          updates.teamStatTotals = get().calculateTeamStatTotals({
+            ...(game as unknown as CalculateTeamStatTotalsInput),
+            ...updates,
+          }) as TeamStatTotals;
+        }
+        if (eventType === "team") {
+          const remainingTeamEvents = (game.gameEventsTeam || []).filter(
+            (t) => String(t.id) !== String(eventId)
+          );
+          updates.gameEventsTeam = remainingTeamEvents;
+          updates.teamStatTotals = get().calculateTeamStatTotals({
+            ...(game as unknown as CalculateTeamStatTotalsInput),
+            ...updates,
+          }) as TeamStatTotals;
+        }
+
+        get().updateGame(updates);
       } catch (error) {
         console.error("Error deleting event:", error);
         throw error;
@@ -1017,6 +1096,18 @@ const useGameStore = create<GameStoreState>((set, get) => {
         ),
         goalsFor: game.goalsFor - (isOurGoal ? 1 : 0),
         goalsAgainst: game.goalsAgainst - (isTheirGoal ? 1 : 0),
+      };
+
+      set({ game: updatedGame });
+    },
+
+    addMajorEvent: (majorEvent: any) => {
+      const game = get().game;
+      if (!game) return;
+
+      const updatedGame: Game = {
+        ...game,
+        gameEventsMajor: [...game.gameEventsMajor, majorEvent],
       };
 
       set({ game: updatedGame });

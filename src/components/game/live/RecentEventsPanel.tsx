@@ -43,7 +43,10 @@ export default function RecentEventsPanel(props: RecentEventsPanelProps) {
     if (!game) return [];
     const list: RecentEvent[] = [];
 
+    const linkedMajorIds = new Set<number>();
+
     (game.gameEventsGoals || []).forEach((g: any) => {
+      if (g.major_event_id) linkedMajorIds.add(Number(g.major_event_id));
       const major = (game.gameEventsMajor || []).find((m) => Number(m.id) === Number(g.major_event_id));
       const eventTime = g.game_time ?? major?.game_time ?? 0;
       const scorer = players.find((p) => Number(p.playerGameId) === Number(g.scorer_player_game_id));
@@ -53,6 +56,7 @@ export default function RecentEventsPanel(props: RecentEventsPanelProps) {
     });
 
     (game.gameEventsDiscipline || []).forEach((d: any) => {
+      if (d.major_event_id) linkedMajorIds.add(Number(d.major_event_id));
       const major = (game.gameEventsMajor || []).find((m) => Number(m.id) === Number(d.major_event_id));
       const eventTime = d.game_time ?? major?.game_time ?? 0;
       const player = players.find((p) => Number(p.playerGameId) === Number(d.player_game_id));
@@ -68,7 +72,7 @@ export default function RecentEventsPanel(props: RecentEventsPanelProps) {
     });
 
     (game.gameEventsMajor || []).forEach((m: any) => {
-      if (m.details || m.event_type === "stoppage") {
+      if (!linkedMajorIds.has(Number(m.id)) && (m.details || m.event_type === "stoppage")) {
         const desc = m.details ? `Stoppage: ${m.details}` : `Stoppage Event`;
         list.push({ id: `major-${m.id}`, dbId: m.id, time: m.game_time ?? 0, type: "major", desc });
       }

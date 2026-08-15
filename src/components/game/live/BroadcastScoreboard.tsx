@@ -94,7 +94,6 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
         );
         if (activeStoppage) {
           await endStoppage(activeStoppage.id);
-          toast.success("Clock resumed from stoppage.");
         }
       } else if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
         if (!isLineupConfigured) {

@@ -36,6 +36,7 @@ export interface GameSettings {
   hasShootout: boolean;
   clockDirection: string; // e.g. "up" | "down"
   reentryRule: ReentryRule;
+  autoStopClockOnMajorEvent?: boolean;
 }
 
 // ==================== PERIODS ====================

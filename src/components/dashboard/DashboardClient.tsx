@@ -313,7 +313,7 @@ export default function DashboardClient({
               </h2>
             </div>
             
-            {/* Team Selector Dropdown */}
+            {/* Team Selector Dropdown & Team Dashboard Link */}
             <div className="flex items-center gap-2 text-xs">
               <span className="text-muted font-bold">Select Active Team:</span>
               <select
@@ -327,6 +327,14 @@ export default function DashboardClient({
                   </option>
                 ))}
               </select>
+              {activeCoachTeam && (
+                <Link href={`/teams/${activeCoachTeam.id}`}>
+                  <Button variant="primary" size="xs" className="flex items-center gap-1 font-extrabold text-[10px]">
+                    <span>View Team</span>
+                    <ArrowRight size={10} />
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -335,14 +343,17 @@ export default function DashboardClient({
               {/* Left summary cards */}
               <div className="lg:col-span-1 space-y-4">
                 <Card variant="default" padding="lg" className="bg-surface space-y-4 shadow-sm border-l-4 border-l-primary">
-                  <div>
-                    <h3 className="font-black text-lg text-text leading-tight">
-                      {activeCoachTeam.teamName}
-                    </h3>
+                  <Link href={`/teams/${activeCoachTeam.id}`} className="block group">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-black text-lg text-text group-hover:text-primary transition-colors leading-tight">
+                        {activeCoachTeam.teamName}
+                      </h3>
+                      <ArrowRight size={16} className="text-primary group-hover:translate-x-1 transition-transform shrink-0" />
+                    </div>
                     <p className="text-xs text-muted font-medium mt-0.5">
                       {activeCoachTeam.clubName} • {activeCoachTeam.seasonName}
                     </p>
-                  </div>
+                  </Link>
 
                   <div className="text-xs divide-y divide-border/50">
                     <div className="py-2.5 flex justify-between">
@@ -361,8 +372,14 @@ export default function DashboardClient({
 
                   {/* Actions shortcuts */}
                   <div className="space-y-2 pt-2">
+                    <Link href={`/teams/${activeCoachTeam.id}`} className="block">
+                      <Button variant="primary" size="sm" className="w-full text-xs flex justify-between items-center group font-extrabold">
+                        <span>Go to Team Dashboard</span>
+                        <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                      </Button>
+                    </Link>
                     <Link href={`/dashboard/scores`} className="block">
-                      <Button variant="primary" size="sm" className="w-full text-xs flex justify-between items-center group font-bold">
+                      <Button variant="outline" size="sm" className="w-full text-xs flex justify-between items-center group font-bold">
                         <span>Master Score Entry Portal</span>
                         <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                       </Button>
