@@ -203,16 +203,16 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - Added dual actions for selected players: `[Enter Sub Now ⚡]` (executes sub immediately during stoppage) and `[Queue for Restart]` (queues sub for restart).
   - Added per-item `[Execute Now ⚡]` and `[Delete 🗑️]` buttons to queued pending subs list.
   - Enforced exhausted player filtering on `Player IN` dropdown (excludes players who reached re-entry limit under active sub rules) with an optional `"Include Exhausted Players (Override)"` checkbox.
-in game adjustments 
-  - fix erroneous subs (time, player in, player out), delete sub
-  - fix erroneous events
+- [x] **Match Administration In-Game Adjustments & Multi-Select Deletion**:
+  - Added full event editing for Goals, Substitutions, and Disciplinary Cards with modal pre-population and `PUT` persistence.
+  - Added checkboxes on every event item, "Select All" header toggles, section-level "Delete Selected (N)" buttons, and a floating bulk deletion banner.
   
 
 ## Step 6: Verification & Automated Tests
 
-[ ] Run automated Next.js build compilation and fix any type/compile errors
-[ ] Verify navigation redirects and role switches work correctly
-[ ] Verify all 6 role types (Admin, Club Admin, Team Admin, Coach, Parent, Player) render correct data scopes _(blueprint §2.1)_
+[x] Run automated Next.js build compilation and fix any type/compile errors
+[x] Verify navigation redirects and role switches work correctly
+[x] Verify all 6 role types (Admin, Club Admin, Team Admin, Coach, Parent, Player) render correct data scopes _(blueprint §2.1)_
 
 ---
 
