@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 export default function NotFound() {
   return (
     <main className='flex h-screen flex-col items-center justify-center bg-gray-100 text-center px-4'>
@@ -10,12 +8,12 @@ export default function NotFound() {
       <p className='mt-2 text-gray-500'>
         Sorry, we couldn’t find the page you were looking for.
       </p>
-      <Link
-        href='/'
-        className='mt-6 inline-block rounded bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 transition'
+      <a
+        href="/"
+        className="mt-6 inline-block rounded bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 transition font-medium"
       >
         Go back home
-      </Link>
+      </a>
     </main>
   );
 }

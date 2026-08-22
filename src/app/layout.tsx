@@ -6,6 +6,8 @@ import { getServerAuthSession } from "@/lib/auth";
 import { Toaster } from "sonner";
 import AuthProvider from "@/components/AuthProvider";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Soccer Stats App",
   description: "Cordero Soccer Stats Everything App",
