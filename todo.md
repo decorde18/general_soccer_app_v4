@@ -277,9 +277,10 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Configure Match Format / Players on Field (`playersOnField` e.g. 5v5, 7v7, 8v8, 9v9, 11v11) in Game Settings
   - [x] Dynamic Lineup Manager STARTER limit set to `playersOnField` max (e.g. 9 for 9v9, 7 for 7v7, 11 for 11v11)
   - [x] Dynamically calculate required field players and goalkeeper requirements in lineup footer and status sections
-
-I need an edit game/delete/cancel on the game schedule page
-
+- [x] **11.2 Match Schedule Edit, Cancel, and Delete Management System**
+  - [x] Modal (`GameEditModal`) to edit kickoff date, time, match play type, status, venue complex, and field sublocation
+  - [x] Dedicated "Mark Cancelled" action updating match status to `cancelled` with confirmation
+  - [x] Transactional permanent delete (`deleteGame`) removing game dependencies and fixture cleanly with confirmation prompt
 ## Notes / Future Considerations
 
 - Advanced live match stream / video link embeds (`games.video_link`)

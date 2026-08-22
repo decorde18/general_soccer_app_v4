@@ -2,29 +2,21 @@
 
 import React from "react";
 
-export default function GlobalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function GlobalError() {
   return (
     <html lang="en">
-      <body className="flex h-screen w-full flex-col items-center justify-center bg-gray-100 p-4 text-center">
-        <div className="max-w-md space-y-6">
-          <h1 className="text-4xl font-bold text-red-600">Something went wrong!</h1>
-          <p className="text-gray-600">
-            A critical error occurred in the application.
+      <body style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", backgroundColor: "#f9fafb", fontFamily: "sans-serif", margin: 0 }}>
+        <div style={{ textAlign: "center", maxWidth: "400px", padding: "20px" }}>
+          <h1 style={{ fontSize: "2rem", color: "#dc2626", fontWeight: "bold" }}>Something went wrong!</h1>
+          <p style={{ color: "#4b5563", marginTop: "10px" }}>
+            A critical application error occurred.
           </p>
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={() => reset()}
-              className="rounded bg-blue-600 px-6 py-2 text-white font-medium hover:bg-blue-700 transition"
-            >
-              Try again
-            </button>
-          </div>
+          <a
+            href="/"
+            style={{ display: "inline-block", marginTop: "20px", padding: "10px 20px", backgroundColor: "#2563eb", color: "#ffffff", borderRadius: "6px", textDecoration: "none", fontWeight: "600" }}
+          >
+            Return Home
+          </a>
         </div>
       </body>
     </html>

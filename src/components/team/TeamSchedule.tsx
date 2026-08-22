@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
 import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
+import GameEditModal from "@/components/dashboard/GameEditModal";
 
 interface Game {
   id: number;
@@ -56,6 +57,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
   const [statusFilter, setStatusFilter] = useState<"all" | "fixtures" | "results">("all");
   const [venueFilter, setVenueFilter] = useState<"all" | "home" | "away">("all");
   const [quickScoreGame, setQuickScoreGame] = useState<Game | null>(null);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const dividerRef = useRef<HTMLDivElement | null>(null);
 
@@ -335,14 +337,25 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
                       <div className="flex items-center gap-2 mt-1">
                         {canManage && (
-                          <button
-                            onClick={() => setQuickScoreGame(game)}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg transition-colors"
-                            title="Quick Score Entry"
-                          >
-                            <Edit3 size={13} />
-                            <span>Quick Score</span>
-                          </button>
+                          <>
+                            <button
+                              onClick={() => setEditingGame(game)}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-text hover:text-primary bg-background border border-border px-2 py-1 rounded-lg transition-colors"
+                              title="Edit Game Details, Cancel, or Delete"
+                            >
+                              <Edit3 size={13} />
+                              <span>Edit</span>
+                            </button>
+
+                            <button
+                              onClick={() => setQuickScoreGame(game)}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg transition-colors"
+                              title="Quick Score Entry"
+                            >
+                              <Edit3 size={13} />
+                              <span>Quick Score</span>
+                            </button>
+                          </>
                         )}
 
                         <Link
@@ -375,6 +388,14 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
           currentHomeScore={quickScoreGame.homeScore}
           currentAwayScore={quickScoreGame.awayScore}
           onClose={() => setQuickScoreGame(null)}
+        />
+      )}
+
+      {/* GAME EDIT MODAL */}
+      {editingGame && (
+        <GameEditModal
+          game={editingGame}
+          onClose={() => setEditingGame(null)}
         />
       )}
 

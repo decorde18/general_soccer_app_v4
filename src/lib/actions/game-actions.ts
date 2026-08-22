@@ -319,6 +319,57 @@ export async function updateGame(
 }
 
 /**
+ * Cancel a game match
+ */
+export async function cancelGame(gameId: number) {
+  await requireSession();
+
+  const game = await prisma.games.findUnique({ where: { id: gameId } });
+  if (!game) throw new Error("Game not found");
+
+  await verifyTeamAccess(game.home_team_season_id);
+
+  const updated = await prisma.games.update({
+    where: { id: gameId },
+    data: { status: "cancelled" },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/leagues");
+  revalidatePath(`/teams/${game.home_team_season_id}`);
+  revalidatePath(`/teams/${game.away_team_season_id}`);
+
+  return { success: true, game: updated };
+}
+
+/**
+ * Permanently delete a game match fixture
+ */
+export async function deleteGame(gameId: number) {
+  await requireSession();
+
+  const game = await prisma.games.findUnique({ where: { id: gameId } });
+  if (!game) throw new Error("Game not found");
+
+  await verifyTeamAccess(game.home_team_season_id);
+
+  await prisma.$transaction([
+    prisma.game_league_nodes.deleteMany({ where: { game_id: gameId } }),
+    prisma.game_standings_inclusions.deleteMany({ where: { game_id: gameId } }),
+    prisma.game_subs.deleteMany({ where: { game_id: gameId } }),
+    prisma.player_games.deleteMany({ where: { game_id: gameId } }),
+    prisma.games.delete({ where: { id: gameId } }),
+  ]);
+
+  revalidatePath("/dashboard");
+  revalidatePath("/leagues");
+  revalidatePath(`/teams/${game.home_team_season_id}`);
+  revalidatePath(`/teams/${game.away_team_season_id}`);
+
+  return { success: true };
+}
+
+/**
  * Fetch active seasons, clubs, teams, competition nodes, age groups, team enrollments, and timezones
  */
 export async function getSchedulerOptions() {
