@@ -4,4 +4,4 @@
 
 [build.environment]
   NODE_ENV = "production"
-  NPM_FLAGS = "--include=dev"
+  NPM_FLAGS = "--legacy-peer-deps"
