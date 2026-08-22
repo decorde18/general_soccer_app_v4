@@ -20,7 +20,6 @@ model addresses {
   modified_at   DateTime?   @default(now()) @db.Timestamp(0)
   clubs         clubs[]
   locations     locations[]
-  
 }
 
 model age_groups {
@@ -273,7 +272,6 @@ model game_periods {
   @@unique([game_id, period_number], map: "game_id")
 }
 
-
 model game_standings_inclusions {
   id                   Int          @id @default(autoincrement())
   game_id              Int
@@ -318,7 +316,7 @@ model games {
   game_type                                            games_game_type?             @default(league)
   notes                                                String?                      @db.Text
   created_at                                           DateTime?                    @default(now()) @db.DateTime(0)
-  modified_at                                           DateTime?                    @default(now()) @db.DateTime(0)
+  modified_at                                          DateTime?                    @default(now()) @db.DateTime(0)
   default_reg_periods                                  Int                          @default(2) @db.TinyInt
   period_duration                                      Int                          @default(2400)
   ot_if_tied                                           Boolean                      @default(false)
@@ -549,7 +547,6 @@ model player_relationships {
   @@index([related_person_id], map: "fk_parent_person")
 }
 
-
 model player_teams {
   id                 Int                  @id @default(autoincrement())
   grade              String?              @db.VarChar(10)
@@ -621,7 +618,6 @@ model team_league_enrollments {
   @@index([league_node_season_id], map: "fk_tls_node_season")
   @@index([team_season_id], map: "idx_team_league_enrollments_team_season")
 }
-
 
 model team_seasons {
   id                                            Int                       @id @default(autoincrement())
@@ -898,4 +894,3 @@ enum clubs_type {
   high_school
   club
 }
-

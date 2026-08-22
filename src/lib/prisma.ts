@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@/generated/client";
 
 // Polyfill BigInt JSON serialization so JSON.stringify doesn't throw on BigInt values from MySQL/Prisma
 if (typeof BigInt !== 'undefined' && !(BigInt.prototype as any).toJSON) {

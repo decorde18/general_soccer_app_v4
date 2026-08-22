@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/auth-utils";
-import { teams_gender } from "@prisma/client";
+import { teams_gender } from "@/generated/client";
 
 /**
  * Create a new Club inline
