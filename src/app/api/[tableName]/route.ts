@@ -132,12 +132,13 @@ function serializeRow(row: Record<string, unknown>): Record<string, unknown> {
 
 // ─── Route context type ───────────────────────────────────────────────────────
 interface RouteContext {
-  params: Promise<{ table: string }>;
+  params: Promise<{ tableName: string }>;
 }
 
 // ─── GET ─────────────────────────────────────────────────────────────────────
 export async function GET(req: Request, context: RouteContext) {
-  const { table } = await context.params;
+  const { tableName } = await context.params;
+  const table = tableName;
 
   if (!ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: `Table "${table}" not allowed` }, { status: 403 });
@@ -283,7 +284,8 @@ export async function GET(req: Request, context: RouteContext) {
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
 export async function POST(req: Request, context: RouteContext) {
-  const { table } = await context.params;
+  const { tableName } = await context.params;
+  const table = tableName;
 
   if (!ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: `Table "${table}" not allowed` }, { status: 403 });
@@ -343,7 +345,8 @@ export async function POST(req: Request, context: RouteContext) {
 
 // ─── PUT ─────────────────────────────────────────────────────────────────────
 export async function PUT(req: Request, context: RouteContext) {
-  const { table } = await context.params;
+  const { tableName } = await context.params;
+  const table = tableName;
 
   if (!ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: `Table "${table}" not allowed` }, { status: 403 });
@@ -385,7 +388,8 @@ export async function PATCH(req: Request, context: RouteContext) {
 
 // ─── DELETE ───────────────────────────────────────────────────────────────────
 export async function DELETE(req: Request, context: RouteContext) {
-  const { table } = await context.params;
+  const { tableName } = await context.params;
+  const table = tableName;
 
   if (!ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: `Table "${table}" not allowed` }, { status: 403 });
