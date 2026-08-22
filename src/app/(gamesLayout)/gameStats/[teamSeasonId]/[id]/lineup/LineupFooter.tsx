@@ -77,7 +77,7 @@ export default function LineupFooter() {
       <div className="grid grid-cols-2 gap-3 w-full max-w-md px-4">
         <Button
           variant="outline"
-          onClick={() => window.history.back()}
+          onClick={() => router.push(`/gamestats/${teamSeasonId}/${id}`)}
           disabled={isSaving}
           className="py-4 !rounded-2xl shadow-sm border-2"
         >

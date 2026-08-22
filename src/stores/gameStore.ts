@@ -292,6 +292,24 @@ const useGameStore = create<GameStoreState>((set, get) => {
         // Build game settings
         const settings: GameSettings = {
           ...DEFAULT_GAME_SETTINGS,
+          playersOnField: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (typeof parsed === "object" && parsed !== null && typeof parsed.playersOnField === "number") {
+                  return parsed.playersOnField;
+                }
+              } catch {}
+            }
+            const nodeName = dbGame.league_node_names || dbGame.league_name || "";
+            if (nodeName.includes("7v7") || nodeName.includes("7-v-7") || nodeName.includes("U9") || nodeName.includes("U10")) return 7;
+            if (nodeName.includes("9v9") || nodeName.includes("9-v-9") || nodeName.includes("U11") || nodeName.includes("U12")) return 9;
+            if (nodeName.includes("5v5") || nodeName.includes("5-v-5")) return 5;
+            return DEFAULT_GAME_SETTINGS.playersOnField;
+          })(),
           periodCount: parseInt(dbGame.default_reg_periods) || 2,
           periodDuration: dbGame.period_duration !== undefined && dbGame.period_duration !== null
             ? Number(dbGame.period_duration)
@@ -307,8 +325,13 @@ const useGameStore = create<GameStoreState>((set, get) => {
             if (dbGame.reentry_rule) return dbGame.reentry_rule;
             if (dbGame.notes) {
               try {
-                const parsed = JSON.parse(dbGame.notes);
-                if (parsed.reentryRule) return parsed.reentryRule;
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && parsed.reentryRule) {
+                  return parsed.reentryRule;
+                }
               } catch {
                 if (dbGame.notes.includes("reentryRule:")) {
                   const match = dbGame.notes.match(/reentryRule:\s*([a_z_]+)/i);
@@ -321,8 +344,11 @@ const useGameStore = create<GameStoreState>((set, get) => {
           autoStopClockOnMajorEvent: (() => {
             if (dbGame.notes) {
               try {
-                const parsed = JSON.parse(dbGame.notes);
-                if (typeof parsed.autoStopClockOnMajorEvent === "boolean") {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && typeof parsed.autoStopClockOnMajorEvent === "boolean") {
                   return parsed.autoStopClockOnMajorEvent;
                 }
               } catch {}

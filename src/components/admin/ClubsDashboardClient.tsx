@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useTransition } from "react";
 import { toast } from "sonner";
-import { Building, Plus, Search, Edit2, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { Building, Plus, Search, Edit2, Trash2, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Dialog from "@/components/ui/Dialog";
@@ -60,21 +60,19 @@ export default function ClubsDashboardClient({
   const [clubs, setClubs] = useState<ClubRecord[]>(initialClubs);
   const [teams, setTeams] = useState<TeamRecord[]>(initialTeams);
 
-  // Filter & selections
-  const [clubSearch, setClubSearch] = useState("");
+  // Active selections & filters
   const [selectedClubId, setSelectedClubId] = useState<number | null>(
     initialClubs[0]?.id || null
   );
+  const [clubSearch, setClubSearch] = useState("");
 
-  // Form modals state
+  // Modals state
   const [showClubForm, setShowClubForm] = useState(false);
   const [editClubRecord, setEditClubRecord] = useState<ClubRecord | null>(null);
+  const [deleteClubTarget, setDeleteClubTarget] = useState<ClubRecord | null>(null);
 
   const [showTeamForm, setShowTeamForm] = useState(false);
   const [editTeamRecord, setEditTeamRecord] = useState<TeamRecord | null>(null);
-
-  // Delete modals state
-  const [deleteClubTarget, setDeleteClubTarget] = useState<ClubRecord | null>(null);
   const [deleteTeamTarget, setDeleteTeamTarget] = useState<TeamRecord | null>(null);
 
   const [isPending, startTransition] = useTransition();
@@ -141,14 +139,14 @@ export default function ClubsDashboardClient({
             {
               id: newClub.id,
               name: formData.name,
-              abbreviation: formData.abbreviation || null,
-              logoUrl: formData.logoUrl || null,
-              location: formData.location || null,
-              locationId: newClub.location_id || null,
+              abbreviation: formData.abbreviation,
+              logoUrl: formData.logoUrl,
+              location: formData.location,
               foundedYear: formData.foundedYear ? Number(formData.foundedYear) : null,
-              contactInfo: formData.contactInfo || null,
+              contactInfo: formData.contactInfo,
               isActive: formData.isActive === "true",
               type: formData.type || "club",
+              locationId: null,
             },
           ]);
           setSelectedClubId(newClub.id);
@@ -168,12 +166,8 @@ export default function ClubsDashboardClient({
       try {
         await deleteClub(deleteClubTarget.id);
         setClubs((prev) => prev.filter((c) => c.id !== deleteClubTarget.id));
-        setTeams((prev) => prev.filter((t) => t.clubId !== deleteClubTarget.id));
-        
-        // Select another club if current was deleted
         if (selectedClubId === deleteClubTarget.id) {
-          const remaining = clubs.filter((c) => c.id !== deleteClubTarget.id);
-          setSelectedClubId(remaining[0]?.id || null);
+          setSelectedClubId(clubs.find((c) => c.id !== deleteClubTarget.id)?.id || null);
         }
         toast.success("Club deleted successfully");
         setDeleteClubTarget(null);
@@ -185,11 +179,13 @@ export default function ClubsDashboardClient({
 
   // --- Team CRUD actions ---
   const handleTeamSubmit = async (formData: Record<string, string>) => {
-    const targetClubId = Number(formData.clubId);
-    const targetClubName = clubs.find((c) => c.id === targetClubId)?.name || "";
-
     startTransition(async () => {
       try {
+        // If clubName returned raw club ID string, map to club name or fallback
+        const targetClubId = Number(formData.clubName) || selectedClubId || 1;
+        const targetClub = clubs.find((c) => c.id === targetClubId);
+        const targetClubName = targetClub ? targetClub.name : "";
+
         if (editTeamRecord) {
           await updateTeam(editTeamRecord.id, formData);
           setTeams((prev) =>
@@ -247,7 +243,7 @@ export default function ClubsDashboardClient({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-text">Clubs & Teams</h1>
           <p className="text-muted text-sm mt-1">
@@ -255,17 +251,28 @@ export default function ClubsDashboardClient({
           </p>
         </div>
         {canAdmin && (
-          <Button
-            variant="primary"
-            onClick={() => {
-              setEditClubRecord(null);
-              setShowClubForm(true);
-            }}
-            className="flex items-center gap-1.5 font-bold text-xs py-2 px-4 shadow-sm"
-          >
-            <Plus size={14} />
-            <span>Add Club</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <a href="/admin/rollover">
+              <Button
+                variant="secondary"
+                className="flex items-center gap-1.5 font-bold text-xs py-2 px-3.5 shadow-sm bg-indigo-600/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-600/30"
+              >
+                <RefreshCw size={14} />
+                <span>Player Rollover Tool 🔄</span>
+              </Button>
+            </a>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setEditClubRecord(null);
+                setShowClubForm(true);
+              }}
+              className="flex items-center gap-1.5 font-bold text-xs py-2 px-4 shadow-sm"
+            >
+              <Plus size={14} />
+              <span>Add Club</span>
+            </Button>
+          </div>
         )}
       </div>
 

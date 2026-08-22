@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { useParams } from "next/navigation";
 import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
 import GameHeader from "@/components/layout/gameLayout/GameHeader";
 import PlayerStatusSections from "./PlayerStatusSections";
@@ -16,6 +17,8 @@ export default function GameLineupClientPage({
   initialPlayers,
   teamSeasonId,
 }: GameLineupClientPageProps) {
+  const params = useParams();
+  const gameId = params.id as string;
   const setPlayers = useGamePlayersStore((s) => s.setPlayers);
 
   useEffect(() => {
@@ -61,7 +64,7 @@ export default function GameLineupClientPage({
   return (
     <div className="flex flex-col h-screen max-w-7xl mx-auto bg-gray-50">
       {/* Header */}
-      <GameHeader backUrl={`/teams/${teamSeasonId}`} />
+      <GameHeader backUrl={`/gamestats/${teamSeasonId}/${gameId}`} />
 
       {/* Scrollable Main Content */}
       <div className="flex-1 overflow-y-auto p-4">

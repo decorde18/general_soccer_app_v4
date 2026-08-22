@@ -5,6 +5,7 @@ import { requireSession, verifyGameAccess } from "../auth/auth-utils";
 import { revalidatePath } from "next/cache";
 
 interface GameSettingsInput {
+  playersOnField?: number;
   periodCount: number;
   periodDuration: number;
   hasOvertime: boolean;
@@ -35,11 +36,19 @@ export async function updateGameSettings(
   if (existingGame?.notes) {
     try {
       notesObj = JSON.parse(existingGame.notes);
+      if (typeof notesObj === "string") {
+        try {
+          notesObj = JSON.parse(notesObj);
+        } catch {}
+      }
     } catch {
       notesObj = { rawNotes: existingGame.notes };
     }
   }
 
+  if (typeof settings.playersOnField === "number") {
+    notesObj.playersOnField = settings.playersOnField;
+  }
   if (settings.reentryRule) {
     notesObj.reentryRule = settings.reentryRule;
   }
@@ -51,11 +60,11 @@ export async function updateGameSettings(
   await prisma.games.update({
     where: { id: gameId },
     data: {
-      default_reg_periods: settings.periodCount,
-      period_duration: settings.periodDuration,
-      ot_if_tied: settings.hasOvertime,
-      ot_duration: settings.overtimeDuration,
-      so_if_tied: settings.hasShootout,
+      default_reg_periods: Number(settings.periodCount),
+      period_duration: Number(settings.periodDuration),
+      ot_if_tied: Boolean(settings.hasOvertime),
+      ot_duration: Number(settings.overtimeDuration),
+      so_if_tied: Boolean(settings.hasShootout),
       notes: JSON.stringify(notesObj),
     },
   });

@@ -63,6 +63,45 @@ export default function PlayerStatusSections() {
 
   const totalFieldPlayers = game?.settings?.playersOnField ?? 11;
 
+  const startersLabel =
+    totalFieldPlayers === 11
+      ? "Starting XI (11 Max)"
+      : totalFieldPlayers === 9
+      ? "Starting IX (9 Max)"
+      : totalFieldPlayers === 7
+      ? "Starting VII (7 Max)"
+      : `Starting Lineup (${totalFieldPlayers} Max)`;
+
+  const dynamicStatusArray: StatusObj[] = [
+    {
+      gameStatus: ["starter", "goalkeeper"],
+      label: startersLabel,
+      section: "starters",
+      sort: ["gameStatus", "jerseyNumber"],
+      minSlots: totalFieldPlayers,
+      prominent: true,
+    },
+    {
+      gameStatus: ["dressed"],
+      label: "Game Changers",
+      section: "bench",
+      sort: ["jerseyNumber"],
+      prominent: true,
+    },
+    {
+      gameStatus: ["not_dressed"],
+      label: "Available (Not Dressed)",
+      section: "available",
+      sort: ["jerseyNumber"],
+    },
+    {
+      gameStatus: ["unavailable", "injured", "suspended"],
+      label: "Unavailable",
+      section: "unavailable",
+      sort: ["gameStatus", "jerseyNumber"],
+    },
+  ];
+
   const handleDrop = (e: React.DragEvent, section: string) => {
     e.preventDefault();
     setActiveHoverSection(null);
@@ -81,7 +120,7 @@ export default function PlayerStatusSections() {
         return;
       }
       handleStatus(playerId, "starter");
-      toast.success(`${player.fullName} moved to Starting XI`);
+      toast.success(`${player.fullName} moved to ${startersLabel}`);
     } else if (section === "bench") {
       handleStatus(playerId, "dressed");
       toast.success(`${player.fullName} moved to Game Changers`);
@@ -98,7 +137,7 @@ export default function PlayerStatusSections() {
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* TOP/LEFT: Starters + Game Changers (PROMINENT) */}
       <div className="flex-1 flex flex-col sm:flex-row gap-4 lg:min-h-0">
-        {statusArray
+        {dynamicStatusArray
           .filter((s) => s.prominent)
           .map((statusObj) => {
             const filteredPlayers = roster.filter((player) =>
@@ -205,7 +244,7 @@ export default function PlayerStatusSections() {
 
       {/* BOTTOM/RIGHT: Available + Unavailable (SECONDARY) */}
       <div className="w-full sm:flex sm:flex-row sm:gap-4 lg:w-80 lg:flex-col lg:min-h-[600px]">
-        {statusArray
+        {dynamicStatusArray
           .filter((s) => !s.prominent)
           .map((statusObj) => {
             const filteredPlayers = roster.filter((player) =>

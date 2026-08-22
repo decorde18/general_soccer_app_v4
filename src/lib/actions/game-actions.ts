@@ -118,6 +118,42 @@ export async function getOrCreateTbdTeamSeason(seasonId: number) {
   return tbdTeamSeason.id;
 }
 
+async function ensureLeagueNodeSeason(rawNodeId: number, seasonId: number): Promise<{ nodeSeasonId: number; leagueNodeId: number } | null> {
+  if (!rawNodeId || !seasonId) return null;
+
+  const bySeasonId = await prisma.league_node_seasons.findUnique({
+    where: { id: rawNodeId },
+  });
+  if (bySeasonId) {
+    return { nodeSeasonId: bySeasonId.id, leagueNodeId: bySeasonId.league_node_id };
+  }
+
+  let nodeSeason = await prisma.league_node_seasons.findFirst({
+    where: {
+      league_node_id: rawNodeId,
+      season_id: seasonId,
+    },
+  });
+
+  if (!nodeSeason) {
+    const leagueNode = await prisma.league_nodes.findUnique({
+      where: { id: rawNodeId },
+    });
+    if (!leagueNode) return null;
+
+    nodeSeason = await prisma.league_node_seasons.create({
+      data: {
+        league_node_id: rawNodeId,
+        season_id: seasonId,
+        status: "active",
+        is_active: true,
+      },
+    });
+  }
+
+  return { nodeSeasonId: nodeSeason.id, leagueNodeId: nodeSeason.league_node_id };
+}
+
 /**
  * Schedule a new match fixture
  */
@@ -164,7 +200,7 @@ export async function createGame(data: CreateGameData) {
     startTimeObj.setHours(hours, minutes, 0, 0);
   }
 
-  // 1. Create Game record
+  // 1. Create the game row
   const game = await prisma.games.create({
     data: {
       season_id: data.seasonId,
@@ -189,21 +225,34 @@ export async function createGame(data: CreateGameData) {
   // 2. Associate Competition Nodes & Standings Inclusions
   if (data.competitionNodes && data.competitionNodes.length > 0) {
     for (const item of data.competitionNodes) {
-      await prisma.game_league_nodes.create({
-        data: {
-          game_id: game.id,
-          league_node_id: item.nodeId,
-          is_primary: item.isPrimary,
-        },
-      });
+      const resolved = await ensureLeagueNodeSeason(item.nodeId, data.seasonId);
+      if (resolved) {
+        const existingGln = await prisma.game_league_nodes.findFirst({
+          where: { game_id: game.id, league_node_id: resolved.nodeSeasonId },
+        });
+        if (!existingGln) {
+          await prisma.game_league_nodes.create({
+            data: {
+              game_id: game.id,
+              league_node_id: resolved.nodeSeasonId,
+              is_primary: item.isPrimary ?? true,
+            },
+          });
+        }
 
-      await prisma.game_standings_inclusions.create({
-        data: {
-          game_id: game.id,
-          league_node_id: item.nodeId,
-          counts_for_standings: item.countsForStandings,
-        },
-      });
+        const existingGsi = await prisma.game_standings_inclusions.findFirst({
+          where: { game_id: game.id, league_node_id: resolved.leagueNodeId },
+        });
+        if (!existingGsi) {
+          await prisma.game_standings_inclusions.create({
+            data: {
+              game_id: game.id,
+              league_node_id: resolved.leagueNodeId,
+              counts_for_standings: item.countsForStandings ?? true,
+            },
+          });
+        }
+      }
     }
   }
 
@@ -250,9 +299,9 @@ export async function updateGame(
   if (data.gameType) updateData.game_type = data.gameType;
   if (data.defaultRegPeriods !== undefined) updateData.default_reg_periods = data.defaultRegPeriods;
   if (data.periodDuration !== undefined) updateData.period_duration = data.periodDuration;
-  if (data.otIfTied !== undefined) updateData.ot_if_tied = data.otIfTied;
-  if (data.otDuration !== undefined) updateData.ot_duration = data.otDuration;
-  if (data.soIfTied !== undefined) updateData.so_if_tied = data.soIfTied;
+  if (data.otIfTied !== undefined) updateData.ot_if_tied = Boolean(data.otIfTied);
+  if (data.otDuration !== undefined) updateData.ot_duration = Number(data.otDuration);
+  if (data.soIfTied !== undefined) updateData.so_if_tied = Boolean(data.soIfTied);
   if (data.notes !== undefined) updateData.notes = data.notes;
   if (data.status) updateData.status = data.status;
 

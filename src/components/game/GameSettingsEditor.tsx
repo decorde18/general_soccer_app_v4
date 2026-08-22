@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { Settings, Clock, RotateCcw, Shield, Zap, CheckCircle, AlertCircle, Users } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -61,12 +61,20 @@ export default function GameSettingsEditor({
     }
   );
 
+  // Synchronize local settings whenever store's game settings load or change
+  useEffect(() => {
+    if (game?.settings) {
+      setLocalSettings(game.settings);
+    }
+  }, [game?.settings]);
+
   if (!game) return null;
 
   const handleSave = () => {
     startTransition(async () => {
       try {
         await updateGameSettings(gameId, teamSeasonId, {
+          playersOnField: localSettings.playersOnField,
           periodCount: localSettings.periodCount,
           periodDuration: localSettings.periodDuration,
           hasOvertime: localSettings.hasOvertime,
@@ -76,7 +84,13 @@ export default function GameSettingsEditor({
         });
 
         // Sync to store
-        updateGame({ settings: localSettings });
+        updateGame({
+          ...game,
+          settings: {
+            ...game.settings,
+            ...localSettings,
+          },
+        });
 
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
@@ -223,28 +237,28 @@ export default function GameSettingsEditor({
         </div>
       </Card>
 
-      {/* Roster Size */}
+      {/* Roster & Match Format Size */}
       <Card variant="default" padding="md">
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/60">
           <Shield size={16} className="text-success" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted">Roster</h3>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-muted">Match Format & Field Size</h3>
         </div>
         <div>
           <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-            Players on Field
+            Players on Field (Starter Limit)
           </label>
           <div className="flex flex-wrap gap-2">
-            {[7, 8, 9, 11].map((n) => (
+            {[5, 7, 8, 9, 11].map((n) => (
               <button
                 key={n}
                 onClick={() => setLocalSettings((s) => ({ ...s, playersOnField: n }))}
-                className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${
+                className={`px-3.5 py-2 rounded-lg text-sm font-bold border transition-all ${
                   localSettings.playersOnField === n
-                    ? "bg-success text-white border-success shadow-sm"
+                    ? "bg-success text-white border-success shadow-sm scale-105"
                     : "bg-background border-border text-muted hover:text-text hover:border-success/50"
                 }`}
               >
-                {n}v{n}
+                {n}v{n} ({n} Starters)
               </button>
             ))}
           </div>

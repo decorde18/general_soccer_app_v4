@@ -19,7 +19,25 @@ export async function createTeam(data: Record<string, string>) {
       },
     });
 
+    // Automatically associate new team with active or upcoming seasons
+    const activeSeasons = await prisma.seasons.findMany({
+      where: {
+        OR: [{ status: "active" }, { status: "upcoming" }],
+      },
+    });
+
+    if (activeSeasons.length > 0) {
+      await prisma.team_seasons.createMany({
+        data: activeSeasons.map((s) => ({
+          team_id: newTeam.id,
+          season_id: s.id,
+          is_active: true,
+        })),
+      });
+    }
+
     revalidatePath("/admin/clubs");
+    revalidatePath("/admin/rollover");
     return newTeam;
   } catch (error) {
     console.error("Error creating team:", error);

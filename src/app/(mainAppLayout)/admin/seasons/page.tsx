@@ -1,36 +1,17 @@
-import { EntityShell } from "@/components/entities/EntityShell";
-import { seasonConfig } from "@/lib/entities/configs/season.config";
-import { createSeason, updateSeason, deleteSeason } from "@/lib/actions/season-actions";
-import { getSeasons } from "@/lib/data/queries";
+import AdminSeasonsClient from "@/components/admin/AdminSeasonsClient";
+import { getSeasons, getAgeGroups } from "@/lib/data/queries";
 
 export default async function AdminSeasonsPage() {
-  const seasons = await getSeasons();
-
-  const stats = [
-    { label: "Total Seasons", value: seasons.length },
-    {
-      label: "Active",
-      value: seasons.filter((s) => s.status === "active").length,
-    },
-    {
-      label: "Upcoming",
-      value: seasons.filter((s) => s.status === "upcoming").length,
-    },
-    {
-      label: "Completed/Archived",
-      value: seasons.filter((s) => s.status === "completed" || s.status === "archived").length,
-    },
-  ];
+  const [seasons, allAgeGroups] = await Promise.all([
+    getSeasons(),
+    getAgeGroups(),
+  ]);
 
   return (
-    <div className='mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8'>
-      <EntityShell
-        config={seasonConfig}
-        data={seasons as any}
-        stats={stats}
-        onCreate={createSeason as any}
-        onUpdate={updateSeason as any}
-        onDelete={deleteSeason as any}
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <AdminSeasonsClient
+        initialSeasons={seasons}
+        allAgeGroups={allAgeGroups}
       />
     </div>
   );

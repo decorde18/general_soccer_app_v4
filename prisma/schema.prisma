@@ -23,15 +23,16 @@ model addresses {
 }
 
 model age_groups {
-  id                      Int            @id @default(autoincrement())
-  name                    String         @db.VarChar(50)
-  begin_date              DateTime?      @db.Date
-  end_date                DateTime?      @db.Date
-  default_period_duration Int?           @default(2400)
-  default_ot_if_tied      Boolean?       @default(false)
-  default_ot_duration     Int?           @default(600)
-  default_so_if_tied      Boolean?       @default(true)
+  id                      Int                 @id @default(autoincrement())
+  name                    String              @db.VarChar(50)
+  begin_date              DateTime?           @db.Date
+  end_date                DateTime?           @db.Date
+  default_period_duration Int?                @default(2400)
+  default_ot_if_tied      Boolean?            @default(false)
+  default_ot_duration     Int?                @default(600)
+  default_so_if_tied      Boolean?            @default(true)
   team_seasons            team_seasons[]
+  season_age_groups       season_age_groups[]
 }
 
 model club_staff {
@@ -587,6 +588,21 @@ model seasons {
   games               games[]
   league_node_seasons league_node_seasons[]
   team_seasons        team_seasons[]
+  season_age_groups   season_age_groups[]
+}
+
+model season_age_groups {
+  id           Int        @id @default(autoincrement())
+  season_id    Int
+  age_group_id Int
+  created_at   DateTime?  @default(now()) @db.Timestamp(0)
+  modified_at  DateTime?  @default(now()) @db.Timestamp(0)
+  seasons      seasons    @relation(fields: [season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_sag_season")
+  age_groups   age_groups @relation(fields: [age_group_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_sag_age_group")
+
+  @@unique([season_id, age_group_id], map: "unique_season_age_group")
+  @@index([season_id], map: "idx_sag_season")
+  @@index([age_group_id], map: "idx_sag_age_group")
 }
 
 model team_league_enrollments {

@@ -102,20 +102,20 @@
 /* Dark mode overrides */
 .dark,
 [data-theme="dark"] {
-  --color-background: 218 44% 8%;
-  --color-surface: 218 44% 12%;
-  --color-text: 210 17% 95%;
-  --color-border: 218 44% 28%;
-  --color-text-label: 210 22% 76%;
-  --color-muted: 210 15% 72%;
-  --color-primary: 211 75% 35%;
-  --color-secondary: 218 44% 12%;
+  --color-background: 218 35% 12%;   /* Brightened from 8% to 12% */
+  --color-surface: 218 28% 19%;      /* Brightened card surface from 12% to 19% */
+  --color-text: 210 17% 96%;
+  --color-border: 218 24% 30%;       /* Lighter borders */
+  --color-text-label: 210 22% 78%;
+  --color-muted: 210 15% 75%;
+  --color-primary: 211 75% 38%;
+  --color-secondary: 218 35% 18%;
   --color-accent: 349 77% 59%;
   --color-accent-hover: 349 67% 52%;
-  --dark-background: 218 44% 8%;
-  --dark-text: 210 17% 95%;
-  --dark-primary: 211 75% 35%;
-  --dark-secondary: 218 44% 12%;
+  --dark-background: 218 35% 12%;
+  --dark-text: 210 17% 96%;
+  --dark-primary: 211 75% 38%;
+  --dark-secondary: 218 35% 18%;
   --dark-accent: 349 77% 59%;
   --dark-accent-hover: 349 67% 52%;
 }

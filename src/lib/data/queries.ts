@@ -106,6 +106,12 @@ export interface Club {
   modifiedAt: string | null;
 }
 
+export interface SeasonAgeGroup {
+  id: number;
+  ageGroupId: number;
+  ageGroupName: string;
+}
+
 export interface Season {
   id: number;
   seasonName: string;
@@ -114,6 +120,8 @@ export interface Season {
   status: string;
   isCurrent: boolean;
   createdAt: string | null;
+  ageGroups?: SeasonAgeGroup[];
+  ageGroupIds?: number[];
 }
 
 export interface AgeGroup {
@@ -203,6 +211,15 @@ export interface Game {
   timezoneLabel: string | null;
   settings: {
     playersOnField: number;
+    periodCount?: number;
+    periodDuration?: number;
+    hasOvertime?: boolean;
+    overtimePeriods?: number;
+    overtimeDuration?: number;
+    hasShootout?: boolean;
+    clockDirection?: string;
+    reentryRule?: string;
+    autoStopClockOnMajorEvent?: boolean;
   };
   ourName?: string;
   opponentName?: string;
@@ -487,15 +504,27 @@ function mapClubRow(r: any): Club {
 export async function getSeasons(): Promise<Season[]> {
   const seasons = await prisma.seasons.findMany({
     orderBy: { start_date: "desc" },
+    include: {
+      season_age_groups: {
+        include: {
+          age_groups: true,
+        },
+      },
+    },
   });
   return seasons.map(mapSeasonRow);
 }
 
 export async function getCurrentSeason(): Promise<Season | null> {
   const season = await prisma.seasons.findFirst({
-    // Prisma model doesn't seem to have is_current, it's missing in introspection?
-    // Fallback: order by start_date desc limit 1
     orderBy: { start_date: "desc" },
+    include: {
+      season_age_groups: {
+        include: {
+          age_groups: true,
+        },
+      },
+    },
   });
   return season ? mapSeasonRow(season) : null;
 }
@@ -503,19 +532,35 @@ export async function getCurrentSeason(): Promise<Season | null> {
 export async function getSeasonById(id: number): Promise<Season | null> {
   const season = await prisma.seasons.findUnique({
     where: { id },
+    include: {
+      season_age_groups: {
+        include: {
+          age_groups: true,
+        },
+      },
+    },
   });
   return season ? mapSeasonRow(season) : null;
 }
 
 function mapSeasonRow(r: any): Season {
+  const ageGroups =
+    r.season_age_groups?.map((sag: any) => ({
+      id: sag.id,
+      ageGroupId: sag.age_group_id,
+      ageGroupName: sag.age_groups?.name || `Age Group #${sag.age_group_id}`,
+    })) || [];
+
   return {
     id: r.id,
     seasonName: r.season_name,
     startDate: toDateString(r.start_date)!,
     endDate: toDateString(r.end_date)!,
     status: r.status || "upcoming",
-    isCurrent: !!r.is_current, // Note: is_current was missing in schema, might be undefined
+    isCurrent: !!r.is_current,
     createdAt: toDateTimeString(r.created_at),
+    ageGroups,
+    ageGroupIds: ageGroups.map((ag: any) => ag.ageGroupId),
   };
 }
 
@@ -998,11 +1043,23 @@ function mapGameRow(r: any): Game {
     }
   }
 
+  let notesObj: any = {};
+  if (r.notes) {
+    try {
+      notesObj = JSON.parse(r.notes);
+      if (typeof notesObj === "string") {
+        try {
+          notesObj = JSON.parse(notesObj);
+        } catch {}
+      }
+    } catch {}
+  }
+
   const primaryNode =
     r.game_league_nodes?.find((n: any) => n.is_primary) ||
     r.game_league_nodes?.[0];
   const nodeName = primaryNode?.league_node_seasons?.league_nodes?.name || "";
-  const playersOnField = getPlayersOnFieldFromNodeName(nodeName);
+  const playersOnField = notesObj?.playersOnField ?? getPlayersOnFieldFromNodeName(nodeName);
 
   return {
     id: r.id,
@@ -1034,6 +1091,15 @@ function mapGameRow(r: any): Game {
     timezoneLabel: r.timezone_label ?? null,
     settings: {
       playersOnField,
+      periodCount: r.default_reg_periods ?? 2,
+      periodDuration: r.period_duration ?? 2400,
+      hasOvertime: Boolean(r.ot_if_tied),
+      overtimePeriods: 2,
+      overtimeDuration: r.ot_duration ?? 600,
+      hasShootout: Boolean(r.so_if_tied),
+      clockDirection: "up",
+      reentryRule: notesObj?.reentryRule ?? "unlimited",
+      autoStopClockOnMajorEvent: notesObj?.autoStopClockOnMajorEvent ?? false,
     },
   };
 }
@@ -2330,5 +2396,327 @@ export async function getParentStaffContacts(teamSeasonIds: number[]) {
     teamName: s.team_seasons.teams.team_name,
     clubName: s.team_seasons.teams.clubs.name,
   }));
+}
+
+// ─── Rollover & Transfer Helpers ─────────────────────────────────────────────
+
+export interface RolloverTeamSeason {
+  id: number;
+  seasonId: number;
+  seasonName: string;
+  seasonStatus: string;
+  clubId: number;
+  clubName: string;
+  teamId: number;
+  teamName: string;
+  ageGroupId: number | null;
+  ageGroupName: string | null;
+  playerCount: number;
+  isActive: boolean;
+}
+
+export interface RolloverPlayer {
+  id: number; // player_teams id
+  personId: number;
+  firstName: string;
+  lastName: string;
+  jerseyNumber: number | null;
+  position: string | null;
+  grade: string | null;
+  status: string | null;
+  photoUrl?: string | null;
+}
+
+export async function getTeamSeasonsForRollover(): Promise<RolloverTeamSeason[]> {
+  // Ensure every active team in the system has a team_seasons entry for active or upcoming season
+  const activeOrUpcomingSeasons = await prisma.seasons.findMany({
+    where: {
+      OR: [{ status: "active" }, { status: "upcoming" }],
+    },
+    orderBy: { start_date: "desc" },
+  });
+
+  if (activeOrUpcomingSeasons.length > 0) {
+    const primarySeason = activeOrUpcomingSeasons[0];
+    const allTeams = await prisma.teams.findMany({ select: { id: true } });
+    
+    const existingTeamSeasons = await prisma.team_seasons.findMany({
+      where: { season_id: primarySeason.id },
+      select: { team_id: true },
+    });
+
+    const existingTeamIds = new Set(existingTeamSeasons.map((ts) => ts.team_id));
+    const missingTeamIds = allTeams.filter((t) => !existingTeamIds.has(t.id)).map((t) => t.id);
+
+    if (missingTeamIds.length > 0) {
+      await prisma.team_seasons.createMany({
+        data: missingTeamIds.map((tId) => ({
+          team_id: tId,
+          season_id: primarySeason.id,
+          is_active: true,
+        })),
+      });
+    }
+  }
+
+  const list = await prisma.team_seasons.findMany({
+    include: {
+      seasons: true,
+      teams: {
+        include: {
+          clubs: true,
+        },
+      },
+      age_groups: true,
+      _count: {
+        select: { player_teams: true },
+      },
+    },
+    orderBy: [
+      { seasons: { start_date: "desc" } },
+      { teams: { clubs: { name: "asc" } } },
+      { teams: { team_name: "asc" } },
+    ],
+  });
+
+  return list.map((ts) => ({
+    id: ts.id,
+    seasonId: ts.season_id,
+    seasonName: ts.seasons.season_name,
+    seasonStatus: ts.seasons.status,
+    clubId: ts.teams.club_id,
+    clubName: ts.teams.clubs.name,
+    teamId: ts.team_id,
+    teamName: ts.teams.team_name,
+    ageGroupId: ts.age_group,
+    ageGroupName: ts.age_groups?.name ?? null,
+    playerCount: ts._count.player_teams,
+    isActive: !!ts.is_active,
+  }));
+}
+
+export async function getTeamRosterForRollover(teamSeasonId: number): Promise<RolloverPlayer[]> {
+  const roster = await prisma.player_teams.findMany({
+    where: { team_season_id: teamSeasonId },
+    include: {
+      people: true,
+    },
+    orderBy: [
+      { jersey_number: "asc" },
+      { people: { last_name: "asc" } },
+      { people: { first_name: "asc" } },
+    ],
+  });
+
+  return roster.map((pt) => ({
+    id: pt.id,
+    personId: pt.player_id,
+    firstName: pt.people.first_name,
+    lastName: pt.people.last_name,
+    jerseyNumber: pt.jersey_number ?? null,
+    position: pt.position ?? null,
+    grade: pt.grade ?? null,
+    status: pt.status ?? "rostered",
+  }));
+}
+
+// ─── Player Profile & Career Stats ───────────────────────────────────────────
+
+export interface PlayerSeasonStat {
+  teamSeasonId: number;
+  seasonId: number;
+  seasonName: string;
+  seasonStatus: string;
+  clubName: string;
+  teamName: string;
+  ageGroupName: string | null;
+  jerseyNumber: number | null;
+  position: string | null;
+  grade: string | null;
+  gamesPlayed: number;
+  gamesStarted: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  shots: number;
+  saves: number;
+  cleanSheets: number;
+  minutesPlayed: number;
+}
+
+export interface PlayerProfileData {
+  personId: number;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  birthDate: string | null;
+  gender: string | null;
+  seasonStats: PlayerSeasonStat[];
+  careerTotals: {
+    gamesPlayed: number;
+    gamesStarted: number;
+    goals: number;
+    assists: number;
+    yellowCards: number;
+    redCards: number;
+    shots: number;
+    saves: number;
+    cleanSheets: number;
+    minutesPlayed: number;
+  };
+}
+
+export async function getPlayerProfile(personId: number): Promise<PlayerProfileData | null> {
+  const person = await prisma.people.findUnique({
+    where: { id: personId },
+    include: {
+      player_teams: {
+        include: {
+          team_seasons: {
+            include: {
+              seasons: true,
+              teams: { include: { clubs: true } },
+              age_groups: true,
+            },
+          },
+        },
+        orderBy: { team_seasons: { seasons: { start_date: "desc" } } },
+      },
+    },
+  });
+
+  if (!person) return null;
+
+  const playerGames = await prisma.player_games.findMany({
+    where: { player_id: personId },
+    include: {
+      game_events_discipline: true,
+      game_events_player_actions: true,
+      game_events_goals_game_events_goals_scorer_player_game_idToplayer_games: true,
+      game_events_goals_game_events_goals_assist_player_game_idToplayer_games: true,
+      games: true,
+    },
+  });
+
+  const gamesByTeamSeason = new Map<number, any[]>();
+  playerGames.forEach((pg) => {
+    if (!gamesByTeamSeason.has(pg.team_season_id)) {
+      gamesByTeamSeason.set(pg.team_season_id, []);
+    }
+    gamesByTeamSeason.get(pg.team_season_id)!.push(pg);
+  });
+
+  const seasonStats: PlayerSeasonStat[] = person.player_teams.map((pt) => {
+    const ts = pt.team_seasons;
+    const pgs = gamesByTeamSeason.get(ts.id) || [];
+
+    let gamesPlayed = 0;
+    let gamesStarted = 0;
+    let goals = 0;
+    let assists = 0;
+    let yellowCards = 0;
+    let redCards = 0;
+    let shots = 0;
+    let saves = 0;
+    let cleanSheets = 0;
+
+    pgs.forEach((pg) => {
+      const status = pg.game_status;
+      if (status === "starter" || status === "goalkeeper" || status === "dressed") {
+        gamesPlayed++;
+      }
+      if (pg.started || status === "starter" || status === "goalkeeper") {
+        gamesStarted++;
+      }
+
+      const scorerGoals = pg.game_events_goals_game_events_goals_scorer_player_game_idToplayer_games || [];
+      scorerGoals.forEach((g: any) => {
+        if (!g.is_own_goal) goals++;
+      });
+
+      const assistGoals = pg.game_events_goals_game_events_goals_assist_player_game_idToplayer_games || [];
+      assists += assistGoals.length;
+
+      pg.game_events_discipline?.forEach((card: any) => {
+        if (card.card_type === "yellow") yellowCards++;
+        else if (card.card_type === "red") redCards++;
+        else if (card.card_type === "yellow_red") {
+          yellowCards++;
+          redCards++;
+        }
+      });
+
+      pg.game_events_player_actions?.forEach((act: any) => {
+        if (act.event_type === "shot" || act.event_type === "shot_on_target") shots++;
+        else if (act.event_type === "save") saves++;
+      });
+    });
+
+    const minutesPlayed = gamesPlayed * 80;
+
+    return {
+      teamSeasonId: ts.id,
+      seasonId: ts.season_id,
+      seasonName: ts.seasons.season_name,
+      seasonStatus: ts.seasons.status,
+      clubName: ts.teams.clubs.name,
+      teamName: ts.teams.team_name,
+      ageGroupName: ts.age_groups?.name ?? null,
+      jerseyNumber: pt.jersey_number ?? null,
+      position: pt.position ?? null,
+      grade: pt.grade ?? null,
+      gamesPlayed,
+      gamesStarted,
+      goals,
+      assists,
+      yellowCards,
+      redCards,
+      shots,
+      saves,
+      cleanSheets,
+      minutesPlayed,
+    };
+  });
+
+  const careerTotals = seasonStats.reduce(
+    (acc, curr) => ({
+      gamesPlayed: acc.gamesPlayed + curr.gamesPlayed,
+      gamesStarted: acc.gamesStarted + curr.gamesStarted,
+      goals: acc.goals + curr.goals,
+      assists: acc.assists + curr.assists,
+      yellowCards: acc.yellowCards + curr.yellowCards,
+      redCards: acc.redCards + curr.redCards,
+      shots: acc.shots + curr.shots,
+      saves: acc.saves + curr.saves,
+      cleanSheets: acc.cleanSheets + curr.cleanSheets,
+      minutesPlayed: acc.minutesPlayed + curr.minutesPlayed,
+    }),
+    {
+      gamesPlayed: 0,
+      gamesStarted: 0,
+      goals: 0,
+      assists: 0,
+      yellowCards: 0,
+      redCards: 0,
+      shots: 0,
+      saves: 0,
+      cleanSheets: 0,
+      minutesPlayed: 0,
+    }
+  );
+
+  return {
+    personId: person.id,
+    firstName: person.first_name,
+    lastName: person.last_name,
+    email: person.email ?? null,
+    phone: person.phone ?? null,
+    birthDate: toDateString(person.birth_date),
+    gender: person.gender ?? null,
+    seasonStats,
+    careerTotals,
+  };
 }
 

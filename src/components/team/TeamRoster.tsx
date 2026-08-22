@@ -314,7 +314,12 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                 {/* Name and Position */}
                 <div>
                   <h3 className="font-extrabold text-text text-base leading-snug">
-                    {player.firstName} {player.lastName}
+                    <a
+                      href={`/players/${player.personId}`}
+                      className="hover:text-primary transition-colors hover:underline"
+                    >
+                      {player.firstName} {player.lastName}
+                    </a>
                     {player.nickname && (
                       <span className="text-muted text-xs font-normal italic block mt-0.5">
                         "{player.nickname}"
@@ -364,7 +369,12 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                   </td>
                   <td className="py-2 px-3">
                     <div className="font-bold text-text text-xs">
-                      {player.firstName} {player.lastName}
+                      <a
+                        href={`/players/${player.personId}`}
+                        className="hover:text-primary transition-colors hover:underline"
+                      >
+                        {player.firstName} {player.lastName}
+                      </a>
                       {player.nickname && (
                         <span className="text-muted text-[10px] font-normal italic ml-1">
                           ({player.nickname})

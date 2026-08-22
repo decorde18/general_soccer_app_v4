@@ -216,8 +216,73 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 
 ---
 
+
+## Step 7: Seasons Lifecycle & Age Group Associations
+
+- [x] **7.1 Seasons & Age Group Association (Admin Lifecycle)**
+  - [x] View associated age groups on season list/detail page in admin
+  - [x] On Season Create: automatically borrow/check previous season's age groups by default with checkboxes to select/unselect all available age groups
+  - [x] On Season Edit: view and update age group associations for the season
+  - [x] Backend API / Prisma query updates to persist season-age group links
+
+## Step 8: Season-Specific Clubs, Teams & Player Rollover Engine
+
+- [x] **8.1 Team Archiving & Season Context**
+  - [x] Season completion handler: archive team season records (rosters, schedules, staff assignments) while maintaining historical stat integrity
+  - [x] Ensure season selector in header switches context to past archived seasons seamlessly
+- [x] **8.2 Player Rollover & Transfer Tool**
+  - [x] Create next-season team initialization workflow (blank roster & schedule)
+  - [x] Build player rollover UI allowing bulk selection and migration of roster players from past season teams to new season teams
+
+- [x] **8.3 Season Completion & Automated Next-Season Setup Prompt**
+  - [x] When marking a season as completed in Admin, prompt to activate the upcoming season
+  - [x] Automatically archive completed season's team records (`is_active = false`)
+  - [x] Create blank new `team_seasons` for the new active season based on the age groups associated with the season
+  - [x] Provide direct link/redirect to the Player Rollover Tool to populate new teams
+
+## Step 9: Player Profile Season Stats Integration
+
+- [x] **9.1 Player Profile Season Filtered Stats**
+  - [x] Update player profile stats queries to filter goals, assists, cards, clean sheets, and minutes played strictly by active/selected season
+  - [x] Display historical career stats breakdown per season
+
+## Step 10: Season-Aware Data Importer & Schema Mapping
+
+- [x] **10.1 Importer Target Season Selector**
+  - [x] Add season selection dropdown to `/admin/importer` to scope all imports
+- [x] **10.2 Robust CSV Entity Mapping & Field Validation**
+  - [x] Build field mapping preview for Teams, Clubs, Roster Players, and Games with explicit Required vs Optional badges
+  - [x] Handle target table/column insertion and error reporting for invalid/missing rows
+
+- [x] **8.4 Rollover Source & Target Season Scoping & Multi-Source Merging**
+  - [x] Scope source team selection to previous/completed season teams
+  - [x] Scope target team selection to new/active season teams
+  - [x] Allow multi-source selection to merge rosters from multiple past teams into target team
+- [x] **10.3 Target Team Selection for Roster Import & Strict Deduplication**
+  - [x] Allow selecting target team first from dropdown to simplify CSV parsing (First Name, Last Name...)
+  - [x] Strict player & roster deduplication (skip existing enrolled players)
+- [x] **10.4 Schedule Import Game Play Type Prompt**
+  - [x] Prompt for game play type (League Play, Tournament Play, Friendly, Playoff) during schedule import
+- [x] **10.5 Top Target Team Selector & CSV File Upload Support**
+  - [x] Prominently display Target Team dropdown at top header before import (enforcing Club/Team columns in CSV if unselected)
+  - [x] Support native `.csv` file upload (`<input type="file">` & FileReader) alongside paste text
+- [x] **10.6 Interactive CSV Column Mapper Tool & Skip Unused Columns**
+  - [x] Visual column mapping tool allowing user to assign CSV columns to target database fields or set to `(None / Skip Field)`
+  - [x] Smart heuristic auto-detection for First Name, Last Name, Email, Jersey #, Position, Grade, Club, Team, Location
+- [x] **10.7 Dual Player & Parent Relationship Import System**
+  - [x] Auto-map Player (`player_first_name`, `player_last_name`, `gender` [Required], `number` [Jersey #], `position`, `grade`, `birth_date`)
+  - [x] Auto-map Optional Parent 1 & Parent 2 (`parent1_first_name`, `parent1_last_name`, `parent1_email`, `parent1_mobile_number`, `parent2_*`)
+  - [x] Create parent `people` records and link to players via `player_relationships` model (`relationship: Parent`)
+- [x] **11. Dynamic Match Format (5v5, 7v7, 8v8, 9v9, 11v11) & Starter Max Limit Engine**
+  - [x] Configure Match Format / Players on Field (`playersOnField` e.g. 5v5, 7v7, 8v8, 9v9, 11v11) in Game Settings
+  - [x] Dynamic Lineup Manager STARTER limit set to `playersOnField` max (e.g. 9 for 9v9, 7 for 7v7, 11 for 11v11)
+  - [x] Dynamically calculate required field players and goalkeeper requirements in lineup footer and status sections
+
+I need an edit game/delete/cancel on the game schedule page
+
 ## Notes / Future Considerations
 
 - Advanced live match stream / video link embeds (`games.video_link`)
 - Historical season archiving and player career stats aggregation
-
+- high school needs available players, trying out, interested
+- uniforms and numbers
