@@ -3,6 +3,8 @@ import GameLineupClientPage from "./GameLineupClientPage";
 import GameProvider from "@/components/game/GameProvider";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{
     teamSeasonId: string;

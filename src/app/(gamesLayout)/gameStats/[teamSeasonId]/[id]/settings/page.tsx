@@ -3,6 +3,8 @@ import GameProvider from "@/components/game/GameProvider";
 import GameSettingsEditor from "@/components/game/GameSettingsEditor";
 import GameHeader from "@/components/layout/gameLayout/GameHeader";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ teamSeasonId: string; id: string }>;
 }

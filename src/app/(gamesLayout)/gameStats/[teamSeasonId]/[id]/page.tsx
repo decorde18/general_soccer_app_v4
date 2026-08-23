@@ -2,6 +2,8 @@ import GameMenuPage from "@/components/game/GameMenuPage";
 import GameProvider from "@/components/game/GameProvider";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{
     teamSeasonId: string;
@@ -9,7 +11,7 @@ interface PageProps {
   }>;
 }
 
-export default async function page({ params }: PageProps) {
+export default async function GameStatsPage({ params }: PageProps) {
   const { teamSeasonId, id } = await params;
   const gameIdNum = Number(id);
   const teamSeasonIdNum = Number(teamSeasonId);
