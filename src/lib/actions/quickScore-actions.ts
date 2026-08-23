@@ -489,8 +489,8 @@ export async function recordDetailedMatchScore({
     if (teamTotals.awayShots) await createTeamEvents(game.away_team_season_id, "shot", teamTotals.awayShots);
     if (teamTotals.homeSaves) await createTeamEvents(game.home_team_season_id, "save", teamTotals.homeSaves);
     if (teamTotals.awaySaves) await createTeamEvents(game.away_team_season_id, "save", teamTotals.awaySaves);
-    if (teamTotals.homeCorners) await createTeamEvents(game.home_team_season_id, "corner_kick", teamTotals.homeCorners);
-    if (teamTotals.awayCorners) await createTeamEvents(game.away_team_season_id, "corner_kick", teamTotals.awayCorners);
+    if (teamTotals.homeCorners) await createTeamEvents(game.home_team_season_id, "corner", teamTotals.homeCorners);
+    if (teamTotals.awayCorners) await createTeamEvents(game.away_team_season_id, "corner", teamTotals.awayCorners);
     if (teamTotals.homeFouls) await createTeamEvents(game.home_team_season_id, "foul", teamTotals.homeFouls);
     if (teamTotals.awayFouls) await createTeamEvents(game.away_team_season_id, "foul", teamTotals.awayFouls);
     if (teamTotals.homeOffsides) await createTeamEvents(game.home_team_season_id, "offside", teamTotals.homeOffsides);

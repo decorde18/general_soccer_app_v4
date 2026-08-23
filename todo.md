@@ -281,21 +281,31 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Modal (`GameEditModal`) to edit kickoff date, time, match play type, status, venue complex, and field sublocation
   - [x] Dedicated "Mark Cancelled" action updating match status to `cancelled` with confirmation
   - [x] Transactional permanent delete (`deleteGame`) removing game dependencies and fixture cleanly with confirmation prompt
-  11v11, 9v9, etc in new game needs to be an option as well as edit game. 
-  schedule on team page should show sublocation as well as location (it did not populate  in edit game, so did it save on new game)
-  edit time per half should be in edit game modal
-  11v11 etc, time, etc should inheret from previuos game as default 
-  getting a 404 error when going to /gamestats/122/876
-  quick score should have an option for more details so every goal, etc.
-  games without full details should not record plus/minus, minutes, etc. But if the game has details on goal scorer, assist, etc. it should include that in the season totals
+- [x] **11.3 Match Format Selection, Half Duration & Inheritance in Game Scheduling**
+  - [x] Add Match Format (11v11, 9v9, 8v8, 7v7, 5v5) selector and Time per Half (minutes) to New Game & Edit Game Modals
+  - [x] Inherit format, period duration, location, and sublocation from previous team match as default when scheduling
+- [x] **11.4 Sublocation & Field Complex Display on Schedule Cards**
+  - [x] Render sublocation name alongside location (e.g. `Harpeth Hall (Field #2)`) on team schedule cards
+  - [x] Fix sublocation initialization & persistence in Edit Game Modal
+- [x] **11.5 Fix 404 Route & Netlify App Router Configuration for `/gamestats/[teamSeasonId]/[id]`**
+  - [x] Resolve invalid fallback route redirect (`/games` -> `/teams/${teamSeasonId}`) in `GameProvider.tsx`
+  - [x] Remove static `publish = ".next"` override in `netlify.toml` and configure `@netlify/plugin-nextjs` for dynamic App Router routes
+- [x] **11.6 Detailed Post-Game Match Event Logger & Stat Scoping Engine**
+  - [x] Quick Score modal toggle between Simple Score and Detailed Match Event Logger
+  - [x] Goal Logger: Scorer, Assist, Goalkeeper Conceded On, Minute, PK flag, Own Goal, Event Comment
+  - [x] Discipline Logger: Card type (Yellow/Red), Player, Minute, Reason/Comment
+  - [x] Team Totals: Shots, Saves, Corner Kicks, Fouls, Offsides for Home & Away teams
+  - [x] Stat Scoping: Games without full lineup details exclude unplayed `minutesPlayed` and `plusMinus` while including logged goal/assist/card events in player season totals
 
+## Step 12: Upcoming Enhancements & Bug Fixes
 
-  I get an error on key when doing lineup if 2 players don't have a jersey number, we need a popup that asks and then either stores for that game or for the season depending on the user answer
-  
+- [ ] **12.1 Lineup Missing / Duplicate Jersey Number Resolution Modal**
+  - [ ] Prompt user with a modal when 2+ players lack a jersey number during lineup selection, allowing them to assign jersey numbers for the match or permanently for the season
 
 ## Notes / Future Considerations
 
 - Advanced live match stream / video link embeds (`games.video_link`)
 - Historical season archiving and player career stats aggregation
-- high school needs available players, trying out, interested
-- uniforms and numbers
+- High school team player status management (available players, trying out, interested)
+- Uniforms and numbers assignment tool
+
