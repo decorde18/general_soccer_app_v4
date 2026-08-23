@@ -81,52 +81,52 @@ const Modal = ({
 
   return (
     <div
-      className={cn("modal-overlay p-4 backdrop-blur-sm", overlayClassName)}
+      className={cn("modal-overlay backdrop-blur-sm p-3 sm:p-4", overlayClassName)}
       onClick={() => closeOnOverlayClick && onClose()}
     >
       <div
         className={cn(
-          "relative bg-surface rounded-xl shadow-xl max-h-[90vh] overflow-y-auto w-full",
+          "relative bg-surface rounded-2xl shadow-2xl flex flex-col w-full max-h-[88dvh] sm:max-h-[85vh] overflow-hidden border border-border/80 my-auto",
           modalSizes[size],
           className,
         )}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header - Pinned to Top */}
         {(title || showCloseButton) && (
           <div
             className={cn(
-              "flex items-center justify-between px-6 py-4 border-b border-border",
+              "flex items-center justify-between px-5 py-3.5 sm:px-6 sm:py-4 border-b border-border/80 shrink-0 bg-surface/95 backdrop-blur-sm z-10",
               headerClassName,
             )}
           >
             {title && (
-              <h3 className='text-xl font-semibold text-text pr-8'>{title}</h3>
+              <h3 className="text-base sm:text-lg font-bold text-text pr-8 tracking-tight">{title}</h3>
             )}
             {showCloseButton && (
-              <>
-                {/* Use shared Button for consistent UI */}
-                <Button
-                  onClick={onClose}
-                  variant='outline'
-                  size='xs'
-                  className='absolute top-4 right-4 text-muted hover:text-text transition-colors duration-200 w-8 h-8 flex items-center justify-center rounded-full p-0'
-                  aria-label='Close modal'
-                >
-                  <span className='text-xl leading-none'>×</span>
-                </Button>
-              </>
+              <Button
+                onClick={onClose}
+                variant="outline"
+                size="xs"
+                className="absolute top-3.5 right-4 text-muted hover:text-text transition-colors duration-200 w-8 h-8 flex items-center justify-center rounded-full p-0 border-border/60 hover:bg-border/30"
+                aria-label="Close modal"
+              >
+                <span className="text-xl leading-none">×</span>
+              </Button>
             )}
           </div>
         )}
 
-        <div className={cn("px-6 py-4 text-text", bodyClassName)}>
+        {/* Body - Scrollable Content Area */}
+        <div className={cn("px-5 py-4 sm:px-6 sm:py-5 text-text flex-1 overflow-y-auto min-h-0", bodyClassName)}>
           {children}
         </div>
 
+        {/* Footer - Pinned to Bottom */}
         {footer && (
           <div
             className={cn(
-              "px-6 py-4 border-t border-border flex justify-end gap-2",
+              "px-5 py-3.5 sm:px-6 sm:py-4 border-t border-border/80 flex justify-end gap-2 shrink-0 bg-surface/95 backdrop-blur-sm z-10",
               footerClassName,
             )}
           >

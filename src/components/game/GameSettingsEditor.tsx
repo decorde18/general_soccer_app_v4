@@ -16,12 +16,11 @@ interface GameSettingsEditorProps {
 }
 
 const PERIOD_DURATION_OPTIONS = [
-  { value: 1200, label: "20 min" },
   { value: 1500, label: "25 min" },
   { value: 1800, label: "30 min" },
+  { value: 2100, label: "35 min" },
   { value: 2400, label: "40 min" },
   { value: 2700, label: "45 min" },
-  { value: 3600, label: "60 min" },
 ];
 
 const OT_DURATION_OPTIONS = [
@@ -33,7 +32,6 @@ const OT_DURATION_OPTIONS = [
 const PERIOD_COUNT_OPTIONS = [
   { value: 1, label: "1 Period" },
   { value: 2, label: "2 Halves" },
-  { value: 4, label: "4 Quarters" },
 ];
 
 export default function GameSettingsEditor({
@@ -51,7 +49,7 @@ export default function GameSettingsEditor({
     game?.settings ?? {
       playersOnField: 11,
       periodCount: 2,
-      periodDuration: 2400,
+      periodDuration: 2100,
       hasOvertime: false,
       overtimePeriods: 2,
       overtimeDuration: 600,
@@ -61,10 +59,13 @@ export default function GameSettingsEditor({
     }
   );
 
+  const [customMinsText, setCustomMinsText] = useState<string>("");
+
   // Synchronize local settings whenever store's game settings load or change
   useEffect(() => {
     if (game?.settings) {
       setLocalSettings(game.settings);
+      setCustomMinsText(String(Math.round(game.settings.periodDuration / 60)));
     }
   }, [game?.settings]);
 
@@ -150,11 +151,14 @@ export default function GameSettingsEditor({
             <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
               Period Duration
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-3">
               {PERIOD_DURATION_OPTIONS.map(({ value, label }) => (
                 <button
                   key={value}
-                  onClick={() => setLocalSettings((s) => ({ ...s, periodDuration: value }))}
+                  onClick={() => {
+                    setLocalSettings((s) => ({ ...s, periodDuration: value }));
+                    setCustomMinsText(String(value / 60));
+                  }}
                   className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${
                     localSettings.periodDuration === value
                       ? "bg-primary text-white border-primary shadow-sm"
@@ -164,6 +168,36 @@ export default function GameSettingsEditor({
                   {label}
                 </button>
               ))}
+            </div>
+
+            {/* Manual Entry Input */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted font-medium">Custom Minutes:</span>
+              <input
+                type="number"
+                min={5}
+                max={90}
+                value={customMinsText}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setCustomMinsText(raw);
+                  const parsed = parseInt(raw);
+                  if (!isNaN(parsed) && parsed > 0) {
+                    setLocalSettings((s) => ({ ...s, periodDuration: parsed * 60 }));
+                  }
+                }}
+                onBlur={() => {
+                  const parsed = parseInt(customMinsText);
+                  if (isNaN(parsed) || parsed < 5) {
+                    const fallback = Math.round(localSettings.periodDuration / 60) || 35;
+                    setCustomMinsText(String(fallback));
+                    setLocalSettings((s) => ({ ...s, periodDuration: fallback * 60 }));
+                  }
+                }}
+                className="w-20 px-2.5 py-1 rounded-md text-sm font-semibold bg-background border border-border text-text focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="35"
+              />
+              <span className="text-xs text-muted font-medium">mins per half</span>
             </div>
           </div>
         </div>

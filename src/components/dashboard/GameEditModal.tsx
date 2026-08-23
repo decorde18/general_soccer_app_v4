@@ -55,8 +55,8 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
   const [playersOnField, setPlayersOnField] = useState<number>(
     game.settings?.playersOnField || 11
   );
-  const [periodDurationMins, setPeriodDurationMins] = useState<number>(
-    game.settings?.periodDuration ? Math.round(game.settings.periodDuration / 60) : 40
+  const [periodDurationMins, setPeriodDurationMins] = useState<number | string>(
+    game.settings?.periodDuration ? Math.round(game.settings.periodDuration / 60) : 35
   );
 
   const [venues, setVenues] = useState<VenueOption[]>([]);
@@ -86,6 +86,10 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
     setErrorMsg(null);
     startTransition(async () => {
       try {
+        const durationNum = typeof periodDurationMins === "number" 
+          ? periodDurationMins 
+          : (parseInt(periodDurationMins) || 35);
+
         await updateGame(game.id, {
           startDate,
           startTime: startTime || null,
@@ -93,7 +97,7 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
           status,
           locationId: selectedLocationId || null,
           sublocationId: selectedSublocationId || null,
-          periodDuration: Number(periodDurationMins) * 60,
+          periodDuration: durationNum * 60,
           notes: JSON.stringify({ playersOnField: Number(playersOnField) }),
         });
 
@@ -275,13 +279,33 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
               {/* Time per Half (Minutes) */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-text">Time Per Half (Mins)</label>
+                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                  {[25, 30, 35, 40, 45].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setPeriodDurationMins(mins)}
+                      className={`px-2.5 py-1 rounded text-xs font-semibold border transition-all ${
+                        Number(periodDurationMins) === mins
+                          ? "bg-primary text-white border-primary"
+                          : "bg-background border-border text-muted hover:text-text"
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
                 <Input
                   type="number"
-                  min={10}
-                  max={60}
+                  min={5}
+                  max={90}
                   value={periodDurationMins}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPeriodDurationMins(Number(e.target.value))}
-                  placeholder="e.g. 40"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPeriodDurationMins(e.target.value)}
+                  onBlur={() => {
+                    const parsed = parseInt(String(periodDurationMins));
+                    if (isNaN(parsed) || parsed < 5) setPeriodDurationMins(35);
+                  }}
+                  placeholder="e.g. 35"
                 />
               </div>
 

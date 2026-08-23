@@ -151,7 +151,7 @@ export default function GameSchedulerModal({
   // Game Rules Override State
   const [playersOnField, setPlayersOnField] = useState<number>(11);
   const [defaultRegPeriods, setDefaultRegPeriods] = useState<number>(2);
-  const [periodDurationMins, setPeriodDurationMins] = useState<number>(40);
+  const [periodDurationMins, setPeriodDurationMins] = useState<number | string>(35);
   const [otIfTied, setOtIfTied] = useState<boolean>(false);
   const [otDurationMins, setOtDurationMins] = useState<number>(10);
   const [soIfTied, setSoIfTied] = useState<boolean>(true);
@@ -1019,14 +1019,37 @@ export default function GameSchedulerModal({
                   />
 
                   {/* Period duration in mins */}
-                  <Input
-                    type="number"
-                    label="Period Duration (Mins)"
-                    value={periodDurationMins}
-                    min={5}
-                    max={60}
-                    onChange={(e: any) => setPeriodDurationMins(parseInt(e.target.value) || 40)}
-                  />
+                  <div>
+                    <label className="text-xs font-bold text-text mb-1.5 block">Time Per Half (Mins)</label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {[25, 30, 35, 40, 45].map((mins) => (
+                        <button
+                          key={mins}
+                          type="button"
+                          onClick={() => setPeriodDurationMins(mins)}
+                          className={`px-2 py-1 rounded text-xs font-semibold border transition-all ${
+                            Number(periodDurationMins) === mins
+                              ? "bg-primary text-white border-primary"
+                              : "bg-background border-border text-muted hover:text-text"
+                          }`}
+                        >
+                          {mins}m
+                        </button>
+                      ))}
+                    </div>
+                    <Input
+                      type="number"
+                      value={periodDurationMins}
+                      min={5}
+                      max={90}
+                      onChange={(e: any) => setPeriodDurationMins(e.target.value)}
+                      onBlur={() => {
+                        const parsed = parseInt(String(periodDurationMins));
+                        if (isNaN(parsed) || parsed < 5) setPeriodDurationMins(35);
+                      }}
+                      placeholder="e.g. 35"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center pt-1">
