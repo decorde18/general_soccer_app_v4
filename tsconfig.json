@@ -31,5 +31,12 @@
     "**/*.mts",
     "next.config.js"
   ],
-  "exclude": ["node_modules", "src/**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": [
+    "node_modules",
+    "src/**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ]
 }
