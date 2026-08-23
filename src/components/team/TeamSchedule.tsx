@@ -24,11 +24,18 @@ interface Game {
   gameType: string;
   startDate: string;
   startTime: string | null;
+  locationId?: number | null;
   locationName: string | null;
+  sublocationId?: number | null;
+  sublocationName?: string | null;
   homeScore: number | null;
   awayScore: number | null;
   finalStatus: string | null;
   videoLink?: string | null;
+  settings?: {
+    playersOnField?: number;
+    periodDuration?: number;
+  };
 }
 
 interface TeamScheduleProps {
@@ -329,9 +336,9 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                         <span>{scoreLabel}</span>
                       </div>
                       {game.locationName && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted max-w-[155px] truncate" title={game.locationName}>
-                          <MapPin size={14} />
-                          <span>{game.locationName}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-muted max-w-[200px] truncate" title={game.sublocationName ? `${game.locationName} - ${game.sublocationName}` : game.locationName}>
+                          <MapPin size={14} className="shrink-0 text-primary" />
+                          <span className="truncate">{game.sublocationName ? `${game.locationName} (${game.sublocationName})` : game.locationName}</span>
                         </div>
                       )}
 

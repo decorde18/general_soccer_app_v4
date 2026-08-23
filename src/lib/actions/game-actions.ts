@@ -487,3 +487,42 @@ export async function getVenueOptions() {
     })),
   }));
 }
+
+/**
+ * Fetch default match parameters from a team's most recently scheduled match
+ */
+export async function getLatestGameDefaults(teamSeasonId: number) {
+  if (!teamSeasonId) return null;
+
+  const latestGame = await prisma.games.findFirst({
+    where: {
+      OR: [
+        { home_team_season_id: teamSeasonId },
+        { away_team_season_id: teamSeasonId },
+      ],
+    },
+    orderBy: { id: "desc" },
+  });
+
+  if (!latestGame) return null;
+
+  let playersOnField = 11;
+  if (latestGame.notes) {
+    try {
+      const parsed = JSON.parse(latestGame.notes);
+      if (parsed?.playersOnField && typeof parsed.playersOnField === "number") {
+        playersOnField = parsed.playersOnField;
+      }
+    } catch {
+      // not json or no playersOnField
+    }
+  }
+
+  return {
+    locationId: latestGame.location_id,
+    sublocationId: latestGame.sublocation_id,
+    gameType: latestGame.game_type,
+    periodDuration: latestGame.period_duration ? Math.round(latestGame.period_duration / 60) : 40,
+    playersOnField,
+  };
+}

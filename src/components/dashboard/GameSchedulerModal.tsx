@@ -22,6 +22,7 @@ import {
   checkVenueConflict,
   getVenueOptions,
   getSchedulerOptions,
+  getLatestGameDefaults,
   CompetitionNodeInput,
 } from "@/lib/actions/game-actions";
 import Modal from "@/components/ui/Modal";
@@ -148,6 +149,7 @@ export default function GameSchedulerModal({
   const [sublocationId, setSublocationId] = useState<number | "">("");
 
   // Game Rules Override State
+  const [playersOnField, setPlayersOnField] = useState<number>(11);
   const [defaultRegPeriods, setDefaultRegPeriods] = useState<number>(2);
   const [periodDurationMins, setPeriodDurationMins] = useState<number>(40);
   const [otIfTied, setOtIfTied] = useState<boolean>(false);
@@ -180,6 +182,21 @@ export default function GameSchedulerModal({
       if (defaultHomeTeamSeasonId) setMyTeamSeasonId(defaultHomeTeamSeasonId);
     });
   }, [defaultHomeTeamSeasonId]);
+
+  // Inherit match format, duration, venue defaults from primary team's latest game
+  useEffect(() => {
+    if (myTeamSeasonId) {
+      getLatestGameDefaults(Number(myTeamSeasonId)).then((defaults) => {
+        if (defaults) {
+          if (defaults.playersOnField) setPlayersOnField(defaults.playersOnField);
+          if (defaults.periodDuration) setPeriodDurationMins(defaults.periodDuration);
+          if (defaults.gameType) setGameType(defaults.gameType as any);
+          if (defaults.locationId) setLocationId(defaults.locationId);
+          if (defaults.sublocationId) setSublocationId(defaults.sublocationId);
+        }
+      });
+    }
+  }, [myTeamSeasonId]);
 
   // Update default standings inclusion behavior when match type changes (League & Tournament default to true)
   useEffect(() => {
@@ -413,6 +430,7 @@ export default function GameSchedulerModal({
           otIfTied,
           otDuration: Number(otDurationMins) * 60,
           soIfTied,
+          notes: JSON.stringify({ playersOnField: Number(playersOnField) }),
           allowConflictOverride: override,
         });
 
@@ -972,11 +990,28 @@ export default function GameSchedulerModal({
                   <span>Game Rules & Duration Overrides</span>
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Match Format */}
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold text-muted">Match Format</span>
+                    <Select
+                      value={String(playersOnField)}
+                      onChange={(e: any) => setPlayersOnField(Number(e.target.value))}
+                      options={[
+                        { value: "11", label: "11v11 (Full Field)" },
+                        { value: "9", label: "9v9 (Intermediate)" },
+                        { value: "8", label: "8v8" },
+                        { value: "7", label: "7v7 (Small Sided)" },
+                        { value: "5", label: "5v5 (Futsal / Indoor)" },
+                      ]}
+                      width="full"
+                    />
+                  </div>
+
                   {/* Number of periods */}
                   <Input
                     type="number"
-                    label="Regular Periods (Halves / Quarters)"
+                    label="Regular Periods"
                     value={defaultRegPeriods}
                     min={1}
                     max={4}
@@ -986,7 +1021,7 @@ export default function GameSchedulerModal({
                   {/* Period duration in mins */}
                   <Input
                     type="number"
-                    label="Period Duration (Minutes)"
+                    label="Period Duration (Mins)"
                     value={periodDurationMins}
                     min={5}
                     max={60}

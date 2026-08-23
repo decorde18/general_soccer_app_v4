@@ -281,6 +281,18 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Modal (`GameEditModal`) to edit kickoff date, time, match play type, status, venue complex, and field sublocation
   - [x] Dedicated "Mark Cancelled" action updating match status to `cancelled` with confirmation
   - [x] Transactional permanent delete (`deleteGame`) removing game dependencies and fixture cleanly with confirmation prompt
+  11v11, 9v9, etc in new game needs to be an option as well as edit game. 
+  schedule on team page should show sublocation as well as location (it did not populate  in edit game, so did it save on new game)
+  edit time per half should be in edit game modal
+  11v11 etc, time, etc should inheret from previuos game as default 
+  getting a 404 error when going to /gamestats/122/876
+  quick score should have an option for more details so every goal, etc.
+  games without full details should not record plus/minus, minutes, etc. But if the game has details on goal scorer, assist, etc. it should include that in the season totals
+
+
+  I get an error on key when doing lineup if 2 players don't have a jersey number, we need a popup that asks and then either stores for that game or for the season depending on the user answer
+  
+
 ## Notes / Future Considerations
 
 - Advanced live match stream / video link embeds (`games.video_link`)

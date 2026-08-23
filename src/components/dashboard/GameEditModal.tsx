@@ -26,9 +26,16 @@ interface GameEditModalProps {
     startTime: string | null;
     gameType: string;
     status: string;
+    locationId?: number | null;
     locationName: string | null;
+    sublocationId?: number | null;
+    sublocationName?: string | null;
     homeScore: number | null;
     awayScore: number | null;
+    settings?: {
+      playersOnField?: number;
+      periodDuration?: number;
+    };
   };
   onClose: () => void;
   onSuccess?: () => void;
@@ -45,9 +52,16 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
   const [homeScore, setHomeScore] = useState<string>(game.homeScore !== null ? String(game.homeScore) : "");
   const [awayScore, setAwayScore] = useState<string>(game.awayScore !== null ? String(game.awayScore) : "");
   
+  const [playersOnField, setPlayersOnField] = useState<number>(
+    game.settings?.playersOnField || 11
+  );
+  const [periodDurationMins, setPeriodDurationMins] = useState<number>(
+    game.settings?.periodDuration ? Math.round(game.settings.periodDuration / 60) : 40
+  );
+
   const [venues, setVenues] = useState<VenueOption[]>([]);
-  const [selectedLocationId, setSelectedLocationId] = useState<number | undefined>(undefined);
-  const [selectedSublocationId, setSelectedSublocationId] = useState<number | undefined>(undefined);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | undefined>(game.locationId || undefined);
+  const [selectedSublocationId, setSelectedSublocationId] = useState<number | undefined>(game.sublocationId || undefined);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -56,12 +70,15 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
   useEffect(() => {
     getVenueOptions().then((data) => {
       setVenues(data);
-      if (game.locationName) {
+      let locId = game.locationId;
+      if (!locId && game.locationName) {
         const matched = data.find((v) => v.name.toLowerCase() === game.locationName?.toLowerCase());
-        if (matched) setSelectedLocationId(matched.id);
+        if (matched) locId = matched.id;
       }
+      if (locId) setSelectedLocationId(locId);
+      if (game.sublocationId) setSelectedSublocationId(game.sublocationId);
     });
-  }, [game.locationName]);
+  }, [game]);
 
   const activeVenue = venues.find((v) => v.id === selectedLocationId);
 
@@ -76,6 +93,8 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
           status,
           locationId: selectedLocationId || null,
           sublocationId: selectedSublocationId || null,
+          periodDuration: Number(periodDurationMins) * 60,
+          notes: JSON.stringify({ playersOnField: Number(playersOnField) }),
         });
 
         toast.success("Game updated successfully!");
@@ -234,6 +253,35 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
                     { value: "completed", label: "Completed" },
                     { value: "cancelled", label: "Cancelled" },
                   ]}
+                />
+              </div>
+
+              {/* Match Format (Players on Field) */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-text">Match Format</label>
+                <Select
+                  value={String(playersOnField)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPlayersOnField(Number(e.target.value))}
+                  options={[
+                    { value: "11", label: "11v11 (Full Field)" },
+                    { value: "9", label: "9v9 (Intermediate)" },
+                    { value: "8", label: "8v8" },
+                    { value: "7", label: "7v7 (Small Sided)" },
+                    { value: "5", label: "5v5 (Futsal / Indoor)" },
+                  ]}
+                />
+              </div>
+
+              {/* Time per Half (Minutes) */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-text">Time Per Half (Mins)</label>
+                <Input
+                  type="number"
+                  min={10}
+                  max={60}
+                  value={periodDurationMins}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPeriodDurationMins(Number(e.target.value))}
+                  placeholder="e.g. 40"
                 />
               </div>
 

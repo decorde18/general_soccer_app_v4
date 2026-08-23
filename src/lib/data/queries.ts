@@ -201,6 +201,8 @@ export interface Game {
   endTime: string | null;
   locationId: number | null;
   locationName: string | null;
+  sublocationId?: number | null;
+  sublocationName?: string | null;
   homeScore: number | null;
   awayScore: number | null;
   homePenaltyScore: number | null;
@@ -917,6 +919,7 @@ export async function getGames(filters?: {
         include: { teams: { include: { clubs: true } } },
       },
       locations: true,
+      locations_sublocations: true,
       game_events_major: {
         include: {
           game_events_goals: true,
@@ -950,6 +953,7 @@ export async function getGameById(id: number): Promise<Game | null> {
         include: { teams: { include: { clubs: true } } },
       },
       locations: true,
+      locations_sublocations: true,
       game_events_major: {
         include: {
           game_events_goals: true,
@@ -1081,6 +1085,8 @@ function mapGameRow(r: any): Game {
     endTime: r.end_time ? toDateTimeString(r.end_time) : null,
     locationId: r.location_id ?? null,
     locationName: r.locations?.name ?? r.location_name ?? null,
+    sublocationId: r.sublocation_id ?? null,
+    sublocationName: r.locations_sublocations?.name ?? null,
     homeScore,
     awayScore,
     homePenaltyScore,

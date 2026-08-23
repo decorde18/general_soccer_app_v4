@@ -163,6 +163,8 @@ export interface Game {
   startDate?: string | null;
   startTime?: string | null;
   locationName?: string | null;
+  sublocationId?: number | null;
+  sublocationName?: string | null;
   gameType?: string | null;
 
   // Derived/computed by initializeGame()

@@ -74,7 +74,7 @@ export default function GameProvider({ children }: GameProviderProps) {
 
         // Redirect if game not found
         if (result?.notFound) {
-          router.push("/games");
+          router.push(teamSeasonId ? `/teams/${teamSeasonId}` : "/dashboard");
           return;
         }
 
@@ -100,8 +100,8 @@ export default function GameProvider({ children }: GameProviderProps) {
       <FullScreenError
         title="Unable to Load Game"
         message={initError}
-        actionLabel="Back to Games"
-        onAction={() => router.push("/games")}
+        actionLabel="Back to Team Schedule"
+        onAction={() => router.push(teamSeasonId ? `/teams/${teamSeasonId}` : "/dashboard")}
       />
     );
   }
