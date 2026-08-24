@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useEffect, useTransition, useRef } from "react";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
@@ -13,6 +13,7 @@ import { checkPlayerSubEligibility } from "@/lib/utils/subRules";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
 import { toast } from "sonner";
+import { enqueueOfflineAction, saveGameCache } from "@/lib/offline/offlineSync";
 import {
   Trophy,
   ShieldAlert,
@@ -26,6 +27,7 @@ import {
   CornerDownRight,
   ArrowRightLeft,
   Trash2,
+  Droplets,
 } from "lucide-react";
 
 export type MajorEventType =
@@ -33,6 +35,7 @@ export type MajorEventType =
   | "card"
   | "pk"
   | "injury"
+  | "hydration"
   | "weather"
   | "var"
   | "stoppage";
@@ -90,58 +93,68 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   const [allowExhaustedOverride, setAllowExhaustedOverride] = useState(false);
   const [showPendingSubPrompt, setShowPendingSubPrompt] = useState(false);
 
+  // Stop Clock toggle state (default: NOT paused / clock running)
+  const [stopClock, setStopClock] = useState<boolean>(false);
+
   // Active unended stoppage
   const activeStoppage = game?.gameEventsMajor?.find(
     (s) => s.end_time === null && s.period === (game?.currentPeriodIndex || 0) + 1 && s.clock_should_run === 0
   );
 
+  const eventOpenMsRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (!isOpen) return;
+    eventOpenMsRef.current = Date.now();
+    setStopClock(false);
+    setTeamTarget("us");
+
+    // Reset Goal Form
+    setGoalScorerId("");
+    setGoalAssistId("");
+    setOppScorerJersey("");
+    setOppAssistJersey("");
+    setIsOwnGoal(false);
+    setSelectedMethods(new Set(["open_play"]));
+    setGoalNotes("");
+
+    // Reset Card Form
+    setCardPlayerId("");
+    setOppCardJersey("");
+    setCardType("yellow");
+    setCardReason("");
+
+    // Reset PK Form
+    setPkTakerId("");
+    setOppPkTakerJersey("");
+    setPkOutcome("goal");
+    setIsReboundGoal(false);
+    setPkNotes("");
+
+    // Reset Subs & Stoppage Form
+    setStoppageSubOutId("");
+    setStoppageSubInId("");
+    setShowPendingSubPrompt(false);
+    setStoppageCategory("injury");
+    setStoppageDetails("");
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return;
 
-    const gameSec = useGameStore.getState().getGameTime();
-    setLiveSeconds(gameSec);
-
-    const interval = setInterval(() => {
-      setLiveSeconds(useGameStore.getState().getGameTime());
-    }, 1000);
-
-    if (activeStoppage) {
-      setIsPausedLocally(true);
-    } else if (game?.settings?.autoStopClockOnMajorEvent && game) {
-      // Auto-create stoppage if setting enabled and clock is currently running
-      fetch(`/api/game_events_major`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          game_id: Number(game.game_id || game.id),
-          event_type: "stoppage",
-          period: game.currentPeriodIndex + 1,
-          game_time: gameSec,
-          clock_should_run: 0,
-          details: "Major Event Clock Pause",
-        }),
-      })
-        .then((r) => r.json())
-        .then((newMajor) => {
-          if (newMajor?.id) {
-            addMajorEvent({
-              id: newMajor.id,
-              game_id: Number(game.game_id || game.id),
-              period: game.currentPeriodIndex + 1,
-              game_time: gameSec,
-              clock_should_run: 0,
-              details: "Major Event Clock Pause",
-              start_time: Date.now(),
-              end_time: null,
-            });
-          }
-        })
-        .catch(() => {});
-      setIsPausedLocally(true);
+    if (stopClock) {
+      // Clock Paused: Freeze at the moment the event button was clicked (minus all previous paused stoppages)
+      const snapSeconds = useGameStore.getState().getPeriodTime(eventOpenMsRef.current);
+      setLiveSeconds(snapSeconds);
+    } else {
+      // Clock Running: Display current actual game time minus all previous paused stoppages and tick live every second
+      setLiveSeconds(useGameStore.getState().getPeriodTime());
+      const interval = setInterval(() => {
+        setLiveSeconds(useGameStore.getState().getPeriodTime());
+      }, 1000);
+      return () => clearInterval(interval);
     }
-
-    return () => clearInterval(interval);
-  }, [isOpen, game?.settings?.autoStopClockOnMajorEvent, game?.currentPeriodIndex, activeStoppage]);
+  }, [isOpen, stopClock]);
 
   // Goal Form State
   const [goalScorerId, setGoalScorerId] = useState("");
@@ -286,23 +299,20 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   // Queue sub for restart
   const handleQueueStoppageSub = async () => {
     if (!stoppageSubOutId || !stoppageSubInId) {
-      toast.error("Please select both player OUT and player IN for the substitution.");
       return;
     }
     try {
       await createPendingSub(stoppageSubInId, stoppageSubOutId);
       setStoppageSubOutId("");
       setStoppageSubInId("");
-      toast.success("Substitution queued for restart.");
     } catch (err: any) {
-      toast.error("Failed to queue sub: " + err.message);
+      console.error("Failed to queue sub:", err);
     }
   };
 
   // Execute sub immediately during stoppage
   const handleExecuteSubImmediately = async () => {
     if (!stoppageSubOutId || !stoppageSubInId) {
-      toast.error("Please select both player OUT and player IN for the substitution.");
       return;
     }
     try {
@@ -312,9 +322,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       }
       setStoppageSubOutId("");
       setStoppageSubInId("");
-      toast.success("Substitution executed immediately!");
     } catch (err: any) {
-      toast.error("Failed to execute sub: " + err.message);
+      console.error("Failed to execute sub:", err);
     }
   };
 
@@ -322,9 +331,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   const handleExecuteSingleQueuedSub = async (subId: string | number) => {
     try {
       await confirmSub(subId);
-      toast.success("Queued sub executed immediately!");
     } catch (err: any) {
-      toast.error("Failed to execute sub: " + err.message);
+      console.error("Failed to execute sub:", err);
     }
   };
 
@@ -332,21 +340,29 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   const handleDeleteSingleQueuedSub = async (subId: string | number) => {
     try {
       await cancelSub(subId);
-      toast.success("Queued sub canceled.");
     } catch (err: any) {
-      toast.error("Failed to cancel sub: " + err.message);
+      console.error("Failed to cancel sub:", err);
     }
   };
 
   // Cancel active stoppage
-  const handleCancelStoppage = async () => {
+  const handleCancelStoppage = () => {
     if (!activeStoppage) {
       onClose();
       return;
     }
     try {
-      await deleteEvent(activeStoppage.id, "major");
+      deleteEvent(activeStoppage.id, "major");
       setIsPausedLocally(false);
+      setStopClock(false);
+      if (game) {
+        saveGameCache(
+          game.game_id || game.id || "",
+          useGameStore.getState().game,
+          useGamePlayersStore.getState().players
+        );
+      }
+      toast.success("Stoppage Canceled!");
       onClose();
     } catch (err: any) {
       toast.error("Failed to cancel stoppage: " + err.message);
@@ -354,25 +370,32 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   };
 
   // End stoppage & resume clock
-  const handleEndStoppageAndResume = async (confirmPendingSubs = false) => {
+  const handleEndStoppageAndResume = (confirmPendingSubs = false) => {
     if (!activeStoppage) {
       onClose();
       return;
     }
 
-    startTransition(async () => {
-      try {
-        if (confirmPendingSubs && pendingSubs.length > 0) {
-          await confirmAllPendingSubs();
-        }
-        await endStoppage(activeStoppage.id);
-        setIsPausedLocally(false);
-        setShowPendingSubPrompt(false);
-        onClose();
-      } catch (err: any) {
-        toast.error("Failed to end stoppage: " + err.message);
+    try {
+      if (confirmPendingSubs && pendingSubs.length > 0) {
+        confirmAllPendingSubs();
       }
-    });
+      endStoppage(activeStoppage.id);
+      setIsPausedLocally(false);
+      setStopClock(false);
+      setShowPendingSubPrompt(false);
+      if (game) {
+        saveGameCache(
+          game.game_id || game.id || "",
+          useGameStore.getState().game,
+          useGamePlayersStore.getState().players
+        );
+      }
+      toast.success("Stoppage Ended — Clock Resumed!");
+      onClose();
+    } catch (err: any) {
+      toast.error("Failed to end stoppage: " + err.message);
+    }
   };
 
   const handleEndStoppageClick = () => {
@@ -392,65 +415,159 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const isOpp = teamTarget === "opp";
-        const scorer = players.find((p) => String(p.id) === goalScorerId);
-        const assist = players.find((p) => String(p.id) === goalAssistId);
-        const teamSeasonVal = isOpp ? game.opponentId : game.teamSeasonId;
-        const gameTimeSeconds = useGameStore.getState().getGameTime();
-        const goalMethodsStr = Array.from(selectedMethods).join(",");
+    try {
+      const isOpp = teamTarget === "opp";
+      const scorer = players.find((p) => String(p.id) === goalScorerId);
+      const assist = players.find((p) => String(p.id) === goalAssistId);
+      const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
+      const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
+      const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
+      const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
+      const goalMethodsArr = Array.from(selectedMethods);
+      const goalTypesJson = JSON.stringify(goalMethodsArr.length > 0 ? goalMethodsArr : ["open_play"]);
 
-        const payload = {
-          game_id: Number(game.game_id || game.id),
+      const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
+      const defendingGkPlayerGameId = isOpp || isOwnGoal ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : null) : null;
+
+      const tempGoalId = `temp_goal_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+      const payload = {
+        game_id: Number(game.game_id || game.id),
+        team_season_id: Number(teamSeasonVal),
+        scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
+        assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
+        defending_gk_player_game_id: defendingGkPlayerGameId,
+        opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
+        is_own_goal: isOwnGoal,
+        goal_types: goalTypesJson,
+        game_time: gameTimeSeconds,
+        period: game.currentPeriodIndex + 1,
+      };
+
+      // 1. Synchronous Optimistic Update (0ms delay)
+      addGoalEvent(
+        {
+          id: tempGoalId,
+          major_event_id: tempMajorId,
           team_season_id: Number(teamSeasonVal),
+          is_own_goal: isOwnGoal,
+          goal_types: goalTypesJson,
           scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
           assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
-          opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
-          is_own_goal: isOwnGoal,
-          goal_types: goalMethodsStr || "open_play",
-          game_time: gameTimeSeconds,
+          defending_gk_player_game_id: defendingGkPlayerGameId,
+        } as any,
+        {
+          id: tempMajorId,
+          game_id: Number(game.game_id || game.id),
           period: game.currentPeriodIndex + 1,
-        };
+          event_type: "goal",
+          game_time: gameTimeSeconds,
+          clock_should_run: stopClock ? 0 : 1,
+          details: goalNotes || (isOwnGoal ? "Own Goal Stoppage" : "Goal Kickoff Stoppage"),
+          start_time: Date.now(),
+          end_time: null,
+        } as any
+      );
 
-        const newGoal = await fetch(`/api/game_events_goals`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }).then((r) => r.json());
+      if (stopClock) {
+        setIsPausedLocally(true);
+      }
 
-        if (newGoal?.id) {
-          addGoalEvent(
-            {
-              id: newGoal.id,
-              major_event_id: newGoal.major_event_id,
-              team_season_id: Number(teamSeasonVal),
-              is_own_goal: isOwnGoal,
-              goal_types: goalMethodsStr || "open_play",
-              scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
-              assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
-            } as any,
-            {
-              id: newGoal.major_event_id,
+      // Save device cache snapshot synchronously
+      saveGameCache(
+        game.game_id || game.id || "",
+        useGameStore.getState().game,
+        useGamePlayersStore.getState().players
+      );
+
+      toast.success(`GOAL Recorded for ${isOpp ? opponentShortName : "Our Team"}!`);
+
+      // CLOSE MODAL IMMEDIATELY
+      onClose();
+
+      // 2. Background Persistence (Non-blocking)
+      (async () => {
+        try {
+          const majorRes = await fetch(`/api/game_events_major`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
               game_id: Number(game.game_id || game.id),
               period: game.currentPeriodIndex + 1,
+              event_type: "goal",
               game_time: gameTimeSeconds,
-              clock_should_run: 0,
+              clock_should_run: stopClock ? 0 : 1,
               details: goalNotes || (isOwnGoal ? "Own Goal Stoppage" : "Goal Kickoff Stoppage"),
-              start_time: Date.now(),
-              end_time: null,
-            } as any
-          );
-        }
+            }),
+          }).then((r) => r.json());
 
-        toast.success(`GOAL Recorded for ${isOpp ? opponentShortName : "Our Team"}!`);
-        setEventType("stoppage");
-        setStoppageCategory("stoppage");
-        setStoppageDetails(goalNotes || (isOwnGoal ? "Own Goal Kickoff Stoppage" : "Goal Kickoff Stoppage"));
-      } catch (err: any) {
-        toast.error("Failed to record goal: " + err.message);
-      }
-    });
+          if (!majorRes?.id) throw new Error("Failed to create major event record.");
+
+          const newGoal = await fetch(`/api/game_events_goals`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              major_event_id: Number(majorRes.id),
+              team_season_id: Number(teamSeasonVal),
+              scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
+              assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
+              defending_gk_player_game_id: defendingGkPlayerGameId,
+              opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
+              is_own_goal: isOwnGoal,
+              goal_types: goalTypesJson,
+            }),
+          }).then((r) => r.json());
+
+          if (newGoal?.id) {
+            useGameStore.getState().replaceGoalEvent(
+              tempGoalId,
+              newGoal,
+              tempMajorId,
+              {
+                id: majorRes.id,
+                game_id: Number(game.game_id || game.id),
+                period: game.currentPeriodIndex + 1,
+                event_type: "goal",
+                game_time: gameTimeSeconds,
+                clock_should_run: stopClock ? 0 : 1,
+                details: goalNotes || (isOwnGoal ? "Own Goal Stoppage" : "Goal Kickoff Stoppage"),
+                start_time: Date.now(),
+                end_time: null,
+              } as any
+            );
+            saveGameCache(
+              game.game_id || game.id || "",
+              useGameStore.getState().game,
+              useGamePlayersStore.getState().players
+            );
+          }
+        } catch (err: any) {
+          console.warn("Error persisting goal to server, queueing offline fallback:", err);
+          enqueueOfflineAction("goal", "game_events_goals", "POST", {
+            majorPayload: {
+              game_id: Number(game.game_id || game.id),
+              period: game.currentPeriodIndex + 1,
+              event_type: "goal",
+              game_time: gameTimeSeconds,
+              clock_should_run: stopClock ? 0 : 1,
+              details: goalNotes || (isOwnGoal ? "Own Goal Stoppage" : "Goal Kickoff Stoppage"),
+            },
+            goalPayload: {
+              team_season_id: Number(teamSeasonVal),
+              scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
+              assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
+              defending_gk_player_game_id: defendingGkPlayerGameId,
+              opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
+              is_own_goal: isOwnGoal,
+              goal_types: goalTypesJson,
+            },
+          });
+        }
+      })();
+    } catch (err: any) {
+      toast.error("Failed to record goal: " + err.message);
+    }
   };
 
   // SUBMIT CARD / DISCIPLINE
@@ -462,59 +579,143 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const isOpp = teamTarget === "opp";
-        const player = players.find((p) => String(p.id) === cardPlayerId);
-        const gameTimeSeconds = useGameStore.getState().getGameTime();
-        const payload = {
-          game_id: Number(game.game_id || game.id),
-          team_season_id: Number(isOpp ? game.opponentId : game.teamSeasonId),
-          player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
-          opponent_jersey_number: isOpp && oppCardJersey ? Number(oppCardJersey) : null,
+    try {
+      const isOpp = teamTarget === "opp";
+      const player = players.find((p) => String(p.id) === cardPlayerId);
+      const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
+      const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
+      const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
+      const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
+
+      const tempCardId = `temp_card_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+      const payload = {
+        game_id: Number(game.game_id || game.id),
+        team_season_id: Number(teamSeasonVal),
+        player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
+        opponent_jersey_number: isOpp && oppCardJersey ? Number(oppCardJersey) : null,
+        card_type: cardType,
+        card_reason: cardReason || null,
+        game_time: gameTimeSeconds,
+        period: game.currentPeriodIndex + 1,
+      };
+
+      // 1. Synchronous Optimistic Update
+      addDisciplineEvent(
+        {
+          id: tempCardId,
+          major_event_id: tempMajorId,
+          team_season_id: Number(teamSeasonVal),
           card_type: cardType,
-          card_reason: cardReason || null,
-          game_time: gameTimeSeconds,
+          card_reason: cardReason,
+          player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
+        } as any,
+        {
+          id: tempMajorId,
+          game_id: Number(game.game_id || game.id),
           period: game.currentPeriodIndex + 1,
-        };
+          event_type: "card",
+          game_time: gameTimeSeconds,
+          clock_should_run: stopClock ? 0 : 1,
+          details: cardReason || `${cardType.toUpperCase()} Card Stoppage`,
+          start_time: Date.now(),
+          end_time: null,
+        } as any
+      );
 
-        const newCard = await fetch(`/api/game_events_discipline`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }).then((r) => r.json());
+      if (stopClock) {
+        setIsPausedLocally(true);
+      }
 
-        if (newCard?.id) {
-          addDisciplineEvent(
-            {
-              id: newCard.id,
-              major_event_id: newCard.major_event_id,
-              team_season_id: Number(isOpp ? game.opponentId : game.teamSeasonId),
-              card_type: cardType,
-              card_reason: cardReason,
-              player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
-            } as any,
-            {
-              id: newCard.major_event_id,
+      saveGameCache(
+        game.game_id || game.id || "",
+        useGameStore.getState().game,
+        useGamePlayersStore.getState().players
+      );
+
+      toast.success(`${cardType.toUpperCase()} Card recorded!`);
+
+      // CLOSE MODAL IMMEDIATELY
+      onClose();
+
+      // 2. Background Persistence
+      (async () => {
+        try {
+          const majorRes = await fetch(`/api/game_events_major`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
               game_id: Number(game.game_id || game.id),
               period: game.currentPeriodIndex + 1,
+              event_type: "card",
               game_time: gameTimeSeconds,
-              clock_should_run: 0,
+              clock_should_run: stopClock ? 0 : 1,
               details: cardReason || `${cardType.toUpperCase()} Card Stoppage`,
-              start_time: Date.now(),
-              end_time: null,
-            } as any
-          );
-        }
+            }),
+          }).then((r) => r.json());
 
-        toast.success(`${cardType.toUpperCase()} Card recorded!`);
-        setEventType("stoppage");
-        setStoppageCategory("stoppage");
-        setStoppageDetails(cardReason || `${cardType.toUpperCase()} Card Stoppage`);
-      } catch (err: any) {
-        toast.error("Failed to record card: " + err.message);
-      }
-    });
+          if (!majorRes?.id) throw new Error("Failed to create major event record.");
+
+          const newCard = await fetch(`/api/game_events_discipline`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              major_event_id: Number(majorRes.id),
+              team_season_id: Number(teamSeasonVal),
+              player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
+              opponent_jersey_number: isOpp && oppCardJersey ? Number(oppCardJersey) : null,
+              card_type: cardType,
+              card_reason: cardReason || null,
+            }),
+          }).then((r) => r.json());
+
+          if (newCard?.id) {
+            useGameStore.getState().replaceDisciplineEvent(
+              tempCardId,
+              newCard,
+              tempMajorId,
+              {
+                id: majorRes.id,
+                game_id: Number(game.game_id || game.id),
+                period: game.currentPeriodIndex + 1,
+                game_time: gameTimeSeconds,
+                clock_should_run: stopClock ? 0 : 1,
+                details: cardReason || `${cardType.toUpperCase()} Card Stoppage`,
+                start_time: Date.now(),
+                end_time: null,
+              } as any
+            );
+            saveGameCache(
+              game.game_id || game.id || "",
+              useGameStore.getState().game,
+              useGamePlayersStore.getState().players
+            );
+          }
+        } catch (err: any) {
+          console.warn("Error persisting card to server, queueing offline fallback:", err);
+          enqueueOfflineAction("discipline", "game_events_discipline", "POST", {
+            majorPayload: {
+              game_id: Number(game.game_id || game.id),
+              period: game.currentPeriodIndex + 1,
+              event_type: "card",
+              game_time: gameTimeSeconds,
+              clock_should_run: stopClock ? 0 : 1,
+              details: cardReason || `${cardType.toUpperCase()} Card Stoppage`,
+            },
+            cardPayload: {
+              team_season_id: Number(teamSeasonVal),
+              player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
+              opponent_jersey_number: isOpp && oppCardJersey ? Number(oppCardJersey) : null,
+              card_type: cardType,
+              card_reason: cardReason || null,
+            },
+          });
+        }
+      })();
+    } catch (err: any) {
+      toast.error("Failed to record card: " + err.message);
+    }
   };
 
   // SUBMIT PENALTY KICK (PK)
@@ -530,17 +731,36 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       try {
         const isOpp = teamTarget === "opp";
         const taker = players.find((p) => String(p.id) === pkTakerId);
-        const gameTimeSeconds = useGameStore.getState().getGameTime();
+        const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
         const finalOutcome = isReboundGoal ? "goal" : pkOutcome;
 
+        const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
+        const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
+        const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
+        const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
+        const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : null) : null;
+
+        const majorRes = await fetch(`/api/game_events_major`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            game_id: Number(game.game_id || game.id),
+            period: game.currentPeriodIndex + 1,
+            event_type: "penalty",
+            game_time: gameTimeSeconds,
+            clock_should_run: 0,
+            details: pkNotes || "Penalty Kick Stoppage",
+          }),
+        }).then((r) => r.json());
+
+        if (!majorRes?.id) throw new Error("Failed to create major event record.");
+
         const pkPayload = {
-          game_id: Number(game.game_id || game.id),
-          team_season_id: Number(isOpp ? game.opponentId : game.teamSeasonId),
+          major_event_id: Number(majorRes.id),
+          team_season_id: Number(teamSeasonVal),
           shooter_player_game_id: !isOpp && taker?.playerGameId ? Number(taker.playerGameId) : null,
           opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
           outcome: finalOutcome,
-          game_time: gameTimeSeconds,
-          period: game.currentPeriodIndex + 1,
         };
 
         await fetch(`/api/game_events_penalties`, {
@@ -550,13 +770,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         });
 
         if (finalOutcome === "goal" || isReboundGoal) {
+          const pkGoalTypesJson = JSON.stringify([isReboundGoal ? "pk_rebound" : "penalty"]);
           const goalPayload = {
-            game_id: Number(game.game_id || game.id),
-            team_season_id: Number(isOpp ? game.opponentId : game.teamSeasonId),
+            major_event_id: Number(majorRes.id),
+            team_season_id: Number(teamSeasonVal),
             scorer_player_game_id: !isOpp && taker?.playerGameId ? Number(taker.playerGameId) : null,
-            goal_types: isReboundGoal ? "pk_rebound" : "penalty",
-            game_time: gameTimeSeconds,
-            period: game.currentPeriodIndex + 1,
+            defending_gk_player_game_id: defendingGkPlayerGameId,
+            goal_types: pkGoalTypesJson,
           };
           const newGoal = await fetch(`/api/game_events_goals`, {
             method: "POST",
@@ -569,8 +789,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
               {
                 id: newGoal.id,
                 major_event_id: newGoal.major_event_id,
-                team_season_id: Number(isOpp ? game.opponentId : game.teamSeasonId),
-                goal_types: isReboundGoal ? "pk_rebound" : "penalty",
+                team_season_id: Number(teamSeasonVal),
+                goal_types: pkGoalTypesJson,
                 scorer_player_game_id: !isOpp && taker?.playerGameId ? Number(taker.playerGameId) : null,
               } as any,
               {
@@ -603,7 +823,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     if (!game) return;
     startTransition(async () => {
       try {
-        const gameTimeSeconds = useGameStore.getState().getGameTime();
+        const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
         const reasonStr = stoppageDetails || stoppageCategory.toUpperCase() + " Stoppage";
 
         const newMajor = await fetch(`/api/game_events_major`, {
@@ -730,46 +950,46 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      showCloseButton={!activeStoppage}
-      closeOnOverlayClick={!activeStoppage}
+      showCloseButton={false}
+      closeOnOverlayClick={false}
       title="Record Major Match Event"
-      subtitle={activeStoppage ? "Active Stoppage in Progress — Must End or Cancel Stoppage" : "Immediate event logging with auto-clock pause controls"}
+      subtitle="Immediate event logging with clock controls"
     >
       <div className="space-y-4 text-xs">
-        {/* Header Bar: Live Clock & Clock Pause Control */}
+        {/* Header Bar: Timed Match Clock & Single Pause Toggle */}
         <div className="flex items-center justify-between p-3 bg-surface border border-border/80 rounded-xl shadow-2xs">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Game Time:</span>
-            <span className="font-mono font-black text-sm text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-lg">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Timed Match Clock:</span>
+            <span className={`font-mono font-black text-sm px-2.5 py-0.5 rounded-lg border ${
+              stopClock
+                ? "bg-amber-500/10 text-amber-500 border-amber-500/30 font-bold"
+                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+            }`}>
               {formatSecondsToMmss(liveSeconds)}
             </span>
-            {activeStoppage && (
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20 animate-pulse">
-                Active Stoppage
-              </span>
-            )}
           </div>
 
-          {!activeStoppage && (
-            <Button
-              variant={isPausedLocally ? "primary" : "outline"}
-              size="xs"
-              onClick={handleToggleClock}
-              className="flex items-center gap-1.5 font-bold text-[10px]"
-            >
-              {isPausedLocally ? (
-                <>
-                  <PlayCircle size={14} className="text-emerald-400" />
-                  <span>Resume Clock</span>
-                </>
-              ) : (
-                <>
-                  <PauseCircle size={14} className="text-amber-500" />
-                  <span>Pause Clock</span>
-                </>
-              )}
-            </Button>
-          )}
+          <button
+            type="button"
+            onClick={() => setStopClock(!stopClock)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer shadow-2xs ${
+              stopClock
+                ? "bg-amber-500/15 border-amber-500/40 text-amber-500 hover:bg-amber-500/25"
+                : "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
+            }`}
+          >
+            {stopClock ? (
+              <>
+                <PauseCircle size={15} className="text-amber-500 animate-pulse" />
+                <span>Clock Paused ⏸️</span>
+              </>
+            ) : (
+              <>
+                <PlayCircle size={15} className="text-emerald-400" />
+                <span>Clock Running ⏱️</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Quick Action Event Type Button Bar */}
@@ -777,12 +997,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted">
             Select Event Type
           </label>
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
             {[
               { type: "goal", label: "Goal", icon: Trophy, color: "text-emerald-500" },
               { type: "card", label: "Card", icon: ShieldAlert, color: "text-amber-500" },
               { type: "pk", label: "PK", icon: Target, color: "text-blue-500" },
               { type: "injury", label: "Injury", icon: Activity, color: "text-rose-500" },
+              { type: "hydration", label: "Water", icon: Droplets, color: "text-cyan-400" },
               { type: "weather", label: "Delay", icon: Zap, color: "text-yellow-500" },
               { type: "var", label: "VAR", icon: Tv, color: "text-indigo-500" },
               { type: "stoppage", label: "Pause", icon: PauseCircle, color: "text-slate-500" },
@@ -791,8 +1012,11 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                 key={type}
                 onClick={() => {
                   setEventType(type as MajorEventType);
-                  if (type === "injury" || type === "weather" || type === "var" || type === "stoppage") {
-                    setStoppageCategory(type as any);
+                  if (type === "injury" || type === "hydration" || type === "weather" || type === "var" || type === "stoppage") {
+                    setStoppageCategory(type === "hydration" ? "stoppage" : type as any);
+                    if (type === "hydration") {
+                      setStoppageDetails("Hydration / Water Break");
+                    }
                   }
                 }}
                 className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all text-center cursor-pointer ${
@@ -806,6 +1030,21 @@ export default function MajorEventModal(props: MajorEventModalProps) {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* PAUSE CLOCK TOGGLE FOR EVENT */}
+        <div className="flex items-center justify-between p-2.5 bg-surface border border-border/80 rounded-xl">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-bold text-text">Pause Timed Match Clock</span>
+            <span className="text-[10px] text-muted">
+              {stopClock ? "Match clock is paused. Clock does not tick." : "Match clock continues running live."}
+            </span>
+          </div>
+          <Checkbox
+            label={stopClock ? "Paused ⏸️" : "Running ⏱️"}
+            checked={stopClock}
+            onChange={(val: any) => setStopClock(typeof val === "boolean" ? val : Boolean(val?.target?.checked))}
+          />
         </div>
 
         {/* TEAM TARGET TOGGLE (Us vs Opponent) */}
@@ -859,10 +1098,10 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                     options={[{ value: "", label: "-- Select Scorer --" }, ...scorerOptions]}
                   />
                   <Select
-                    label="Assist By (Excludes Scorer)"
+                    label="Assist By (Optional)"
                     value={goalAssistId}
                     onChange={(e: any) => setGoalAssistId(e.target.value)}
-                    options={[{ value: "", label: "-- Unassisted / None --" }, ...assistOptions]}
+                    options={[{ value: "", label: "-- None (Optional) --" }, ...assistOptions]}
                   />
                 </>
               )
@@ -1085,8 +1324,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           </div>
         )}
 
-        {/* UNIFIED BOTTOM FOOTER ACTION BAR (VISIBLE ON ALL EVENT TABS) */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border/60">
+        {/* UNIFIED BOTTOM FOOTER ACTION BAR */}
+        <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/60">
           {activeStoppage ? (
             <Button
               variant="outline"
@@ -1103,32 +1342,21 @@ export default function MajorEventModal(props: MajorEventModalProps) {
             </Button>
           )}
 
-          {activeStoppage ? (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleEndStoppageClick}
-              disabled={isPending}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5"
-            >
-              <PlayCircle size={16} />
-              <span>End Stoppage & Resume Play</span>
-            </Button>
-          ) : eventType === "goal" ? (
+          {eventType === "goal" ? (
             <Button variant="primary" size="sm" onClick={handleGoalSubmit} disabled={isPending}>
-              Record Goal
+              Record Goal ⚽
             </Button>
           ) : eventType === "card" ? (
             <Button variant="primary" size="sm" onClick={handleCardSubmit} disabled={isPending}>
-              Record Card
+              Record Card 🟨🟥
             </Button>
           ) : eventType === "pk" ? (
             <Button variant="primary" size="sm" onClick={handlePkSubmit} disabled={isPending}>
-              Log Penalty Kick
+              Log Penalty Kick 🎯
             </Button>
           ) : (
             <Button variant="primary" size="sm" onClick={handleStoppageSubmit} disabled={isPending}>
-              Log Stoppage
+              Log Stoppage ⏸️
             </Button>
           )}
         </div>

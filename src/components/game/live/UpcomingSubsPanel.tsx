@@ -40,27 +40,24 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
   const defaultConfirmSingleSub = async (subId: string | number) => {
     try {
       await confirmSub(subId);
-      toast.success("Substitution entered.");
     } catch (err: any) {
-      toast.error("Failed to enter sub: " + err.message);
+      console.error("Failed to enter sub: ", err);
     }
   };
 
   const defaultCancelSub = async (subId: string | number) => {
     try {
       await cancelSub(subId);
-      toast.success("Substitution cancelled.");
     } catch (err: any) {
-      toast.error("Failed to cancel sub: " + err.message);
+      console.error("Failed to cancel sub: ", err);
     }
   };
 
   const defaultConfirmAllSubs = async () => {
     try {
       await confirmAllPendingSubs();
-      toast.success("All pending substitutions entered.");
     } catch (err: any) {
-      toast.error("Failed to enter subs: " + err.message);
+      console.error("Failed to enter subs: ", err);
     }
   };
 
@@ -70,9 +67,8 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
         in_player_id: inPlayerId ? Number(inPlayerId) : null,
         out_player_id: outPlayerId ? Number(outPlayerId) : null,
       });
-      toast.success("Pending substitution updated.");
     } catch (err: any) {
-      toast.error("Failed to update sub: " + err.message);
+      console.error("Failed to update sub: ", err);
     }
   };
 

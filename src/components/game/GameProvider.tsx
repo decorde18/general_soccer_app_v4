@@ -8,6 +8,9 @@ import useGamePlayersStore from "@/stores/gamePlayersStore";
 import { useSession } from "next-auth/react";
 import { FullScreenLoader, FullScreenError } from "@/components/shared/FullScreenState";
 
+import { saveGameCache, loadGameCache } from "@/lib/offline/offlineSync";
+import { toast } from "sonner";
+
 interface GameProviderProps {
   children: ReactNode;
 }
@@ -22,20 +25,26 @@ export default function GameProvider({ children }: GameProviderProps) {
   // Game Stores
   const initializeGame = useGameStore((s) => s.initializeGame);
   const loadPlayers = useGamePlayersStore((s) => s.loadPlayers);
-  const gameIsLoading = useGameStore((s) => s.isLoading);
-  const playersIsLoading = useGamePlayersStore((s) => s.isLoading);
   const game = useGameStore((s) => s.game);
   const players = useGamePlayersStore((s) => s.players);
 
   const [initError, setInitError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // STEP 1: Wait for hydration, then check auth & permissions
+  // STEP 1: Wait for hydration, then check auth & permissions (with offline fallback)
   useEffect(() => {
     if (status === "loading") return;
 
-    // Not authenticated - redirect to login
+    // Check if we have offline cached game data available
+    const cached = loadGameCache(id);
+
+    // Not authenticated online - check if offline cache exists
     if (status === "unauthenticated" || !session?.user) {
+      if (cached) {
+        console.warn("Offline/unauthenticated session: Bypassing auth check using local cache.");
+        setAuthChecked(true);
+        return;
+      }
       router.push(`/login?redirect=/gamestats/${teamSeasonId}/${id}`);
       return;
     }
@@ -54,6 +63,10 @@ export default function GameProvider({ children }: GameProviderProps) {
 
     // Must have can_enter_stats permission
     if (!isCoachOrAdmin && !isTeamAdminOrStatsKeeper) {
+      if (cached) {
+        setAuthChecked(true);
+        return;
+      }
       console.warn("Access denied: User lacks can_enter_stats permission");
       router.push(`/teams/${teamSeasonId}?error=insufficient_permissions`);
       return;
@@ -63,13 +76,13 @@ export default function GameProvider({ children }: GameProviderProps) {
     setAuthChecked(true);
   }, [status, session, teamSeasonId, id, router]);
 
-  // STEP 2: Load Game Data (only after auth check passes)
+  // STEP 2: Load Game Data (online fetch with offline cache fallback)
   useEffect(() => {
     if (!authChecked) return;
 
     const initializeGameData = async () => {
       try {
-        // Initialize game first
+        // Initialize game first online
         const result = await initializeGame(id, teamSeasonId);
 
         // Redirect if game not found
@@ -80,8 +93,26 @@ export default function GameProvider({ children }: GameProviderProps) {
 
         // Then load players for this game
         await loadPlayers(id, teamSeasonId);
+
+        // Cache successful load for offline resilience
+        const latestGame = useGameStore.getState().game;
+        const latestPlayers = useGamePlayersStore.getState().players;
+        if (latestGame && latestPlayers.length > 0) {
+          saveGameCache(id, latestGame, latestPlayers);
+        }
       } catch (error) {
-        console.error("Error initializing game:", error);
+        console.error("Error initializing game online, checking offline cache:", error);
+        
+        // Check offline cache fallback
+        const cached = loadGameCache(id);
+        if (cached?.game && cached?.players) {
+          useGameStore.setState({ game: cached.game, isLoading: false });
+          useGamePlayersStore.setState({ players: cached.players, isLoading: false });
+          toast.info("Offline Mode: Rehydrated match data from device cache.");
+          setInitError(null);
+          return;
+        }
+
         setInitError(error instanceof Error ? error.message : "Something went wrong loading this game.");
       }
     };
@@ -89,13 +120,24 @@ export default function GameProvider({ children }: GameProviderProps) {
     initializeGameData();
   }, [authChecked, id, teamSeasonId, initializeGame, loadPlayers, router]);
 
+  // STEP 3: Final cache fallback rehydration in useEffect (Hook declared at top level)
+  useEffect(() => {
+    if ((!game || players.length === 0) && id) {
+      const cached = loadGameCache(id);
+      if (cached?.game && cached?.players) {
+        useGameStore.setState({ game: cached.game, isLoading: false });
+        useGamePlayersStore.setState({ players: cached.players, isLoading: false });
+      }
+    }
+  }, [game, players?.length, id]);
+
   // Waiting for hydration or auth check
   if (status === "loading" || !authChecked) {
     return <FullScreenLoader message="Verifying access..." />;
   }
 
-  // Error state
-  if (initError) {
+  // Error state (only if no cache exists)
+  if (initError && !game) {
     return (
       <FullScreenError
         title="Unable to Load Game"
@@ -106,7 +148,7 @@ export default function GameProvider({ children }: GameProviderProps) {
     );
   }
 
-  // Loading game data (only initially, do not block subsequent background updates)
+  // Loading game data
   if (!game || players.length === 0) {
     return <FullScreenLoader message="Loading game data..." />;
   }

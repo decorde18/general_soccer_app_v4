@@ -309,12 +309,86 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
       return null;
     }
 
-    // Auto-detect if this is a GK sub
-    if (!isGkSub && (inPlayerId || outPlayerId)) {
-      isGkSub = await get().isGkSubstitution(inPlayerId, outPlayerId);
-    }
+    const tempSubId = `temp_sub_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const playersStore = useGamePlayersStore.getState();
+    const calculateFieldStatus = playersStore.calculateFieldStatus;
 
+    // 1. SYNCHRONOUS OPTIMISTIC UPDATE (0ms lag - changes UI to pending INSTANTLY)
+    playersStore.setPlayers(
+      playersStore.players.map((player) => {
+        let updatedPlayer: Player = { ...player };
+
+        // Add to ins
+        if (inPlayerId && Number(player.playerGameId) === Number(inPlayerId)) {
+          updatedPlayer = {
+            ...updatedPlayer,
+            ins: [
+              ...(player.ins || []),
+              { gameTime: null, subId: tempSubId, gkSub: isGkSub },
+            ],
+          };
+        }
+
+        // Add to outs
+        if (outPlayerId && Number(player.playerGameId) === Number(outPlayerId)) {
+          updatedPlayer = {
+            ...updatedPlayer,
+            outs: [
+              ...(player.outs || []),
+              { gameTime: null, subId: tempSubId, gkSub: isGkSub },
+            ],
+          };
+        }
+
+        // Calculate subStatus for this player
+        const pendingIns = (updatedPlayer.ins || []).filter(
+          (s) => s.gameTime === null,
+        );
+        const pendingOuts = (updatedPlayer.outs || []).filter(
+          (s) => s.gameTime === null,
+        );
+
+        const subStatus = computeSubStatus(
+          pendingIns.length,
+          pendingOuts.length,
+        );
+
+        const hasChanged =
+          updatedPlayer.ins !== player.ins ||
+          updatedPlayer.outs !== player.outs;
+
+        return {
+          ...updatedPlayer,
+          subStatus,
+          fieldStatus: hasChanged
+            ? calculateFieldStatus(updatedPlayer)
+            : player.fieldStatus,
+        };
+      }),
+    );
+
+    // Also update gameStore.game.pendingSubs synchronously
+    const tempSubObj: any = {
+      id: tempSubId,
+      game_id: gameId,
+      in_player_id: inPlayerId,
+      out_player_id: outPlayerId,
+      sub_time: null,
+      period: useGameStore.getState().getCurrentPeriodNumber(),
+      gk_sub: isGkSub ? 1 : 0,
+    };
+    const currentPending = useGameStore.getState().game?.pendingSubs || [];
+    useGameStore.getState().updateGame({
+      pendingSubs: [...currentPending, tempSubObj] as any,
+    });
+
+    // 2. BACKGROUND SERVER PERSISTENCE (Non-blocking)
     try {
+      // Auto-detect if this is a GK sub if not already specified
+      if (!isGkSub && (inPlayerId || outPlayerId)) {
+        isGkSub = await get().isGkSubstitution(inPlayerId, outPlayerId);
+      }
+
       const sub = await apiFetch<GameSub>("game_subs", "POST", {
         game_id: gameId,
         in_player_id: inPlayerId,
@@ -324,72 +398,28 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
         gk_sub: isGkSub ? 1 : 0,
       });
 
-      const playersStore = useGamePlayersStore.getState();
-      const calculateFieldStatus = playersStore.calculateFieldStatus;
+      if (sub?.id) {
+        // Replace tempSubId with real sub.id in playersStore and gameStore
+        const latestPlayers = useGamePlayersStore.getState().players;
+        useGamePlayersStore.getState().setPlayers(
+          latestPlayers.map((player) => ({
+            ...player,
+            ins: (player.ins || []).map((i) => (i.subId === tempSubId ? { ...i, subId: sub.id, gkSub: isGkSub } : i)),
+            outs: (player.outs || []).map((o) => (o.subId === tempSubId ? { ...o, subId: sub.id, gkSub: isGkSub } : o)),
+          }))
+        );
 
-      // Update players with the new sub - CRITICAL: Do this in ONE operation
-      playersStore.setPlayers(
-        playersStore.players.map((player) => {
-          let updatedPlayer: Player = { ...player };
+        const latestPending = useGameStore.getState().game?.pendingSubs || [];
+        useGameStore.getState().updateGame({
+          pendingSubs: latestPending.map((s) => (s.id === tempSubId ? sub : s)) as any,
+        });
 
-          // Add to ins
-          if (inPlayerId && Number(player.playerGameId) === Number(inPlayerId)) {
-            updatedPlayer = {
-              ...updatedPlayer,
-              ins: [
-                ...(player.ins || []),
-                { gameTime: null, subId: sub.id, gkSub: isGkSub },
-              ],
-            };
-          }
-
-          // Add to outs
-          if (outPlayerId && Number(player.playerGameId) === Number(outPlayerId)) {
-            updatedPlayer = {
-              ...updatedPlayer,
-              outs: [
-                ...(player.outs || []),
-                { gameTime: null, subId: sub.id, gkSub: isGkSub },
-              ],
-            };
-          }
-
-          // Calculate subStatus for this player
-          const pendingIns = (updatedPlayer.ins || []).filter(
-            (s) => s.gameTime === null,
-          );
-          const pendingOuts = (updatedPlayer.outs || []).filter(
-            (s) => s.gameTime === null,
-          );
-
-          const subStatus = computeSubStatus(
-            pendingIns.length,
-            pendingOuts.length,
-          );
-
-          // Recalculate field status if ins or outs changed
-          const hasChanged =
-            updatedPlayer.ins !== player.ins ||
-            updatedPlayer.outs !== player.outs;
-
-          return {
-            ...updatedPlayer,
-            subStatus,
-            fieldStatus: hasChanged
-              ? calculateFieldStatus(updatedPlayer)
-              : player.fieldStatus,
-          };
-        }),
-      );
-
-      // ❌ DO NOT CALL updateAllSubStatuses - it overwrites everything!
-      // await playersStore.updateAllSubStatuses(gameId);
-
-      return sub;
+        return sub;
+      }
     } catch (error) {
-      console.error("Error creating pending sub:", error);
-      return null;
+      console.error("Error creating pending sub on server:", error);
     }
+    return tempSubObj;
   },
 
   // ==================== UPDATE PENDING SUB ====================

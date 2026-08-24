@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
+import Modal from "@/components/ui/Modal";
 import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
 import useGameSubsStore, { PendingSub } from "@/stores/gameSubsStore";
 import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
 import useGameStore from "@/stores/gameStore";
 import { toast } from "sonner";
+import { saveGameCache } from "@/lib/offline/offlineSync";
 import LivePlayerTable from "./LivePlayerTable";
 
 interface OnFieldPlayersPanelProps {
@@ -130,6 +132,26 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
 
   const handleQuickPlayerAction = props.handleQuickPlayerAction ?? defaultQuickPlayerAction;
 
+  const [isGkSwapModalOpen, setIsGkSwapModalOpen] = useState(false);
+  const swapGoalkeeperRole = useGamePlayersStore((s) => s.swapGoalkeeperRole);
+
+  const handleSwapGkRole = (player: Player) => {
+    try {
+      swapGoalkeeperRole(player.id);
+      if (storeGame) {
+        saveGameCache(
+          storeGame.game_id || storeGame.id || "",
+          useGameStore.getState().game,
+          useGamePlayersStore.getState().players
+        );
+      }
+      toast.success(`${player.fullName} is now the Goalkeeper!`);
+      setIsGkSwapModalOpen(false);
+    } catch (err: any) {
+      toast.error("Failed to swap goalkeeper: " + err.message);
+    }
+  };
+
   return (
     <Card variant="outlined" padding="sm" className="shrink-0 flex flex-col bg-surface shadow-xs rounded-xl p-2.5 overflow-hidden">
       <div className="shrink-0 flex items-center justify-between border-b border-border/40 pb-1.5 px-1.5">
@@ -137,18 +159,29 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>Players On Field ({onFieldCount})</span>
         </h3>
-        {props.subOutId && (
-          <span className="text-[8px] uppercase font-black text-rose-500 animate-pulse bg-rose-50 border border-rose-500/20 px-1.5 py-0.25 rounded">
-            Select game changer row below to swap
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsGkSwapModalOpen(true)}
+            className="text-[9px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 transition-colors cursor-pointer"
+            title="Reassign or swap which player is Goalkeeper"
+          >
+            🧤 Swap GK
+          </button>
+          {props.subOutId && (
+            <span className="text-[8px] uppercase font-black text-rose-500 animate-pulse bg-rose-50 border border-rose-500/20 px-1.5 py-0.25 rounded">
+              Select game changer row below to swap
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col gap-2 pt-1.5 overflow-hidden">
         {/* GOALKEEPER SECTION */}
         {onFieldGks.length > 0 && (
           <div className="shrink-0 space-y-0.5">
-            <span className="text-[9px] uppercase font-black text-muted tracking-wider px-1">Goalkeeper</span>
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[9px] uppercase font-black text-muted tracking-wider">Goalkeeper</span>
+            </div>
             <LivePlayerTable
               players={onFieldGks}
               tableType="gk"
@@ -181,6 +214,63 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
           />
         </div>
       </div>
+
+      {/* GK SWAP SELECTION MODAL */}
+      <Modal
+        isOpen={isGkSwapModalOpen}
+        onClose={() => setIsGkSwapModalOpen(false)}
+        title="Assign / Swap Goalkeeper Role 🧤"
+        size="md"
+      >
+        <div className="space-y-3 text-xs">
+          <p className="text-muted leading-relaxed">
+            Select any player below to assign them as the Goalkeeper. The previous Goalkeeper will automatically transition to a field player role.
+          </p>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted">Eligible Roster Players</span>
+            <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1 border border-border/60 rounded-xl p-2 bg-background/50">
+              {eligiblePlayers.map((p) => {
+                const isCurrentGk = p.gameStatus === "goalkeeper" || p.fieldStatus === "onFieldGk";
+                return (
+                  <div
+                    key={p.id}
+                    className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
+                      isCurrentGk
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold"
+                        : "bg-surface border-border/80 hover:border-primary/50 text-text cursor-pointer"
+                    }`}
+                    onClick={() => !isCurrentGk && handleSwapGkRole(p)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold w-6 text-center text-muted">
+                        #{p.jerseyNumber || "?"}
+                      </span>
+                      <span className="font-bold">{p.fullName}</span>
+                      <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-muted/20 text-muted">
+                        {p.fieldStatus}
+                      </span>
+                    </div>
+
+                    {isCurrentGk ? (
+                      <span className="text-[9px] font-extrabold uppercase text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/20">
+                        Active GK 🧤
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleSwapGkRole(p)}
+                        className="px-2.5 py-1 bg-primary text-white font-bold text-[10px] rounded-md shadow-xs hover:bg-primary/90 cursor-pointer"
+                      >
+                        Make GK 🧤
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </Modal>
     </Card>
   );
 }

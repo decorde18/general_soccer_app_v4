@@ -16,6 +16,7 @@ import UpcomingSubsPanel from "./live/UpcomingSubsPanel";
 import RecentEventsPanel from "./live/RecentEventsPanel";
 import MajorEventModal from "./live/MajorEventModal";
 import LiveNavigationDrawer from "./live/LiveNavigationDrawer";
+import { PauseCircle } from "lucide-react";
 
 export default function LiveGameTrackerClient() {
   const { id, teamSeasonId } = useParams<{ id: string; teamSeasonId: string }>();
@@ -59,7 +60,7 @@ export default function LiveGameTrackerClient() {
             );
           }
         } catch (err: any) {
-          toast.error("Failed to queue sub: " + err.message);
+          console.error("Failed to queue sub:", err);
         }
       };
       executeAutoSub();
@@ -107,6 +108,19 @@ export default function LiveGameTrackerClient() {
         onOpenMajorEventModal={handleOpenMajorEventModal}
         onOpenNavDrawer={() => setIsNavDrawerOpen(true)}
       />
+
+      {/* BETWEEN PERIODS INTERMISSION BANNER */}
+      {currentStage === GAME_STAGES.BETWEEN_PERIODS && (
+        <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-2 text-xs font-bold text-amber-500 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <PauseCircle size={16} className="text-amber-500 animate-pulse" />
+            <span>HALFTIME / BETWEEN PERIODS — Timed match clock is paused. Review lineups, stats & queue substitutions. Event recording is disabled until next period starts.</span>
+          </div>
+          <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] uppercase font-black tracking-wider shrink-0 border border-amber-500/30">
+            Intermission
+          </span>
+        </div>
+      )}
 
       {/* Main split grid: Left 70% (Rosters Stacked), Right 30% (Feeds Stacked) */}
       <div className="flex-1 min-h-0 flex gap-3">

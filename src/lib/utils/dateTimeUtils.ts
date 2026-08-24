@@ -339,9 +339,11 @@ export function calculatePeriodTime(
 
   const totalPeriodSeconds = Math.floor((periodEndMs - periodStartMs) / 1000);
 
-  const stoppageSeconds = stoppages
-    .filter((s): s is Stoppage & { endTime: number } => s.endTime !== null)
-    .reduce((total, s) => total + (s.endTime - s.startTime), 0);
+  const stoppageSeconds = stoppages.reduce((total, s) => {
+    const end = s.endTime !== null && s.endTime !== undefined ? s.endTime : totalPeriodSeconds;
+    const dur = Math.max(0, end - s.startTime);
+    return total + dur;
+  }, 0);
 
   return Math.max(0, totalPeriodSeconds - stoppageSeconds);
 }

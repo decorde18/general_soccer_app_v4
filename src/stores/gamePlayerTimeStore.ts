@@ -57,12 +57,15 @@ const calculateStoppageTimeInRange = (
   rangeStart: number,
   rangeEnd: number,
   periodNumber: number,
+  currentGameTime?: number,
 ) =>
   stoppages
-    .filter((s) => s.periodNumber === periodNumber && s.endTime !== null)
+    .filter((s) => (s.periodNumber === periodNumber || s.period === periodNumber) && (s.clock_should_run === 0 || s.clockShouldRun === 0))
     .reduce((total, stoppage) => {
-      const overlapStart = Math.max(stoppage.startTime, rangeStart);
-      const overlapEnd = Math.min(stoppage.endTime, rangeEnd);
+      const stopStart = stoppage.startTime ?? stoppage.game_time ?? 0;
+      const stopEnd = stoppage.endTime ?? stoppage.end_time ?? (currentGameTime !== undefined ? currentGameTime : rangeEnd);
+      const overlapStart = Math.max(stopStart, rangeStart);
+      const overlapEnd = Math.min(stopEnd, rangeEnd);
       return overlapEnd > overlapStart
         ? total + (overlapEnd - overlapStart)
         : total;
@@ -156,6 +159,7 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
           chunk.start,
           chunk.end,
           chunk.periodNumber,
+          currentGameTime
         );
         total += Math.max(0, chunkTime - stoppageTime);
       });
@@ -191,6 +195,7 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
         chunk.start,
         chunk.end,
         chunk.periodNumber,
+        currentGameTime
       );
       total += Math.max(0, chunkTime - stoppageTime);
     });

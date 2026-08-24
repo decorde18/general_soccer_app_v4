@@ -6,6 +6,7 @@ import {
   calculatePeriodTime,
 } from "@/lib/utils/dateTimeUtils";
 import useGameSubsStore from "./gameSubsStore";
+import useGamePlayersStore from "./gamePlayersStore";
 import {
   GAME_STAGES,
   type Game,
@@ -50,6 +51,7 @@ const DEFAULT_GAME_SETTINGS: GameSettings = {
   clockDirection: "up",
   reentryRule: "unlimited",
   autoStopClockOnMajorEvent: true,
+  clockRuleProfile: "NFHS",
 };
 
 interface CalculateTeamStatTotalsInput {
@@ -81,7 +83,7 @@ export interface GameStoreState {
 
   // Time calculations
   getGameTime: () => number;
-  getPeriodTime: () => number;
+  getPeriodTime: (atMs?: number) => number;
   getPeriodDuration: (periodIndex: number) => number;
 
   // Game actions
@@ -238,40 +240,65 @@ const useGameStore = create<GameStoreState>((set, get) => {
         );
 
         // Fetch all game events in parallel
-        const [
-          gameEventsGoals,
-          gameEventsDiscipline,
-          gameEventsPenalties,
+        let [
+          rawGoals,
+          rawDiscipline,
+          rawPenalties,
           gameEventsMajor,
           playerActions,
           gameEventsTeam,
         ]: [
-          GameEventGoal[],
-          GameEventDiscipline[],
-          GameEventPenalty[],
-          GameEventMajor[],
-          PlayerAction[],
-          GameEventTeam[],
+          any[],
+          any[],
+          any[],
+          any[],
+          any[],
+          any[],
         ] = await Promise.all([
           apiFetch("v_game_events_goals_complete", "GET", null, null, {
             filters: { game_id: gameId },
-          }),
+          }).catch(() => []),
           apiFetch("v_game_events_discipline_complete", "GET", null, null, {
             filters: { game_id: gameId },
-          }),
+          }).catch(() => []),
           apiFetch("v_game_events_penalties_complete", "GET", null, null, {
             filters: { game_id: gameId },
-          }),
+          }).catch(() => []),
           apiFetch("game_events_major", "GET", null, null, {
             filters: { game_id: gameId },
-          }),
+          }).catch(() => []),
           apiFetch("game_events_player_actions", "GET", null, null, {
             filters: { game_id: gameId },
-          }),
+          }).catch(() => []),
           apiFetch("game_events_team", "GET", null, null, {
             filters: { game_id: gameId },
-          }),
+          }).catch(() => []),
         ]);
+
+        // Fallback: If view query returns empty, fetch goals/discipline/penalties directly using major_event_id
+        const majorIds = (gameEventsMajor || []).map((m: any) => Number(m.id));
+        if ((!rawGoals || rawGoals.length === 0) && majorIds.length > 0) {
+          const allGoals = await apiFetch("game_events_goals", "GET").catch(() => []);
+          if (Array.isArray(allGoals)) {
+            rawGoals = allGoals.filter((g: any) => majorIds.includes(Number(g.major_event_id)));
+          }
+        }
+        if ((!rawDiscipline || rawDiscipline.length === 0) && majorIds.length > 0) {
+          const allCards = await apiFetch("game_events_discipline", "GET").catch(() => []);
+          if (Array.isArray(allCards)) {
+            rawDiscipline = allCards.filter((d: any) => majorIds.includes(Number(d.major_event_id)));
+          }
+        }
+        if ((!rawPenalties || rawPenalties.length === 0) && majorIds.length > 0) {
+          const allPenalties = await apiFetch("game_events_penalties", "GET").catch(() => []);
+          if (Array.isArray(allPenalties)) {
+            rawPenalties = allPenalties.filter((p: any) => majorIds.includes(Number(p.major_event_id)));
+          }
+        }
+
+        const gameEventsGoals = rawGoals || [];
+        const gameEventsDiscipline = rawDiscipline || [];
+        const gameEventsPenalties = rawPenalties || [];
 
         // Build opponent info
         const { home_team_season_id, away_team_season_id } = dbGame;
@@ -438,6 +465,12 @@ const useGameStore = create<GameStoreState>((set, get) => {
           isLoading: false,
         });
 
+        // Recalculate real-time player event stats (goals, assists, GA, cards)
+        useGamePlayersStore.getState().recalculatePlayerStatsFromEvents(
+          finalGame.gameEventsGoals,
+          finalGame.gameEventsDiscipline
+        );
+
         // Calculate and sync game stage/status
         await get().syncGameStatus();
 
@@ -579,16 +612,16 @@ const useGameStore = create<GameStoreState>((set, get) => {
       return calculateGameTime(game.gameStartTime, currentMs);
     },
 
-    getPeriodTime: () => {
+    getPeriodTime: (atMs?: number) => {
       const game = get().game;
       if (!game) return 0;
 
       const currentPeriod = game.periods[game.currentPeriodIndex];
       if (!currentPeriod?.startTime) return 0;
 
-      const currentMs = currentPeriod.endTime || Date.now();
+      const currentMs = atMs || currentPeriod.endTime || Date.now();
 
-      const periodStoppages = game.gameEventsMajor
+      const periodStoppages = (game.gameEventsMajor || [])
         .filter(
           (s) =>
             s.period === currentPeriod.periodNumber && s.clock_should_run === 0,
@@ -749,16 +782,17 @@ const useGameStore = create<GameStoreState>((set, get) => {
 
       const gameTime = get().getGameTime();
 
+      // 1. Update Zustand local state synchronously (0ms lag)
+      const updatedStoppages = (game.gameEventsMajor || []).map((s) =>
+        String(s.id) === String(stoppageId) ? { ...s, end_time: gameTime } : s,
+      );
+      get().updateGame({ gameEventsMajor: updatedStoppages });
+
+      // 2. Non-blocking server update
       try {
         await apiFetch("game_events_major", "PUT", { end_time: gameTime }, stoppageId);
-
-        const updatedStoppages = (game.gameEventsMajor || []).map((s) =>
-          String(s.id) === String(stoppageId) ? { ...s, end_time: gameTime } : s,
-        );
-
-        get().updateGame({ gameEventsMajor: updatedStoppages });
       } catch (error) {
-        console.error("Error ending stoppage:", error);
+        console.error("Error ending stoppage on server:", error);
       }
     },
 
@@ -951,31 +985,7 @@ const useGameStore = create<GameStoreState>((set, get) => {
           if ((pen as any)?.major_event_id) majorIdToDelete = (pen as any).major_event_id;
         }
 
-        // Execute API deletions
-        const deletePromises: Promise<any>[] = [];
-
-        if (majorIdToDelete) {
-          deletePromises.push(apiFetch("game_events_major", "DELETE", null, majorIdToDelete));
-        }
-        if (goalIdToDelete) {
-          deletePromises.push(apiFetch("game_events_goals", "DELETE", null, goalIdToDelete));
-        }
-        if (disciplineIdToDelete) {
-          deletePromises.push(apiFetch("game_events_discipline", "DELETE", null, disciplineIdToDelete));
-        }
-        if (penaltyIdToDelete) {
-          deletePromises.push(apiFetch("game_events_penalties", "DELETE", null, penaltyIdToDelete));
-        }
-        if (eventType === "player_action") {
-          deletePromises.push(apiFetch("player_actions", "DELETE", null, eventId));
-        }
-        if (eventType === "team") {
-          deletePromises.push(apiFetch("game_events_team", "DELETE", null, eventId));
-        }
-
-        await Promise.all(deletePromises);
-
-        // Update Zustand game state synchronously
+        // 1. Update Zustand game state synchronously (0ms lag)
         const updates: Partial<Game> = {};
 
         if (majorIdToDelete) {
@@ -1035,9 +1045,38 @@ const useGameStore = create<GameStoreState>((set, get) => {
         }
 
         get().updateGame(updates);
+        useGamePlayersStore.getState().recalculatePlayerStatsFromEvents(
+          updates.gameEventsGoals || game.gameEventsGoals,
+          updates.gameEventsDiscipline || game.gameEventsDiscipline
+        );
+
+        // 2. Non-blocking server deletion
+        const deletePromises: Promise<any>[] = [];
+
+        if (majorIdToDelete) {
+          deletePromises.push(apiFetch("game_events_major", "DELETE", null, majorIdToDelete));
+        }
+        if (goalIdToDelete) {
+          deletePromises.push(apiFetch("game_events_goals", "DELETE", null, goalIdToDelete));
+        }
+        if (disciplineIdToDelete) {
+          deletePromises.push(apiFetch("game_events_discipline", "DELETE", null, disciplineIdToDelete));
+        }
+        if (penaltyIdToDelete) {
+          deletePromises.push(apiFetch("game_events_penalties", "DELETE", null, penaltyIdToDelete));
+        }
+        if (eventType === "player_action") {
+          deletePromises.push(apiFetch("player_actions", "DELETE", null, eventId));
+        }
+        if (eventType === "team") {
+          deletePromises.push(apiFetch("game_events_team", "DELETE", null, eventId));
+        }
+
+        Promise.all(deletePromises).catch((err) => {
+          console.error("Error deleting event on server:", err);
+        });
       } catch (error) {
         console.error("Error deleting event:", error);
-        throw error;
       }
     },
 
@@ -1045,24 +1084,28 @@ const useGameStore = create<GameStoreState>((set, get) => {
       const game = get().game;
       if (!game) return;
 
-      const teamSeasonId = game.isHome
-        ? game.home_team_season_id
-        : game.away_team_season_id;
+      const ourTeamSeasonId =
+        game.teamSeasonId ||
+        (game.isHome ? game.home_team_season_id : game.away_team_season_id);
 
       const isOurGoal =
-        goalEvent.team_season_id === teamSeasonId && !goalEvent.is_own_goal;
+        String(goalEvent.team_season_id) === String(ourTeamSeasonId) && !goalEvent.is_own_goal;
       const isTheirGoal =
-        goalEvent.team_season_id !== teamSeasonId || goalEvent.is_own_goal;
+        String(goalEvent.team_season_id) !== String(ourTeamSeasonId) || goalEvent.is_own_goal;
 
       const updatedGame: Game = {
         ...game,
-        gameEventsGoals: [...game.gameEventsGoals, goalEvent],
-        gameEventsMajor: [...game.gameEventsMajor, majorEvent],
-        goalsFor: game.goalsFor + (isOurGoal ? 1 : 0),
-        goalsAgainst: game.goalsAgainst + (isTheirGoal ? 1 : 0),
+        gameEventsGoals: [...(game.gameEventsGoals || []), goalEvent],
+        gameEventsMajor: [...(game.gameEventsMajor || []), majorEvent],
+        goalsFor: (game.goalsFor || 0) + (isOurGoal ? 1 : 0),
+        goalsAgainst: (game.goalsAgainst || 0) + (isTheirGoal ? 1 : 0),
       };
 
       set({ game: updatedGame });
+      useGamePlayersStore.getState().recalculatePlayerStatsFromEvents(
+        updatedGame.gameEventsGoals,
+        updatedGame.gameEventsDiscipline
+      );
     },
 
     replaceGoalEvent: (
@@ -1087,6 +1130,10 @@ const useGameStore = create<GameStoreState>((set, get) => {
       };
 
       set({ game: updatedGame });
+      useGamePlayersStore.getState().recalculatePlayerStatsFromEvents(
+        updatedGame.gameEventsGoals,
+        updatedGame.gameEventsDiscipline
+      );
     },
 
     removeGoalEvent: (goalId, majorEventId) => {
@@ -1125,6 +1172,10 @@ const useGameStore = create<GameStoreState>((set, get) => {
       };
 
       set({ game: updatedGame });
+      useGamePlayersStore.getState().recalculatePlayerStatsFromEvents(
+        updatedGame.gameEventsGoals,
+        updatedGame.gameEventsDiscipline
+      );
     },
 
     addMajorEvent: (majorEvent: any) => {
@@ -1150,6 +1201,10 @@ const useGameStore = create<GameStoreState>((set, get) => {
       };
 
       set({ game: updatedGame });
+      useGamePlayersStore.getState().recalculatePlayerStatsFromEvents(
+        updatedGame.gameEventsGoals,
+        updatedGame.gameEventsDiscipline
+      );
     },
 
     replaceDisciplineEvent: (

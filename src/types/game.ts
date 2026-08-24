@@ -37,6 +37,7 @@ export interface GameSettings {
   clockDirection: string; // e.g. "up" | "down"
   reentryRule: ReentryRule;
   autoStopClockOnMajorEvent?: boolean;
+  clockRuleProfile?: "NFHS" | "USSF";
 }
 
 // ==================== PERIODS ====================

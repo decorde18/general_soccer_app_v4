@@ -220,6 +220,9 @@ export interface GamePlayersState {
     playerId: string | number,
     action: GameStatus,
   ) => Promise<void>;
+  swapGoalkeeperRole: (
+    newGkPlayerId: string | number
+  ) => void;
 
   // Sub status management
   updateAllSubStatuses: (gameId: string | number | undefined) => Promise<void>;
@@ -237,6 +240,12 @@ export interface GamePlayersState {
     goalkeeperTime: number,
   ) => void;
   updateAllGoalkeeperTime: (gkTimeMap: GoalkeeperTimeMap) => void;
+
+  // Real-time Event Stat Synchronization
+  recalculatePlayerStatsFromEvents: (
+    gameEventsGoals?: any[],
+    gameEventsDiscipline?: any[],
+  ) => void;
 
   // Query helpers
   getPlayersByFieldStatus: (fieldStatus: FieldStatus) => Player[];
@@ -257,6 +266,45 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
   players: [],
   isLoading: false,
   error: null,
+
+  recalculatePlayerStatsFromEvents: (gameEventsGoals = [], gameEventsDiscipline = []) => {
+    set((state) => {
+      const updatedPlayers = state.players.map((p) => {
+        const pgId = String(p.playerGameId);
+
+        const goalsCount = (gameEventsGoals || []).filter(
+          (g: any) => g.scorer_player_game_id && String(g.scorer_player_game_id) === pgId
+        ).length;
+
+        const assistsCount = (gameEventsGoals || []).filter(
+          (g: any) => g.assist_player_game_id && String(g.assist_player_game_id) === pgId
+        ).length;
+
+        const gaCount = (gameEventsGoals || []).filter(
+          (g: any) => g.defending_gk_player_game_id && String(g.defending_gk_player_game_id) === pgId
+        ).length;
+
+        const yellowCount = (gameEventsDiscipline || []).filter(
+          (d: any) => d.player_game_id && String(d.player_game_id) === pgId && (d.card_type === "yellow" || d.card_type === "yellow_red")
+        ).length;
+
+        const redCount = (gameEventsDiscipline || []).filter(
+          (d: any) => d.player_game_id && String(d.player_game_id) === pgId && (d.card_type === "red" || d.card_type === "yellow_red")
+        ).length;
+
+        return {
+          ...p,
+          goals: goalsCount,
+          assists: assistsCount,
+          goalsAgainst: gaCount,
+          yellowCards: yellowCount,
+          redCards: redCount,
+        };
+      });
+
+      return { players: updatedPlayers };
+    });
+  },
 
   // ==================== INITIALIZATION ====================
 
@@ -848,6 +896,36 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
           ...player,
           plusMinus: newPlusMinus,
         };
+      });
+
+      return { players: updatedPlayers };
+    });
+  },
+
+  /**
+   * Swap Goalkeeper role to a specified player
+   */
+  swapGoalkeeperRole: (newGkPlayerId) => {
+    set((state) => {
+      const updatedPlayers = state.players.map((player) => {
+        const isTarget = player.id === newGkPlayerId || player.playerGameId === newGkPlayerId;
+        const isCurrentGk = player.gameStatus === "goalkeeper" || player.fieldStatus === "onFieldGk";
+
+        if (isTarget) {
+          return {
+            ...player,
+            gameStatus: "goalkeeper" as GameStatus,
+            fieldStatus: "onFieldGk" as FieldStatus,
+          };
+        }
+        if (isCurrentGk) {
+          return {
+            ...player,
+            gameStatus: "starter" as GameStatus,
+            fieldStatus: "onField" as FieldStatus,
+          };
+        }
+        return player;
       });
 
       return { players: updatedPlayers };

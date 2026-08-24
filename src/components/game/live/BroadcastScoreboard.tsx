@@ -6,7 +6,7 @@ import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
 import { formatTeamName } from "@/lib/utils/teamName";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
-import { useOnlineStatus } from "@/lib/offline/offlineSync";
+import { useOnlineStatus, setSimulatedOfflineMode, isSimulatedOfflineMode } from "@/lib/offline/offlineSync";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
 
@@ -179,15 +179,39 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
       <div className="flex items-center justify-between border-t border-slate-800/80 pt-2 text-[9px] text-slate-400 font-bold">
         <div className="flex items-center gap-1.5">
           {isOnline ? (
-            <span className="inline-flex items-center gap-1 text-emerald-400">
-              <Wifi size={11} />
-              <span>Sync Active</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-emerald-400">
+                <Wifi size={11} />
+                <span>Sync Active</span>
+              </span>
+              <button
+                onClick={() => {
+                  setSimulatedOfflineMode(true);
+                  toast.warning("Simulated 0-kbps Offline Test Mode Activated.");
+                }}
+                className="text-[9px] opacity-75 hover:opacity-100 underline text-slate-400 hover:text-amber-300 transition-colors cursor-pointer"
+                title="Simulate zero-cell reception for testing offline mode"
+              >
+                [Test Offline]
+              </button>
+            </div>
           ) : (
-            <span className="inline-flex items-center gap-1 text-amber-400">
-              <WifiOff size={11} />
-              <span>Offline ({queueCount})</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 text-amber-400 font-extrabold">
+                <WifiOff size={11} />
+                <span>Offline ({queueCount})</span>
+              </span>
+              <button
+                onClick={() => {
+                  setSimulatedOfflineMode(false);
+                  toast.success("Exited Offline Test Mode.");
+                }}
+                className="text-[9px] bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/40 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                title="Turn off simulated offline mode"
+              >
+                Exit Offline Test
+              </button>
+            </div>
           )}
         </div>
 
@@ -199,7 +223,7 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
           >
             {getClockButtonText()}
           </button>
-          {props.onOpenMajorEventModal && (
+          {props.onOpenMajorEventModal && currentStage !== GAME_STAGES.BETWEEN_PERIODS && (
             <button
               onClick={props.onOpenMajorEventModal}
               className="h-6 py-0 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-[10px] font-black shadow-xs transition-colors cursor-pointer"

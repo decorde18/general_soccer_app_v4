@@ -995,7 +995,7 @@ function mapGameRow(r: any): Game {
     let hasShootout = false;
 
     r.game_events_major?.forEach((major: any) => {
-      if (major.event_type === "goal") {
+      if (major.event_type === "goal" || (major.game_events_goals && major.game_events_goals.length > 0)) {
         major.game_events_goals?.forEach((goal: any) => {
           const isHomeScorer = goal.team_season_id === r.home_team_season_id;
           if (
@@ -1222,7 +1222,7 @@ async function getStatsForRoster(
     let homeScore = 0;
     let awayScore = 0;
     g.game_events_major?.forEach((major: any) => {
-      if (major.event_type === "goal") {
+      if (major.event_type === "goal" || (major.game_events_goals && major.game_events_goals.length > 0)) {
         major.game_events_goals?.forEach((goal: any) => {
           const isHomeScorer = goal.team_season_id === g.home_team_season_id;
           if (
@@ -1506,7 +1506,7 @@ export async function getTeamSeasonRecords(
     let homeScore = 0;
     let awayScore = 0;
     g.game_events_major?.forEach((major: any) => {
-      if (major.event_type === "goal") {
+      if (major.event_type === "goal" || (major.game_events_goals && major.game_events_goals.length > 0)) {
         major.game_events_goals?.forEach((goal: any) => {
           const isHomeScorer = goal.team_season_id === g.home_team_season_id;
           if (

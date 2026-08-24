@@ -882,7 +882,18 @@ export default function GameManageClient() {
                         <span className="uppercase px-1.5 py-0.25 rounded bg-primary/10 text-primary border border-primary/20">
                           {isUs ? "FOR US" : "AGAINST"}
                         </span>
-                        <span>Type: {String(g.goal_types || "standard")}</span>
+                        <span>
+                          Type: {(() => {
+                            if (!g.goal_types) return "Standard";
+                            try {
+                              const parsed = typeof g.goal_types === "string" ? JSON.parse(g.goal_types) : g.goal_types;
+                              if (Array.isArray(parsed)) return parsed.join(", ").replace(/_/g, " ");
+                              return String(parsed).replace(/_/g, " ");
+                            } catch {
+                              return String(g.goal_types).replace(/_/g, " ");
+                            }
+                          })()}
+                        </span>
                         {Boolean(g.period) && <span>Period: {String(g.period)}</span>}
                         {g.game_time !== undefined && g.game_time !== null && (
                           <span>Min: {Math.floor(Number(g.game_time) / 60)}&apos;</span>

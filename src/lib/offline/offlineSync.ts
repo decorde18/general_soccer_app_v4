@@ -86,10 +86,29 @@ export async function flushOfflineQueue(): Promise<{ synced: number; failed: num
 
   for (const item of queue) {
     try {
+      let payloadToSend = item.payload;
+
+      // Handle dual major + child event payloads
+      if (item.payload?.majorPayload && (item.payload?.goalPayload || item.payload?.cardPayload)) {
+        const majorRes = await fetch("/api/game_events_major", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item.payload.majorPayload),
+        }).then((r) => r.json());
+
+        if (majorRes?.id) {
+          const childPayload = item.payload.goalPayload || item.payload.cardPayload;
+          payloadToSend = {
+            ...childPayload,
+            major_event_id: Number(majorRes.id),
+          };
+        }
+      }
+
       const response = await fetch(`/api/${item.endpoint}`, {
         method: item.method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item.payload),
+        body: JSON.stringify(payloadToSend),
       });
 
       if (response.ok) {
@@ -120,12 +139,63 @@ export async function flushOfflineQueue(): Promise<{ synced: number; failed: num
 }
 
 /**
+ * Save complete live game snapshot to local storage
+ */
+export function saveGameCache(gameId: string | number, game: any, players: any[]) {
+  if (typeof window === "undefined" || !gameId) return;
+  try {
+    const key = `live_game_cache_${gameId}`;
+    const data = {
+      game,
+      players,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (err) {
+    console.error("Error saving live game cache:", err);
+  }
+}
+
+/**
+ * Retrieve cached live game snapshot from local storage
+ */
+export function loadGameCache(gameId: string | number): { game: any; players: any[]; timestamp: number } | null {
+  if (typeof window === "undefined" || !gameId) return null;
+  try {
+    const key = `live_game_cache_${gameId}`;
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    console.error("Error reading live game cache:", err);
+    return null;
+  }
+}
+
+// Simulated offline testing mode state
+let simulatedOffline = false;
+
+export function setSimulatedOfflineMode(enabled: boolean) {
+  simulatedOffline = enabled;
+  if (typeof window !== "undefined") {
+    localStorage.setItem("soccer_app_simulated_offline", enabled ? "true" : "false");
+    window.dispatchEvent(new Event(enabled ? "offline" : "online"));
+  }
+}
+
+export function isSimulatedOfflineMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("soccer_app_simulated_offline") === "true";
+}
+
+/**
  * React Hook for monitoring online status and queued event count
  */
 export function useOnlineStatus() {
-  const [isOnline, setIsOnline] = useState<boolean>(
-    typeof navigator !== "undefined" ? navigator.onLine : true
-  );
+  const [isOnline, setIsOnline] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    if (isSimulatedOfflineMode()) return false;
+    return navigator.onLine;
+  });
   const [queueCount, setQueueCount] = useState<number>(0);
 
   useEffect(() => {
@@ -136,6 +206,10 @@ export function useOnlineStatus() {
     updateQueue();
 
     const handleOnline = () => {
+      if (isSimulatedOfflineMode()) {
+        setIsOnline(false);
+        return;
+      }
       setIsOnline(true);
       toast.success("Network connection restored. Syncing offline events...");
       flushOfflineQueue().then(updateQueue);
