@@ -470,6 +470,32 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         } as any
       );
 
+      if (!isOpp && scorer?.playerGameId) {
+        fetch("/api/game_events_player_actions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            game_id: Number(game.game_id || game.id),
+            player_game_id: Number(scorer.playerGameId),
+            event_type: "shot",
+            game_time: gameTimeSeconds,
+            period: game.currentPeriodIndex + 1,
+          }),
+        }).then((r) => r.json()).then((newAction) => {
+          if (newAction?.id) {
+            useGameStore.getState().addPlayerAction({
+              id: newAction.id,
+              game_id: Number(game.game_id || game.id),
+              team_season_id: Number(game.teamSeasonId),
+              player_game_id: Number(scorer.playerGameId),
+              event_type: "shot",
+              game_time: gameTimeSeconds,
+              period: game.currentPeriodIndex + 1,
+            } as any);
+          }
+        }).catch((err) => console.error("Error logging auto shot on goal:", err));
+      }
+
       if (stopClock) {
         setIsPausedLocally(true);
       }
@@ -480,8 +506,6 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         useGameStore.getState().game,
         useGamePlayersStore.getState().players
       );
-
-      toast.success(`GOAL Recorded for ${isOpp ? opponentShortName : "Our Team"}!`);
 
       // CLOSE MODAL IMMEDIATELY
       onClose();
@@ -633,8 +657,6 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         useGameStore.getState().game,
         useGamePlayersStore.getState().players
       );
-
-      toast.success(`${cardType.toUpperCase()} Card recorded!`);
 
       // CLOSE MODAL IMMEDIATELY
       onClose();
@@ -804,9 +826,33 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                 end_time: null,
               } as any
             );
-          }
 
-          toast.success("Penalty Kick GOAL recorded!");
+            if (!isOpp && taker?.playerGameId) {
+              fetch("/api/game_events_player_actions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  game_id: Number(game.game_id || game.id),
+                  player_game_id: Number(taker.playerGameId),
+                  event_type: "shot",
+                  game_time: gameTimeSeconds,
+                  period: game.currentPeriodIndex + 1,
+                }),
+              }).then((r) => r.json()).then((newAction) => {
+                if (newAction?.id) {
+                  useGameStore.getState().addPlayerAction({
+                    id: newAction.id,
+                    game_id: Number(game.game_id || game.id),
+                    team_season_id: Number(game.teamSeasonId),
+                    player_game_id: Number(taker.playerGameId),
+                    event_type: "shot",
+                    game_time: gameTimeSeconds,
+                    period: game.currentPeriodIndex + 1,
+                  } as any);
+                }
+              }).catch((err) => console.error("Error logging PK auto shot:", err));
+            }
+          }
         }
 
         setEventType("stoppage");
@@ -818,14 +864,44 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     });
   };
 
-  // SUBMIT STOPPAGE
+  // SUBMIT STOPPAGE / INJURY / VAR
   const handleStoppageSubmit = () => {
     if (!game) return;
+
+    const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
+    const reasonStr = stoppageDetails || stoppageCategory.toUpperCase() + " Stoppage";
+    const tempMajorId = `temp_stoppage_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    // 1. Synchronous Optimistic Update
+    addMajorEvent({
+      id: tempMajorId,
+      game_id: Number(game.game_id || game.id),
+      period: game.currentPeriodIndex + 1,
+      event_type: "stoppage",
+      game_time: gameTimeSeconds,
+      clock_should_run: stopClock ? 0 : 1,
+      details: reasonStr,
+      start_time: Date.now(),
+      end_time: null,
+    });
+
+    if (stopClock) {
+      setIsPausedLocally(true);
+    }
+
+    // Save device cache snapshot synchronously
+    saveGameCache(
+      game.game_id || game.id || "",
+      useGameStore.getState().game,
+      useGamePlayersStore.getState().players
+    );
+
+    // CLOSE MODAL IMMEDIATELY
+    onClose();
+
+    // 2. Background Persistence
     startTransition(async () => {
       try {
-        const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
-        const reasonStr = stoppageDetails || stoppageCategory.toUpperCase() + " Stoppage";
-
         const newMajor = await fetch(`/api/game_events_major`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -834,27 +910,16 @@ export default function MajorEventModal(props: MajorEventModalProps) {
             event_type: "stoppage",
             period: game.currentPeriodIndex + 1,
             game_time: gameTimeSeconds,
-            clock_should_run: 0,
+            clock_should_run: stopClock ? 0 : 1,
             details: reasonStr,
           }),
         }).then((r) => r.json());
 
         if (newMajor?.id) {
-          addMajorEvent({
-            id: newMajor.id,
-            game_id: Number(game.game_id || game.id),
-            period: game.currentPeriodIndex + 1,
-            game_time: gameTimeSeconds,
-            clock_should_run: 0,
-            details: reasonStr,
-            start_time: Date.now(),
-            end_time: null,
-          });
+          // Replace temp ID with server ID if needed
         }
-
-        setIsPausedLocally(true);
       } catch (err: any) {
-        toast.error("Failed to log stoppage: " + err.message);
+        console.error("Failed to log stoppage to server:", err);
       }
     });
   };

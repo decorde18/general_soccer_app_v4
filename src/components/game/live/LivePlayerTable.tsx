@@ -192,20 +192,21 @@ export default function LivePlayerTable({
 
                 <td className="py-0.5 px-1.5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                   {isRedCarded ? (
-                    <span className="text-[9px] font-bold text-rose-600 uppercase">SENT OFF</span>
+                    <span className="text-[9px] font-bold text-rose-600 uppercase tracking-wide">SENT OFF</span>
                   ) : (
                     <div className="flex gap-1.5 justify-center items-center">
-                      {!isBench && onQuickAction && (
+                      {!isBench && onQuickAction && (gameStore.getGameStage() === gameStore.GAME_STAGES.DURING_PERIOD || gameStore.getGameStage() === gameStore.GAME_STAGES.IN_STOPPAGE) && (
                         <button
                           onClick={() => onQuickAction(player.id, isGk ? "save" : "shot")}
-                          className={`px-2.5 py-0.5 bg-background border border-border/80 text-[10px] font-black rounded-md shadow-xs shrink-0 cursor-pointer ${
-                            isGk ? "hover:border-emerald-500 text-emerald-700 dark:text-emerald-300" : "hover:border-primary text-text"
+                          className={`h-5.5 py-0 px-2 rounded text-[10px] font-black uppercase border transition-all cursor-pointer shadow-2xs ${
+                            isGk
+                              ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700"
+                              : "bg-primary hover:bg-primary/90 text-white border-primary"
                           }`}
                         >
                           {isGk ? "SAVE" : "SHOT"}
                         </button>
                       )}
-
                       {isPendingOut ? (
                         <span className="inline-block text-[9px] font-black text-rose-600 dark:text-rose-400 bg-rose-500/15 border border-rose-500/20 px-2 py-0.5 rounded uppercase tracking-tight">
                           Pending Out

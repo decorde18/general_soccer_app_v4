@@ -320,9 +320,31 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **13.5 Hydration Break Stoppage & NFHS vs. USSF Clock Rule Profiles**
   - [x] Add Hydration Break 💧 tab to Major Event modal with duration tracker to calculate stoppage time at end of half.
   - [x] Differentiate NFHS (High School stopped clock on major events/goals) vs USSF (Club continuous running clock with added stoppage time calculation).
-I don't need to select and assister or unassisted. It is optional. If I select it, great, otherwise, it doesn't need unassissted to be selected (remove it from the options).
-Between periods, the clock should not be running (actual clock never stops, but we aren't looking at the actual clock, we are looking at the timed clock that can be paused/stopped). We also need a different between period page where we aren't able create/edit any events. We should just be able to see the game stats and lineups and game details. We can make subs during this time though.  
-I also need an end of the game stats page. The game should know how many periods to play and go to final game stats page at the end of the last period.
+
+## Step 14: Match Stage Workflows (Pregame, Inter-Period Breaks & Postgame)
+
+- [x] **14.1 Pregame & Inter-Period Simplified Workspaces**
+  - [x] Restrict live match action buttons (Shot, Save, Corner, Foul, Offside, Record Major Event) strictly to active periods (`during_period`).
+  - [x] Simplify pregame and between-period views to show game details, lineups, and game stats while preserving pending substitution management.
+- [x] **14.2 Automatic Final Stage Navigation & Game End Workflow**
+  - [x] Configure game stage manager to know the total scheduled periods (e.g. 2 halves + OT).
+  - [x] Automatically navigate to the final game stats & summary page upon completing the final period.
+- [x] **14.3 Period Transition Clock & Period Number Integrity**
+  - [x] Ensure timed match clock remains stopped between periods.
+  - [x] Fix period number tracking on period restart so starting the next period correctly increments the period number (e.g., Period 2 after Halftime instead of resetting to Period 1).
+
+## Step 15: Event Recording & Live Tracker Polish
+
+- [x] **15.1 Automatic Shot Creation on Goal**: Automatically log an accompanying `shot` action for the scoring player whenever a goal is recorded.
+- [x] **15.2 Pending Sub Confirmation Prompt on Event Entry**: Prompt user whether to confirm pending substitutions when recording/saving major events.
+- [x] **15.3 Optional Assister Selection & Clean Default Labels**: Remove explicit "Unassisted" selection options (making assister optional by default) and remove redundant "Select an Option" items from Scorer and Assister dropdowns.
+- [x] **15.4 Instant Period Start Pending Sub Sync**: Apply pending substitutions synchronously on period start without waiting for database responses.
+- [x] **15.5 Injury Stoppage Recording & Concurrent Sub Reliability**: Fix injury stoppage recording when substitutions are executed or queued concurrently during the stoppage event.
+- [x] **15.6 Global Notification Audit (Error-Only Toasts)**: Remove non-error toasts for lineup changes, game/period starts, and general tracking actions, retaining toasts strictly for error alerts.
+- [x] **15.7 Team Page 500 Route Error Fix (`/teams/122`)**: Resolve "Something went wrong" crash on public team page (`/teams/[teamSeasonId]`).
+- [x] **15.8 Dev-Only Offline Test Mode**: Restrict offline testing toggle UI to development environment (`process.env.NODE_ENV === 'development'`).
+
+individual stats on page summary should include minutes played and +/-, keeper stats should be separate from field player stats (and include time in goal (a player may have played 55 but only 20 were in goal))
 
 ## Notes / Future Considerations
 

@@ -101,10 +101,8 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
           return;
         }
         await startNextPeriod();
-        toast.success(`Started ${periodLabel}`);
       } else if (currentStage === GAME_STAGES.DURING_PERIOD) {
         await endPeriod();
-        toast.info(`Ended ${periodLabel}`);
       }
     } catch (err: any) {
       toast.error("Clock action error: " + err.message);
@@ -113,16 +111,24 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
 
   const onTogglePeriodClock = props.onTogglePeriodClock ?? handleDefaultToggleClock;
 
+  const currentPeriodNum = (game?.currentPeriodIndex ?? 0) + 1;
+  const nextPeriodNum = currentStage === GAME_STAGES.BEFORE_START ? 1 : currentPeriodNum + 1;
+
   const getClockButtonText = () => {
     if (currentStage === GAME_STAGES.IN_STOPPAGE) return "Resume Clock";
-    if (currentStage === GAME_STAGES.DURING_PERIOD) return "End Period";
-    return "Start Period";
+    if (currentStage === GAME_STAGES.DURING_PERIOD) return `End Period ${currentPeriodNum}`;
+    if (currentStage === GAME_STAGES.BEFORE_START) return "Start Match";
+    if (currentStage === GAME_STAGES.BETWEEN_PERIODS) return `Start Period ${nextPeriodNum}`;
+    return "Game Completed";
   };
 
   const isClockButtonDisabled =
-    !isLineupConfigured &&
-    currentStage !== GAME_STAGES.DURING_PERIOD &&
-    currentStage !== GAME_STAGES.IN_STOPPAGE;
+    (!isLineupConfigured &&
+      currentStage !== GAME_STAGES.DURING_PERIOD &&
+      currentStage !== GAME_STAGES.IN_STOPPAGE) ||
+    currentStage === GAME_STAGES.END_GAME;
+
+  const isDev = process.env.NODE_ENV === "development";
 
   return (
     <div className="shrink-0 rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 text-white px-5 py-3 shadow-md flex flex-col gap-2 animate-in fade-in duration-200">
@@ -184,16 +190,17 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
                 <Wifi size={11} />
                 <span>Sync Active</span>
               </span>
-              <button
-                onClick={() => {
-                  setSimulatedOfflineMode(true);
-                  toast.warning("Simulated 0-kbps Offline Test Mode Activated.");
-                }}
-                className="text-[9px] opacity-75 hover:opacity-100 underline text-slate-400 hover:text-amber-300 transition-colors cursor-pointer"
-                title="Simulate zero-cell reception for testing offline mode"
-              >
-                [Test Offline]
-              </button>
+              {isDev && (
+                <button
+                  onClick={() => {
+                    setSimulatedOfflineMode(true);
+                  }}
+                  className="text-[9px] opacity-75 hover:opacity-100 underline text-slate-400 hover:text-amber-300 transition-colors cursor-pointer"
+                  title="Simulate zero-cell reception for testing offline mode"
+                >
+                  [Test Offline]
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -201,32 +208,35 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
                 <WifiOff size={11} />
                 <span>Offline ({queueCount})</span>
               </span>
-              <button
-                onClick={() => {
-                  setSimulatedOfflineMode(false);
-                  toast.success("Exited Offline Test Mode.");
-                }}
-                className="text-[9px] bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/40 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
-                title="Turn off simulated offline mode"
-              >
-                Exit Offline Test
-              </button>
+              {isDev && (
+                <button
+                  onClick={() => {
+                    setSimulatedOfflineMode(false);
+                  }}
+                  className="text-[9px] bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/40 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                  title="Turn off simulated offline mode"
+                >
+                  Exit Offline Test
+                </button>
+              )}
             </div>
           )}
         </div>
 
         <div className="flex gap-2">
-          <button
-            onClick={onTogglePeriodClock}
-            disabled={isClockButtonDisabled}
-            className="h-6 py-0 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[10px] font-black shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
-          >
-            {getClockButtonText()}
-          </button>
-          {props.onOpenMajorEventModal && currentStage !== GAME_STAGES.BETWEEN_PERIODS && (
+          {currentStage !== GAME_STAGES.END_GAME && (
+            <button
+              onClick={onTogglePeriodClock}
+              disabled={isClockButtonDisabled}
+              className="h-6 py-0 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[10px] font-black shadow-xs disabled:opacity-50 transition-colors cursor-pointer uppercase tracking-wide"
+            >
+              {getClockButtonText()}
+            </button>
+          )}
+          {props.onOpenMajorEventModal && (currentStage === GAME_STAGES.DURING_PERIOD || currentStage === GAME_STAGES.IN_STOPPAGE) && (
             <button
               onClick={props.onOpenMajorEventModal}
-              className="h-6 py-0 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-[10px] font-black shadow-xs transition-colors cursor-pointer"
+              className="h-6 py-0 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-[10px] font-black shadow-xs transition-colors cursor-pointer uppercase tracking-wide"
             >
               Record Major Event
             </button>

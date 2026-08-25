@@ -50,38 +50,145 @@ export default async function TeamPage({ params }: PageProps) {
     );
   }
 
-  // Fetch all necessary data in parallel
-  const [teamSeason, players, staff, games, stats, records, leagueLinks] =
-    await Promise.all([
-      getTeamSeasonById(idNumber),
-      getPlayersByTeamSeason(idNumber),
-      getTeamStaff(idNumber),
-      getGames({ teamSeasonId: idNumber }),
-      getPlayerStatsByTeamSeason(idNumber),
-      getTeamSeasonRecords(undefined, idNumber),
-      getLeaguesForTeamSeason(idNumber),
-    ]);
+  try {
+    // Fetch all necessary data in parallel
+    const [teamSeason, players, staff, games, stats, records, leagueLinks] =
+      await Promise.all([
+        getTeamSeasonById(idNumber),
+        getPlayersByTeamSeason(idNumber),
+        getTeamStaff(idNumber),
+        getGames({ teamSeasonId: idNumber }),
+        getPlayerStatsByTeamSeason(idNumber),
+        getTeamSeasonRecords(undefined, idNumber),
+        getLeaguesForTeamSeason(idNumber),
+      ]);
 
-  // Handle case where team season doesn't exist
-  if (!teamSeason) {
+    // Handle case where team season doesn't exist
+    if (!teamSeason) {
+      return (
+        <div className='mx-auto max-w-2xl px-4 py-16'>
+          <Card
+            variant='outlined'
+            padding='lg'
+            className='text-center bg-surface/30'
+          >
+            <ShieldAlert size={48} className='mx-auto text-danger mb-4' />
+            <h2 className='text-xl font-bold text-text mb-2'>Team Not Found</h2>
+            <p className='text-sm text-muted mb-6'>
+              We couldn't find the team season you were looking for. It may have
+              been removed or the ID is incorrect.
+            </p>
+            <Link href='/'>
+              <Button
+                variant='primary'
+                className='inline-flex flex-row items-center gap-2 text-sm px-4 py-2'
+              >
+                <ArrowLeft size={16} />
+                <span>Back to Match Center</span>
+              </Button>
+            </Link>
+          </Card>
+        </div>
+      );
+    }
+
+    const safePlayers = players || [];
+    const safeStaff = staff || [];
+    const safeGames = games || [];
+    const safeStats = stats || [];
+    const safeRecords = records || [];
+    const safeLeagueLinks = leagueLinks || [];
+
+    // Consolidate standings record or calculate as a fallback from games
+    let record = { wins: 0, losses: 0, draws: 0, points: 0 };
+    if (safeRecords && safeRecords.length > 0) {
+      safeRecords
+        .filter((r) => r.leagueNodeSeasonId === null || r.leagueNodeSeasonId === undefined)
+        .forEach((r) => {
+          record.wins += r.wins || 0;
+          record.losses += r.losses || 0;
+          record.draws += r.draws || 0;
+          record.points += r.points || 0;
+        });
+    } else {
+      // Fallback: Compute record from scored completed games only.
+      const completedGames = safeGames.filter(
+        (g) => g.status === "completed" && (g.homeScore ?? 0) + (g.awayScore ?? 0) > 0,
+      );
+      completedGames.forEach((g) => {
+        const isHome = g.homeTeamSeasonId === idNumber;
+        const teamScore = isHome ? g.homeScore : g.awayScore;
+        const oppScore = isHome ? g.awayScore : g.homeScore;
+
+        if (teamScore !== null && oppScore !== null && teamScore !== undefined && oppScore !== undefined) {
+          if (teamScore > oppScore) {
+            record.wins += 1;
+            record.points += 3;
+          } else if (teamScore < oppScore) {
+            record.losses += 1;
+          } else {
+            record.draws += 1;
+            record.points += 1;
+          }
+        }
+      });
+    }
+
+    const leagueLinksWithStandings = await Promise.all(
+      safeLeagueLinks.map(async (link) => {
+        const competitionRecords = (await getTeamSeasonRecords(
+          link.leagueNodeSeasonId,
+          idNumber,
+        )) || [];
+        const teamCompetitionRecord = competitionRecords.find(
+          (item) => item.teamSeasonId === idNumber,
+        );
+        const position = teamCompetitionRecord
+          ? competitionRecords.findIndex(
+              (item) => item.teamSeasonId === idNumber,
+            ) + 1
+          : null;
+
+        return {
+          ...link,
+          record: teamCompetitionRecord
+            ? {
+                wins: teamCompetitionRecord.wins,
+                losses: teamCompetitionRecord.losses,
+                draws: teamCompetitionRecord.draws,
+                points: teamCompetitionRecord.points,
+              }
+            : null,
+          position,
+        };
+      }),
+    );
+
+    return (
+      <main className='mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8'>
+        <TeamPageClient
+          teamSeason={teamSeason}
+          players={safePlayers}
+          staff={safeStaff}
+          games={safeGames}
+          stats={safeStats}
+          record={record}
+          leagueLinks={leagueLinksWithStandings}
+        />
+      </main>
+    );
+  } catch (err: any) {
+    console.error(`Error loading team season ${idNumber}:`, err);
     return (
       <div className='mx-auto max-w-2xl px-4 py-16'>
-        <Card
-          variant='outlined'
-          padding='lg'
-          className='text-center bg-surface/30'
-        >
+        <Card variant='outlined' padding='lg' className='text-center bg-surface/30'>
           <ShieldAlert size={48} className='mx-auto text-danger mb-4' />
-          <h2 className='text-xl font-bold text-text mb-2'>Team Not Found</h2>
+          <h2 className='text-xl font-bold text-text mb-2'>Team Data Unavailable</h2>
           <p className='text-sm text-muted mb-6'>
-            We couldn't find the team season you were looking for. It may have
-            been removed or the ID is incorrect.
+            Unable to load team statistics right now. Please try again later.
           </p>
           <Link href='/'>
-            <Button
-              variant='primary'
-              className='inline-flex flex-row items-center gap-2 text-sm px-4 py-2'
-            >
+            <Button variant='primary' className='inline-flex flex-row items-center gap-2 text-sm px-4 py-2'>
               <ArrowLeft size={16} />
               <span>Back to Match Center</span>
             </Button>
@@ -90,83 +197,4 @@ export default async function TeamPage({ params }: PageProps) {
       </div>
     );
   }
-
-  // Consolidate standings record or calculate as a fallback from games
-  let record = { wins: 0, losses: 0, draws: 0, points: 0 };
-  if (records && records.length > 0) {
-    records
-      .filter((r) => r.leagueNodeSeasonId === null || r.leagueNodeSeasonId === undefined)
-      .forEach((r) => {
-        record.wins += r.wins;
-        record.losses += r.losses;
-        record.draws += r.draws;
-        record.points += r.points;
-      });
-  } else {
-    // Fallback: Compute record from scored completed games only.
-    const completedGames = games.filter(
-      (g) => g.status === "completed" && (g.homeScore ?? 0) + (g.awayScore ?? 0) > 0,
-    );
-    completedGames.forEach((g) => {
-      const isHome = g.homeTeamSeasonId === idNumber;
-      const teamScore = isHome ? g.homeScore : g.awayScore;
-      const oppScore = isHome ? g.awayScore : g.homeScore;
-
-      if (teamScore !== null && oppScore !== null) {
-        if (teamScore > oppScore) {
-          record.wins += 1;
-          record.points += 3;
-        } else if (teamScore < oppScore) {
-          record.losses += 1;
-        } else {
-          record.draws += 1;
-          record.points += 1;
-        }
-      }
-    });
-  }
-
-  const leagueLinksWithStandings = await Promise.all(
-    leagueLinks.map(async (link) => {
-      const competitionRecords = await getTeamSeasonRecords(
-        link.leagueNodeSeasonId,
-        idNumber,
-      );
-      const teamCompetitionRecord = competitionRecords.find(
-        (item) => item.teamSeasonId === idNumber,
-      );
-      const position = teamCompetitionRecord
-        ? competitionRecords.findIndex(
-            (item) => item.teamSeasonId === idNumber,
-          ) + 1
-        : null;
-
-      return {
-        ...link,
-        record: teamCompetitionRecord
-          ? {
-              wins: teamCompetitionRecord.wins,
-              losses: teamCompetitionRecord.losses,
-              draws: teamCompetitionRecord.draws,
-              points: teamCompetitionRecord.points,
-            }
-          : null,
-        position,
-      };
-    }),
-  );
-
-  return (
-    <main className='mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8'>
-      <TeamPageClient
-        teamSeason={teamSeason}
-        players={players}
-        staff={staff}
-        games={games}
-        stats={stats}
-        record={record}
-        leagueLinks={leagueLinksWithStandings}
-      />
-    </main>
-  );
 }

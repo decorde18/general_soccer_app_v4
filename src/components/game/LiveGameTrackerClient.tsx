@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
@@ -89,6 +89,15 @@ export default function LiveGameTrackerClient() {
     }
   }, [game?.gameEventsMajor, game?.currentPeriodIndex]);
 
+  const router = useRouter();
+
+  // Auto-redirect to summary page when game is completed
+  useEffect(() => {
+    if (currentStage === GAME_STAGES.END_GAME && teamSeasonId && id) {
+      router.push(`/gamestats/${teamSeasonId}/${id}/summary`);
+    }
+  }, [currentStage, GAME_STAGES.END_GAME, teamSeasonId, id, router]);
+
   // Modal open / close logic
   const handleOpenMajorEventModal = async () => {
     setIsMajorEventModalOpen(true);
@@ -108,6 +117,19 @@ export default function LiveGameTrackerClient() {
         onOpenMajorEventModal={handleOpenMajorEventModal}
         onOpenNavDrawer={() => setIsNavDrawerOpen(true)}
       />
+
+      {/* PREGAME INTERMISSION BANNER */}
+      {currentStage === GAME_STAGES.BEFORE_START && (
+        <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/30 rounded-xl flex items-center justify-between gap-2 text-xs font-bold text-indigo-400 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <PauseCircle size={16} className="text-indigo-400" />
+            <span>PREGAME — Starting Lineup & Substitutions Configured. Click 'Start Match' in header to begin Period 1. Event recording is disabled before start.</span>
+          </div>
+          <span className="px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] uppercase font-black tracking-wider shrink-0 border border-indigo-500/30">
+            Pregame
+          </span>
+        </div>
+      )}
 
       {/* BETWEEN PERIODS INTERMISSION BANNER */}
       {currentStage === GAME_STAGES.BETWEEN_PERIODS && (

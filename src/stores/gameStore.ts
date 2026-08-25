@@ -695,20 +695,8 @@ const useGameStore = create<GameStoreState>((set, get) => {
           await get().syncGameStatus();
         }
 
-        // Auto-confirm any pending subs at time 0 of new period
-        const gameSubsStore = useGameSubsStore.getState();
-        const pendingSubs = await gameSubsStore.getPendingSubs();
-        const completeSubs = pendingSubs.filter(
-          (sub: { isComplete: boolean }) => sub.isComplete,
-        );
-
-        if (completeSubs.length > 0) {
-          await Promise.all(
-            completeSubs.map((sub: { subId: number | string }) =>
-              gameSubsStore.confirmSub(sub.subId),
-            ),
-          );
-        }
+        // Confirm all pending subs synchronously (0ms delay) on period start
+        useGameSubsStore.getState().confirmAllPendingSubs();
       } catch (error) {
         console.error("Error starting next period:", error);
       }
