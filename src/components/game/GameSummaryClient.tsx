@@ -2,17 +2,19 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, Calendar, MapPin, Users, Activity, ChevronRight, BarChart2, Shield } from "lucide-react";
+import { Users, BarChart2, Shield } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
-import { formatDateStandard, formatTimeStandard } from "@/components/ui/DateSelect";
+import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
+import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
 
 export default function GameSummaryClient() {
   const router = useRouter();
   const game = useGameStore((s) => s.game);
   const players = useGamePlayersStore((s) => s.players);
+  const calculateTotalTimeOnField = useGamePlayerTimeStore((s) => s.calculateTotalTimeOnField);
+  const calculateAllGoalkeeperTime = useGamePlayerTimeStore((s) => s.calculateAllGoalkeeperTime);
 
   if (!game) {
     return (
@@ -22,15 +24,28 @@ export default function GameSummaryClient() {
     );
   }
 
-  // Aggregate stats
+  // Calculate current match time for minute calculations
+  const gameTimeSeconds = useGameStore.getState().getPeriodTime() || 0;
+  const gkTimesMap = calculateAllGoalkeeperTime(game.id || game.game_id || "", gameTimeSeconds);
+
+  // Aggregate team stats
   const goalsFor = game.goalsFor ?? 0;
   const goalsAgainst = game.goalsAgainst ?? 0;
 
   const yellowCardsCount = game.gameEventsDiscipline?.filter((d) => d.card_type === "yellow").length || 0;
   const redCardsCount = game.gameEventsDiscipline?.filter((d) => d.card_type === "red" || d.card_type === "yellow_red").length || 0;
 
+  // Separate Goalkeepers vs Field Players
+  const goalkeepers = players.filter(
+    (p) => p.gameStatus === "goalkeeper" || p.saves > 0 || (gkTimesMap[p.id] || 0) > 0 || p.goalkeeperTime > 0
+  );
+
+  const fieldPlayers = players.filter(
+    (p) => !goalkeepers.some((gk) => gk.id === p.id)
+  );
+
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 select-none">
       {/* HEADER BANNER */}
       <div className="relative overflow-hidden rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-md">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -103,12 +118,12 @@ export default function GameSummaryClient() {
         </div>
       </Card>
 
-      {/* INDIVIDUAL PLAYER BOX SCORE TABLE */}
+      {/* FIELD PLAYERS BOX SCORE TABLE */}
       <Card variant="outlined" padding="lg" className="space-y-4 bg-surface shadow-xs">
         <div className="flex items-center gap-2 border-b border-border/70 pb-3">
           <Users size={16} className="text-primary" />
           <h3 className="font-extrabold text-sm text-text uppercase tracking-wider">
-            Individual Player Box Score
+            Field Players Box Score
           </h3>
         </div>
 
@@ -119,34 +134,109 @@ export default function GameSummaryClient() {
                 <th className="p-3">#</th>
                 <th className="p-3">Player Name</th>
                 <th className="p-3 text-center">Status</th>
+                <th className="p-3 text-right">MIN</th>
+                <th className="p-3 text-center">+/-</th>
                 <th className="p-3 text-center">Goals</th>
                 <th className="p-3 text-center">Assists</th>
-                <th className="p-3 text-center">Saves</th>
+                <th className="p-3 text-center">Shots</th>
+                <th className="p-3 text-center">SOG</th>
                 <th className="p-3 text-center">Cards</th>
               </tr>
             </thead>
             <tbody>
-              {players.map((p) => (
-                <tr key={p.id} className="border-b border-border/40 hover:bg-background/25">
-                  <td className="p-3 font-mono font-bold text-primary">#{p.jerseyNumber || "?"}</td>
-                  <td className="p-3 font-bold text-text">{p.fullName}</td>
-                  <td className="p-3 text-center capitalize text-muted text-[10px] font-bold">
-                    {p.gameStatus}
-                  </td>
-                  <td className="p-3 text-center font-bold text-text">{p.goals || 0}</td>
-                  <td className="p-3 text-center font-bold text-text">{p.assists || 0}</td>
-                  <td className="p-3 text-center font-bold text-text">{p.saves || 0}</td>
-                  <td className="p-3 text-center font-bold text-text">
-                    {p.yellowCards > 0 && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 rounded mr-1">Y</span>}
-                    {p.redCards > 0 && <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-600 rounded">R</span>}
-                    {!p.yellowCards && !p.redCards && "--"}
-                  </td>
-                </tr>
-              ))}
+              {fieldPlayers.map((p) => {
+                const totalSec = calculateTotalTimeOnField(p, gameTimeSeconds);
+                const plusMinusStr = p.plusMinus > 0 ? `+${p.plusMinus}` : String(p.plusMinus || 0);
+
+                return (
+                  <tr key={p.id} className="border-b border-border/40 hover:bg-background/25">
+                    <td className="p-3 font-mono font-bold text-primary">#{p.jerseyNumber || "?"}</td>
+                    <td className="p-3 font-bold text-text">{p.fullName}</td>
+                    <td className="p-3 text-center capitalize text-muted text-[10px] font-bold">
+                      {p.gameStatus}
+                    </td>
+                    <td className="p-3 text-right font-mono font-bold text-text">
+                      {formatSecondsToMmss(totalSec)}
+                    </td>
+                    <td className="p-3 text-center font-mono font-black text-slate-600">
+                      {plusMinusStr}
+                    </td>
+                    <td className="p-3 text-center font-bold text-text">{p.goals || 0}</td>
+                    <td className="p-3 text-center font-bold text-text">{p.assists || 0}</td>
+                    <td className="p-3 text-center font-bold text-muted">{p.shots || 0}</td>
+                    <td className="p-3 text-center font-bold text-muted">{p.shotsOnTarget || 0}</td>
+                    <td className="p-3 text-center font-bold text-text">
+                      {p.yellowCards > 0 && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 rounded mr-1">Y</span>}
+                      {p.redCards > 0 && <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-600 rounded">R</span>}
+                      {!p.yellowCards && !p.redCards && "--"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </Card>
+
+      {/* GOALKEEPERS BOX SCORE TABLE */}
+      {goalkeepers.length > 0 && (
+        <Card variant="outlined" padding="lg" className="space-y-4 bg-surface shadow-xs">
+          <div className="flex items-center gap-2 border-b border-border/70 pb-3">
+            <Shield size={16} className="text-emerald-600" />
+            <h3 className="font-extrabold text-sm text-text uppercase tracking-wider">
+              Goalkeepers Box Score
+            </h3>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-border/70">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-border bg-background/60 text-[10px] font-bold uppercase text-muted">
+                  <th className="p-3">#</th>
+                  <th className="p-3">Keeper Name</th>
+                  <th className="p-3 text-center">Status</th>
+                  <th className="p-3 text-right">Total MIN</th>
+                  <th className="p-3 text-right">MIN in Goal</th>
+                  <th className="p-3 text-center">Saves</th>
+                  <th className="p-3 text-center">GA</th>
+                  <th className="p-3 text-center">Clean Sheet</th>
+                  <th className="p-3 text-center">Cards</th>
+                </tr>
+              </thead>
+              <tbody>
+                {goalkeepers.map((p) => {
+                  const totalSec = calculateTotalTimeOnField(p, gameTimeSeconds);
+                  const gkSec = gkTimesMap[p.id] || p.goalkeeperTime || 0;
+
+                  return (
+                    <tr key={p.id} className="border-b border-border/40 hover:bg-background/25">
+                      <td className="p-3 font-mono font-bold text-emerald-600">#{p.jerseyNumber || "?"}</td>
+                      <td className="p-3 font-bold text-text">{p.fullName}</td>
+                      <td className="p-3 text-center capitalize text-muted text-[10px] font-bold">
+                        {p.gameStatus}
+                      </td>
+                      <td className="p-3 text-right font-mono font-bold text-text">
+                        {formatSecondsToMmss(totalSec)}
+                      </td>
+                      <td className="p-3 text-right font-mono font-bold text-emerald-600">
+                        {formatSecondsToMmss(gkSec)}
+                      </td>
+                      <td className="p-3 text-center font-mono font-bold text-emerald-600">{p.saves || 0}</td>
+                      <td className="p-3 text-center font-mono font-bold text-rose-500">{p.goalsAgainst || 0}</td>
+                      <td className="p-3 text-center font-bold text-text">{p.cleanSheet ? "Yes" : "No"}</td>
+                      <td className="p-3 text-center font-bold text-text">
+                        {p.yellowCards > 0 && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 rounded mr-1">Y</span>}
+                        {p.redCards > 0 && <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-600 rounded">R</span>}
+                        {!p.yellowCards && !p.redCards && "--"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

@@ -727,17 +727,18 @@ const useGameStore = create<GameStoreState>((set, get) => {
       }
     },
 
-    startStoppage: async (reason = "", eventType = "other") => {
+    startStoppage: async (reason = "", eventType = "stoppage") => {
       const game = get().game;
       if (!game) return;
 
       const gameTime = get().getGameTime();
       const period = get().getCurrentPeriodNumber();
+      const validEventType = ["goal", "card", "penalty", "substitution", "stoppage", "period_end"].includes(eventType) ? eventType : "stoppage";
 
       try {
         const stoppageEvent = await apiFetch("game_events_major", "POST", {
           game_id: game.game_id,
-          event_type: eventType,
+          event_type: validEventType,
           game_time: gameTime,
           end_time: null,
           period: period,

@@ -344,7 +344,8 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **15.7 Team Page 500 Route Error Fix (`/teams/122`)**: Resolve "Something went wrong" crash on public team page (`/teams/[teamSeasonId]`).
 - [x] **15.8 Dev-Only Offline Test Mode**: Restrict offline testing toggle UI to development environment (`process.env.NODE_ENV === 'development'`).
 
-individual stats on page summary should include minutes played and +/-, keeper stats should be separate from field player stats (and include time in goal (a player may have played 55 but only 20 were in goal))
+individual stats on page summary should include minutes played and +/-, keeper stats should be separate from field player stats (and include time in goal (a player may have played 55 but only 20 were in goal, they may have only played 20 minutes and were in goal for all of them))
+game 877 the time in goal is wrong, there was never a sub for the GK so the starting gk should have taken all the minutes
 
 ## Notes / Future Considerations
 

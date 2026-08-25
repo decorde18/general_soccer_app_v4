@@ -156,19 +156,19 @@ model game_events_goals {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model game_events_major {
-  id                     Int                          @id @default(autoincrement())
+  id                     Int                      @id @default(autoincrement())
   game_id                Int
-  event_type             game_events_major_event_type
+  event_type             String                   @db.VarChar(50)
   game_time              Int
   end_time               Int?
   period                 Int
-  clock_should_run       Boolean                      @default(true)
-  details                String?                      @db.Text
-  created_at             DateTime?                    @default(now()) @db.Timestamp(0)
-  modified_at            DateTime?                    @default(now()) @db.Timestamp(0)
+  clock_should_run       Boolean                  @default(true)
+  details                String?                  @db.Text
+  created_at             DateTime?                @default(now()) @db.Timestamp(0)
+  modified_at            DateTime?                @default(now()) @db.Timestamp(0)
   game_events_discipline game_events_discipline[]
   game_events_goals      game_events_goals[]
-  games                  games                        @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_major_game")
+  games                  games                    @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_major_game")
   game_events_penalties  game_events_penalties[]
 
   @@index([game_id], map: "idx_major_game")

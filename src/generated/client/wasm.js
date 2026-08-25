@@ -621,15 +621,6 @@ exports.game_events_discipline_card_type = exports.$Enums.game_events_discipline
   yellow_red: 'yellow_red'
 };
 
-exports.game_events_major_event_type = exports.$Enums.game_events_major_event_type = {
-  weather: 'weather',
-  discipline: 'discipline',
-  goal: 'goal',
-  penalty: 'penalty',
-  injury: 'injury',
-  other: 'other'
-};
-
 exports.game_events_penalties_outcome = exports.$Enums.game_events_penalties_outcome = {
   goal: 'goal',
   saved: 'saved',

@@ -1388,41 +1388,34 @@ export async function getTeamSeasonRecords(
     });
   }
 
+  const orConditions: any[] = [];
+  if (leagueNodeSeasonId) {
+    orConditions.push({
+      game_league_nodes: {
+        some: { league_node_id: leagueNodeSeasonId },
+      },
+    });
+    if (enrolledTeamSeasonIds.length > 0) {
+      orConditions.push({
+        AND: [
+          { home_team_season_id: { in: enrolledTeamSeasonIds } },
+          { away_team_season_id: { in: enrolledTeamSeasonIds } },
+        ],
+      });
+    }
+  }
+  if (teamSeasonId) {
+    orConditions.push({ home_team_season_id: teamSeasonId });
+    orConditions.push({ away_team_season_id: teamSeasonId });
+  }
+
+  const whereClause: any = { status: "completed" };
+  if (orConditions.length > 0) {
+    whereClause.OR = orConditions;
+  }
+
   const gamesData = await prisma.games.findMany({
-    where: {
-      status: "completed",
-      OR: [
-        ...(leagueNodeSeasonId
-          ? [
-              {
-                game_league_nodes: {
-                  some: { league_node_id: leagueNodeSeasonId },
-                },
-              },
-            ]
-          : []),
-        ...(leagueNodeSeasonId && enrolledTeamSeasonIds.length > 0
-          ? [
-              {
-                AND: [
-                  { home_team_season_id: { in: enrolledTeamSeasonIds } },
-                  { away_team_season_id: { in: enrolledTeamSeasonIds } },
-                ],
-              },
-            ]
-          : []),
-        ...(teamSeasonId
-          ? [
-              {
-                OR: [
-                  { home_team_season_id: teamSeasonId },
-                  { away_team_season_id: teamSeasonId },
-                ],
-              },
-            ]
-          : []),
-      ],
-    },
+    where: whereClause,
     include: {
       game_events_major: {
         include: {

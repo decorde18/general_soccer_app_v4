@@ -159,7 +159,7 @@ model game_events_goals {
 model game_events_major {
   id                     Int                          @id @default(autoincrement())
   game_id                Int
-  event_type             game_events_major_event_type
+  event_type             String                       @db.VarChar(50)
   game_time              Int
   end_time               Int?
   period                 Int

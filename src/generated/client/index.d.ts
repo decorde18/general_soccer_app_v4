@@ -244,18 +244,6 @@ export const game_events_discipline_card_type: {
 export type game_events_discipline_card_type = (typeof game_events_discipline_card_type)[keyof typeof game_events_discipline_card_type]
 
 
-export const game_events_major_event_type: {
-  weather: 'weather',
-  discipline: 'discipline',
-  goal: 'goal',
-  penalty: 'penalty',
-  injury: 'injury',
-  other: 'other'
-};
-
-export type game_events_major_event_type = (typeof game_events_major_event_type)[keyof typeof game_events_major_event_type]
-
-
 export const game_events_penalties_outcome: {
   goal: 'goal',
   saved: 'saved',
@@ -437,10 +425,6 @@ export const event_types_category: typeof $Enums.event_types_category
 export type game_events_discipline_card_type = $Enums.game_events_discipline_card_type
 
 export const game_events_discipline_card_type: typeof $Enums.game_events_discipline_card_type
-
-export type game_events_major_event_type = $Enums.game_events_major_event_type
-
-export const game_events_major_event_type: typeof $Enums.game_events_major_event_type
 
 export type game_events_penalties_outcome = $Enums.game_events_penalties_outcome
 
@@ -13342,7 +13326,7 @@ export namespace Prisma {
   export type Game_events_majorMinAggregateOutputType = {
     id: number | null
     game_id: number | null
-    event_type: $Enums.game_events_major_event_type | null
+    event_type: string | null
     game_time: number | null
     end_time: number | null
     period: number | null
@@ -13355,7 +13339,7 @@ export namespace Prisma {
   export type Game_events_majorMaxAggregateOutputType = {
     id: number | null
     game_id: number | null
-    event_type: $Enums.game_events_major_event_type | null
+    event_type: string | null
     game_time: number | null
     end_time: number | null
     period: number | null
@@ -13525,7 +13509,7 @@ export namespace Prisma {
   export type Game_events_majorGroupByOutputType = {
     id: number
     game_id: number
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time: number | null
     period: number
@@ -13605,7 +13589,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: number
       game_id: number
-      event_type: $Enums.game_events_major_event_type
+      event_type: string
       game_time: number
       end_time: number | null
       period: number
@@ -13988,7 +13972,7 @@ export namespace Prisma {
   interface game_events_majorFieldRefs {
     readonly id: FieldRef<"game_events_major", 'Int'>
     readonly game_id: FieldRef<"game_events_major", 'Int'>
-    readonly event_type: FieldRef<"game_events_major", 'game_events_major_event_type'>
+    readonly event_type: FieldRef<"game_events_major", 'String'>
     readonly game_time: FieldRef<"game_events_major", 'Int'>
     readonly end_time: FieldRef<"game_events_major", 'Int'>
     readonly period: FieldRef<"game_events_major", 'Int'>
@@ -44930,13 +44914,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'game_events_major_event_type'
-   */
-  export type Enumgame_events_major_event_typeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'game_events_major_event_type'>
-    
-
-
-  /**
    * Reference to a field of type 'game_events_penalties_outcome'
    */
   export type Enumgame_events_penalties_outcomeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'game_events_penalties_outcome'>
@@ -45748,7 +45725,7 @@ export namespace Prisma {
     NOT?: game_events_majorWhereInput | game_events_majorWhereInput[]
     id?: IntFilter<"game_events_major"> | number
     game_id?: IntFilter<"game_events_major"> | number
-    event_type?: Enumgame_events_major_event_typeFilter<"game_events_major"> | $Enums.game_events_major_event_type
+    event_type?: StringFilter<"game_events_major"> | string
     game_time?: IntFilter<"game_events_major"> | number
     end_time?: IntNullableFilter<"game_events_major"> | number | null
     period?: IntFilter<"game_events_major"> | number
@@ -45785,7 +45762,7 @@ export namespace Prisma {
     OR?: game_events_majorWhereInput[]
     NOT?: game_events_majorWhereInput | game_events_majorWhereInput[]
     game_id?: IntFilter<"game_events_major"> | number
-    event_type?: Enumgame_events_major_event_typeFilter<"game_events_major"> | $Enums.game_events_major_event_type
+    event_type?: StringFilter<"game_events_major"> | string
     game_time?: IntFilter<"game_events_major"> | number
     end_time?: IntNullableFilter<"game_events_major"> | number | null
     period?: IntFilter<"game_events_major"> | number
@@ -45823,7 +45800,7 @@ export namespace Prisma {
     NOT?: game_events_majorScalarWhereWithAggregatesInput | game_events_majorScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"game_events_major"> | number
     game_id?: IntWithAggregatesFilter<"game_events_major"> | number
-    event_type?: Enumgame_events_major_event_typeWithAggregatesFilter<"game_events_major"> | $Enums.game_events_major_event_type
+    event_type?: StringWithAggregatesFilter<"game_events_major"> | string
     game_time?: IntWithAggregatesFilter<"game_events_major"> | number
     end_time?: IntNullableWithAggregatesFilter<"game_events_major"> | number | null
     period?: IntWithAggregatesFilter<"game_events_major"> | number
@@ -49055,7 +49032,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorCreateInput = {
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -49072,7 +49049,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedCreateInput = {
     id?: number
     game_id: number
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -49086,7 +49063,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorUpdateInput = {
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -49103,7 +49080,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     game_id?: IntFieldUpdateOperationsInput | number
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -49119,7 +49096,7 @@ export namespace Prisma {
   export type game_events_majorCreateManyInput = {
     id?: number
     game_id: number
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -49130,7 +49107,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorUpdateManyMutationInput = {
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -49143,7 +49120,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     game_id?: IntFieldUpdateOperationsInput | number
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -52518,13 +52495,6 @@ export namespace Prisma {
     defending_gk_player_game_id?: SortOrder
   }
 
-  export type Enumgame_events_major_event_typeFilter<$PrismaModel = never> = {
-    equals?: $Enums.game_events_major_event_type | Enumgame_events_major_event_typeFieldRefInput<$PrismaModel>
-    in?: $Enums.game_events_major_event_type[]
-    notIn?: $Enums.game_events_major_event_type[]
-    not?: NestedEnumgame_events_major_event_typeFilter<$PrismaModel> | $Enums.game_events_major_event_type
-  }
-
   export type Game_events_disciplineListRelationFilter = {
     every?: game_events_disciplineWhereInput
     some?: game_events_disciplineWhereInput
@@ -52603,16 +52573,6 @@ export namespace Prisma {
     game_time?: SortOrder
     end_time?: SortOrder
     period?: SortOrder
-  }
-
-  export type Enumgame_events_major_event_typeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.game_events_major_event_type | Enumgame_events_major_event_typeFieldRefInput<$PrismaModel>
-    in?: $Enums.game_events_major_event_type[]
-    notIn?: $Enums.game_events_major_event_type[]
-    not?: NestedEnumgame_events_major_event_typeWithAggregatesFilter<$PrismaModel> | $Enums.game_events_major_event_type
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumgame_events_major_event_typeFilter<$PrismaModel>
-    _max?: NestedEnumgame_events_major_event_typeFilter<$PrismaModel>
   }
 
   export type Enumgame_events_penalties_outcomeFilter<$PrismaModel = never> = {
@@ -55392,10 +55352,6 @@ export namespace Prisma {
     connectOrCreate?: game_events_penaltiesCreateOrConnectWithoutGame_events_majorInput | game_events_penaltiesCreateOrConnectWithoutGame_events_majorInput[]
     createMany?: game_events_penaltiesCreateManyGame_events_majorInputEnvelope
     connect?: game_events_penaltiesWhereUniqueInput | game_events_penaltiesWhereUniqueInput[]
-  }
-
-  export type Enumgame_events_major_event_typeFieldUpdateOperationsInput = {
-    set?: $Enums.game_events_major_event_type
   }
 
   export type game_events_disciplineUpdateManyWithoutGame_events_majorNestedInput = {
@@ -59104,23 +59060,6 @@ export namespace Prisma {
     _max?: NestedEnumgame_events_discipline_card_typeFilter<$PrismaModel>
   }
 
-  export type NestedEnumgame_events_major_event_typeFilter<$PrismaModel = never> = {
-    equals?: $Enums.game_events_major_event_type | Enumgame_events_major_event_typeFieldRefInput<$PrismaModel>
-    in?: $Enums.game_events_major_event_type[]
-    notIn?: $Enums.game_events_major_event_type[]
-    not?: NestedEnumgame_events_major_event_typeFilter<$PrismaModel> | $Enums.game_events_major_event_type
-  }
-
-  export type NestedEnumgame_events_major_event_typeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.game_events_major_event_type | Enumgame_events_major_event_typeFieldRefInput<$PrismaModel>
-    in?: $Enums.game_events_major_event_type[]
-    notIn?: $Enums.game_events_major_event_type[]
-    not?: NestedEnumgame_events_major_event_typeWithAggregatesFilter<$PrismaModel> | $Enums.game_events_major_event_type
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumgame_events_major_event_typeFilter<$PrismaModel>
-    _max?: NestedEnumgame_events_major_event_typeFilter<$PrismaModel>
-  }
-
   export type NestedEnumgame_events_penalties_outcomeFilter<$PrismaModel = never> = {
     equals?: $Enums.game_events_penalties_outcome | Enumgame_events_penalties_outcomeFieldRefInput<$PrismaModel>
     in?: $Enums.game_events_penalties_outcome[]
@@ -60365,7 +60304,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorCreateWithoutGame_events_disciplineInput = {
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -60381,7 +60320,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedCreateWithoutGame_events_disciplineInput = {
     id?: number
     game_id: number
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -60506,7 +60445,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorUpdateWithoutGame_events_disciplineInput = {
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -60522,7 +60461,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedUpdateWithoutGame_events_disciplineInput = {
     id?: IntFieldUpdateOperationsInput | number
     game_id?: IntFieldUpdateOperationsInput | number
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -60735,7 +60674,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorCreateWithoutGame_events_goalsInput = {
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -60751,7 +60690,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedCreateWithoutGame_events_goalsInput = {
     id?: number
     game_id: number
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -61025,7 +60964,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorUpdateWithoutGame_events_goalsInput = {
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -61041,7 +60980,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedUpdateWithoutGame_events_goalsInput = {
     id?: IntFieldUpdateOperationsInput | number
     game_id?: IntFieldUpdateOperationsInput | number
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -61699,7 +61638,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorCreateWithoutGame_events_penaltiesInput = {
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -61715,7 +61654,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedCreateWithoutGame_events_penaltiesInput = {
     id?: number
     game_id: number
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -62010,7 +61949,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorUpdateWithoutGame_events_penaltiesInput = {
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -62026,7 +61965,7 @@ export namespace Prisma {
   export type game_events_majorUncheckedUpdateWithoutGame_events_penaltiesInput = {
     id?: IntFieldUpdateOperationsInput | number
     game_id?: IntFieldUpdateOperationsInput | number
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -63615,7 +63554,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorCreateWithoutGamesInput = {
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -63630,7 +63569,7 @@ export namespace Prisma {
 
   export type game_events_majorUncheckedCreateWithoutGamesInput = {
     id?: number
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -64149,7 +64088,7 @@ export namespace Prisma {
     NOT?: game_events_majorScalarWhereInput | game_events_majorScalarWhereInput[]
     id?: IntFilter<"game_events_major"> | number
     game_id?: IntFilter<"game_events_major"> | number
-    event_type?: Enumgame_events_major_event_typeFilter<"game_events_major"> | $Enums.game_events_major_event_type
+    event_type?: StringFilter<"game_events_major"> | string
     game_time?: IntFilter<"game_events_major"> | number
     end_time?: IntNullableFilter<"game_events_major"> | number | null
     period?: IntFilter<"game_events_major"> | number
@@ -71202,7 +71141,7 @@ export namespace Prisma {
 
   export type game_events_majorCreateManyGamesInput = {
     id?: number
-    event_type: $Enums.game_events_major_event_type
+    event_type: string
     game_time: number
     end_time?: number | null
     period: number
@@ -71309,7 +71248,7 @@ export namespace Prisma {
   }
 
   export type game_events_majorUpdateWithoutGamesInput = {
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -71324,7 +71263,7 @@ export namespace Prisma {
 
   export type game_events_majorUncheckedUpdateWithoutGamesInput = {
     id?: IntFieldUpdateOperationsInput | number
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
@@ -71339,7 +71278,7 @@ export namespace Prisma {
 
   export type game_events_majorUncheckedUpdateManyWithoutGamesInput = {
     id?: IntFieldUpdateOperationsInput | number
-    event_type?: Enumgame_events_major_event_typeFieldUpdateOperationsInput | $Enums.game_events_major_event_type
+    event_type?: StringFieldUpdateOperationsInput | string
     game_time?: IntFieldUpdateOperationsInput | number
     end_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number

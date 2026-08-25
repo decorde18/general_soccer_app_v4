@@ -81,6 +81,9 @@ const TABLE_ENUM_VALIDATIONS: Record<string, Record<string, string[]>> = {
   game_events_penalties: {
     outcome: ["goal", "saved", "missed", "hit_post"],
   },
+  game_events_major: {
+    event_type: ["goal", "card", "penalty", "substitution", "stoppage", "period_end"],
+  },
   game_events_player_actions: {
     event_type: ["shot", "shot_on_target", "shot_blocked", "save"],
   },
