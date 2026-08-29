@@ -26,7 +26,7 @@ export default function GameSummaryClient() {
   }
 
   // Calculate current match time for minute calculations
-  const gameTimeSeconds = useGameStore.getState().getPeriodTime() || 0;
+  const gameTimeSeconds = useGameStore.getState().getGameTime() || 0;
   const gkTimesMap = calculateAllGoalkeeperTime(game.id || game.game_id || "", gameTimeSeconds);
 
   // Aggregate team stats

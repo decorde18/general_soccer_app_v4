@@ -396,6 +396,20 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **21.5 Schedule Location Cell Font & Sublocation Display**
   - [x] Refined location cell styling in `TournamentScheduleView.tsx` (`text-[11px] font-normal hover:underline`) and added sublocation formatting (`Location Name (Sublocation)`).
 
+## Step 22: Master Score Entry Enhancements, Tournament Crossover Standings & Playing Time Fixes
+
+- [x] **22.1 Master Score Reporting Filters & Season Default**
+  - [x] Added Season selector (defaulting to current active season) and specific Tournament / League dropdown filter in `MasterScoreEntryClient.tsx`.
+- [x] **22.2 Inline Batch Score Entry Mode**
+  - [x] Added **`[⚡ Batch Quick Edit Scores]`** toggle to `MasterScoreEntryClient.tsx` allowing inline editing of scores with immediate UI state updates and a single **`[Save All Scores]`** batch action.
+- [x] **22.3 Tournament Crossover Standings Calculation**
+  - [x] Updated `getTeamSeasonRecords` in `queries.ts` so crossover matches against teams in other group nodes count towards enrolled teams' group standings.
+- [x] **22.4 Major Event Modal & Select Dropdown UI Cleanups**
+  - [x] Removed duplicate inline clock pause checkbox from `MajorEventModal.tsx`.
+  - [x] Updated `Select.tsx` to automatically suppress generic `-- Select an option --` when customized placeholder options exist.
+- [x] **22.5 Game Summary Box Score Minutes Played Calculation Fix (Game 882)**
+  - [x] Updated `GameSummaryClient.tsx` to pass continuous absolute game time (`getGameTime()`) instead of single-period time (`getPeriodTime()`), ensuring full-match players (Bryn) and subbed-in players (Isabella, Georgia) accumulate accurate match minutes.
+
 ## Notes / Future Considerations
 
 - Advanced live match stream / video link embeds (`games.video_link`)

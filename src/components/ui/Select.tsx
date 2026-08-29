@@ -48,6 +48,8 @@ export default function Select({
   placeholder = "Select an option",
   showPlaceholder = true,
   defaultValue,
+  value,
+  onChange,
   ...props
 }: any) {
   const widthClasses: Record<string, string> = {
@@ -58,12 +60,27 @@ export default function Select({
     full: "w-full",
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!onChange) return;
+    const val = e.target.value;
+    // Pass val as first arg and e as second arg
+    onChange(val, e);
+  };
+
+  const firstOpt = options[0];
+  const hasCustomEmptyOption =
+    firstOpt !== undefined &&
+    ((typeof firstOpt === "object" && firstOpt !== null && firstOpt.value === "") ||
+      firstOpt === "");
+
   return (
     <div className={cn("relative", widthClasses[width])}>
       <div className='relative'>
         <select
           disabled={disabled}
           defaultValue={defaultValue}
+          value={value}
+          onChange={handleChange}
           className={cn(
             "appearance-none w-full px-4 py-2 rounded-md transition-colors border",
             "text-sm font-semibold",
@@ -77,7 +94,7 @@ export default function Select({
           )}
           {...props}
         >
-          {showPlaceholder && (
+          {showPlaceholder && !hasCustomEmptyOption && (
             <option value='' disabled>
               {placeholder}
             </option>

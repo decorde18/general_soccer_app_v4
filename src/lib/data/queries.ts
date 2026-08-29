@@ -1558,17 +1558,18 @@ export async function getTeamSeasonRecords(
         }
       }
 
+      const homeEnrolled = leagueNodeSeasonId ? enrolledTeamSeasonsMap.has(g.home_team_season_id) : true;
+      const awayEnrolled = leagueNodeSeasonId ? enrolledTeamSeasonsMap.has(g.away_team_season_id) : true;
+
       if (leagueNodeSeasonId) {
-        if (
-          !enrolledTeamSeasonsMap.has(g.home_team_season_id) ||
-          !enrolledTeamSeasonsMap.has(g.away_team_season_id)
-        ) {
+        if (!homeEnrolled && !awayEnrolled) {
           return;
         }
       }
 
       const homeRec =
-        !teamSeasonId || g.home_team_season_id === teamSeasonId
+        (!teamSeasonId || g.home_team_season_id === teamSeasonId) &&
+        (!leagueNodeSeasonId || homeEnrolled)
           ? getOrCreateRecord(
               g.home_team_season_id,
               Number(targetLnId ?? leagueNodeSeasonId ?? 0),
@@ -1576,7 +1577,8 @@ export async function getTeamSeasonRecords(
             )
           : null;
       const awayRec =
-        !teamSeasonId || g.away_team_season_id === teamSeasonId
+        (!teamSeasonId || g.away_team_season_id === teamSeasonId) &&
+        (!leagueNodeSeasonId || awayEnrolled)
           ? getOrCreateRecord(
               g.away_team_season_id,
               Number(targetLnId ?? leagueNodeSeasonId ?? 0),
