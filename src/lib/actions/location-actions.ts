@@ -110,3 +110,64 @@ export async function deleteLocation(id: unknown) {
 
   revalidatePath("/locations");
 }
+
+export interface LocationDetails {
+  id: number;
+  name: string;
+  abbreviation: string | null;
+  addressId: number | null;
+  formattedAddress: string | null;
+  streetAddress: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  googleMapsUrl: string | null;
+  sublocations: {
+    id: number;
+    name: string;
+    description: string | null;
+    surfaceType: string | null;
+  }[];
+}
+
+export async function getLocationDetails(locationId: number): Promise<LocationDetails | null> {
+  if (!locationId) return null;
+
+  const loc = await prisma.locations.findUnique({
+    where: { id: locationId },
+    include: {
+      addresses: true,
+      locations_sublocations: true,
+    },
+  });
+
+  if (!loc) return null;
+
+  const addr = loc.addresses;
+  const addressParts = addr
+    ? [addr.address_line1, addr.address_line2, `${addr.city || ""}${addr.city && addr.state ? ", " : ""}${addr.state || ""} ${addr.postal_code || ""}`.trim()].filter(Boolean)
+    : [];
+  const formattedAddress = addressParts.length > 0 ? addressParts.join(" ") : null;
+
+  const searchQuery = formattedAddress || `${loc.name} soccer complex`;
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`;
+
+  return {
+    id: loc.id,
+    name: loc.name,
+    abbreviation: loc.abbreviation,
+    addressId: loc.address_id,
+    formattedAddress,
+    streetAddress: addr?.address_line1 || null,
+    city: addr?.city || null,
+    state: addr?.state || null,
+    postalCode: addr?.postal_code || null,
+    googleMapsUrl,
+    sublocations: loc.locations_sublocations.map((sub) => ({
+      id: sub.id,
+      name: sub.name,
+      description: sub.description,
+      surfaceType: sub.surface_type,
+    })),
+  };
+}

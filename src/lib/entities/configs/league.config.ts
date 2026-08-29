@@ -121,6 +121,14 @@ export const leagueConfig: EntityConfig = {
         placeholder: "League details and notes...",
         gridColumn: "span-12",
       },
+      {
+        key: "matchRules",
+        label: "Match Format & Rules (JSON / Text)",
+        type: "textarea",
+        required: false,
+        placeholder: '{"format":"11v11","periodDuration":40,"tieBreaker":"Goal Differential","advancement":"Top 2 Teams"}',
+        gridColumn: "span-12",
+      },
     ],
   },
 };

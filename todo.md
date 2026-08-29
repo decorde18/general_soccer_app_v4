@@ -33,11 +33,7 @@
 
 ---
 
-
-
 ---
-
-
 
 [x] On roster view in team page, default to table layout instead of cards
 [x] Add player avatar/photo placeholder on roster cards view
@@ -206,7 +202,6 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **Match Administration In-Game Adjustments & Multi-Select Deletion**:
   - Added full event editing for Goals, Substitutions, and Disciplinary Cards with modal pre-population and `PUT` persistence.
   - Added checkboxes on every event item, "Select All" header toggles, section-level "Delete Selected (N)" buttons, and a floating bulk deletion banner.
-  
 
 ## Step 6: Verification & Automated Tests
 
@@ -215,7 +210,6 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 [x] Verify all 6 role types (Admin, Club Admin, Team Admin, Coach, Parent, Player) render correct data scopes _(blueprint §2.1)_
 
 ---
-
 
 ## Step 7: Seasons Lifecycle & Age Group Associations
 
@@ -302,7 +296,6 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [ ] **12.1 Lineup Missing / Duplicate Jersey Number Resolution Modal**
   - [ ] Prompt user with a modal when players lack a jersey number during lineup selection, allowing them to assign jersey numbers for the match or permanently for the season
 
-
 ## Step 13: Live Match Reliability, Offline-First Engine & Coaching Workflow Upgrades
 
 - [x] **13.1 Offline-First Game State Caching & Network Resilience**
@@ -344,10 +337,47 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **15.7 Team Page 500 Route Error Fix (`/teams/122`)**: Resolve "Something went wrong" crash on public team page (`/teams/[teamSeasonId]`).
 - [x] **15.8 Dev-Only Offline Test Mode**: Restrict offline testing toggle UI to development environment (`process.env.NODE_ENV === 'development'`).
 
-individual stats on page summary should include minutes played and +/-, keeper stats should be separate from field player stats (and include time in goal (a player may have played 55 but only 20 were in goal, they may have only played 20 minutes and were in goal for all of them))
-game 877 the time in goal is wrong, there was never a sub for the GK so the starting gk should have taken all the minutes
+## Step 16: League & Tournament Match Format & Standings Configurations
+
+- [x] **16.1 League & Tournament Rules / Match Format Metadata**
+  - [x] Store match format options (11v11, 9v9, 7v7, 5v5), period duration (e.g. 35m vs 40m), tiebreaker rules, and advancement criteria (group winner, top X teams) as JSON/text in `leagues`.
+  - [x] Build configuration interface in Admin League Management (`/admin/leagues`).
+- [x] **16.2 Standings Calculation & Seeding Engine Roadmap**
+  - [x] Design future standings engine rules (points per win/draw/loss, shutout bonuses, max goal differential caps, group tiebreakers, and seeding).
+
+## Step 17: Comprehensive Game Schedule Importer & Hierarchy Mapper
+
+- [x] **17.1 Host Team Scoping (Default Team vs Neutral Schedule Imports)**
+  - [x] Support importing game schedules assigned to a default host team OR importing neutral schedule batches across leagues/tournaments.
+- [x] **17.2 Gender-First League Node Hierarchy Alignment**
+  - [x] Enforce sub-node tree hierarchy order: **Gender** level above **Age Group** level above **Division / Group**.
+  - [x] Migration script: Automatically reorganize existing node trees in DB to place Gender above Age Group across existing leagues & tournaments.
+- [x] **17.3 Interactive Step-by-Step Entity Matching Wizard (Clubs, Teams, Locations, Sublocations)**
+  - [x] Evaluate incoming schedule rows against DB clubs, teams, locations, and sublocations (fields).
+  - [x] Build an Interactive Step-by-Step Wizard modal showing candidate matches with single-click mapping or "Create New Entity" buttons.
+- [x] **17.4 Timezone Resolution & Header Auto-Detection**
+  - [x] Prompt for default Time Zone in import header whenever timezone column is missing from import rows.
+  - [x] Support mapping standard CSV/TSV headers (`Game#`, `Date`, `Time`, `Division`, `Field`, `Home`, `H Score`, `Away`, `A Score`, `Game Type`).
+
+## Step 18: Summary Page Stats Polish & Keeper Time-in-Goal Fix
+
+- [x] **18.1 Summary Player Minutes Played & +/- Display**
+  - [x] Include `minutesPlayed` and `plusMinus` (+/-) on post-game summary player statistics tables.
+- [x] **18.2 Separate Goalkeeper Stats & Time-in-Goal Calculation Integrity**
+  - [x] Separate goalkeeper stats into a dedicated summary table (tracking shots faced, saves, clean sheets, and exact `timeInGoal`).
+  - [x] Fix Game 877 issue where starting GK received zero/incorrect time in goal despite no goalkeeper substitutions being logged.
+
+When creating a league/tournament, I should have been offered the options for the tournament in the modal when creating on batch import. This did not happen.
+League/tournaments should be allowed fro one season to the next. Leagues should allow an import of teams from the previous season.
+How do we account for placeholder teams? Group B#1. When the end of group play happens, those turn into actual teams, how do we handle that in the system?
+When I change the season, it should update the current page to that season.
 
 ## Notes / Future Considerations
+
+On player stats/team stats, we need to know which stats are part of the season (includes all games). Which ones are league/tournament specific, etc
+
+For future
+career should not be for club but for pro league high school etc. which we need to start creating.
 
 - Advanced live match stream / video link embeds (`games.video_link`)
 - Historical season archiving and player career stats aggregation

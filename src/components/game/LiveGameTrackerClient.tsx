@@ -16,7 +16,7 @@ import UpcomingSubsPanel from "./live/UpcomingSubsPanel";
 import RecentEventsPanel from "./live/RecentEventsPanel";
 import MajorEventModal from "./live/MajorEventModal";
 import LiveNavigationDrawer from "./live/LiveNavigationDrawer";
-import { PauseCircle } from "lucide-react";
+import { PauseCircle, Info } from "lucide-react";
 
 export default function LiveGameTrackerClient() {
   const { id, teamSeasonId } = useParams<{ id: string; teamSeasonId: string }>();
@@ -40,6 +40,11 @@ export default function LiveGameTrackerClient() {
 
   // Automatic sub queueing when both an on-field and bench player are selected
   useEffect(() => {
+    if (getGameStage() === useGameStore.getState().GAME_STAGES.BEFORE_START) {
+      setSubOutId(null);
+      setSubInId(null);
+      return;
+    }
     if (subOutId && subInId) {
       const outId = subOutId;
       const inId = subInId;
@@ -161,11 +166,41 @@ export default function LiveGameTrackerClient() {
 
         {/* RIGHT COLUMN: ACTION & FEED PANEL (30% WIDTH) */}
         <div className="w-[30%] flex flex-col gap-2.5 min-h-0">
-          <TeamCountersPanel />
-
-          <UpcomingSubsPanel />
-
-          <RecentEventsPanel />
+          {currentStage !== GAME_STAGES.BEFORE_START ? (
+            <>
+              <TeamCountersPanel />
+              <UpcomingSubsPanel />
+              <RecentEventsPanel />
+            </>
+          ) : (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 space-y-4 text-slate-300 shadow-xl backdrop-blur-md">
+              <div className="flex items-center gap-2 text-indigo-400 font-extrabold uppercase text-xs tracking-wider">
+                <Info size={16} className="text-indigo-400" />
+                <span>Pregame Overview</span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                The match has not started yet. Starting lineups are set on the <strong className="text-slate-200">Lineup</strong> page.
+              </p>
+              <div className="space-y-2.5 pt-3 border-t border-slate-800/80 text-xs font-semibold">
+                <div className="flex justify-between items-center text-slate-400">
+                  <span>Match Period:</span>
+                  <span className="text-indigo-300 font-extrabold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">Pregame</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span>Corners / Fouls / Offsides:</span>
+                  <span className="text-slate-500 text-[11px]">Activates in Period 1</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span>Pending Substitutions:</span>
+                  <span className="text-slate-500 text-[11px]">Activates in Period 1</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-400">
+                  <span>Live Match Feed:</span>
+                  <span className="text-slate-500 text-[11px]">Activates in Period 1</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -29,16 +29,66 @@ import {
   batchImportTeams,
   batchImportSchedule,
   batchImportRoster,
+  getImportLocationsData,
   TeamImportRecord,
   ScheduleImportRecord,
   RosterImportRecord,
   ParentImportRecord,
 } from "@/lib/actions/import-actions";
+import EntityMatchingWizardModal from "@/components/admin/importer/EntityMatchingWizardModal";
+import { createInlineLeague, createInlineLeagueNode, carryoverLeagueTeamsFromPreviousSeason } from "@/lib/actions/league-actions";
 
 interface BatchImporterClientProps {
   seasons: { id: number; name: string }[];
-  leagueNodes?: { id: number; name: string }[];
+  leagues?: { id: number; name: string; isTournament: boolean }[];
+  leagueNodes?: { id: number; leagueId?: number; name: string }[];
   teamSeasons?: { id: number; seasonId: number; clubName: string; teamName: string; label: string }[];
+}
+
+function detectScheduleHeaderMapping(headers: string[]) {
+  const sMap = {
+    startDate: -1,
+    startTime: -1,
+    homeClub: -1,
+    homeTeam: -1,
+    awayClub: -1,
+    awayTeam: -1,
+    gender: -1,
+    location: -1,
+    sublocation: -1,
+    gameType: -1,
+    divisionName: -1,
+  };
+
+  headers.forEach((header, idx) => {
+    const h = header.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+
+    if (h.includes("date") || h === "dt") {
+      sMap.startDate = idx;
+    } else if (h.includes("time") || h === "tm") {
+      sMap.startTime = idx;
+    } else if (h.includes("homeclub")) {
+      sMap.homeClub = idx;
+    } else if (h.includes("hometeam") || h === "home" || h === "h") {
+      sMap.homeTeam = idx;
+    } else if (h.includes("awayclub")) {
+      sMap.awayClub = idx;
+    } else if (h.includes("awayteam") || h === "away" || h === "a") {
+      sMap.awayTeam = idx;
+    } else if (h.includes("gender") || h === "sex") {
+      sMap.gender = idx;
+    } else if (h.includes("location") || h.includes("venue") || h.includes("complex") || h.includes("facility")) {
+      sMap.location = idx;
+    } else if (h.includes("field") || h.includes("pitch") || h.includes("sublocation") || h === "fieldno") {
+      sMap.sublocation = idx;
+    } else if (h.includes("type") || h.includes("gametype")) {
+      sMap.gameType = idx;
+    } else if (h.includes("division") || h.includes("agegroup") || h.includes("bracket") || h.includes("group")) {
+      sMap.divisionName = idx;
+    }
+  });
+
+  return sMap;
 }
 
 function normalizeGenderInput(genderStr?: string): "boys" | "girls" | "coed" {
@@ -140,6 +190,7 @@ function detectRosterHeaderMapping(headers: string[]) {
 
 export default function BatchImporterClient({
   seasons,
+  leagues = [],
   leagueNodes = [],
   teamSeasons = [],
 }: BatchImporterClientProps) {
@@ -160,7 +211,87 @@ export default function BatchImporterClient({
 
   // Schedule Mode Options
   const [defaultScheduleGameType, setDefaultScheduleGameType] = useState<"league" | "tournament" | "friendly" | "playoff">("league");
+  const [selectedLeagueId, setSelectedLeagueId] = useState<number | "">("");
   const [leagueNodeId, setLeagueNodeId] = useState<number | "">("");
+  const [defaultTimezone, setDefaultTimezone] = useState<string>("America/New_York");
+  const [scheduleHostTeamSeasonId, setScheduleHostTeamSeasonId] = useState<number | "">("");
+
+  // Dynamic Lists for Leagues & Nodes
+  const [leaguesList, setLeaguesList] = useState(leagues || []);
+  const [nodesList, setNodesList] = useState(leagueNodes || []);
+
+  // Inline Creation Modal States
+  const [isLeagueModalOpen, setIsLeagueModalOpen] = useState(false);
+  const [newLeagueName, setNewLeagueName] = useState("");
+  const [newLeagueIsTournament, setNewLeagueIsTournament] = useState(false);
+  const [newLeagueFormat, setNewLeagueFormat] = useState<string>("11v11");
+  const [newLeaguePeriodDuration, setNewLeaguePeriodDuration] = useState<string>("40");
+  const [newLeagueTiebreaker, setNewLeagueTiebreaker] = useState<string>("penalties");
+
+  const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
+  const [newNodeName, setNewNodeName] = useState("");
+
+  // Interactive Entity Matching Wizard States
+  const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
+  const [unmatchedClubs, setUnmatchedClubs] = useState<string[]>([]);
+  const [unmatchedTeams, setUnmatchedTeams] = useState<string[]>([]);
+  const [unmatchedLocations, setUnmatchedLocations] = useState<string[]>([]);
+  const [unmatchedFields, setUnmatchedFields] = useState<string[]>([]);
+  const [dbLocations, setDbLocations] = useState<{ id: number; name: string; abbreviation?: string; address?: string | null }[]>([]);
+  const [dbSublocations, setDbSublocations] = useState<{ id: number; name: string; code?: string; locationId?: number; locationName?: string }[]>([]);
+
+  const handleCreateLeagueInline = async () => {
+    if (!newLeagueName.trim()) return;
+    try {
+      const matchRulesObj = {
+        format: newLeagueFormat,
+        halfDurationMinutes: Number(newLeaguePeriodDuration) || 40,
+        tiebreaker: newLeagueTiebreaker,
+      };
+      const matchRulesStr = JSON.stringify(matchRulesObj, null, 2);
+
+      const created = await createInlineLeague(newLeagueName, newLeagueIsTournament, matchRulesStr);
+      setLeaguesList((prev) => [...prev, created]);
+      setSelectedLeagueId(created.id);
+      setIsLeagueModalOpen(false);
+      setNewLeagueName("");
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Failed to create league");
+    }
+  };
+
+  const handleCarryoverTeams = async () => {
+    if (!selectedLeagueId || seasons.length < 2) return;
+    // Find previous season ID
+    const curSeasonIdx = seasons.findIndex((s) => s.id === targetSeasonId);
+    const prevSeason = seasons[curSeasonIdx + 1] || seasons[0];
+    if (!prevSeason || prevSeason.id === targetSeasonId) {
+      setErrorMsg("No previous season found to carry over teams from.");
+      return;
+    }
+
+    try {
+      const res = await carryoverLeagueTeamsFromPreviousSeason(Number(selectedLeagueId), prevSeason.id, targetSeasonId);
+      setImportSummary(`Successfully carried over ${res.totalCarriedOver} team registrations from ${prevSeason.name} into ${selectedSeason.name}!`);
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Failed to carry over teams.");
+    }
+  };
+
+  const handleCreateNodeInline = async () => {
+    if (!newNodeName.trim() || !selectedLeagueId) return;
+    try {
+      const targetLeague = leaguesList.find((l) => l.id === Number(selectedLeagueId));
+      const created = await createInlineLeagueNode(Number(selectedLeagueId), newNodeName, targetSeasonId);
+      const formattedNode = { id: created.id, name: `${targetLeague?.name || "League"} - ${created.name}` };
+      setNodesList((prev) => [...prev, formattedNode]);
+      setLeagueNodeId(created.id);
+      setIsNodeModalOpen(false);
+      setNewNodeName("");
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Failed to create division node");
+    }
+  };
 
   // --- HEADER-BASED COLUMN MAPPING STATES FOR PLAYERS & PARENTS ---
   const [rosterMapping, setRosterMapping] = useState<{
@@ -234,6 +365,7 @@ export default function BatchImporterClient({
     location: number;
     sublocation: number;
     gameType: number;
+    divisionName: number;
   }>({
     startDate: -1,
     startTime: -1,
@@ -245,6 +377,7 @@ export default function BatchImporterClient({
     location: -1,
     sublocation: -1,
     gameType: -1,
+    divisionName: -1,
   });
 
   // Parsed records state
@@ -258,6 +391,7 @@ export default function BatchImporterClient({
 
   // Selected Objects
   const selectedSeason = seasons.find((s) => s.id === targetSeasonId) || seasons[0];
+  const selectedLeague = leaguesList.find((l) => l.id === Number(selectedLeagueId));
   const availableTeamSeasons = teamSeasons.filter((ts) => ts.seasonId === targetSeasonId);
   const selectedTargetTeam = teamSeasons.find((ts) => ts.id === Number(targetRosterTeamSeasonId));
 
@@ -278,17 +412,24 @@ export default function BatchImporterClient({
     setCsvHeaders(firstLineParts);
 
     if (hasHeaderRow) {
-      const autoMap = detectRosterHeaderMapping(firstLineParts);
-      setRosterMapping(autoMap);
+      if (importMode === "roster") {
+        const autoMap = detectRosterHeaderMapping(firstLineParts);
+        setRosterMapping(autoMap);
+      } else if (importMode === "schedule") {
+        const autoMap = detectScheduleHeaderMapping(firstLineParts);
+        setScheduleMapping(autoMap);
+      }
     }
-  }, [rawText, hasHeaderRow]);
+  }, [rawText, hasHeaderRow, importMode]);
 
   // Re-parse when target team or mapping changes dynamically
   useEffect(() => {
     if (rawText.trim() && importMode === "roster") {
       parseRosterText(rawText);
+    } else if (rawText.trim() && importMode === "schedule") {
+      parseScheduleText(rawText);
     }
-  }, [targetRosterTeamSeasonId, rosterMapping, importMode]);
+  }, [targetRosterTeamSeasonId, rosterMapping, scheduleMapping, importMode]);
 
   // Handle Native CSV File Upload (.csv, .tsv, .txt)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -475,6 +616,20 @@ export default function BatchImporterClient({
     setImportSummary(null);
 
     const lines = text.trim().split("\n");
+    if (lines.length === 0) return;
+
+    const firstLineParts = lines[0].split(/,|\t/).map((p) => p.trim());
+    const autoMap = hasHeaderRow ? detectScheduleHeaderMapping(firstLineParts) : null;
+    const activeMapping = { ...scheduleMapping };
+
+    if (autoMap) {
+      (Object.keys(autoMap) as Array<keyof typeof autoMap>).forEach((key) => {
+        if (autoMap[key] >= 0) {
+          activeMapping[key] = autoMap[key];
+        }
+      });
+    }
+
     const records: ScheduleImportRecord[] = [];
     const startIndex = hasHeaderRow ? 1 : 0;
 
@@ -483,17 +638,18 @@ export default function BatchImporterClient({
       if (!line.trim()) continue;
       const parts = line.split(/,|\t/).map((p) => p.trim());
 
-      const startDate = scheduleMapping.startDate >= 0 ? parts[scheduleMapping.startDate] || "" : "";
-      const startTime = scheduleMapping.startTime >= 0 ? parts[scheduleMapping.startTime] || undefined : undefined;
-      const homeClubName = scheduleMapping.homeClub >= 0 ? parts[scheduleMapping.homeClub] || "" : "";
-      const homeTeamName = scheduleMapping.homeTeam >= 0 ? parts[scheduleMapping.homeTeam] || "" : "";
-      const awayClubName = scheduleMapping.awayClub >= 0 ? parts[scheduleMapping.awayClub] || "" : "";
-      const awayTeamName = scheduleMapping.awayTeam >= 0 ? parts[scheduleMapping.awayTeam] || homeTeamName : homeTeamName;
-      const gender = scheduleMapping.gender >= 0 ? normalizeGenderInput(parts[scheduleMapping.gender]) : "boys";
-      const locationName = scheduleMapping.location >= 0 ? parts[scheduleMapping.location] || undefined : undefined;
-      const sublocationName = scheduleMapping.sublocation >= 0 ? parts[scheduleMapping.sublocation] || undefined : undefined;
-      const rawType = scheduleMapping.gameType >= 0 ? parts[scheduleMapping.gameType] : undefined;
+      const startDate = activeMapping.startDate >= 0 ? parts[activeMapping.startDate] || "" : "";
+      const startTime = activeMapping.startTime >= 0 ? parts[activeMapping.startTime] || undefined : undefined;
+      const homeClubName = activeMapping.homeClub >= 0 ? parts[activeMapping.homeClub] || "" : "";
+      const homeTeamName = activeMapping.homeTeam >= 0 ? parts[activeMapping.homeTeam] || "" : "";
+      const awayClubName = activeMapping.awayClub >= 0 ? parts[activeMapping.awayClub] || "" : "";
+      const awayTeamName = activeMapping.awayTeam >= 0 ? parts[activeMapping.awayTeam] || homeTeamName : homeTeamName;
+      const gender = activeMapping.gender >= 0 ? normalizeGenderInput(parts[activeMapping.gender]) : "boys";
+      const locationName = activeMapping.location >= 0 ? parts[activeMapping.location] || undefined : undefined;
+      const sublocationName = activeMapping.sublocation >= 0 ? parts[activeMapping.sublocation] || undefined : undefined;
+      const rawType = activeMapping.gameType >= 0 ? parts[activeMapping.gameType] : undefined;
       const gameType = (rawType || defaultScheduleGameType).toLowerCase() as any;
+      const divisionName = activeMapping.divisionName >= 0 ? parts[activeMapping.divisionName] || undefined : undefined;
 
       if (!startDate || !homeTeamName) continue;
 
@@ -508,7 +664,9 @@ export default function BatchImporterClient({
         locationName,
         sublocationName,
         gameType,
+        leagueId: selectedLeagueId ? Number(selectedLeagueId) : undefined,
         leagueNodeId: leagueNodeId ? Number(leagueNodeId) : undefined,
+        divisionName,
       });
     }
 
@@ -543,6 +701,81 @@ export default function BatchImporterClient({
           setRawText("");
           setUploadedFileName(null);
         } else {
+          // Check for unmatched schedule teams or clubs before saving to DB
+          const existingTeamFull = new Set(
+            availableTeamSeasons.map((ts) => `${ts.clubName} ${ts.teamName}`.toLowerCase().trim())
+          );
+          const existingTeamSimple = new Set(
+            availableTeamSeasons.map((ts) => ts.teamName.toLowerCase().trim())
+          );
+
+          const missingTeams: string[] = [];
+          const missingClubs: string[] = [];
+          const missingLocs: string[] = [];
+          const missingSublocs: string[] = [];
+
+          // Fetch existing DB locations & sublocations for verification wizard
+          const { existingLocations, existingSublocations } = await getImportLocationsData();
+          setDbLocations(existingLocations);
+          setDbSublocations(existingSublocations);
+
+          const existingLocNames = new Set(existingLocations.map((l) => l.name.toLowerCase()));
+          const existingLocAbbrs = new Set(existingLocations.map((l) => (l.abbreviation || "").toLowerCase()).filter(Boolean));
+          const existingSubCodes = new Set(existingSublocations.map((s) => (s.code || "").toLowerCase()).filter(Boolean));
+          const existingSubNames = new Set(existingSublocations.map((s) => s.name.toLowerCase()));
+
+          parsedSchedule.forEach((rec) => {
+            const hFull = `${rec.homeClubName} ${rec.homeTeamName}`.toLowerCase().trim();
+            const hSimple = rec.homeTeamName.toLowerCase().trim();
+            if (!existingTeamFull.has(hFull) && !existingTeamSimple.has(hSimple)) {
+              if (!missingTeams.includes(rec.homeTeamName)) missingTeams.push(rec.homeTeamName);
+            }
+            if (rec.homeClubName && !missingClubs.includes(rec.homeClubName)) {
+              missingClubs.push(rec.homeClubName);
+            }
+
+            const aFull = `${rec.awayClubName} ${rec.awayTeamName}`.toLowerCase().trim();
+            const aSimple = rec.awayTeamName.toLowerCase().trim();
+            if (!existingTeamFull.has(aFull) && !existingTeamSimple.has(aSimple)) {
+              if (!missingTeams.includes(rec.awayTeamName)) missingTeams.push(rec.awayTeamName);
+            }
+            if (rec.awayClubName && !missingClubs.includes(rec.awayClubName)) {
+              missingClubs.push(rec.awayClubName);
+            }
+
+            // Check location matching
+            if (rec.locationName) {
+              const locRaw = rec.locationName.trim();
+              const locLower = locRaw.toLowerCase();
+              const isMatched =
+                existingLocNames.has(locLower) ||
+                existingLocAbbrs.has(locLower) ||
+                existingSubCodes.has(locLower);
+
+              if (!isMatched && !missingLocs.includes(locRaw)) {
+                missingLocs.push(locRaw);
+              }
+            }
+
+            if (rec.sublocationName) {
+              const subRaw = rec.sublocationName.trim();
+              const subLower = subRaw.toLowerCase();
+              const isSubMatched = existingSubCodes.has(subLower) || existingSubNames.has(subLower);
+              if (!isSubMatched && !missingSublocs.includes(subRaw)) {
+                missingSublocs.push(subRaw);
+              }
+            }
+          });
+
+          if (missingTeams.length > 0 || missingLocs.length > 0 || missingSublocs.length > 0) {
+            setUnmatchedTeams(missingTeams);
+            setUnmatchedClubs(missingClubs);
+            setUnmatchedLocations(missingLocs);
+            setUnmatchedFields(missingSublocs);
+            setIsWizardOpen(true);
+            return;
+          }
+
           const res = await batchImportSchedule(targetSeasonId, parsedSchedule);
           setImportSummary(res.summary);
           setParsedSchedule([]);
@@ -629,8 +862,8 @@ export default function BatchImporterClient({
           </div>
         </div>
 
-        {/* TARGET SEASON & TARGET TEAM SELECTION GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-700/60">
+        {/* TARGET SEASON, LEAGUE/TOURNAMENT & DIVISION SELECTION GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-slate-700/60">
           {/* Target Season */}
           <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
@@ -653,9 +886,100 @@ export default function BatchImporterClient({
             </p>
           </div>
 
+          {/* SCHEDULE MODE: LEAGUE / TOURNAMENT PROMPT */}
+          {importMode === "schedule" && (
+            <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Trophy className="h-4 w-4 text-amber-400" />
+                  Target League / Tournament *
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsLeagueModalOpen(true)}
+                  className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold underline flex items-center gap-1"
+                >
+                  + Create New
+                </button>
+              </label>
+              <Select
+                value={selectedLeagueId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setSelectedLeagueId(e.target.value ? Number(e.target.value) : "");
+                  setLeagueNodeId("");
+                }}
+                options={leaguesList.map((l) => ({
+                  value: String(l.id),
+                  label: `${l.name} ${l.isTournament ? "🎪 (Tournament)" : "🏆 (League)"}`,
+                }))}
+                placeholder="Select League or Tournament..."
+                showPlaceholder={true}
+              />
+              <p className="text-[11px] text-slate-400 flex items-center justify-between">
+                {selectedLeague ? (
+                  <span>Selected <strong className="text-emerald-300">{selectedLeague.name}</strong></span>
+                ) : (
+                  <span>Choose or create the tournament/league before uploading schedule</span>
+                )}
+                {selectedLeagueId && seasons.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleCarryoverTeams}
+                    className="text-[10px] text-amber-400 hover:text-amber-300 font-bold underline ml-2"
+                  >
+                    🔄 Copy Prev Season Teams
+                  </button>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* SCHEDULE MODE: LEAGUE NODE / DIVISION PROMPT */}
+          {importMode === "schedule" && (
+            <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Layers className="h-4 w-4 text-indigo-400" />
+                  Target Division / Node (Optional)
+                </span>
+                {selectedLeagueId && (
+                  <button
+                    type="button"
+                    onClick={() => setIsNodeModalOpen(true)}
+                    className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold underline flex items-center gap-1"
+                  >
+                    + Create Node
+                  </button>
+                )}
+              </label>
+              <Select
+                value={leagueNodeId}
+                disabled={!selectedLeagueId}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  setLeagueNodeId(e.target.value ? Number(e.target.value) : "")
+                }
+                options={nodesList
+                  .filter((n) => !selectedLeagueId || !n.leagueId || n.leagueId === Number(selectedLeagueId))
+                  .map((n) => ({
+                    value: String(n.id),
+                    label: n.name,
+                  }))}
+                placeholder={selectedLeagueId ? "-- Auto-Deduce Hierarchy from CSV (or Select Specific Node) --" : "Select League First..."}
+                showPlaceholder={true}
+              />
+              <p className="text-[11px] text-slate-400">
+                {leagueNodeId ? (
+                  <span>Selected explicit division node for import.</span>
+                ) : (
+                  <span>Left blank: Importer will auto-deduce <strong>Gender $\rightarrow$ Age Group $\rightarrow$ Division</strong> node tree for each row.</span>
+                )}
+              </p>
+            </div>
+          )}
+
           {/* Target Team Selection (For Players / Roster Mode) */}
           {importMode === "roster" && (
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 space-y-1.5">
+            <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 space-y-1.5 col-span-2">
               <label className="block text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Users className="h-4 w-4 text-indigo-400" />
@@ -697,12 +1021,10 @@ export default function BatchImporterClient({
             </div>
           )}
 
-          {importMode !== "roster" && (
+          {importMode === "teams" && (
             <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-700/60 flex items-center">
               <p className="text-xs text-slate-400">
-                {importMode === "teams"
-                  ? "Importing Clubs & Teams into target season."
-                  : "Importing Fixture Schedules into target season."}
+                Importing Clubs & Teams into target season.
               </p>
             </div>
           )}
@@ -1058,7 +1380,18 @@ export default function BatchImporterClient({
           {importMode === "schedule" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-xs">
               <div>
-                <label className="block text-[11px] font-bold text-red-300 mb-1">Match Date *</label>
+                <label className="block text-[11px] font-bold text-slate-200 mb-1 flex items-center justify-between">
+                  <span>Match Date *</span>
+                  {scheduleMapping.startDate >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-amber-400 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">
+                      Action Needed ⚠️
+                    </span>
+                  )}
+                </label>
                 <Select
                   value={String(scheduleMapping.startDate)}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -1069,7 +1402,18 @@ export default function BatchImporterClient({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-red-300 mb-1">Home Team *</label>
+                <label className="block text-[11px] font-bold text-slate-200 mb-1 flex items-center justify-between">
+                  <span>Home Team *</span>
+                  {scheduleMapping.homeTeam >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-amber-400 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">
+                      Action Needed ⚠️
+                    </span>
+                  )}
+                </label>
                 <Select
                   value={String(scheduleMapping.homeTeam)}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -1080,7 +1424,18 @@ export default function BatchImporterClient({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-red-300 mb-1">Away Team *</label>
+                <label className="block text-[11px] font-bold text-slate-200 mb-1 flex items-center justify-between">
+                  <span>Away Team *</span>
+                  {scheduleMapping.awayTeam >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-amber-400 font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">
+                      Action Needed ⚠️
+                    </span>
+                  )}
+                </label>
                 <Select
                   value={String(scheduleMapping.awayTeam)}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -1091,7 +1446,16 @@ export default function BatchImporterClient({
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Location</label>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Location</span>
+                  {scheduleMapping.location >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  )}
+                </label>
                 <Select
                   value={String(scheduleMapping.location)}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -1146,26 +1510,47 @@ export default function BatchImporterClient({
             </div>
           </div>
 
-          {/* SCHEDULE GAME TYPE PROMPT */}
+          {/* SCHEDULE GAME TYPE & TIMEZONE PROMPTS */}
           {importMode === "schedule" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1">
-                  <Trophy className="h-3.5 w-3.5 text-amber-400" />
-                  Game Play Type Prompt *
-                </label>
-                <Select
-                  value={defaultScheduleGameType}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    setDefaultScheduleGameType(e.target.value as any)
-                  }
-                  options={[
-                    { value: "league", label: "League Play 🏆" },
-                    { value: "tournament", label: "Tournament Play 🎪" },
-                    { value: "friendly", label: "Friendly Match 🤝" },
-                    { value: "playoff", label: "Playoff Match 🥇" },
-                  ]}
-                />
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1">
+                    <Trophy className="h-3.5 w-3.5 text-amber-400" />
+                    Game Play Type Prompt *
+                  </label>
+                  <Select
+                    value={defaultScheduleGameType}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setDefaultScheduleGameType(e.target.value as any)
+                    }
+                    options={[
+                      { value: "league", label: "League Play 🏆" },
+                      { value: "tournament", label: "Tournament Play 🎪" },
+                      { value: "friendly", label: "Friendly Match 🤝" },
+                      { value: "playoff", label: "Playoff Match 🥇" },
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1">
+                    <Settings2 className="h-3.5 w-3.5 text-indigo-400" />
+                    Default Game Time Zone *
+                  </label>
+                  <Select
+                    value={defaultTimezone}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setDefaultTimezone(e.target.value)
+                    }
+                    options={[
+                      { value: "America/New_York", label: "Eastern Time (America/New_York)" },
+                      { value: "America/Chicago", label: "Central Time (America/Chicago)" },
+                      { value: "America/Denver", label: "Mountain Time (America/Denver)" },
+                      { value: "America/Los_Angeles", label: "Pacific Time (America/Los_Angeles)" },
+                    ]}
+                  />
+                </div>
               </div>
 
               {leagueNodes.length > 0 && (
@@ -1376,6 +1761,156 @@ export default function BatchImporterClient({
           </Button>
         </div>
       </div>
+
+      {/* INTERACTIVE ENTITY MATCHING WIZARD MODAL */}
+      <EntityMatchingWizardModal
+        isOpen={isWizardOpen}
+        unmatchedClubs={unmatchedClubs}
+        unmatchedTeams={unmatchedTeams}
+        unmatchedLocations={unmatchedLocations}
+        unmatchedFields={unmatchedFields}
+        existingClubs={[]}
+        existingTeams={availableTeamSeasons.map((ts) => ({ id: ts.id, name: ts.teamName, clubName: ts.clubName }))}
+        existingLocations={dbLocations}
+        existingSublocations={dbSublocations}
+        onComplete={(resolvedMappings) => {
+          setIsWizardOpen(false);
+          // Execute import after wizard resolution
+          startTransition(async () => {
+            try {
+              const res = await batchImportSchedule(targetSeasonId, parsedSchedule, resolvedMappings as any);
+              setImportSummary(res.summary);
+              setParsedSchedule([]);
+              setRawText("");
+              setUploadedFileName(null);
+            } catch (err: any) {
+              setErrorMsg(err?.message || "Schedule import failed.");
+            }
+          });
+        }}
+        onCancel={() => setIsWizardOpen(false)}
+      />
+
+      {/* INLINE LEAGUE / TOURNAMENT CREATION MODAL */}
+      {isLeagueModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-amber-400" />
+              Create New League or Tournament
+            </h3>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">League / Tournament Name *</label>
+                <input
+                  type="text"
+                  value={newLeagueName}
+                  onChange={(e) => setNewLeagueName(e.target.value)}
+                  placeholder="e.g. DPL National Championship"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-white focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-slate-300 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={newLeagueIsTournament}
+                  onChange={(e) => setNewLeagueIsTournament(e.target.checked)}
+                  className="rounded border-slate-700 bg-slate-800 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                />
+                <span className="font-semibold text-amber-300">This is a Tournament Event 🎪</span>
+              </label>
+
+              {/* Tournament Match Format & Rules Configuration */}
+              <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/20 p-3 space-y-2.5">
+                <p className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">
+                  Tournament Match Rules & Format
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1">Match Format</label>
+                    <Select
+                      value={newLeagueFormat}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewLeagueFormat(e.target.value)}
+                      options={[
+                        { value: "11v11", label: "11v11 (Standard)" },
+                        { value: "9v9", label: "9v9 (U11/U12)" },
+                        { value: "7v7", label: "7v7 (U9/U10)" },
+                        { value: "5v5", label: "5v5 / Futsal" },
+                      ]}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1">Half Duration (Mins)</label>
+                    <input
+                      type="number"
+                      value={newLeaguePeriodDuration}
+                      onChange={(e) => setNewLeaguePeriodDuration(e.target.value)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-white focus:border-indigo-500 focus:outline-none text-xs"
+                      placeholder="40"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Tied Match Resolution / Tiebreaker</label>
+                  <Select
+                    value={newLeagueTiebreaker}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setNewLeagueTiebreaker(e.target.value)}
+                    options={[
+                      { value: "penalties", label: "Penalty Shootout (PKs)" },
+                      { value: "golden_goal", label: "Golden Goal Overtime" },
+                      { value: "none", label: "Allow Draws (Group Stage)" },
+                    ]}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button onClick={() => setIsLeagueModalOpen(false)} variant="secondary" className="text-xs">
+                Cancel
+              </Button>
+              <Button onClick={handleCreateLeagueInline} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs">
+                Create & Select
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* INLINE DIVISION NODE CREATION MODAL */}
+      {isNodeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 space-y-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Layers className="h-5 w-5 text-indigo-400" />
+              Create New Division / League Node
+            </h3>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">Division Node Name *</label>
+                <input
+                  type="text"
+                  value={newNodeName}
+                  onChange={(e) => setNewNodeName(e.target.value)}
+                  placeholder="e.g. Under 13 Girls Navy Division"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-white focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button onClick={() => setIsNodeModalOpen(false)} variant="secondary" className="text-xs">
+                Cancel
+              </Button>
+              <Button onClick={handleCreateNodeInline} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs">
+                Create & Select Node
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -114,6 +114,23 @@ export default async function LeagueDetailsPage({ params }: PageProps) {
   // Only display divisions that have teams enrolled (filters out parent nodes like "South Atlantic Premier League")
   const activeDivisions = allDivisionsData.filter(d => d.standings.length > 0);
 
+  const tournamentGames = allGames.map((g) => ({
+    id: g.id,
+    startDate: g.startDate,
+    startTime: g.startTime,
+    homeClubName: g.homeClubName,
+    homeTeamName: g.homeTeamName,
+    awayClubName: g.awayClubName,
+    awayTeamName: g.awayTeamName,
+    homeTeamSeasonId: g.homeTeamSeasonId,
+    awayTeamSeasonId: g.awayTeamSeasonId,
+    locationName: g.locationName || "",
+    sublocationName: "",
+    gameType: g.gameType,
+    status: g.status,
+    divisionNodeName: "General",
+  }));
+
   return (
     <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Back Button */}
@@ -128,11 +145,13 @@ export default async function LeagueDetailsPage({ params }: PageProps) {
 
       <Suspense fallback={<div className="text-center py-8 text-muted">Loading filters and standings...</div>}>
         <LeaguePageClient
+          leagueId={idNumber}
           leagueName={league.name}
           governingBodyName={league.governingBodyName}
           abbreviation={league.abbreviation}
           description={league.description}
           divisions={activeDivisions}
+          tournamentGames={tournamentGames}
         />
       </Suspense>
     </main>

@@ -293,7 +293,14 @@ export const games_game_type: {
   friendly: 'friendly',
   scrimmage: 'scrimmage',
   exhibition: 'exhibition',
-  playoff: 'playoff'
+  playoff: 'playoff',
+  group_stage: 'group_stage',
+  final: 'final',
+  semifinal: 'semifinal',
+  quarterfinal: 'quarterfinal',
+  round_of_16: 'round_of_16',
+  consolation: 'consolation',
+  showcase: 'showcase'
 };
 
 export type games_game_type = (typeof games_game_type)[keyof typeof games_game_type]
@@ -26786,6 +26793,7 @@ export namespace Prisma {
     ot_if_tied: boolean | null
     ot_duration: number | null
     so_if_tied: boolean | null
+    match_rules: string | null
   }
 
   export type LeaguesMaxAggregateOutputType = {
@@ -26804,6 +26812,7 @@ export namespace Prisma {
     ot_if_tied: boolean | null
     ot_duration: number | null
     so_if_tied: boolean | null
+    match_rules: string | null
   }
 
   export type LeaguesCountAggregateOutputType = {
@@ -26822,6 +26831,7 @@ export namespace Prisma {
     ot_if_tied: number
     ot_duration: number
     so_if_tied: number
+    match_rules: number
     _all: number
   }
 
@@ -26858,6 +26868,7 @@ export namespace Prisma {
     ot_if_tied?: true
     ot_duration?: true
     so_if_tied?: true
+    match_rules?: true
   }
 
   export type LeaguesMaxAggregateInputType = {
@@ -26876,6 +26887,7 @@ export namespace Prisma {
     ot_if_tied?: true
     ot_duration?: true
     so_if_tied?: true
+    match_rules?: true
   }
 
   export type LeaguesCountAggregateInputType = {
@@ -26894,6 +26906,7 @@ export namespace Prisma {
     ot_if_tied?: true
     ot_duration?: true
     so_if_tied?: true
+    match_rules?: true
     _all?: true
   }
 
@@ -26999,6 +27012,7 @@ export namespace Prisma {
     ot_if_tied: boolean | null
     ot_duration: number | null
     so_if_tied: boolean | null
+    match_rules: string | null
     _count: LeaguesCountAggregateOutputType | null
     _avg: LeaguesAvgAggregateOutputType | null
     _sum: LeaguesSumAggregateOutputType | null
@@ -27036,6 +27050,7 @@ export namespace Prisma {
     ot_if_tied?: boolean
     ot_duration?: boolean
     so_if_tied?: boolean
+    match_rules?: boolean
     league_nodes?: boolean | leagues$league_nodesArgs<ExtArgs>
     governing_bodies?: boolean | leagues$governing_bodiesArgs<ExtArgs>
     _count?: boolean | LeaguesCountOutputTypeDefaultArgs<ExtArgs>
@@ -27058,6 +27073,7 @@ export namespace Prisma {
     ot_if_tied?: boolean
     ot_duration?: boolean
     so_if_tied?: boolean
+    match_rules?: boolean
   }
 
   export type leaguesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -27088,6 +27104,7 @@ export namespace Prisma {
       ot_if_tied: boolean | null
       ot_duration: number | null
       so_if_tied: boolean | null
+      match_rules: string | null
     }, ExtArgs["result"]["leagues"]>
     composites: {}
   }
@@ -27474,6 +27491,7 @@ export namespace Prisma {
     readonly ot_if_tied: FieldRef<"leagues", 'Boolean'>
     readonly ot_duration: FieldRef<"leagues", 'Int'>
     readonly so_if_tied: FieldRef<"leagues", 'Boolean'>
+    readonly match_rules: FieldRef<"leagues", 'String'>
   }
     
 
@@ -27847,6 +27865,7 @@ export namespace Prisma {
   export type LocationsMinAggregateOutputType = {
     id: number | null
     name: string | null
+    abbreviation: string | null
     address_id: number | null
     created_at: Date | null
     modified_at: Date | null
@@ -27855,6 +27874,7 @@ export namespace Prisma {
   export type LocationsMaxAggregateOutputType = {
     id: number | null
     name: string | null
+    abbreviation: string | null
     address_id: number | null
     created_at: Date | null
     modified_at: Date | null
@@ -27863,6 +27883,7 @@ export namespace Prisma {
   export type LocationsCountAggregateOutputType = {
     id: number
     name: number
+    abbreviation: number
     address_id: number
     created_at: number
     modified_at: number
@@ -27883,6 +27904,7 @@ export namespace Prisma {
   export type LocationsMinAggregateInputType = {
     id?: true
     name?: true
+    abbreviation?: true
     address_id?: true
     created_at?: true
     modified_at?: true
@@ -27891,6 +27913,7 @@ export namespace Prisma {
   export type LocationsMaxAggregateInputType = {
     id?: true
     name?: true
+    abbreviation?: true
     address_id?: true
     created_at?: true
     modified_at?: true
@@ -27899,6 +27922,7 @@ export namespace Prisma {
   export type LocationsCountAggregateInputType = {
     id?: true
     name?: true
+    abbreviation?: true
     address_id?: true
     created_at?: true
     modified_at?: true
@@ -27994,6 +28018,7 @@ export namespace Prisma {
   export type LocationsGroupByOutputType = {
     id: number
     name: string
+    abbreviation: string | null
     address_id: number | null
     created_at: Date | null
     modified_at: Date | null
@@ -28021,6 +28046,7 @@ export namespace Prisma {
   export type locationsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
+    abbreviation?: boolean
     address_id?: boolean
     created_at?: boolean
     modified_at?: boolean
@@ -28035,6 +28061,7 @@ export namespace Prisma {
   export type locationsSelectScalar = {
     id?: boolean
     name?: boolean
+    abbreviation?: boolean
     address_id?: boolean
     created_at?: boolean
     modified_at?: boolean
@@ -28059,6 +28086,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: number
       name: string
+      abbreviation: string | null
       address_id: number | null
       created_at: Date | null
       modified_at: Date | null
@@ -28437,6 +28465,7 @@ export namespace Prisma {
   interface locationsFieldRefs {
     readonly id: FieldRef<"locations", 'Int'>
     readonly name: FieldRef<"locations", 'String'>
+    readonly abbreviation: FieldRef<"locations", 'String'>
     readonly address_id: FieldRef<"locations", 'Int'>
     readonly created_at: FieldRef<"locations", 'DateTime'>
     readonly modified_at: FieldRef<"locations", 'DateTime'>
@@ -44601,7 +44630,8 @@ export namespace Prisma {
     reg_periods: 'reg_periods',
     ot_if_tied: 'ot_if_tied',
     ot_duration: 'ot_duration',
-    so_if_tied: 'so_if_tied'
+    so_if_tied: 'so_if_tied',
+    match_rules: 'match_rules'
   };
 
   export type LeaguesScalarFieldEnum = (typeof LeaguesScalarFieldEnum)[keyof typeof LeaguesScalarFieldEnum]
@@ -44610,6 +44640,7 @@ export namespace Prisma {
   export const LocationsScalarFieldEnum: {
     id: 'id',
     name: 'name',
+    abbreviation: 'abbreviation',
     address_id: 'address_id',
     created_at: 'created_at',
     modified_at: 'modified_at'
@@ -46898,6 +46929,7 @@ export namespace Prisma {
     ot_if_tied?: BoolNullableFilter<"leagues"> | boolean | null
     ot_duration?: IntNullableFilter<"leagues"> | number | null
     so_if_tied?: BoolNullableFilter<"leagues"> | boolean | null
+    match_rules?: StringNullableFilter<"leagues"> | string | null
     league_nodes?: League_nodesListRelationFilter
     governing_bodies?: XOR<Governing_bodiesNullableRelationFilter, governing_bodiesWhereInput> | null
   }
@@ -46918,6 +46950,7 @@ export namespace Prisma {
     ot_if_tied?: SortOrderInput | SortOrder
     ot_duration?: SortOrderInput | SortOrder
     so_if_tied?: SortOrderInput | SortOrder
+    match_rules?: SortOrderInput | SortOrder
     league_nodes?: league_nodesOrderByRelationAggregateInput
     governing_bodies?: governing_bodiesOrderByWithRelationInput
   }
@@ -46941,6 +46974,7 @@ export namespace Prisma {
     ot_if_tied?: BoolNullableFilter<"leagues"> | boolean | null
     ot_duration?: IntNullableFilter<"leagues"> | number | null
     so_if_tied?: BoolNullableFilter<"leagues"> | boolean | null
+    match_rules?: StringNullableFilter<"leagues"> | string | null
     league_nodes?: League_nodesListRelationFilter
     governing_bodies?: XOR<Governing_bodiesNullableRelationFilter, governing_bodiesWhereInput> | null
   }, "id">
@@ -46961,6 +46995,7 @@ export namespace Prisma {
     ot_if_tied?: SortOrderInput | SortOrder
     ot_duration?: SortOrderInput | SortOrder
     so_if_tied?: SortOrderInput | SortOrder
+    match_rules?: SortOrderInput | SortOrder
     _count?: leaguesCountOrderByAggregateInput
     _avg?: leaguesAvgOrderByAggregateInput
     _max?: leaguesMaxOrderByAggregateInput
@@ -46987,6 +47022,7 @@ export namespace Prisma {
     ot_if_tied?: BoolNullableWithAggregatesFilter<"leagues"> | boolean | null
     ot_duration?: IntNullableWithAggregatesFilter<"leagues"> | number | null
     so_if_tied?: BoolNullableWithAggregatesFilter<"leagues"> | boolean | null
+    match_rules?: StringNullableWithAggregatesFilter<"leagues"> | string | null
   }
 
   export type locationsWhereInput = {
@@ -46995,6 +47031,7 @@ export namespace Prisma {
     NOT?: locationsWhereInput | locationsWhereInput[]
     id?: IntFilter<"locations"> | number
     name?: StringFilter<"locations"> | string
+    abbreviation?: StringNullableFilter<"locations"> | string | null
     address_id?: IntNullableFilter<"locations"> | number | null
     created_at?: DateTimeNullableFilter<"locations"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"locations"> | Date | string | null
@@ -47007,6 +47044,7 @@ export namespace Prisma {
   export type locationsOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
+    abbreviation?: SortOrderInput | SortOrder
     address_id?: SortOrderInput | SortOrder
     created_at?: SortOrderInput | SortOrder
     modified_at?: SortOrderInput | SortOrder
@@ -47022,6 +47060,7 @@ export namespace Prisma {
     OR?: locationsWhereInput[]
     NOT?: locationsWhereInput | locationsWhereInput[]
     name?: StringFilter<"locations"> | string
+    abbreviation?: StringNullableFilter<"locations"> | string | null
     address_id?: IntNullableFilter<"locations"> | number | null
     created_at?: DateTimeNullableFilter<"locations"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"locations"> | Date | string | null
@@ -47034,6 +47073,7 @@ export namespace Prisma {
   export type locationsOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
+    abbreviation?: SortOrderInput | SortOrder
     address_id?: SortOrderInput | SortOrder
     created_at?: SortOrderInput | SortOrder
     modified_at?: SortOrderInput | SortOrder
@@ -47050,6 +47090,7 @@ export namespace Prisma {
     NOT?: locationsScalarWhereWithAggregatesInput | locationsScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"locations"> | number
     name?: StringWithAggregatesFilter<"locations"> | string
+    abbreviation?: StringNullableWithAggregatesFilter<"locations"> | string | null
     address_id?: IntNullableWithAggregatesFilter<"locations"> | number | null
     created_at?: DateTimeNullableWithAggregatesFilter<"locations"> | Date | string | null
     modified_at?: DateTimeNullableWithAggregatesFilter<"locations"> | Date | string | null
@@ -50218,6 +50259,7 @@ export namespace Prisma {
     ot_if_tied?: boolean | null
     ot_duration?: number | null
     so_if_tied?: boolean | null
+    match_rules?: string | null
     league_nodes?: league_nodesCreateNestedManyWithoutLeaguesInput
     governing_bodies?: governing_bodiesCreateNestedOneWithoutLeaguesInput
   }
@@ -50238,6 +50280,7 @@ export namespace Prisma {
     ot_if_tied?: boolean | null
     ot_duration?: number | null
     so_if_tied?: boolean | null
+    match_rules?: string | null
     league_nodes?: league_nodesUncheckedCreateNestedManyWithoutLeaguesInput
   }
 
@@ -50255,6 +50298,7 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     league_nodes?: league_nodesUpdateManyWithoutLeaguesNestedInput
     governing_bodies?: governing_bodiesUpdateOneWithoutLeaguesNestedInput
   }
@@ -50275,6 +50319,7 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     league_nodes?: league_nodesUncheckedUpdateManyWithoutLeaguesNestedInput
   }
 
@@ -50294,6 +50339,7 @@ export namespace Prisma {
     ot_if_tied?: boolean | null
     ot_duration?: number | null
     so_if_tied?: boolean | null
+    match_rules?: string | null
   }
 
   export type leaguesUpdateManyMutationInput = {
@@ -50310,6 +50356,7 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type leaguesUncheckedUpdateManyInput = {
@@ -50328,10 +50375,12 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type locationsCreateInput = {
     name: string
+    abbreviation?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     events?: eventsCreateNestedManyWithoutLocationsInput
@@ -50343,6 +50392,7 @@ export namespace Prisma {
   export type locationsUncheckedCreateInput = {
     id?: number
     name: string
+    abbreviation?: string | null
     address_id?: number | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
@@ -50353,6 +50403,7 @@ export namespace Prisma {
 
   export type locationsUpdateInput = {
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     events?: eventsUpdateManyWithoutLocationsNestedInput
@@ -50364,6 +50415,7 @@ export namespace Prisma {
   export type locationsUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     address_id?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -50375,6 +50427,7 @@ export namespace Prisma {
   export type locationsCreateManyInput = {
     id?: number
     name: string
+    abbreviation?: string | null
     address_id?: number | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
@@ -50382,6 +50435,7 @@ export namespace Prisma {
 
   export type locationsUpdateManyMutationInput = {
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -50389,6 +50443,7 @@ export namespace Prisma {
   export type locationsUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     address_id?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -53604,6 +53659,7 @@ export namespace Prisma {
     ot_if_tied?: SortOrder
     ot_duration?: SortOrder
     so_if_tied?: SortOrder
+    match_rules?: SortOrder
   }
 
   export type leaguesAvgOrderByAggregateInput = {
@@ -53630,6 +53686,7 @@ export namespace Prisma {
     ot_if_tied?: SortOrder
     ot_duration?: SortOrder
     so_if_tied?: SortOrder
+    match_rules?: SortOrder
   }
 
   export type leaguesMinOrderByAggregateInput = {
@@ -53648,6 +53705,7 @@ export namespace Prisma {
     ot_if_tied?: SortOrder
     ot_duration?: SortOrder
     so_if_tied?: SortOrder
+    match_rules?: SortOrder
   }
 
   export type leaguesSumOrderByAggregateInput = {
@@ -53691,6 +53749,7 @@ export namespace Prisma {
   export type locationsCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    abbreviation?: SortOrder
     address_id?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
@@ -53704,6 +53763,7 @@ export namespace Prisma {
   export type locationsMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    abbreviation?: SortOrder
     address_id?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
@@ -53712,6 +53772,7 @@ export namespace Prisma {
   export type locationsMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    abbreviation?: SortOrder
     address_id?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
@@ -59412,6 +59473,7 @@ export namespace Prisma {
 
   export type locationsCreateWithoutAddressesInput = {
     name: string
+    abbreviation?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     events?: eventsCreateNestedManyWithoutLocationsInput
@@ -59422,6 +59484,7 @@ export namespace Prisma {
   export type locationsUncheckedCreateWithoutAddressesInput = {
     id?: number
     name: string
+    abbreviation?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     events?: eventsUncheckedCreateNestedManyWithoutLocationsInput
@@ -59495,6 +59558,7 @@ export namespace Prisma {
     NOT?: locationsScalarWhereInput | locationsScalarWhereInput[]
     id?: IntFilter<"locations"> | number
     name?: StringFilter<"locations"> | string
+    abbreviation?: StringNullableFilter<"locations"> | string | null
     address_id?: IntNullableFilter<"locations"> | number | null
     created_at?: DateTimeNullableFilter<"locations"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"locations"> | Date | string | null
@@ -60119,6 +60183,7 @@ export namespace Prisma {
 
   export type locationsCreateWithoutEventsInput = {
     name: string
+    abbreviation?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     games?: gamesCreateNestedManyWithoutLocationsInput
@@ -60129,6 +60194,7 @@ export namespace Prisma {
   export type locationsUncheckedCreateWithoutEventsInput = {
     id?: number
     name: string
+    abbreviation?: string | null
     address_id?: number | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
@@ -60230,6 +60296,7 @@ export namespace Prisma {
 
   export type locationsUpdateWithoutEventsInput = {
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     games?: gamesUpdateManyWithoutLocationsNestedInput
@@ -60240,6 +60307,7 @@ export namespace Prisma {
   export type locationsUncheckedUpdateWithoutEventsInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     address_id?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -63900,6 +63968,7 @@ export namespace Prisma {
 
   export type locationsCreateWithoutGamesInput = {
     name: string
+    abbreviation?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     events?: eventsCreateNestedManyWithoutLocationsInput
@@ -63910,6 +63979,7 @@ export namespace Prisma {
   export type locationsUncheckedCreateWithoutGamesInput = {
     id?: number
     name: string
+    abbreviation?: string | null
     address_id?: number | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
@@ -64412,6 +64482,7 @@ export namespace Prisma {
 
   export type locationsUpdateWithoutGamesInput = {
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     events?: eventsUpdateManyWithoutLocationsNestedInput
@@ -64422,6 +64493,7 @@ export namespace Prisma {
   export type locationsUncheckedUpdateWithoutGamesInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     address_id?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -64732,6 +64804,7 @@ export namespace Prisma {
     ot_if_tied?: boolean | null
     ot_duration?: number | null
     so_if_tied?: boolean | null
+    match_rules?: string | null
     league_nodes?: league_nodesCreateNestedManyWithoutLeaguesInput
   }
 
@@ -64750,6 +64823,7 @@ export namespace Prisma {
     ot_if_tied?: boolean | null
     ot_duration?: number | null
     so_if_tied?: boolean | null
+    match_rules?: string | null
     league_nodes?: league_nodesUncheckedCreateNestedManyWithoutLeaguesInput
   }
 
@@ -64798,6 +64872,7 @@ export namespace Prisma {
     ot_if_tied?: BoolNullableFilter<"leagues"> | boolean | null
     ot_duration?: IntNullableFilter<"leagues"> | number | null
     so_if_tied?: BoolNullableFilter<"leagues"> | boolean | null
+    match_rules?: StringNullableFilter<"leagues"> | string | null
   }
 
   export type game_league_nodesCreateWithoutLeague_node_seasonsInput = {
@@ -65110,6 +65185,7 @@ export namespace Prisma {
     ot_if_tied?: boolean | null
     ot_duration?: number | null
     so_if_tied?: boolean | null
+    match_rules?: string | null
     governing_bodies?: governing_bodiesCreateNestedOneWithoutLeaguesInput
   }
 
@@ -65129,6 +65205,7 @@ export namespace Prisma {
     ot_if_tied?: boolean | null
     ot_duration?: number | null
     so_if_tied?: boolean | null
+    match_rules?: string | null
   }
 
   export type leaguesCreateOrConnectWithoutLeague_nodesInput = {
@@ -65285,6 +65362,7 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     governing_bodies?: governing_bodiesUpdateOneWithoutLeaguesNestedInput
   }
 
@@ -65304,6 +65382,7 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type league_nodesUpsertWithoutOther_league_nodesInput = {
@@ -65880,6 +65959,7 @@ export namespace Prisma {
 
   export type locationsCreateWithoutLocations_sublocationsInput = {
     name: string
+    abbreviation?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     events?: eventsCreateNestedManyWithoutLocationsInput
@@ -65890,6 +65970,7 @@ export namespace Prisma {
   export type locationsUncheckedCreateWithoutLocations_sublocationsInput = {
     id?: number
     name: string
+    abbreviation?: string | null
     address_id?: number | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
@@ -65931,6 +66012,7 @@ export namespace Prisma {
 
   export type locationsUpdateWithoutLocations_sublocationsInput = {
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     events?: eventsUpdateManyWithoutLocationsNestedInput
@@ -65941,6 +66023,7 @@ export namespace Prisma {
   export type locationsUncheckedUpdateWithoutLocations_sublocationsInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     address_id?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -70593,6 +70676,7 @@ export namespace Prisma {
   export type locationsCreateManyAddressesInput = {
     id?: number
     name: string
+    abbreviation?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -70644,6 +70728,7 @@ export namespace Prisma {
 
   export type locationsUpdateWithoutAddressesInput = {
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     events?: eventsUpdateManyWithoutLocationsNestedInput
@@ -70654,6 +70739,7 @@ export namespace Prisma {
   export type locationsUncheckedUpdateWithoutAddressesInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     events?: eventsUncheckedUpdateManyWithoutLocationsNestedInput
@@ -70664,6 +70750,7 @@ export namespace Prisma {
   export type locationsUncheckedUpdateManyWithoutAddressesInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -71601,6 +71688,7 @@ export namespace Prisma {
     ot_if_tied?: boolean | null
     ot_duration?: number | null
     so_if_tied?: boolean | null
+    match_rules?: string | null
   }
 
   export type leaguesUpdateWithoutGoverning_bodiesInput = {
@@ -71617,6 +71705,7 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     league_nodes?: league_nodesUpdateManyWithoutLeaguesNestedInput
   }
 
@@ -71635,6 +71724,7 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     league_nodes?: league_nodesUncheckedUpdateManyWithoutLeaguesNestedInput
   }
 
@@ -71653,6 +71743,7 @@ export namespace Prisma {
     ot_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
     ot_duration?: NullableIntFieldUpdateOperationsInput | number | null
     so_if_tied?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type game_league_nodesCreateManyLeague_node_seasonsInput = {

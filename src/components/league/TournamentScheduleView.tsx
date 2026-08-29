@@ -1,0 +1,230 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { resolveKnockoutPlaceholders } from "@/lib/actions/league-actions";
+import { Zap, Calendar, MapPin, Trophy, Filter, Layers } from "lucide-react";
+import { formatDateStandard, formatTimeStandard } from "@/lib/utils/dateTimeUtils";
+import LocationDetailsModal from "@/components/location/LocationDetailsModal";
+
+interface GameRecord {
+  id: number;
+  startDate: string;
+  startTime: string | null;
+  homeClubName: string;
+  homeTeamName: string;
+  awayClubName: string;
+  awayTeamName: string;
+  homeTeamSeasonId: number;
+  awayTeamSeasonId: number;
+  locationId?: number | null;
+  locationName: string;
+  sublocationName: string;
+  gameType: string;
+  status: string;
+  divisionNodeName: string;
+}
+
+interface TournamentScheduleViewProps {
+  leagueName: string;
+  leagueId?: number;
+  games: GameRecord[];
+}
+
+export default function TournamentScheduleView({
+  leagueName,
+  leagueId,
+  games,
+}: TournamentScheduleViewProps) {
+  const [selectedFilterType, setSelectedFilterType] = useState<string>("all");
+  const [selectedDivision, setSelectedDivision] = useState<string>("all");
+  const [isResolving, setIsResolving] = useState(false);
+  const [selectedLocationModal, setSelectedLocationModal] = useState<{ id: number | null; name?: string | null; subName?: string | null } | null>(null);
+
+  const handleResolveSeedings = async () => {
+    if (!leagueId) return;
+    setIsResolving(true);
+    try {
+      const res = await resolveKnockoutPlaceholders(leagueId);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to resolve knockout seedings.");
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  const divisions = Array.from(new Set(games.map((g) => g.divisionNodeName).filter(Boolean)));
+  const gameTypes = Array.from(new Set(games.map((g) => g.gameType).filter(Boolean)));
+
+  const filteredGames = games.filter((g) => {
+    if (selectedFilterType !== "all" && g.gameType !== selectedFilterType) return false;
+    if (selectedDivision !== "all" && g.divisionNodeName !== selectedDivision) return false;
+    return true;
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Header & Filter Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-slate-700/60 bg-slate-900/80 p-4 shadow-xl">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
+            <Trophy className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-white">{leagueName} Schedule</h2>
+            <p className="text-xs text-slate-400">
+              Showing {filteredGames.length} of {games.length} total matches
+            </p>
+          </div>
+        </div>
+
+        {/* Filters & Actions */}
+        <div className="flex flex-wrap items-center gap-3">
+          {leagueId && (
+            <button
+              onClick={handleResolveSeedings}
+              disabled={isResolving}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 rounded-lg transition-all disabled:opacity-50"
+              title="Automatically update knockout TBD/placeholder teams based on current group stage standings"
+            >
+              <Zap className="h-3.5 w-3.5" />
+              <span>{isResolving ? "Resolving..." : "Resolve Seedings"}</span>
+            </button>
+          )}
+          {divisions.length > 1 && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-300">
+              <Layers className="h-3.5 w-3.5 text-indigo-400" />
+              <select
+                value={selectedDivision}
+                onChange={(e) => setSelectedDivision(e.target.value)}
+                className="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-indigo-500 focus:outline-none"
+              >
+                <option value="all">All Divisions</option>
+                {divisions.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {gameTypes.length > 1 && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-300">
+              <Filter className="h-3.5 w-3.5 text-indigo-400" />
+              <select
+                value={selectedFilterType}
+                onChange={(e) => setSelectedFilterType(e.target.value)}
+                className="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-white focus:border-indigo-500 focus:outline-none capitalize"
+              >
+                <option value="all">All Stages</option>
+                {gameTypes.map((gt) => (
+                  <option key={gt} value={gt}>
+                    {gt.replace("_", " ")}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Games List Grid */}
+      {filteredGames.length === 0 ? (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-center text-xs text-slate-400">
+          No matches found for this filter selection.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredGames.map((g) => (
+            <div
+              key={g.id}
+              className="rounded-xl border border-slate-800 bg-slate-900/90 p-4 space-y-3 shadow-lg hover:border-slate-700 transition"
+            >
+              {/* Top Meta Bar */}
+              <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800/80 pb-2">
+                <span className="flex items-center gap-1.5 text-indigo-300 font-semibold">
+                  <Calendar className="h-3.5 w-3.5 text-indigo-400" />
+                  {formatDateStandard(g.startDate, "full")} {g.startTime ? `@ ${formatTimeStandard(g.startTime)}` : ""}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                  {g.gameType.replace("_", " ")}
+                </span>
+              </div>
+
+              {/* Teams Matchup */}
+              <div className="space-y-2 py-1">
+                {/* Home Team */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold text-white truncate">
+                    {g.homeClubName ? <span className="text-slate-400 font-normal">{g.homeClubName} </span> : null}
+                    {g.homeTeamName}
+                  </span>
+                  <span className="text-xs text-indigo-400 font-bold px-1.5 py-0.5 rounded bg-indigo-500/10">
+                    Home
+                  </span>
+                </div>
+
+                {/* Away Team */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold text-white truncate">
+                    {g.awayClubName ? <span className="text-slate-400 font-normal">{g.awayClubName} </span> : null}
+                    {g.awayTeamName}
+                  </span>
+                  <span className="text-xs text-blue-400 font-bold px-1.5 py-0.5 rounded bg-blue-500/10">
+                    Away
+                  </span>
+                </div>
+              </div>
+
+              {/* Footer Venue & Action */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
+                {g.locationName ? (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedLocationModal({ id: g.locationId ?? null, name: g.locationName, subName: g.sublocationName })}
+                    className="text-slate-400 hover:text-indigo-300 transition-colors flex items-center gap-1.5 truncate max-w-[240px] group cursor-pointer"
+                    title="Click to view venue details & map"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="truncate underline underline-offset-2 decoration-indigo-500/40 group-hover:decoration-indigo-400 font-medium">
+                      {g.locationName} {g.sublocationName ? `(${g.sublocationName})` : ""}
+                    </span>
+                  </button>
+                ) : (
+                  <span className="text-slate-500 flex items-center gap-1 truncate max-w-[240px]">
+                    <MapPin className="h-3.5 w-3.5 text-slate-600 shrink-0" />
+                    Venue TBD
+                  </span>
+                )}
+
+                <Link
+                  href={`/gamestats/${g.homeTeamSeasonId}/${g.id}`}
+                  className="text-xs font-bold text-indigo-400 hover:text-indigo-300 underline"
+                >
+                  Match Details →
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* LOCATION DETAILS & MAP MODAL */}
+      <LocationDetailsModal
+        isOpen={Boolean(selectedLocationModal)}
+        locationId={selectedLocationModal?.id ?? null}
+        locationNameFallback={selectedLocationModal?.name}
+        sublocationName={selectedLocationModal?.subName}
+        onClose={() => setSelectedLocationModal(null)}
+      />
+
+    </div>
+  );
+}

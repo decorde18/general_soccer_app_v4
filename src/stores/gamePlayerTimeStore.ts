@@ -296,7 +296,7 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     const gkOuts = outs.filter((s) => s.gkSub);
 
     if (startedAsGK) {
-      const firstOut = gkOuts[0] || outs[0];
+      const firstOut = gkOuts[0];
       gkSegments.push({
         start: 0,
         end: firstOut ? firstOut.gameTime : currentGameTime,

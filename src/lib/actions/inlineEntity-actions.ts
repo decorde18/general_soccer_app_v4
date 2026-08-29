@@ -149,6 +149,7 @@ export async function createInlineLeague(data: {
  */
 export async function createInlineLocation(data: {
   name: string;
+  abbreviation?: string;
   addressLine1?: string;
   city?: string;
   state?: string;
@@ -178,6 +179,7 @@ export async function createInlineLocation(data: {
   const location = await prisma.locations.create({
     data: {
       name: data.name.trim(),
+      abbreviation: data.abbreviation?.trim() || null,
       address_id: addressId,
     },
   });

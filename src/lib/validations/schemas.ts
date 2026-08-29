@@ -23,7 +23,8 @@ export const leagueSchema = z.object({
     .enum(["active", "upcoming", "inactive"])
     .optional()
     .default("active"),
-  });
+  matchRules: z.string().optional().nullable(),
+});
   export const clubSchema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
     abbreviation: z.string().optional().nullable(),
@@ -46,6 +47,7 @@ export const leagueSchema = z.object({
   
   export const locationSchema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters"),
+    abbreviation: z.string().optional().nullable(),
     addressId: z.coerce
     .number()
     .optional()

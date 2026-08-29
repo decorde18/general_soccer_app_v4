@@ -4,6 +4,8 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireSession, verifyAdmin } from "@/lib/auth/auth-utils";
 
+import { resolveOrCreateDivisionHierarchy } from "@/lib/actions/league-actions";
+
 export interface TeamImportRecord {
   clubName: string;
   teamName: string;
@@ -23,8 +25,32 @@ export interface ScheduleImportRecord {
   gender?: "boys" | "girls" | "coed";
   locationName?: string;
   sublocationName?: string;
-  gameType?: "league" | "tournament" | "friendly" | "playoff";
+  gameType?: string;
   leagueNodeId?: number;
+  leagueId?: number;
+  divisionName?: string;
+}
+
+/**
+ * Helper to normalize game_type enum inputs from CSV/user text
+ */
+export async function normalizeGameType(rawStr?: string, defaultType: string = "league"): Promise<any> {
+  if (!rawStr || !rawStr.trim()) return defaultType as any;
+  const s = rawStr.trim().toLowerCase();
+
+  if (["final", "finals", "championship", "gold final", "silver final"].includes(s)) return "final";
+  if (["semifinal", "semi-final", "semifinals", "semi", "semis"].includes(s)) return "semifinal";
+  if (["quarterfinal", "quarter-final", "quarterfinals", "quarter"].includes(s)) return "quarterfinal";
+  if (["round_of_16", "round of 16", "r16", "sweet 16"].includes(s)) return "round_of_16";
+  if (["group_stage", "group", "group play", "group stage", "pool play", "round robin"].includes(s)) return "group_stage";
+  if (["playoff", "playoffs", "knockout", "postseason"].includes(s)) return "playoff";
+  if (["consolation", "consolation final", "3rd place"].includes(s)) return "consolation";
+  if (["showcase"].includes(s)) return "showcase";
+  if (["friendly", "scrimmage", "exhibition"].includes(s)) return s as any;
+  if (["tournament"].includes(s)) return "tournament";
+  if (["league"].includes(s)) return "league";
+
+  return defaultType as any;
 }
 
 /**
@@ -172,12 +198,19 @@ export async function batchImportTeams(
   };
 }
 
+import { parseGameDatesAndTimesUTC } from "@/lib/utils/dateTimeUtils";
+
+function parseGameDatesAndTimes(dateStr: string, timeStr?: string, defaultDurationMinutes: number = 90) {
+  return parseGameDatesAndTimesUTC(dateStr, timeStr, defaultDurationMinutes);
+}
+
 /**
  * Batch import schedule fixtures with deduplication & auto-resolving teams/venues
  */
 export async function batchImportSchedule(
   seasonId: number,
-  records: ScheduleImportRecord[]
+  records: ScheduleImportRecord[],
+  resolvedMappings?: any
 ) {
   await requireSession();
   await verifyAdmin();
@@ -258,48 +291,85 @@ export async function batchImportSchedule(
       });
     }
 
-    // 3. Resolve Location & Sublocation
+    // 3. Resolve Location & Sublocation with smart matching
     let locationId: number | null = null;
     let sublocationId: number | null = null;
 
-    if (rec.locationName) {
-      let location = await prisma.locations.findFirst({
-        where: { name: { equals: rec.locationName.trim() } },
-      });
-      if (!location) {
-        location = await prisma.locations.create({
-          data: { name: rec.locationName.trim() },
-        });
-      }
-      locationId = location.id;
+    const rawLocName = rec.locationName ? rec.locationName.trim() : "";
+    const rawSubName = rec.sublocationName ? rec.sublocationName.trim() : "";
 
-      if (rec.sublocationName) {
+    if (rawLocName) {
+      // Check mapped location first
+      const mappedLoc = resolvedMappings?.locations?.[rawLocName];
+      const mappedSub = resolvedMappings?.sublocations?.[rawSubName || rawLocName];
+
+      if (mappedLoc?.matchedId) {
+        locationId = mappedLoc.matchedId;
+      } else {
+        // Search by Name OR Abbreviation OR Sublocation Code (e.g. OCH1 -> O.C. Hubert Park)
+        let location = await prisma.locations.findFirst({
+          where: {
+            OR: [
+              { name: { equals: rawLocName } },
+              { abbreviation: { equals: rawLocName } },
+              { locations_sublocations: { some: { description: rawLocName } } },
+              { locations_sublocations: { some: { name: rawLocName } } },
+            ],
+          },
+          include: { locations_sublocations: true },
+        });
+
+        if (!location) {
+          location = await prisma.locations.create({
+            data: { name: rawLocName },
+            include: { locations_sublocations: true },
+          });
+        }
+        locationId = location.id;
+
+        // Try to deduce sublocation automatically if code or name matches (e.g. OCH1 -> Field 1)
+        if (location && !sublocationId) {
+          const matchingSub = location.locations_sublocations.find(
+            (sub) =>
+              sub.description?.toLowerCase() === rawLocName.toLowerCase() ||
+              sub.name.toLowerCase() === rawLocName.toLowerCase() ||
+              (rawSubName && sub.name.toLowerCase() === rawSubName.toLowerCase())
+          );
+          if (matchingSub) {
+            sublocationId = matchingSub.id;
+          }
+        }
+      }
+
+      if (mappedSub?.matchedId) {
+        sublocationId = mappedSub.matchedId;
+      } else if (rawSubName && locationId && !sublocationId) {
         let subloc = await prisma.locations_sublocations.findFirst({
           where: {
-            location_id: location.id,
-            name: { equals: rec.sublocationName.trim() },
+            location_id: locationId,
+            OR: [
+              { name: { equals: rawSubName } },
+              { description: { equals: rawSubName } },
+            ],
           },
         });
         if (!subloc) {
           subloc = await prisma.locations_sublocations.create({
-            data: { location_id: location.id, name: rec.sublocationName.trim() },
+            data: { location_id: locationId, name: rawSubName },
           });
         }
         sublocationId = subloc.id;
       }
     }
 
-    // 4. Format time
-    let formattedTime: string | null = null;
-    if (rec.startTime) {
-      formattedTime = rec.startTime.trim();
-    }
+    // 4. Format start and end date & times
+    const { startDate, startTime, endDate, endTime } = parseGameDatesAndTimes(rec.startDate, rec.startTime);
 
     // 5. Check if game already exists (deduplication)
     const existingGame = await prisma.games.findFirst({
       where: {
         season_id: seasonId,
-        start_date: new Date(rec.startDate),
+        start_date: startDate,
         home_team_season_id: homeTeamSeason.id,
         away_team_season_id: awayTeamSeason.id,
       },
@@ -316,20 +386,38 @@ export async function batchImportSchedule(
         season_id: seasonId,
         home_team_season_id: homeTeamSeason.id,
         away_team_season_id: awayTeamSeason.id,
-        start_date: new Date(rec.startDate),
-        start_time: formattedTime,
+        start_date: startDate,
+        start_time: startTime,
+        end_date: endDate,
+        end_time: endTime,
         location_id: locationId,
         sublocation_id: sublocationId,
-        game_type: rec.gameType || "league",
+        game_type: await normalizeGameType(rec.gameType, "league"),
         status: "scheduled",
       },
     });
 
     gamesCreated++;
 
-    // 7. Attach to league node if specified
-    if (rec.leagueNodeId) {
-      const resolved = await ensureLeagueNodeSeason(rec.leagueNodeId, seasonId);
+    // 7. Attach to league node if specified OR auto-deduce hierarchy if leagueId provided
+    let targetNodeSeasonId = rec.leagueNodeId;
+    if (!targetNodeSeasonId && rec.leagueId && (rec.divisionName || rec.homeTeamName)) {
+      try {
+        const autoResolved = await resolveOrCreateDivisionHierarchy(
+          rec.divisionName || rec.homeTeamName,
+          rec.leagueId,
+          seasonId
+        );
+        if (autoResolved) {
+          targetNodeSeasonId = autoResolved.nodeSeasonId;
+        }
+      } catch (err) {
+        console.error("Failed to auto-deduce division hierarchy for row:", err);
+      }
+    }
+
+    if (targetNodeSeasonId) {
+      const resolved = await ensureLeagueNodeSeason(targetNodeSeasonId, seasonId);
       if (resolved) {
         const existingGln = await prisma.game_league_nodes.findFirst({
           where: { game_id: game.id, league_node_id: resolved.nodeSeasonId },
@@ -354,6 +442,25 @@ export async function batchImportSchedule(
               league_node_id: resolved.leagueNodeId,
               counts_for_standings: rec.gameType !== "friendly",
             },
+          });
+        }
+
+        // Auto-enroll Home and Away teams into Team League Enrollments
+        const homeEnrollment = await prisma.team_league_enrollments.findFirst({
+          where: { team_season_id: homeTeamSeason.id, league_node_season_id: resolved.nodeSeasonId },
+        });
+        if (!homeEnrollment) {
+          await prisma.team_league_enrollments.create({
+            data: { team_season_id: homeTeamSeason.id, league_node_season_id: resolved.nodeSeasonId, is_active: true },
+          });
+        }
+
+        const awayEnrollment = await prisma.team_league_enrollments.findFirst({
+          where: { team_season_id: awayTeamSeason.id, league_node_season_id: resolved.nodeSeasonId },
+        });
+        if (!awayEnrollment) {
+          await prisma.team_league_enrollments.create({
+            data: { team_season_id: awayTeamSeason.id, league_node_season_id: resolved.nodeSeasonId, is_active: true },
           });
         }
       }
@@ -638,4 +745,39 @@ export async function batchImportRoster(
     success: true,
     summary: `Roster import complete. Created ${playersCreated} players, ${parentsCreated} parent records linked via player_relationships, ${rosterEntriesCreated} team roster entries (${rosterEntriesUpdated} updated, ${rosterEntriesSkipped} existing duplicates skipped).`,
   };
+}
+
+/**
+ * Fetch existing locations & sublocations for importer entity matching
+ */
+export async function getImportLocationsData() {
+  await requireSession();
+  const locations = await prisma.locations.findMany({
+    include: {
+      addresses: true,
+      locations_sublocations: true,
+    },
+    orderBy: { name: "asc" },
+  });
+
+  const existingLocations = locations.map((loc) => ({
+    id: loc.id,
+    name: loc.name,
+    abbreviation: loc.abbreviation ?? "",
+    address: loc.addresses
+      ? `${loc.addresses.address_line1 || ""}, ${loc.addresses.city || ""}, ${loc.addresses.state || ""} ${loc.addresses.postal_code || ""}`.trim()
+      : null,
+  }));
+
+  const existingSublocations = locations.flatMap((loc) =>
+    loc.locations_sublocations.map((sub) => ({
+      id: sub.id,
+      name: sub.name,
+      code: sub.description || "",
+      locationId: loc.id,
+      locationName: loc.name,
+    }))
+  );
+
+  return { existingLocations, existingSublocations };
 }

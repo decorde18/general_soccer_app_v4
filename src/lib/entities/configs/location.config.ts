@@ -13,6 +13,7 @@ export const locationConfig: EntityConfig = {
   table: {
     columns: [
       { key: "name", label: "Location Name", type: "text", sortable: true },
+      { key: "abbreviation", label: "Abbreviation", type: "text", sortable: true },
       { key: "addressLine1", label: "Address", type: "text", sortable: true },
       { key: "city", label: "City", type: "text", sortable: true },
       { key: "state", label: "State", type: "text" },
@@ -21,7 +22,8 @@ export const locationConfig: EntityConfig = {
   form: {
     layout: "grid",
     fields: [
-      { key: "name", label: "Location Name", type: "text", required: true, gridColumn: "span-12" },
+      { key: "name", label: "Location Name", type: "text", required: true, gridColumn: "span-8" },
+      { key: "abbreviation", label: "Abbreviation", type: "text", required: false, placeholder: "e.g. MSVP", gridColumn: "span-4" },
       { key: "addressLine1", label: "Address Line 1", type: "text", required: true, gridColumn: "span-12" },
       { key: "addressLine2", label: "Address Line 2", type: "text", required: false, gridColumn: "span-12" },
       { key: "city", label: "City", type: "text", required: true, gridColumn: "span-6" },

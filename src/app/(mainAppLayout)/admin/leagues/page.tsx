@@ -12,14 +12,11 @@ import {
 export default async function AdminLeaguesPage() {
   await verifyAdmin();
 
-  const [leagues, leagueNodes, teamSeasons, seasons, teamEnrollments] =
-    await Promise.all([
-      getLeagues(),
-      getLeagueNodes(),
-      getTeamSeasons(),
-      getSeasons(),
-      getTeamLeagueEnrollments(),
-    ]);
+  const leagues = await getLeagues();
+  const leagueNodes = await getLeagueNodes();
+  const teamSeasons = await getTeamSeasons();
+  const seasons = await getSeasons();
+  const teamEnrollments = await getTeamLeagueEnrollments();
 
   const leaguesData = leagues.map((l) => ({
     label: l.name,

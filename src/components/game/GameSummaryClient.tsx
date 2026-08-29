@@ -41,7 +41,7 @@ export default function GameSummaryClient() {
   );
 
   const fieldPlayers = players.filter(
-    (p) => !goalkeepers.some((gk) => gk.id === p.id)
+    (p) => calculateTotalTimeOnField(p, gameTimeSeconds) > 0 || p.gameStatus === "starter" || p.gameStatus === "dressed" || p.gameStatus === "goalkeeper"
   );
 
   return (

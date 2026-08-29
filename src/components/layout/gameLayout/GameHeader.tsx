@@ -1,10 +1,11 @@
 'use client'
-import React from "react";
+import React, { useState } from "react";
 import { ArrowLeft, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
 import useGameStore from "@/stores/gameStore";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { formatDateStandard, formatTimeStandard } from "@/components/ui/DateSelect";
+import LocationDetailsModal from "@/components/location/LocationDetailsModal";
 
 interface GameHeaderProps {
   backUrl?: string;
@@ -13,6 +14,7 @@ interface GameHeaderProps {
 
 export default function GameHeader({ backUrl, className }: GameHeaderProps) {
   const game = useGameStore((s) => s.game);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   if (!game) return null;
 
@@ -47,13 +49,20 @@ export default function GameHeader({ backUrl, className }: GameHeaderProps) {
             <span className="flex items-center gap-1">
               <Calendar size={13} className="opacity-70" />
               {formatDateStandard((game.startDate || game.start_date) as string)}
-              {game.startTime || game.start_time ? ` @ ${formatTimeStandard((game.startTime || game.start_time) as string)}` : ""}
+              {game.startTime || game.start_time ? ` @ ${formatTimeStandard((game.startTime || game.start_time) as string, (game.timezoneLabel || game.timezone_label) as string)}` : ""}
             </span>
-            {game.locationName && (
-              <span className="flex items-center gap-1">
-                <MapPin size={13} className="opacity-70" />
-                {game.locationName}
-              </span>
+            {Boolean(game.locationName || game.location_name) && (
+              <button
+                type="button"
+                onClick={() => setIsLocationModalOpen(true)}
+                className="flex items-center gap-1 hover:text-primary transition-colors group cursor-pointer text-left"
+                title="Click to view venue details & map"
+              >
+                <MapPin size={13} className="opacity-70 text-primary group-hover:scale-110 transition-transform shrink-0" />
+                <span className="underline underline-offset-2 decoration-primary/40 group-hover:decoration-primary">
+                  {(game.locationName || game.location_name) as string} {game.sublocationName ? `(${game.sublocationName})` : ""}
+                </span>
+              </button>
             )}
           </div>
         </div>
@@ -61,6 +70,15 @@ export default function GameHeader({ backUrl, className }: GameHeaderProps) {
           {game.gameType}
         </div>
       </div>
+
+      {/* LOCATION DETAILS & MAP MODAL */}
+      <LocationDetailsModal
+        isOpen={isLocationModalOpen}
+        locationId={(game.locationId || game.location_id) as number}
+        locationNameFallback={(game.locationName || game.location_name) as string}
+        sublocationName={(game.sublocationName || game.sublocation_name) as string}
+        onClose={() => setIsLocationModalOpen(false)}
+      />
     </div>
   );
 }

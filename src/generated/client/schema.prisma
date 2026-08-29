@@ -437,6 +437,7 @@ model leagues {
   ot_if_tied        Boolean?
   ot_duration       Int?
   so_if_tied        Boolean?
+  match_rules       String?           @db.Text
   league_nodes      league_nodes[]
   governing_bodies  governing_bodies? @relation(fields: [governing_body_id], references: [id], onUpdate: Restrict, map: "fk_leagues_governing_body")
 
@@ -446,6 +447,7 @@ model leagues {
 model locations {
   id                     Int                      @id @default(autoincrement())
   name                   String                   @db.VarChar(255)
+  abbreviation           String?                  @db.VarChar(50)
   address_id             Int?
   created_at             DateTime?                @default(now()) @db.Timestamp(0)
   modified_at            DateTime?                @default(now()) @db.Timestamp(0)
@@ -865,6 +867,13 @@ enum games_game_type {
   scrimmage
   exhibition
   playoff
+  group_stage
+  final
+  semifinal
+  quarterfinal
+  round_of_16
+  consolation
+  showcase
 }
 
 enum game_scores_final_status {

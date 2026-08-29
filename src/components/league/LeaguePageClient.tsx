@@ -9,6 +9,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
 import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
+import TournamentScheduleView from "@/components/league/TournamentScheduleView";
 
 interface StandingsRow {
   teamSeasonId: number;
@@ -47,25 +48,30 @@ interface DivisionData {
 }
 
 interface LeaguePageClientProps {
+  leagueId?: number;
   leagueName: string;
   governingBodyName: string | null;
   abbreviation: string | null;
   description: string | null;
   divisions: DivisionData[];
+  tournamentGames?: any[];
 }
 
 export default function LeaguePageClient({
+  leagueId,
   leagueName,
   governingBodyName,
   abbreviation,
   description,
   divisions,
+  tournamentGames = [],
 }: LeaguePageClientProps) {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
+  const [activeTab, setActiveTab] = useState<"standings" | "schedule">("standings");
   const [quickScoreGame, setQuickScoreGame] = useState<Game | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
@@ -204,14 +210,45 @@ export default function LeaguePageClient({
         </div>
       </div>
 
-      {/* FILTER & DRILL DOWN CONTROLS */}
-      <div className="bg-surface border border-border/80 p-5 rounded-2xl shadow-sm space-y-4">
-        <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
-          <Filter size={16} className="text-primary" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
-            Filter Standings & Divisions
-          </h3>
-        </div>
+      {/* VIEW SELECTION TAB BAR */}
+      <div className="flex border-b border-border/80 text-sm font-bold gap-6">
+        <button
+          onClick={() => setActiveTab("standings")}
+          className={`pb-3 flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === "standings"
+              ? "border-primary text-primary font-black"
+              : "border-transparent text-muted hover:text-text"
+          }`}
+        >
+          <Trophy size={18} />
+          <span>Division Standings ({divisions.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("schedule")}
+          className={`pb-3 flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === "schedule"
+              ? "border-primary text-primary font-black"
+              : "border-transparent text-muted hover:text-text"
+          }`}
+        >
+          <Calendar size={18} />
+          <span>Full Tournament Schedule ({tournamentGames.length} Matches)</span>
+        </button>
+      </div>
+
+      {activeTab === "schedule" ? (
+        <TournamentScheduleView leagueId={leagueId} leagueName={leagueName} games={tournamentGames} />
+      ) : (
+        <div className="space-y-8">
+          {/* FILTER & DRILL DOWN CONTROLS */}
+          <div className="bg-surface border border-border/80 p-5 rounded-2xl shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
+              <Filter size={16} className="text-primary" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
+                Filter Standings & Divisions
+              </h3>
+            </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
           {/* Text Search */}
@@ -410,6 +447,8 @@ export default function LeaguePageClient({
           ))
         )}
       </div>
+      </div>
+      )}
 
       {/* QUICK SCORE MODAL */}
       {quickScoreGame && (

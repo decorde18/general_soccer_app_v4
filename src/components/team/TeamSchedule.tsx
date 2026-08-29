@@ -43,12 +43,11 @@ interface TeamScheduleProps {
   games: Game[];
 }
 
+import { formatDateStandard, formatTimeStandard } from "@/lib/utils/dateTimeUtils";
+import LocationDetailsModal from "@/components/location/LocationDetailsModal";
+
 function formatDate(dateStr: string) {
-  try {
-    return format(new Date(dateStr), "EEE, MMM d, yyyy");
-  } catch (e) {
-    return dateStr;
-  }
+  return formatDateStandard(dateStr, "full");
 }
 
 function isPastGameDate(dateStr: string) {
@@ -65,6 +64,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
   const [venueFilter, setVenueFilter] = useState<"all" | "home" | "away">("all");
   const [quickScoreGame, setQuickScoreGame] = useState<Game | null>(null);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [selectedLocationModal, setSelectedLocationModal] = useState<{ id: number | null; name?: string | null; subName?: string | null } | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const dividerRef = useRef<HTMLDivElement | null>(null);
 
@@ -331,15 +331,27 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                         <span>{formatDate(game.startDate)}</span>
                       </div>
 
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-accent">
+                        <Clock size={14} className="text-accent shrink-0" />
+                        <span>{formatTimeStandard(game.startTime, (game as any).timezoneLabel) || "Time TBD"}</span>
+                      </div>
+
                       <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${scoreBadgeClass}`}>
                         <Trophy size={11} />
                         <span>{scoreLabel}</span>
                       </div>
                       {game.locationName && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted max-w-[200px] truncate" title={game.sublocationName ? `${game.locationName} - ${game.sublocationName}` : game.locationName}>
-                          <MapPin size={14} className="shrink-0 text-primary" />
-                          <span className="truncate">{game.sublocationName ? `${game.locationName} (${game.sublocationName})` : game.locationName}</span>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLocationModal({ id: game.locationId ?? null, name: game.locationName, subName: game.sublocationName })}
+                          className="flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors max-w-[200px] truncate group cursor-pointer text-right justify-end"
+                          title="Click to view venue details & map"
+                        >
+                          <MapPin size={14} className="shrink-0 text-primary group-hover:scale-110 transition-transform" />
+                          <span className="truncate underline underline-offset-2 decoration-primary/40 group-hover:decoration-primary">
+                            {game.sublocationName ? `${game.locationName} (${game.sublocationName})` : game.locationName}
+                          </span>
+                        </button>
                       )}
 
                       <div className="flex items-center gap-2 mt-1">
@@ -413,6 +425,15 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
           onClose={() => setIsScheduleModalOpen(false)}
         />
       )}
+
+      {/* LOCATION DETAILS & MAP MODAL */}
+      <LocationDetailsModal
+        isOpen={Boolean(selectedLocationModal)}
+        locationId={selectedLocationModal?.id ?? null}
+        locationNameFallback={selectedLocationModal?.name}
+        sublocationName={selectedLocationModal?.subName}
+        onClose={() => setSelectedLocationModal(null)}
+      />
 
     </div>
   );

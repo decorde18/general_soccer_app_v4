@@ -31,6 +31,7 @@ export default async function AdminImporterPage() {
 
   const leagueNodes = nodeSeasonsData.map((ns) => ({
     id: ns.id,
+    leagueId: ns.league_nodes.league_id,
     name: `${ns.league_nodes.leagues.name} - ${ns.league_nodes.name}`,
   }));
 
@@ -57,9 +58,21 @@ export default async function AdminImporterPage() {
     label: `${ts.teams.clubs.name} — ${ts.teams.team_name}`,
   }));
 
+  // Load leagues/tournaments
+  const leaguesData = await prisma.leagues.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, is_tournament: true },
+  });
+
+  const leagues = leaguesData.map((l) => ({
+    id: l.id,
+    name: l.name,
+    isTournament: l.is_tournament ?? false,
+  }));
+
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <BatchImporterClient seasons={seasons} leagueNodes={leagueNodes} teamSeasons={teamSeasons} />
+      <BatchImporterClient seasons={seasons} leagues={leagues} leagueNodes={leagueNodes} teamSeasons={teamSeasons} />
     </main>
   );
 }

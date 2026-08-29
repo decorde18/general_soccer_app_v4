@@ -404,12 +404,14 @@ exports.Prisma.LeaguesScalarFieldEnum = {
   reg_periods: 'reg_periods',
   ot_if_tied: 'ot_if_tied',
   ot_duration: 'ot_duration',
-  so_if_tied: 'so_if_tied'
+  so_if_tied: 'so_if_tied',
+  match_rules: 'match_rules'
 };
 
 exports.Prisma.LocationsScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  abbreviation: 'abbreviation',
   address_id: 'address_id',
   created_at: 'created_at',
   modified_at: 'modified_at'
@@ -658,7 +660,14 @@ exports.games_game_type = exports.$Enums.games_game_type = {
   friendly: 'friendly',
   scrimmage: 'scrimmage',
   exhibition: 'exhibition',
-  playoff: 'playoff'
+  playoff: 'playoff',
+  group_stage: 'group_stage',
+  final: 'final',
+  semifinal: 'semifinal',
+  quarterfinal: 'quarterfinal',
+  round_of_16: 'round_of_16',
+  consolation: 'consolation',
+  showcase: 'showcase'
 };
 
 exports.league_node_seasons_status = exports.$Enums.league_node_seasons_status = {

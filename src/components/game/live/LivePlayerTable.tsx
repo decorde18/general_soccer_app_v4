@@ -50,6 +50,9 @@ export default function LivePlayerTable({
   const gameStore = useGameStore.getState();
   const currentPeriod = (gameStore.game?.currentPeriodIndex ?? 0) + 1;
   const gameSettings = gameStore.game?.settings;
+  const isPreGame =
+    gameStore.game?.status === "scheduled" ||
+    (gameStore.game && gameStore.getGameStage() === gameStore.GAME_STAGES.BEFORE_START);
 
   return (
     <div className="border border-border/60 bg-background/25 rounded-lg p-1">
@@ -102,7 +105,9 @@ export default function LivePlayerTable({
               player.subStatus === "pendingIn" ||
               pendingSubsList.some((s) => Number(s.inPlayerId) === pGameId);
 
-            let rowClass = "hover:bg-background/60 transition-colors cursor-pointer text-text font-bold text-[11px] h-6.5";
+            let rowClass = isPreGame
+              ? "bg-background/25 text-text font-bold text-[11px] h-6.5"
+              : "hover:bg-background/60 transition-colors cursor-pointer text-text font-bold text-[11px] h-6.5";
             if (isRedCarded) {
               rowClass = "opacity-40 bg-slate-100 dark:bg-slate-900 pointer-events-none text-muted-foreground font-bold text-[11px] h-6.5";
             } else if (isExhausted) {
@@ -122,7 +127,7 @@ export default function LivePlayerTable({
                 key={player.id}
                 className={rowClass}
                 onClick={() => {
-                  if (isRedCarded || isPendingOut || isPendingIn) return;
+                  if (isPreGame || isRedCarded || isPendingOut || isPendingIn) return;
                   if (isExhausted) {
                     onAttemptIneligibleSelect?.(player, eligibility.reason || "Re-entry limit reached");
                     return;
@@ -193,6 +198,16 @@ export default function LivePlayerTable({
                 <td className="py-0.5 px-1.5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                   {isRedCarded ? (
                     <span className="text-[9px] font-bold text-rose-600 uppercase tracking-wide">SENT OFF</span>
+                  ) : isPreGame ? (
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                        isBench
+                          ? "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                          : "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20"
+                      }`}
+                    >
+                      {isBench ? "Bench" : "Starter"}
+                    </span>
                   ) : (
                     <div className="flex gap-1.5 justify-center items-center">
                       {!isBench && onQuickAction && (gameStore.getGameStage() === gameStore.GAME_STAGES.DURING_PERIOD || gameStore.getGameStage() === gameStore.GAME_STAGES.IN_STOPPAGE) && (

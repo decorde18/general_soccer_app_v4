@@ -12,8 +12,27 @@ import prisma from "@/lib/prisma";
 
 function toDateString(val: unknown): string | null {
   if (!val) return null;
-  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return null;
+    const y = val.getUTCFullYear();
+    const m = (val.getUTCMonth() + 1).toString().padStart(2, "0");
+    const d = val.getUTCDate().toString().padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
   if (typeof val === "string") return val.slice(0, 10);
+  return null;
+}
+
+function toTimeString(val: unknown): string | null {
+  if (!val) return null;
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return null;
+    const h = val.getUTCHours().toString().padStart(2, "0");
+    const m = val.getUTCMinutes().toString().padStart(2, "0");
+    const s = val.getUTCSeconds().toString().padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  }
+  if (typeof val === "string") return val;
   return null;
 }
 
@@ -80,6 +99,7 @@ export interface League extends Record<string, unknown> {
   description: string | null;
   isTournament: boolean;
   status: LeagueStatus;
+  matchRules?: string | null;
   createdAt: string | null;
   modifiedAt: string | null;
 }
@@ -334,6 +354,7 @@ export interface Address {
 export interface Location {
   id: number;
   name: string;
+  abbreviation: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
   city: string | null;
@@ -403,6 +424,7 @@ function mapLeagueRow(r: any): League {
     description: r.description ?? null,
     isTournament: !!r.is_tournament,
     status: mapLeagueStatus(r.status),
+    matchRules: r.match_rules ?? null,
     createdAt: toDateTimeString(r.created_at),
     modifiedAt: toDateTimeString(r.modified_at),
   };
@@ -1080,9 +1102,9 @@ function mapGameRow(r: any): Game {
     status: r.status as GameStatus,
     gameType: r.game_type as GameType,
     startDate: toDateString(r.start_date)!,
-    startTime: r.start_time ? toDateTimeString(r.start_time) : null,
+    startTime: toTimeString(r.start_time),
     endDate: toDateString(r.end_date),
-    endTime: r.end_time ? toDateTimeString(r.end_time) : null,
+    endTime: toTimeString(r.end_time),
     locationId: r.location_id ?? null,
     locationName: r.locations?.name ?? r.location_name ?? null,
     sublocationId: r.sublocation_id ?? null,
@@ -1675,6 +1697,7 @@ export async function getLocations(): Promise<Location[]> {
   return locations.map((r) => ({
     id: r.id,
     name: r.name,
+    abbreviation: r.abbreviation ?? null,
     addressLine1: r.addresses?.address_line1 ?? null,
     addressLine2: r.addresses?.address_line2 ?? null,
     city: r.addresses?.city ?? null,
@@ -1942,26 +1965,40 @@ export async function getTeamLeagueEnrollments(): Promise<
   TeamLeagueEnrollmentRecord[]
 > {
   const enrollments = await prisma.team_league_enrollments.findMany({
-    include: {
+    select: {
+      id: true,
+      team_season_id: true,
+      league_node_season_id: true,
+      is_active: true,
       team_seasons: {
-        include: {
-          teams: { include: { clubs: true } },
-          seasons: true,
+        select: {
+          teams: {
+            select: {
+              team_name: true,
+              clubs: { select: { name: true } },
+            },
+          },
         },
       },
       league_node_seasons: {
-        include: {
+        select: {
+          season_id: true,
+          league_node_id: true,
+          seasons: { select: { season_name: true } },
           league_nodes: {
-            include: { leagues: true },
+            select: {
+              name: true,
+              league_id: true,
+              leagues: { select: { name: true } },
+            },
           },
-          seasons: true,
         },
       },
     },
     orderBy: [
-      { league_node_seasons: { league_nodes: { leagues: { name: "asc" } } } },
-      { team_seasons: { teams: { team_name: "asc" } } },
+      { id: "desc" },
     ],
+    take: 300,
   });
 
   return enrollments.map((e) => ({

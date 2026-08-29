@@ -412,3 +412,280 @@ export function calculatePlayerTimeOnField(
 
   return Math.max(0, totalTime);
 }
+
+// ==================== UNIFIED SYSTEM-WIDE DATE & TIME FORMATTERS ====================
+
+/**
+ * System-Wide Date Formatting (Non-Shifted Literal Date)
+ * Accepts YYYY-MM-DD, ISO strings, or Date objects.
+ * Returns MM/DD/YYYY or EEE, MMM d, yyyy based on literal year, month, and day.
+ */
+export function formatDateStandard(
+  dateInput?: string | Date | null,
+  formatType: "short" | "medium" | "full" = "short"
+): string {
+  if (!dateInput) return "--";
+
+  let year: number, month: number, day: number;
+
+  if (typeof dateInput === "string") {
+    const cleanStr = dateInput.trim().split("T")[0];
+    const parts = cleanStr.split("-");
+    if (parts.length === 3) {
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10);
+      day = parseInt(parts[2], 10);
+    } else {
+      const slashes = cleanStr.split("/");
+      if (slashes.length === 3) {
+        month = parseInt(slashes[0], 10);
+        day = parseInt(slashes[1], 10);
+        year = parseInt(slashes[2], 10);
+      } else {
+        const d = new Date(dateInput);
+        if (isNaN(d.getTime())) return dateInput;
+        year = d.getUTCFullYear();
+        month = d.getUTCMonth() + 1;
+        day = d.getUTCDate();
+      }
+    }
+  } else if (dateInput instanceof Date) {
+    if (isNaN(dateInput.getTime())) return "--";
+    year = dateInput.getUTCFullYear();
+    month = dateInput.getUTCMonth() + 1;
+    day = dateInput.getUTCDate();
+  } else {
+    return "--";
+  }
+
+  const dateObj = new Date(year, month - 1, day);
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const dayOfWeekStr = daysOfWeek[dateObj.getDay()];
+  const monthStr = months[month - 1];
+  const paddedMonth = month.toString().padStart(2, "0");
+  const paddedDay = day.toString().padStart(2, "0");
+
+  if (formatType === "short") {
+    return `${paddedMonth}/${paddedDay}/${year}`;
+  }
+  if (formatType === "full") {
+    return `${dayOfWeekStr}, ${monthStr} ${day}, ${year}`;
+  }
+  return `${dayOfWeekStr}, ${monthStr} ${day}`;
+}
+
+/**
+ * System-Wide Time Formatting (Non-Shifted Literal Time)
+ * Accepts HH:MM:SS, 12-hr string, or Date objects.
+ * Returns 12-hr formatted string (e.g., "8:00 AM", "1:15 PM").
+ * Appends timezoneLabel ONLY if passed explicitly.
+ */
+export function formatTimeStandard(
+  timeInput?: string | Date | null,
+  timezoneLabel?: string | null
+): string {
+  if (!timeInput) return "TBD";
+
+  let hours = 0;
+  let minutes = 0;
+
+  if (typeof timeInput === "string") {
+    const cleanStr = timeInput.trim();
+    if (!cleanStr) return "TBD";
+
+    const twelverMatch = cleanStr.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i);
+    if (twelverMatch) {
+      hours = parseInt(twelverMatch[1], 10);
+      minutes = parseInt(twelverMatch[2], 10);
+      const ampm = (twelverMatch[3] || "").toLowerCase();
+      if (ampm === "pm" && hours < 12) hours += 12;
+      if (ampm === "am" && hours === 12) hours = 0;
+    } else if (cleanStr.includes("T")) {
+      const timePart = cleanStr.split("T")[1];
+      if (timePart) {
+        const parts = timePart.split(":");
+        hours = parseInt(parts[0], 10) || 0;
+        minutes = parseInt(parts[1], 10) || 0;
+      }
+    } else {
+      const parts = cleanStr.split(":");
+      hours = parseInt(parts[0], 10) || 0;
+      minutes = parseInt(parts[1], 10) || 0;
+    }
+  } else if (timeInput instanceof Date) {
+    if (isNaN(timeInput.getTime())) return "TBD";
+    hours = timeInput.getUTCHours();
+    minutes = timeInput.getUTCMinutes();
+  } else {
+    return "TBD";
+  }
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+  const displayMinutes = minutes.toString().padStart(2, "0");
+
+  const formattedTime = `${displayHours}:${displayMinutes} ${ampm}`;
+  return timezoneLabel ? `${formattedTime} ${timezoneLabel}` : formattedTime;
+}
+
+export function formatGameDate(
+  dateInput: string | Date | null | undefined,
+  formatType: "short" | "medium" | "full" = "medium"
+): string {
+  if (!dateInput) return "";
+
+  let year: number, month: number, day: number;
+
+  if (typeof dateInput === "string") {
+    const cleanStr = dateInput.split("T")[0];
+    const parts = cleanStr.split("-");
+    if (parts.length === 3) {
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10);
+      day = parseInt(parts[2], 10);
+    } else {
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return dateInput;
+      year = d.getUTCFullYear();
+      month = d.getUTCMonth() + 1;
+      day = d.getUTCDate();
+    }
+  } else if (dateInput instanceof Date) {
+    if (isNaN(dateInput.getTime())) return "";
+    year = dateInput.getUTCFullYear();
+    month = dateInput.getUTCMonth() + 1;
+    day = dateInput.getUTCDate();
+  } else {
+    return "";
+  }
+
+  const dateObj = new Date(year, month - 1, day);
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const dayOfWeekStr = daysOfWeek[dateObj.getDay()];
+  const monthStr = months[month - 1];
+  const paddedMonth = month.toString().padStart(2, "0");
+  const paddedDay = day.toString().padStart(2, "0");
+
+  if (formatType === "short") {
+    return `${paddedMonth}/${paddedDay}/${year}`;
+  }
+  if (formatType === "full") {
+    return `${dayOfWeekStr}, ${monthStr} ${day}, ${year}`;
+  }
+  return `${dayOfWeekStr}, ${monthStr} ${day}`;
+}
+
+export function formatGameTime(
+  timeInput: string | Date | null | undefined,
+  includeZone: boolean = false
+): string {
+  if (!timeInput) return "";
+
+  let hours = 0;
+  let minutes = 0;
+
+  if (typeof timeInput === "string") {
+    const cleanStr = timeInput.trim();
+    if (!cleanStr) return "";
+
+    const twelverMatch = cleanStr.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i);
+    if (twelverMatch) {
+      hours = parseInt(twelverMatch[1], 10);
+      minutes = parseInt(twelverMatch[2], 10);
+      const ampm = (twelverMatch[3] || "").toLowerCase();
+      if (ampm === "pm" && hours < 12) hours += 12;
+      if (ampm === "am" && hours === 12) hours = 0;
+    } else if (cleanStr.includes("T")) {
+      const timePart = cleanStr.split("T")[1];
+      if (timePart) {
+        const parts = timePart.split(":");
+        hours = parseInt(parts[0], 10) || 0;
+        minutes = parseInt(parts[1], 10) || 0;
+      }
+    } else {
+      const parts = cleanStr.split(":");
+      hours = parseInt(parts[0], 10) || 0;
+      minutes = parseInt(parts[1], 10) || 0;
+    }
+  } else if (timeInput instanceof Date) {
+    if (isNaN(timeInput.getTime())) return "";
+    hours = timeInput.getUTCHours();
+    minutes = timeInput.getUTCMinutes();
+  } else {
+    return "";
+  }
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+  const displayMinutes = minutes.toString().padStart(2, "0");
+
+  const timeStr = `${displayHours}:${displayMinutes} ${ampm}`;
+  return includeZone ? `${timeStr} EST` : timeStr;
+}
+
+export function parseGameDatesAndTimesUTC(
+  dateStr: string,
+  timeStr?: string,
+  defaultDurationMinutes: number = 90
+) {
+  let year = 2026, month = 1, day = 1;
+  const cleanDateStr = (dateStr || "").trim();
+  const dateParts = cleanDateStr.split("T")[0].split("-");
+  if (dateParts.length === 3) {
+    year = parseInt(dateParts[0], 10);
+    month = parseInt(dateParts[1], 10);
+    day = parseInt(dateParts[2], 10);
+  } else {
+    const slashes = cleanDateStr.split("/");
+    if (slashes.length === 3) {
+      month = parseInt(slashes[0], 10);
+      day = parseInt(slashes[1], 10);
+      year = parseInt(slashes[2], 10);
+    }
+  }
+
+  const startDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+
+  if (!timeStr || !timeStr.trim()) {
+    return {
+      startDate,
+      startTime: null,
+      endDate: startDate,
+      endTime: null,
+    };
+  }
+
+  const rawTime = timeStr.trim();
+  let hours = 0;
+  let minutes = 0;
+
+  const twelverMatch = rawTime.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i);
+  if (twelverMatch) {
+    hours = parseInt(twelverMatch[1], 10);
+    minutes = parseInt(twelverMatch[2], 10);
+    const ampm = (twelverMatch[3] || "").toLowerCase();
+    if (ampm === "pm" && hours < 12) hours += 12;
+    if (ampm === "am" && hours === 12) hours = 0;
+  } else {
+    const parts = rawTime.split(":");
+    if (parts.length >= 2) {
+      hours = parseInt(parts[0], 10) || 0;
+      minutes = parseInt(parts[1], 10) || 0;
+    }
+  }
+
+  const startTime = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0));
+  const endTime = new Date(startTime.getTime() + defaultDurationMinutes * 60 * 1000);
+  const endDate = new Date(Date.UTC(endTime.getUTCFullYear(), endTime.getUTCMonth(), endTime.getUTCDate(), 0, 0, 0));
+
+  return {
+    startDate,
+    startTime,
+    endDate,
+    endTime,
+  };
+}
