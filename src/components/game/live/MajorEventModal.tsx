@@ -1097,21 +1097,6 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           </div>
         </div>
 
-        {/* PAUSE CLOCK TOGGLE FOR EVENT */}
-        <div className="flex items-center justify-between p-2.5 bg-surface border border-border/80 rounded-xl">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-bold text-text">Pause Timed Match Clock</span>
-            <span className="text-[10px] text-muted">
-              {stopClock ? "Match clock is paused. Clock does not tick." : "Match clock continues running live."}
-            </span>
-          </div>
-          <Checkbox
-            label={stopClock ? "Paused ⏸️" : "Running ⏱️"}
-            checked={stopClock}
-            onChange={(val: any) => setStopClock(typeof val === "boolean" ? val : Boolean(val?.target?.checked))}
-          />
-        </div>
-
         {/* TEAM TARGET TOGGLE (Us vs Opponent) */}
         {(eventType === "goal" || eventType === "card" || eventType === "pk") && (
           <div className="flex items-center gap-2 pt-1">

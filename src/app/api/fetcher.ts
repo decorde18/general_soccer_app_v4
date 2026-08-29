@@ -195,10 +195,8 @@ export async function apiFetch<T = any>(
     if (count) params.append("_count", "true");
   }
 
-  // Handle DELETE, PUT, PATCH with ID
-  if (id && (method === "DELETE" || method === "PUT" || method === "PATCH")) {
-    params.append("id", String(id));
-  }
+  // Handle DELETE, PUT, PATCH with ID if not already appended
+  // (targetId was already appended at line 109)
 
   // Append query parameters to URL
   const queryString = params.toString();
@@ -240,8 +238,8 @@ export async function apiFetch<T = any>(
     const result: ApiSuccessResult = await res.json();
 
     // If PUT/PATCH returns { success: true }, refetch the updated item
-    if ((method === "PUT" || method === "PATCH") && result.success && id) {
-      const refetchUrl = `${API_BASE_URL}/${table}?id=${id}`;
+    if ((method === "PUT" || method === "PATCH") && result.success && targetId) {
+      const refetchUrl = `${API_BASE_URL}/${cleanTable}?id=${targetId}`;
       const refetchRes = await fetch(refetchUrl, {
         method: "GET",
         headers: {

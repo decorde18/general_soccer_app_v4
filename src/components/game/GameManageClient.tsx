@@ -76,6 +76,7 @@ export default function GameManageClient() {
   const [goalType, setGoalType] = useState<string>("foot");
   const [goalPeriod, setGoalPeriod] = useState<string>("1");
   const [goalTimeMin, setGoalTimeMin] = useState<string>("0");
+  const [goalTimeSec, setGoalTimeSec] = useState<string>("0");
   const [isOpponentGoal, setIsOpponentGoal] = useState<boolean>(false);
 
   // Sub Form State
@@ -83,6 +84,7 @@ export default function GameManageClient() {
   const [subOutId, setSubOutId] = useState<string>("");
   const [subPeriod, setSubPeriod] = useState<string>("1");
   const [subTimeMin, setSubTimeMin] = useState<string>("0");
+  const [subTimeSec, setSubTimeSec] = useState<string>("0");
   const [isGkSub, setIsGkSub] = useState<boolean>(false);
 
   // Card Form State
@@ -91,6 +93,7 @@ export default function GameManageClient() {
   const [cardReason, setCardReason] = useState<string>("");
   const [cardPeriod, setCardPeriod] = useState<string>("1");
   const [cardTimeMin, setCardTimeMin] = useState<string>("0");
+  const [cardTimeSec, setCardTimeSec] = useState<string>("0");
 
   // Delete event confirmation dialog
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
@@ -310,6 +313,7 @@ export default function GameManageClient() {
     setGoalType("foot");
     setGoalPeriod("1");
     setGoalTimeMin("0");
+    setGoalTimeSec("0");
     setIsOpponentGoal(false);
     setIsGoalModalOpen(true);
   };
@@ -321,7 +325,9 @@ export default function GameManageClient() {
     setGoalAssistId(g.assist_player_game_id ? String(g.assist_player_game_id) : "");
     setGoalType(g.is_own_goal ? "own_goal" : g.goal_types || "foot");
     setGoalPeriod(g.period ? String(g.period) : "1");
-    setGoalTimeMin(g.game_time !== undefined && g.game_time !== null ? String(Math.floor(g.game_time / 60)) : "0");
+    const totalSec = g.game_time !== undefined && g.game_time !== null ? Number(g.game_time) : 0;
+    setGoalTimeMin(String(Math.floor(totalSec / 60)));
+    setGoalTimeSec(String(totalSec % 60));
     setIsOpponentGoal(g.team_season_id != teamSeasonId);
     setIsGoalModalOpen(true);
   };
@@ -336,6 +342,7 @@ export default function GameManageClient() {
       try {
         const scorer = players.find((p) => String(p.playerGameId) === goalScorerId);
         const assist = players.find((p) => String(p.playerGameId) === goalAssistId);
+        const totalSeconds = Number(goalTimeMin) * 60 + Number(goalTimeSec);
 
         if (editingGoal) {
           // Edit existing goal
@@ -351,7 +358,7 @@ export default function GameManageClient() {
           if (editingGoal.major_event_id) {
             await apiFetch("game_events_major", "PUT", {
               period: Number(goalPeriod),
-              game_time: Number(goalTimeMin) * 60,
+              game_time: totalSeconds,
             }, editingGoal.major_event_id);
           }
           toast.success("Goal record updated successfully.");
@@ -361,7 +368,7 @@ export default function GameManageClient() {
             game_id: Number(game.game_id || game.id),
             period: Number(goalPeriod),
             event_type: "goal",
-            game_time: Number(goalTimeMin) * 60,
+            game_time: totalSeconds,
             clock_should_run: 1,
           };
           const resMajor = await apiFetch("game_events_major", "POST", majorPayload);
@@ -396,6 +403,7 @@ export default function GameManageClient() {
     setSubOutId("");
     setSubPeriod("1");
     setSubTimeMin("0");
+    setSubTimeSec("0");
     setIsGkSub(false);
     setIsSubModalOpen(true);
   };
@@ -403,10 +411,20 @@ export default function GameManageClient() {
   const openEditSubModal = (s: any) => {
     const realId = getSubId(s);
     setEditingSub({ ...s, id: realId });
-    setSubInId(s.in_player_id ? String(s.in_player_id) : "");
-    setSubOutId(s.out_player_id ? String(s.out_player_id) : "");
+
+    const matchingIn = players.find(
+      (p) => String(p.playerGameId) === String(s.in_player_id) || String(p.id) === String(s.in_player_id)
+    );
+    const matchingOut = players.find(
+      (p) => String(p.playerGameId) === String(s.out_player_id) || String(p.id) === String(s.out_player_id)
+    );
+
+    setSubInId(matchingIn ? String(matchingIn.playerGameId) : s.in_player_id ? String(s.in_player_id) : "");
+    setSubOutId(matchingOut ? String(matchingOut.playerGameId) : s.out_player_id ? String(s.out_player_id) : "");
     setSubPeriod(s.period ? String(s.period) : "1");
-    setSubTimeMin(s.sub_time !== undefined && s.sub_time !== null ? String(Math.floor(s.sub_time / 60)) : "0");
+    const totalSec = s.sub_time !== undefined && s.sub_time !== null ? Number(s.sub_time) : 0;
+    setSubTimeMin(String(Math.floor(totalSec / 60)));
+    setSubTimeSec(String(totalSec % 60));
     setIsGkSub(Boolean(s.gk_sub));
     setIsSubModalOpen(true);
   };
@@ -419,12 +437,13 @@ export default function GameManageClient() {
 
     startTransition(async () => {
       try {
+        const totalSeconds = Number(subTimeMin) * 60 + Number(subTimeSec);
         const subPayload = {
           game_id: Number(game.game_id || game.id),
           in_player_id: Number(subInId),
           out_player_id: Number(subOutId),
           period: Number(subPeriod),
-          sub_time: Number(subTimeMin) * 60,
+          sub_time: totalSeconds,
           gk_sub: isGkSub ? 1 : 0,
         };
 
@@ -457,6 +476,7 @@ export default function GameManageClient() {
     setCardReason("");
     setCardPeriod("1");
     setCardTimeMin("0");
+    setCardTimeSec("0");
     setIsCardModalOpen(true);
   };
 
@@ -467,7 +487,9 @@ export default function GameManageClient() {
     setCardType(c.card_type || "yellow");
     setCardReason(c.card_reason || "");
     setCardPeriod(c.period ? String(c.period) : "1");
-    setCardTimeMin(c.game_time !== undefined && c.game_time !== null ? String(Math.floor(c.game_time / 60)) : "0");
+    const totalSec = c.game_time !== undefined && c.game_time !== null ? Number(c.game_time) : 0;
+    setCardTimeMin(String(Math.floor(totalSec / 60)));
+    setCardTimeSec(String(totalSec % 60));
     setIsCardModalOpen(true);
   };
 
@@ -480,6 +502,7 @@ export default function GameManageClient() {
     startTransition(async () => {
       try {
         const player = players.find((p) => String(p.playerGameId) === cardPlayerId);
+        const totalSeconds = Number(cardTimeMin) * 60 + Number(cardTimeSec);
 
         if (editingCard) {
           const cardPayload = {
@@ -492,7 +515,7 @@ export default function GameManageClient() {
           if (editingCard.major_event_id) {
             await apiFetch("game_events_major", "PUT", {
               period: Number(cardPeriod),
-              game_time: Number(cardTimeMin) * 60,
+              game_time: totalSeconds,
             }, editingCard.major_event_id);
           }
           toast.success("Discipline card updated successfully.");
@@ -501,7 +524,7 @@ export default function GameManageClient() {
             game_id: Number(game.game_id || game.id),
             period: Number(cardPeriod),
             event_type: "discipline",
-            game_time: Number(cardTimeMin) * 60,
+            game_time: totalSeconds,
             clock_should_run: 1,
           };
           const resMajor = await apiFetch("game_events_major", "POST", majorPayload);
@@ -1214,18 +1237,18 @@ export default function GameManageClient() {
                 label="Goal Scorer"
                 options={[{ value: "", label: "-- Select Scorer --" }, ...playerOptions]}
                 value={goalScorerId}
-                onChange={(val: string) => setGoalScorerId(val)}
+                onChange={(e: any) => setGoalScorerId(e.target?.value ?? e)}
               />
               <Select
                 label="Assisted By"
                 options={[{ value: "", label: "-- None / Select Assist --" }, ...playerOptions]}
                 value={goalAssistId}
-                onChange={(val: string) => setGoalAssistId(val)}
+                onChange={(e: any) => setGoalAssistId(e.target?.value ?? e)}
               />
             </>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <Select
               label="Goal Type"
               options={[
@@ -1236,22 +1259,32 @@ export default function GameManageClient() {
                 { value: "own_goal", label: "Own Goal" },
               ]}
               value={goalType}
-              onChange={(val: string) => setGoalType(val)}
+              onChange={(e: any) => setGoalType(e.target?.value ?? e)}
             />
             <Select
               label="Match Period"
               options={periodOptions}
               value={goalPeriod}
-              onChange={(val: string) => setGoalPeriod(val)}
+              onChange={(e: any) => setGoalPeriod(e.target?.value ?? e)}
             />
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                label="Min (mm)"
+                type="number"
+                min="0"
+                value={goalTimeMin}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGoalTimeMin(e.target.value)}
+              />
+              <Input
+                label="Sec (ss)"
+                type="number"
+                min="0"
+                max="59"
+                value={goalTimeSec}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGoalTimeSec(e.target.value)}
+              />
+            </div>
           </div>
-
-          <Input
-            label="Game Time (minutes into match)"
-            type="number"
-            value={goalTimeMin}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGoalTimeMin(e.target.value)}
-          />
 
           <div className="flex justify-end gap-2 pt-2">
             <Button
@@ -1284,27 +1317,36 @@ export default function GameManageClient() {
             label="Player IN"
             options={[{ value: "", label: "-- Select Player In --" }, ...playerOptions]}
             value={subInId}
-            onChange={(val: string) => setSubInId(val)}
+            onChange={(e: any) => setSubInId(e.target?.value ?? e)}
           />
           <Select
             label="Player OUT"
             options={[{ value: "", label: "-- Select Player Out --" }, ...playerOptions]}
             value={subOutId}
-            onChange={(val: string) => setSubOutId(val)}
+            onChange={(e: any) => setSubOutId(e.target?.value ?? e)}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <Select
               label="Match Period"
               options={periodOptions}
               value={subPeriod}
-              onChange={(val: string) => setSubPeriod(val)}
+              onChange={(e: any) => setSubPeriod(e.target?.value ?? e)}
             />
             <Input
-              label="Game Time (minutes)"
+              label="Minute (mm)"
               type="number"
+              min="0"
               value={subTimeMin}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubTimeMin(e.target.value)}
+            />
+            <Input
+              label="Second (ss)"
+              type="number"
+              min="0"
+              max="59"
+              value={subTimeSec}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubTimeSec(e.target.value)}
             />
           </div>
 
@@ -1345,10 +1387,10 @@ export default function GameManageClient() {
             label="Carded Player"
             options={[{ value: "", label: "-- Select Player --" }, ...playerOptions]}
             value={cardPlayerId}
-            onChange={(val: string) => setCardPlayerId(val)}
+            onChange={(e: any) => setCardPlayerId(e.target?.value ?? e)}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <Select
               label="Card Color"
               options={[
@@ -1357,22 +1399,32 @@ export default function GameManageClient() {
                 { value: "yellow_red", label: "Second Yellow (Red)" },
               ]}
               value={cardType}
-              onChange={(val: string) => setCardType(val)}
+              onChange={(e: any) => setCardType(e.target?.value ?? e)}
             />
             <Select
               label="Match Period"
               options={periodOptions}
               value={cardPeriod}
-              onChange={(val: string) => setCardPeriod(val)}
+              onChange={(e: any) => setCardPeriod(e.target?.value ?? e)}
             />
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                label="Min (mm)"
+                type="number"
+                min="0"
+                value={cardTimeMin}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardTimeMin(e.target.value)}
+              />
+              <Input
+                label="Sec (ss)"
+                type="number"
+                min="0"
+                max="59"
+                value={cardTimeSec}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardTimeSec(e.target.value)}
+              />
+            </div>
           </div>
-
-          <Input
-            label="Game Time (minutes)"
-            type="number"
-            value={cardTimeMin}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardTimeMin(e.target.value)}
-          />
 
           <Input
             label="Reason (Optional)"

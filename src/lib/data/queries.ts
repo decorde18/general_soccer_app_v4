@@ -1388,6 +1388,18 @@ async function getStatsForRoster(
 
 // ─── Team Season Records (standings) ─────────────────────────────────────────
 
+export function isPlaceholderTeamName(name?: string | null): boolean {
+  if (!name) return false;
+  const trimmed = name.trim();
+  return (
+    /^Group\s+[A-Z0-9]\s*#/i.test(trimmed) ||
+    /^Winner/i.test(trimmed) ||
+    /^Runner-?Up/i.test(trimmed) ||
+    /^TBD/i.test(trimmed) ||
+    /Placeholder/i.test(trimmed)
+  );
+}
+
 export async function getTeamSeasonRecords(
   leagueNodeSeasonId?: number,
   teamSeasonId?: number,
@@ -1419,10 +1431,10 @@ export async function getTeamSeasonRecords(
     });
     if (enrolledTeamSeasonIds.length > 0) {
       orConditions.push({
-        AND: [
-          { home_team_season_id: { in: enrolledTeamSeasonIds } },
-          { away_team_season_id: { in: enrolledTeamSeasonIds } },
-        ],
+        home_team_season_id: { in: enrolledTeamSeasonIds },
+      });
+      orConditions.push({
+        away_team_season_id: { in: enrolledTeamSeasonIds },
       });
     }
   }
@@ -1472,9 +1484,10 @@ export async function getTeamSeasonRecords(
     }
   >();
 
-  // Initialize with enrolled teams
+  // Initialize with enrolled teams (excluding placeholder teams)
   if (leagueNodeSeasonId) {
     enrolledTeamSeasonsMap.forEach((ts, tsId) => {
+      if (isPlaceholderTeamName(ts?.teams?.team_name)) return;
       const key = `${tsId}_${leagueNodeSeasonId}`;
       recordsMap.set(key, {
         teamSeasonId: tsId,
@@ -1497,9 +1510,11 @@ export async function getTeamSeasonRecords(
     lnId: number,
     teamSeasonObj: any,
   ) => {
+    const team = teamSeasonObj?.teams;
+    if (isPlaceholderTeamName(team?.team_name)) return null;
+
     const key = `${tsId}_${lnId}`;
     if (!recordsMap.has(key)) {
-      const team = teamSeasonObj?.teams;
       recordsMap.set(key, {
         teamSeasonId: tsId,
         teamName: team?.team_name ?? tsId.toString(),
@@ -1518,23 +1533,30 @@ export async function getTeamSeasonRecords(
   };
 
   gamesData.forEach((g: any) => {
-    let homeScore = 0;
-    let awayScore = 0;
-    g.game_events_major?.forEach((major: any) => {
-      if (major.event_type === "goal" || (major.game_events_goals && major.game_events_goals.length > 0)) {
-        major.game_events_goals?.forEach((goal: any) => {
-          const isHomeScorer = goal.team_season_id === g.home_team_season_id;
-          if (
-            (isHomeScorer && !goal.is_own_goal) ||
-            (!isHomeScorer && goal.is_own_goal)
-          ) {
-            homeScore++;
-          } else {
-            awayScore++;
-          }
-        });
+    let homeScore = g.home_score ?? 0;
+    let awayScore = g.away_score ?? 0;
+    if (g.game_events_major && g.game_events_major.length > 0) {
+      let eventHomeGoals = 0;
+      let eventAwayGoals = 0;
+      let hasGoalEvents = false;
+      g.game_events_major.forEach((major: any) => {
+        if (major.event_type === "goal" || (major.game_events_goals && major.game_events_goals.length > 0)) {
+          major.game_events_goals?.forEach((goal: any) => {
+            hasGoalEvents = true;
+            const isHomeScorer = goal.team_season_id === g.home_team_season_id;
+            if ((isHomeScorer && !goal.is_own_goal) || (!isHomeScorer && goal.is_own_goal)) {
+              eventHomeGoals++;
+            } else {
+              eventAwayGoals++;
+            }
+          });
+        }
+      });
+      if (hasGoalEvents) {
+        homeScore = eventHomeGoals;
+        awayScore = eventAwayGoals;
       }
-    });
+    }
 
     const nodes = g.game_league_nodes.map((n: any) => n.league_node_id);
     const targetNodes = leagueNodeSeasonId
@@ -1558,17 +1580,18 @@ export async function getTeamSeasonRecords(
         }
       }
 
+      const homeEnrolled = leagueNodeSeasonId ? enrolledTeamSeasonsMap.has(g.home_team_season_id) : true;
+      const awayEnrolled = leagueNodeSeasonId ? enrolledTeamSeasonsMap.has(g.away_team_season_id) : true;
+
       if (leagueNodeSeasonId) {
-        if (
-          !enrolledTeamSeasonsMap.has(g.home_team_season_id) ||
-          !enrolledTeamSeasonsMap.has(g.away_team_season_id)
-        ) {
+        if (!homeEnrolled && !awayEnrolled) {
           return;
         }
       }
 
       const homeRec =
-        !teamSeasonId || g.home_team_season_id === teamSeasonId
+        (!teamSeasonId || g.home_team_season_id === teamSeasonId) &&
+        (!leagueNodeSeasonId || homeEnrolled)
           ? getOrCreateRecord(
               g.home_team_season_id,
               Number(targetLnId ?? leagueNodeSeasonId ?? 0),
@@ -1576,7 +1599,8 @@ export async function getTeamSeasonRecords(
             )
           : null;
       const awayRec =
-        !teamSeasonId || g.away_team_season_id === teamSeasonId
+        (!teamSeasonId || g.away_team_season_id === teamSeasonId) &&
+        (!leagueNodeSeasonId || awayEnrolled)
           ? getOrCreateRecord(
               g.away_team_season_id,
               Number(targetLnId ?? leagueNodeSeasonId ?? 0),
@@ -1623,7 +1647,7 @@ export async function getTeamSeasonRecords(
       where: { id: teamSeasonId },
       include: { teams: { include: { clubs: true } } },
     });
-    if (teamSeason) {
+    if (teamSeason && !isPlaceholderTeamName(teamSeason.teams.team_name)) {
       const team = teamSeason.teams;
       return [
         {
@@ -1645,21 +1669,23 @@ export async function getTeamSeasonRecords(
     }
   }
 
-  let result = Array.from(recordsMap.values()).map((r, index) => ({
-    id: index + 1,
-    teamSeasonId: r.teamSeasonId,
-    teamName: r.teamName,
-    clubName: r.clubName,
-    leagueNodeSeasonId: r.leagueNodeSeasonId || null,
-    wins: r.wins,
-    losses: r.losses,
-    draws: r.draws,
-    goalsFor: r.goalsFor,
-    goalsAgainst: r.goalsAgainst,
-    gamesPlayed: r.gamesPlayed,
-    points: r.points,
-    recordSource: "calculated" as const,
-  }));
+  let result = Array.from(recordsMap.values())
+    .filter((r) => !isPlaceholderTeamName(r.teamName))
+    .map((r, index) => ({
+      id: index + 1,
+      teamSeasonId: r.teamSeasonId,
+      teamName: r.teamName,
+      clubName: r.clubName,
+      leagueNodeSeasonId: r.leagueNodeSeasonId || null,
+      wins: r.wins,
+      losses: r.losses,
+      draws: r.draws,
+      goalsFor: r.goalsFor,
+      goalsAgainst: r.goalsAgainst,
+      gamesPlayed: r.gamesPlayed,
+      points: r.points,
+      recordSource: "calculated" as const,
+    }));
 
   result.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
@@ -2050,16 +2076,28 @@ export async function getLeaguesForTeamSeason(
     },
   });
 
-  return enrollments.map((e) => ({
-    leagueId: e.league_node_seasons.league_nodes.league_id,
-    leagueName: e.league_node_seasons.league_nodes.leagues.name,
-    leagueNodeId: e.league_node_seasons.league_node_id,
-    leagueNodeName: e.league_node_seasons.league_nodes.name,
-    leagueNodeSeasonId: e.league_node_season_id,
-    leagueAbbreviation:
-      e.league_node_seasons.league_nodes.leagues.abbreviation ?? null,
-    isTournament: !!e.league_node_seasons.league_nodes.leagues.is_tournament,
-  }));
+  const uniqueMap = new Map<number, TeamLeagueLink>();
+
+  enrollments.forEach((e) => {
+    const leagueId = e.league_node_seasons.league_nodes.league_id;
+    const nodeName = e.league_node_seasons.league_nodes.name;
+    const leagueName = e.league_node_seasons.league_nodes.leagues.name;
+
+    if (!uniqueMap.has(leagueId)) {
+      uniqueMap.set(leagueId, {
+        leagueId,
+        leagueName,
+        leagueNodeId: e.league_node_seasons.league_node_id,
+        leagueNodeName: nodeName,
+        leagueNodeSeasonId: e.league_node_season_id,
+        leagueAbbreviation:
+          e.league_node_seasons.league_nodes.leagues.abbreviation ?? null,
+        isTournament: !!e.league_node_seasons.league_nodes.leagues.is_tournament,
+      });
+    }
+  });
+
+  return Array.from(uniqueMap.values());
 }
 
 export interface GuestPlayerOption {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useTransition } from "react";
 import {
   Trophy,
   Calendar,
@@ -15,12 +15,16 @@ import {
   ShieldCheck,
   Check,
   X,
+  Zap,
+  Save,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Link from "next/link";
 import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
 import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
 import { formatDateStandard, formatTimeStandard } from "@/components/ui/DateSelect";
+import { recordQuickScore } from "@/lib/actions/quickScore-actions";
+import { toast } from "sonner";
 
 export interface MasterGameRow {
   id: number;
@@ -67,24 +71,60 @@ export default function MasterScoreEntryClient({
   const [gameTypeFilter, setGameTypeFilter] = useState<string>("all");
   const [standingsFilter, setStandingsFilter] = useState<"all" | "yes" | "no">("all");
 
+  // Season & Specific Tournament Filters
+  const seasonOptions = useMemo(() => {
+    const map = new Map<number, string>();
+    games.forEach((g) => {
+      if (g.seasonId && g.seasonName) map.set(g.seasonId, g.seasonName);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [games]);
+
+  const defaultSeasonId = useMemo(() => {
+    return seasonOptions.length > 0 ? String(seasonOptions[0].id) : "all";
+  }, [seasonOptions]);
+
+  const [seasonFilter, setSeasonFilter] = useState<string>(defaultSeasonId);
+
+  const leagueOptions = useMemo(() => {
+    const set = new Set<string>();
+    games.forEach((g) => {
+      if (g.leagueName) set.add(g.leagueName);
+    });
+    return Array.from(set).sort();
+  }, [games]);
+
+  const [leagueFilter, setLeagueFilter] = useState<string>("all");
+
+  // Inline Batch Edit State
+  const [isBatchEditMode, setIsBatchEditMode] = useState(false);
+  const [batchScores, setBatchScores] = useState<Record<number, { home: string | number; away: string | number }>>({});
+  const [isSavingBatch, startBatchTransition] = useTransition();
+
   const [quickScoreGame, setQuickScoreGame] = useState<MasterGameRow | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   // Filtered games
   const filteredGames = useMemo(() => {
     return games.filter((g) => {
-      // 1. Status Filter
+      // 1. Season Filter (Default to current season)
+      if (seasonFilter !== "all" && String(g.seasonId) !== seasonFilter) return false;
+
+      // 2. Tournament / League Filter
+      if (leagueFilter !== "all" && g.leagueName !== leagueFilter) return false;
+
+      // 3. Status Filter
       if (statusFilter === "pending" && g.status === "completed") return false;
       if (statusFilter === "completed" && g.status !== "completed") return false;
 
-      // 2. Game Type Filter
+      // 4. Game Type Filter
       if (gameTypeFilter !== "all" && g.gameType !== gameTypeFilter) return false;
 
-      // 3. Standings Filter
+      // 5. Standings Filter
       if (standingsFilter === "yes" && g.countsForStandings === false) return false;
       if (standingsFilter === "no" && g.countsForStandings !== false) return false;
 
-      // 4. Search Filter
+      // 6. Search Filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const home = `${g.homeClubName} ${g.homeTeamName}`.toLowerCase();
@@ -104,7 +144,76 @@ export default function MasterScoreEntryClient({
 
       return true;
     });
-  }, [games, searchQuery, statusFilter, gameTypeFilter, standingsFilter]);
+  }, [games, seasonFilter, leagueFilter, statusFilter, gameTypeFilter, standingsFilter, searchQuery]);
+
+  // Update batch score input values
+  const handleBatchInputChange = (gameId: number, field: "home" | "away", val: string) => {
+    setBatchScores((prev) => {
+      const current = prev[gameId] || {
+        home: games.find((g) => g.id === gameId)?.homeScore ?? "",
+        away: games.find((g) => g.id === gameId)?.awayScore ?? "",
+      };
+      return {
+        ...prev,
+        [gameId]: {
+          ...current,
+          [field]: val,
+        },
+      };
+    });
+  };
+
+  // Save all batch scores
+  const handleSaveAllBatchScores = async () => {
+    const updatesToProcess = Object.entries(batchScores).filter(([_, s]) => s.home !== "" && s.away !== "");
+    if (updatesToProcess.length === 0) {
+      toast.error("No valid scores entered to save.");
+      return;
+    }
+
+    startBatchTransition(async () => {
+      try {
+        let savedCount = 0;
+        const updatedGamesList = [...games];
+
+        for (const [gameIdStr, scoreObj] of updatesToProcess) {
+          const gameId = Number(gameIdStr);
+          const homeScoreNum = Number(scoreObj.home);
+          const awayScoreNum = Number(scoreObj.away);
+
+          const targetGame = games.find((g) => g.id === gameId);
+          const countsForStandings = targetGame?.countsForStandings ?? true;
+
+          const res = await recordQuickScore({
+            gameId,
+            homeScore: homeScoreNum,
+            awayScore: awayScoreNum,
+            countsForStandings,
+          });
+
+          if (res.success) {
+            savedCount++;
+            const idx = updatedGamesList.findIndex((g) => g.id === gameId);
+            if (idx !== -1) {
+              updatedGamesList[idx] = {
+                ...updatedGamesList[idx],
+                homeScore: homeScoreNum,
+                awayScore: awayScoreNum,
+                status: "completed",
+              };
+            }
+          }
+        }
+
+        setGames(updatedGamesList);
+        setBatchScores({});
+        setIsBatchEditMode(false);
+        toast.success(`Successfully recorded scores for ${savedCount} matches!`);
+      } catch (err: any) {
+        toast.error("Error saving batch scores: " + err.message);
+      }
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -125,15 +234,43 @@ export default function MasterScoreEntryClient({
             </p>
           </div>
 
-          {canManage && (
-            <button
-              onClick={() => setIsScheduleModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-md transition-all self-start sm:self-auto shrink-0"
-            >
-              <Plus size={16} />
-              <span>Schedule Match</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+            {canManage && (
+              <>
+                <button
+                  onClick={() => setIsBatchEditMode(!isBatchEditMode)}
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-extrabold rounded-xl border transition-all cursor-pointer ${
+                    isBatchEditMode
+                      ? "bg-amber-500 text-white border-amber-500 shadow-md"
+                      : "bg-surface border-border text-text hover:border-primary/50"
+                  }`}
+                  title="Toggle clean batch score entry mode for all filtered games"
+                >
+                  <Zap size={15} />
+                  <span>{isBatchEditMode ? "Exit Batch Mode" : "⚡ Batch Quick Edit Scores"}</span>
+                </button>
+
+                {isBatchEditMode && (
+                  <button
+                    onClick={handleSaveAllBatchScores}
+                    disabled={isSavingBatch}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition-all cursor-pointer"
+                  >
+                    <Save size={15} />
+                    <span>{isSavingBatch ? "Saving..." : "Save All Scores"}</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setIsScheduleModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-md transition-all cursor-pointer"
+                >
+                  <Plus size={16} />
+                  <span>Schedule Match</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -146,17 +283,37 @@ export default function MasterScoreEntryClient({
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
-          {/* Search Query */}
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <input
-              type="text"
-              placeholder="Search team, club, or venue..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text placeholder:text-muted/65 transition-all"
-            />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 items-center">
+          {/* Season Filter (Default Current Season) */}
+          <div>
+            <select
+              value={seasonFilter}
+              onChange={(e) => setSeasonFilter(e.target.value)}
+              className="w-full py-2 px-3 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text font-bold"
+            >
+              <option value="all">All Seasons</option>
+              {seasonOptions.map((s) => (
+                <option key={s.id} value={String(s.id)}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tournament / Specific League Filter */}
+          <div>
+            <select
+              value={leagueFilter}
+              onChange={(e) => setLeagueFilter(e.target.value)}
+              className="w-full py-2 px-3 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text font-bold"
+            >
+              <option value="all">All Tournaments & Leagues</option>
+              {leagueOptions.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Status Filter */}
@@ -199,8 +356,37 @@ export default function MasterScoreEntryClient({
               <option value="no">Excluded from Standings</option>
             </select>
           </div>
+
+          {/* Search Query */}
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <input
+              type="text"
+              placeholder="Search team or venue..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text placeholder:text-muted/65 transition-all"
+            />
+          </div>
         </div>
       </div>
+
+      {/* BATCH EDIT MODE BANNER */}
+      {isBatchEditMode && (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
+            <Zap size={16} />
+            <span>Batch Score Entry Mode Active: Enter scores directly in table rows below, then click "Save All Scores".</span>
+          </div>
+          <button
+            onClick={handleSaveAllBatchScores}
+            disabled={isSavingBatch}
+            className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
+          >
+            {isSavingBatch ? "Saving Scores..." : "Save All Scores"}
+          </button>
+        </div>
+      )}
 
       {/* GAMES TABLE */}
       <div className="overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-sm">
@@ -226,6 +412,8 @@ export default function MasterScoreEntryClient({
             ) : (
               filteredGames.map((game) => {
                 const isCompleted = game.status === "completed";
+                const batchVal = batchScores[game.id];
+
                 return (
                   <tr
                     key={game.id}
@@ -276,9 +464,29 @@ export default function MasterScoreEntryClient({
                       )}
                     </td>
 
-                    {/* Score */}
+                    {/* Score (Normal vs Batch Input) */}
                     <td className="py-3 px-3 text-center whitespace-nowrap">
-                      {isCompleted && game.homeScore !== null && game.awayScore !== null ? (
+                      {isBatchEditMode ? (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="H"
+                            value={batchVal ? batchVal.home : (game.homeScore ?? "")}
+                            onChange={(e) => handleBatchInputChange(game.id, "home", e.target.value)}
+                            className="w-12 text-center font-bold text-xs py-1 bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
+                          <span className="text-muted">-</span>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="A"
+                            value={batchVal ? batchVal.away : (game.awayScore ?? "")}
+                            onChange={(e) => handleBatchInputChange(game.id, "away", e.target.value)}
+                            className="w-12 text-center font-bold text-xs py-1 bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
+                        </div>
+                      ) : isCompleted && game.homeScore !== null && game.awayScore !== null ? (
                         <span className="inline-flex items-center gap-1 font-black text-sm text-text bg-background border border-border px-2.5 py-1 rounded-lg">
                           <span>{game.homeScore}</span>
                           <span className="text-muted">-</span>
@@ -346,6 +554,16 @@ export default function MasterScoreEntryClient({
           currentHomeScore={quickScoreGame.homeScore}
           currentAwayScore={quickScoreGame.awayScore}
           onClose={() => setQuickScoreGame(null)}
+          onSuccess={() => {
+            // Re-fetch / refresh games state locally when modal saves
+            setGames((prev) =>
+              prev.map((g) =>
+                g.id === quickScoreGame.id
+                  ? { ...g, status: "completed" }
+                  : g
+              )
+            );
+          }}
         />
       )}
 
