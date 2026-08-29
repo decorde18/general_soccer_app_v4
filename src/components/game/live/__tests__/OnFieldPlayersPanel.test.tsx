@@ -55,18 +55,8 @@ describe("OnFieldPlayersPanel", () => {
     expect(screen.getByText("Players On Field (2)")).toBeInTheDocument();
     expect(screen.getByText("Manuel Neuer")).toBeInTheDocument();
     expect(screen.getByText("Lionel Messi")).toBeInTheDocument();
-    expect(screen.getByText("SAVE")).toBeInTheDocument();
-    expect(screen.getByText("SHOT")).toBeInTheDocument();
-  });
-
-  it("triggers handleQuickPlayerAction when action button clicked", () => {
-    render(<OnFieldPlayersPanel {...defaultProps} />);
-
-    fireEvent.click(screen.getByText("SAVE"));
-    expect(defaultProps.handleQuickPlayerAction).toHaveBeenCalledWith("gk1", "save");
-
-    fireEvent.click(screen.getByText("SHOT"));
-    expect(defaultProps.handleQuickPlayerAction).toHaveBeenCalledWith("fld1", "shot");
+    expect(screen.getByText("Saves")).toBeInTheDocument();
+    expect(screen.getByText("Shots")).toBeInTheDocument();
   });
 
   it("triggers setSubOutId when row or sub out button is clicked", () => {

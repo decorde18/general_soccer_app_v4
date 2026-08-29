@@ -309,18 +309,108 @@ export function toTimeInputValue(timeValue: string): string {
 // ==================== GAME TIME CALCULATIONS ====================
 
 /**
- * Calculates total game time (wall clock time since game started).
- * Game time never pauses.
+ * Calculates Absolute Time (wall-clock continuous elapsed time since game started).
+ * Absolute Time is stored internally for events, subs, and timestamps.
+ * Absolute Time never pauses.
  * @param firstPeriodStartMs - Unix timestamp when game started (ms)
  * @param currentMs - Current Unix timestamp (ms)
- * @returns Game time in seconds
+ * @returns Absolute Time in seconds
  */
-export function calculateGameTime(
+export function calculateAbsoluteGameTime(
   firstPeriodStartMs: number,
   currentMs: number,
 ): number {
   if (!firstPeriodStartMs || !currentMs) return 0;
   return Math.floor((currentMs - firstPeriodStartMs) / 1000);
+}
+
+/**
+ * Legacy alias for calculateAbsoluteGameTime.
+ */
+export function calculateGameTime(
+  firstPeriodStartMs: number,
+  currentMs: number,
+): number {
+  return calculateAbsoluteGameTime(firstPeriodStartMs, currentMs);
+}
+
+/**
+ * Calculates Scoreboard Time (effective match clock time).
+ * Scoreboard Time pauses during stopped clock events and inter-period breaks.
+ * @param absoluteSeconds - Absolute Time in seconds
+ * @param stoppages - Array of stoppages (with startTime/endTime or clock_should_run === 0)
+ * @param periodBreaks - Array of inter-period break duration ranges in absolute seconds
+ * @returns Scoreboard Time in seconds
+ */
+export function calculateScoreboardTime(
+  absoluteSeconds: number,
+  stoppages: Stoppage[] = [],
+  periodBreaks: { start: number; end: number }[] = [],
+): number {
+  if (absoluteSeconds <= 0) return 0;
+
+  // Subtract inter-period break durations that occurred before absoluteSeconds
+  let breakDeduction = 0;
+  for (const pBreak of periodBreaks) {
+    if (absoluteSeconds > pBreak.start) {
+      const breakEnd = Math.min(absoluteSeconds, pBreak.end);
+      breakDeduction += Math.max(0, breakEnd - pBreak.start);
+    }
+  }
+
+  // Subtract clock stoppages
+  let stoppageDeduction = 0;
+  for (const s of stoppages) {
+    if (s.startTime < absoluteSeconds) {
+      const end = s.endTime !== null && s.endTime !== undefined ? s.endTime : absoluteSeconds;
+      const overlapStart = s.startTime;
+      const overlapEnd = Math.min(absoluteSeconds, end);
+      if (overlapEnd > overlapStart) {
+        stoppageDeduction += overlapEnd - overlapStart;
+      }
+    }
+  }
+
+  return Math.max(0, absoluteSeconds - breakDeduction - stoppageDeduction);
+}
+
+/**
+ * Formats Scoreboard Time in seconds into standard soccer match minute notation.
+ * e.g., 23m 15s in 1st half -> "24'"
+ * e.g., 41m 20s in 1st half (40m nominal half) -> "40+2'"
+ * @param scoreboardSeconds - Scoreboard Time in seconds
+ * @param periodNumber - Current period number (1 or 2)
+ * @param periodDurationMinutes - Nominal period length in minutes (default 40)
+ * @returns Formatted minute string (e.g. "24'", "40+2'")
+ */
+export function formatScoreboardMinute(
+  scoreboardSeconds: number,
+  periodNumber: number = 1,
+  periodDurationMinutes: number = 40,
+): string {
+  if (scoreboardSeconds <= 0) return "1'";
+
+  const totalScoreboardMins = Math.floor(scoreboardSeconds / 60);
+
+  if (periodNumber === 1) {
+    if (totalScoreboardMins >= periodDurationMinutes) {
+      const addedMins = totalScoreboardMins - periodDurationMinutes + 1;
+      return `${periodDurationMinutes}+${addedMins}'`;
+    }
+    return `${totalScoreboardMins + 1}'`;
+  } else if (periodNumber === 2) {
+    const nominalPeriod1 = periodDurationMinutes;
+    const period2ScoreboardMins = Math.max(0, totalScoreboardMins - periodDurationMinutes);
+    const minuteInMatch = nominalPeriod1 + period2ScoreboardMins + 1;
+
+    if (minuteInMatch > periodDurationMinutes * 2) {
+      const addedMins = minuteInMatch - (periodDurationMinutes * 2);
+      return `${periodDurationMinutes * 2}+${addedMins}'`;
+    }
+    return `${minuteInMatch}'`;
+  }
+
+  return `${totalScoreboardMins + 1}'`;
 }
 
 /**

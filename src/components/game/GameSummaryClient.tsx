@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Users, BarChart2, Shield } from "lucide-react";
+import { Users, BarChart2, Shield, Pencil } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
@@ -61,7 +62,7 @@ export default function GameSummaryClient() {
           </div>
 
           {/* FINAL SCORE */}
-          <div className="flex flex-col items-center justify-center space-y-2">
+          <div className="flex flex-col items-center justify-center space-y-3">
             <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold uppercase tracking-widest border border-primary/20">
               Final Match Result
             </span>
@@ -70,6 +71,17 @@ export default function GameSummaryClient() {
               <span className="text-muted/40">:</span>
               <span>{goalsAgainst}</span>
             </div>
+
+            {Boolean(game.id || game.game_id) && Boolean(game.teamSeasonId || game.home_team_season_id) && (
+              <Link
+                href={`/gamestats/${game.teamSeasonId || game.home_team_season_id}/${game.id || game.game_id}/manage`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-xs transition-all mt-1"
+                title="Edit match clocks, substitutions, goals, and disciplinary logs"
+              >
+                <Pencil size={13} />
+                <span>Edit Match Details & Clocks</span>
+              </Link>
+            )}
           </div>
 
           {/* AWAY TEAM */}
@@ -139,7 +151,6 @@ export default function GameSummaryClient() {
                 <th className="p-3 text-center">Goals</th>
                 <th className="p-3 text-center">Assists</th>
                 <th className="p-3 text-center">Shots</th>
-                <th className="p-3 text-center">SOG</th>
                 <th className="p-3 text-center">Cards</th>
               </tr>
             </thead>
@@ -164,7 +175,6 @@ export default function GameSummaryClient() {
                     <td className="p-3 text-center font-bold text-text">{p.goals || 0}</td>
                     <td className="p-3 text-center font-bold text-text">{p.assists || 0}</td>
                     <td className="p-3 text-center font-bold text-muted">{p.shots || 0}</td>
-                    <td className="p-3 text-center font-bold text-muted">{p.shotsOnTarget || 0}</td>
                     <td className="p-3 text-center font-bold text-text">
                       {p.yellowCards > 0 && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 rounded mr-1">Y</span>}
                       {p.redCards > 0 && <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-600 rounded">R</span>}

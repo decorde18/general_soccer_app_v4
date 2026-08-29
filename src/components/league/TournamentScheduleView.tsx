@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { resolveKnockoutPlaceholders } from "@/lib/actions/league-actions";
-import { Zap, Calendar, MapPin, Trophy, Filter, Layers } from "lucide-react";
+import { Zap, Calendar, MapPin, Trophy, Filter, Layers, Table, LayoutGrid } from "lucide-react";
 import { formatDateStandard, formatTimeStandard } from "@/lib/utils/dateTimeUtils";
 import LocationDetailsModal from "@/components/location/LocationDetailsModal";
 
@@ -39,6 +39,7 @@ export default function TournamentScheduleView({
 }: TournamentScheduleViewProps) {
   const [selectedFilterType, setSelectedFilterType] = useState<string>("all");
   const [selectedDivision, setSelectedDivision] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [isResolving, setIsResolving] = useState(false);
   const [selectedLocationModal, setSelectedLocationModal] = useState<{ id: number | null; name?: string | null; subName?: string | null } | null>(null);
 
@@ -132,13 +133,129 @@ export default function TournamentScheduleView({
               </select>
             </div>
           )}
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center rounded-lg border border-slate-700 bg-slate-950 p-0.5 text-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                viewMode === "table"
+                  ? "bg-indigo-600 text-white font-bold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title="Table View (Default)"
+            >
+              <Table className="h-3.5 w-3.5" />
+              <span>Table</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-indigo-600 text-white font-bold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title="Grid / Cards View"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Grid</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Games List Grid */}
+      {/* Games List (Table or Grid) */}
       {filteredGames.length === 0 ? (
         <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-center text-xs text-slate-400">
           No matches found for this filter selection.
+        </div>
+      ) : viewMode === "table" ? (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/90 overflow-hidden shadow-xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-300">
+              <thead className="bg-slate-950/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                <tr>
+                  <th className="px-4 py-3">Date & Time</th>
+                  <th className="px-4 py-3">Stage / Type</th>
+                  <th className="px-4 py-3">Division</th>
+                  <th className="px-4 py-3">Matchup</th>
+                  <th className="px-4 py-3">Venue / Field</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {filteredGames.map((g) => (
+                  <tr key={g.id} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="px-4 py-3 font-medium whitespace-nowrap text-indigo-300">
+                      <div>{formatDateStandard(g.startDate, "medium")}</div>
+                      {g.startTime && (
+                        <div className="text-[10px] text-slate-400 font-normal">
+                          {formatTimeStandard(g.startTime)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                        {g.gameType.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-400">
+                      {g.divisionNodeName || "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">H</span>
+                          <span className="font-semibold text-white">
+                            {g.homeClubName ? <span className="text-slate-400 font-normal">{g.homeClubName} </span> : null}
+                            {g.homeTeamName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">A</span>
+                          <span className="font-semibold text-white">
+                            {g.awayClubName ? <span className="text-slate-400 font-normal">{g.awayClubName} </span> : null}
+                            {g.awayTeamName}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-[11px]">
+                      {g.locationName ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedLocationModal({ id: g.locationId ?? null, name: g.locationName, subName: g.sublocationName })}
+                          className="text-slate-300 hover:text-indigo-300 transition-colors flex items-center gap-1 text-[11px] hover:underline underline-offset-2 decoration-indigo-400/50 text-left cursor-pointer group"
+                          title="Click to view map & location details"
+                        >
+                          <MapPin className="h-3 w-3 text-indigo-400 shrink-0 group-hover:scale-105 transition-transform" />
+                          <span className="truncate max-w-[180px]">
+                            {g.locationName}{g.sublocationName ? ` (${g.sublocationName})` : ""}
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="text-slate-500 flex items-center gap-1 text-[11px]">
+                          <MapPin className="h-3 w-3 text-slate-600 shrink-0" />
+                          Venue TBD
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <Link
+                        href={`/gamestats/${g.homeTeamSeasonId}/${g.id}`}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-indigo-400 hover:text-indigo-300 underline"
+                      >
+                        <span>Match Details</span>
+                        <span className="text-[10px]">→</span>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

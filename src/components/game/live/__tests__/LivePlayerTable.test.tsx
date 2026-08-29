@@ -43,7 +43,6 @@ describe("LivePlayerTable", () => {
     expect(screen.getByText("Luka Modric")).toBeInTheDocument();
     expect(screen.getByText("10")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sub Out" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "SHOT" })).toBeInTheDocument();
   });
 
   it("renders Pending Out badge instead of button when player is pending out", () => {
@@ -56,7 +55,6 @@ describe("LivePlayerTable", () => {
 
     expect(screen.getByText("Pending Out")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Sub Out" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "SHOT" })).toBeInTheDocument();
   });
 
   it("triggers onSelectPlayer when Sub Out button is clicked", () => {

@@ -43,19 +43,25 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
   const players = useGamePlayersStore((s) => s.players);
   const { isOnline: onlineStatus, queueCount: offlineQueueCount } = useOnlineStatus();
 
+  // Clock direction & mode state toggles (Default: Period Time, Count Up or Game Setting)
+  const [clockDirection, setClockDirection] = useState<"up" | "down">(
+    (game?.settings?.clockDirection as "up" | "down") || "up"
+  );
+  const [clockMode, setClockMode] = useState<"period" | "match">("period");
+
   // Local timer tick for smooth scoreboard clock
   const [storeGameTimeSeconds, setStoreGameTimeSeconds] = useState<number>(0);
 
   useEffect(() => {
     if (props.gameTimeSeconds !== undefined) return;
     const interval = setInterval(() => {
-      setStoreGameTimeSeconds(useGameStore.getState().getGameTime());
+      setStoreGameTimeSeconds(useGameStore.getState().getScoreboardTime());
     }, 1000);
     return () => clearInterval(interval);
   }, [props.gameTimeSeconds]);
 
   // Derived values with fallbacks
-  const gameTimeSeconds = props.gameTimeSeconds ?? storeGameTimeSeconds;
+  const periodScoreboardSeconds = props.gameTimeSeconds ?? storeGameTimeSeconds;
   const currentStage = props.currentStage ?? (game ? getGameStage() : 0);
   const GAME_STAGES = props.GAME_STAGES ?? GAME_STAGES_STORE;
   const periodLabel = props.periodLabel ?? (game ? getCurrentPeriodLabel() : "");
@@ -63,6 +69,22 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
   const queueCount = props.queueCount ?? offlineQueueCount;
   const goalsFor = props.goalsFor ?? game?.goalsFor ?? 0;
   const goalsAgainst = props.goalsAgainst ?? game?.goalsAgainst ?? 0;
+
+  // Calculate display seconds based on Mode (Period vs Match) and Direction (Up vs Down)
+  const currentPeriodIdx = game?.currentPeriodIndex ?? 0;
+  const periodDurationMins = game?.settings?.periodDuration || 40;
+  const periodDurationSecs = periodDurationMins * 60;
+  const totalPeriods = game?.settings?.periodCount || 2;
+  const totalMatchSecs = totalPeriods * periodDurationSecs;
+
+  const matchScoreboardSeconds = (currentPeriodIdx * periodDurationSecs) + periodScoreboardSeconds;
+  const activeBaseSeconds = clockMode === "period" ? periodScoreboardSeconds : matchScoreboardSeconds;
+
+  let calculatedDisplaySeconds = activeBaseSeconds;
+  if (clockDirection === "down") {
+    const maxSecs = clockMode === "period" ? periodDurationSecs : totalMatchSecs;
+    calculatedDisplaySeconds = Math.max(0, maxSecs - activeBaseSeconds);
+  }
 
   const starterCount = players.filter((p) => p.gameStatus === "starter").length;
   const gkCount = players.filter((p) => p.gameStatus === "goalkeeper").length;
@@ -146,13 +168,49 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
           </span>
         </div>
 
-        {/* LARGE MATCH TIME CLOCK */}
-        <div className="flex flex-col items-center justify-center bg-black/40 border border-slate-700/60 px-5 py-1.5 rounded-xl shadow-inner min-w-[150px] shrink-0">
-          <div className="flex items-center gap-1 font-mono font-black text-2xl sm:text-3xl text-yellow-400 tracking-tight">
-            <span>{formatSecondsToMmss(gameTimeSeconds)}</span>
+        {/* LARGE MATCH TIME CLOCK CONTAINER */}
+        <div className="flex flex-col items-center justify-center bg-black/50 border border-slate-700/80 px-4 py-1.5 rounded-xl shadow-inner min-w-[170px] shrink-0 gap-1">
+          {/* TOP TOGGLE CONTROLS */}
+          <div className="flex items-center gap-1 text-[9px] font-bold">
+            {/* Mode Toggle (Period vs Match) */}
+            <button
+              type="button"
+              onClick={() => setClockMode((prev) => (prev === "period" ? "match" : "period"))}
+              className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer border ${
+                clockMode === "period"
+                  ? "bg-indigo-600/80 border-indigo-400 text-white font-extrabold"
+                  : "bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200"
+              }`}
+              title="Toggle between Period Time (default) and Total Match Time"
+            >
+              {clockMode === "period" ? "PERIOD" : "MATCH"}
+            </button>
+
+            {/* Direction Toggle (Up vs Down) */}
+            <button
+              type="button"
+              onClick={() => setClockDirection((prev) => (prev === "up" ? "down" : "up"))}
+              className={`px-1.5 py-0.5 rounded transition-colors cursor-pointer border ${
+                clockDirection === "up"
+                  ? "bg-emerald-600/80 border-emerald-400 text-white font-extrabold"
+                  : "bg-amber-600/80 border-amber-400 text-white font-extrabold"
+              }`}
+              title="Toggle between Count Up (IFAB) and Count Down (NFHS)"
+            >
+              {clockDirection === "up" ? "UP ⬆" : "DOWN ⬇"}
+            </button>
           </div>
-          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mt-0.75">
-            {periodLabel}
+
+          {/* MAIN CLOCK DISPLAY */}
+          <div className="flex items-center gap-1 font-mono font-black text-2xl sm:text-3xl text-yellow-400 tracking-tight leading-none">
+            <span>{formatSecondsToMmss(calculatedDisplaySeconds)}</span>
+          </div>
+
+          {/* CONTEXT SUB-LABEL */}
+          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
+            {clockMode === "period"
+              ? (clockDirection === "down" ? `${periodLabel} (REMAINING)` : periodLabel)
+              : (clockDirection === "down" ? "MATCH REMAINING" : "CUMULATIVE MATCH TIME")}
           </span>
         </div>
 

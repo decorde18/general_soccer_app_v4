@@ -367,17 +367,36 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Separate goalkeeper stats into a dedicated summary table (tracking shots faced, saves, clean sheets, and exact `timeInGoal`).
   - [x] Fix Game 877 issue where starting GK received zero/incorrect time in goal despite no goalkeeper substitutions being logged.
 
-When creating a league/tournament, I should have been offered the options for the tournament in the modal when creating on batch import. This did not happen.
-League/tournaments should be allowed fro one season to the next. Leagues should allow an import of teams from the previous season.
-How do we account for placeholder teams? Group B#1. When the end of group play happens, those turn into actual teams, how do we handle that in the system?
-When I change the season, it should update the current page to that season.
+- [x] ON league/tournament schedule, let's use the grid/table option we use for rosters and schedule. Let's set default to table.
+- [x] on the time clock, we need a button/toggle to show clock up clock down (scoreboard clock counts up like ifab or counts down like NFHS/NCAA). It also needs a button/toggle, for period time vs game time, remember these are scoreboard times, not actual. The default should be period, so we always know how much time is in/left in any period based on its start time.
+
+## Step 19: Tournament Rules, Multi-Season Lifecycle & Season Navigation
+
+- [ ] **19.1 Tournament Rules Modal Options on Batch Importer**
+  - [ ] Expand inline "Create New League/Tournament" modal in Batch Importer (`/admin/importer`) to configure tournament-specific rules (Points per W/D/L, max goal diff cap, advancing teams count, group advancement rules).
+- [ ] **19.2 Multi-Season League Lifecycle & Previous Season Team Import**
+  - [ ] Support rollover of Leagues/Tournaments across seasons (`league_node_seasons`) and add a "Import Previous Season Teams" tool inside League Admin (`/admin/leagues`) to quickly re-enroll past season teams into the new season's league nodes.
+- [x] **19.3 Knockout Placeholder Team Resolution Engine**
+  - [x] Added `resolveKnockoutPlaceholders` action in `league-actions.ts` to calculate group rankings (pts, GD, GF) and parse placeholders (`Group A #1`, `Group B Winner`, etc.).
+  - [x] Added `[⚡ Resolve Seedings]` button on tournament schedule views (`TournamentScheduleView.tsx`) to auto-populate knockout fixtures when group play completes.
+- [ ] **19.4 Dynamic Season Navigation Context Sync**
+  - [ ] Update global `SeasonSelector` & `TeamSelector` so that changing the active season dropdown automatically updates the current page route and refetches data for the newly selected season (mapping team/league routes e.g. `/teams/[teamSeasonId]` to the target season's equivalent ID).
+
+## Step 21: Match Management Sub Editing & Box Score Cleanups
+
+- [x] **21.1 NASA Tophat Tournament Record Cleanup**
+  - [x] Verified database state and ensured single active NASA Tophat tournament record (`ID 7`).
+- [x] **21.2 Match Edit Sub Player Resolution & Stale Pending Sub Cleanup (Game 881)**
+  - [x] Converted player ID matching in `GameManageClient.tsx` sub rows & dropdowns to loose string comparisons (`String(playerGameId) === String(s.in_player_id)`) to fix "Unknown" player labels.
+  - [x] Added automated pending sub status cleanup and store re-initialization on sub save/update to prevent phantom 12th player on field.
+- [x] **21.3 Match Final/Summary Page Navigation Link**
+  - [x] Added `[Edit Match Details & Clocks]` button to post-game summary header banner (`GameSummaryClient.tsx`) directing to `/gamestats/[teamSeasonId]/[id]/manage`.
+- [x] **21.4 Box Score SOG Column Removal**
+  - [x] Removed Shots On Goal (SOG) header and cell data from player box score summary tables.
+- [x] **21.5 Schedule Location Cell Font & Sublocation Display**
+  - [x] Refined location cell styling in `TournamentScheduleView.tsx` (`text-[11px] font-normal hover:underline`) and added sublocation formatting (`Location Name (Sublocation)`).
 
 ## Notes / Future Considerations
-
-On player stats/team stats, we need to know which stats are part of the season (includes all games). Which ones are league/tournament specific, etc
-
-For future
-career should not be for club but for pro league high school etc. which we need to start creating.
 
 - Advanced live match stream / video link embeds (`games.video_link`)
 - Historical season archiving and player career stats aggregation

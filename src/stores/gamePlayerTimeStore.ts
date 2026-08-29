@@ -1,5 +1,7 @@
 // stores/gamePlayerTimeStore.ts
-// Player time calculations with stoppage time handling and period boundary fixes
+// Player playing time & goalkeeper time calculations using the dual-time model.
+// Input timestamps & sub events use Absolute Time (continuous seconds since match start).
+// Output field/goalkeeper playing times calculate active Scoreboard Time (excluding stoppages & period breaks).
 
 import { create } from "zustand";
 import useGameStore from "./gameStore";
@@ -13,8 +15,8 @@ const normalizeSubs = (subs: any[]): any[] =>
     .sort((a, b) => (a.gameTime ?? 0) - (b.gameTime ?? 0));
 
 /**
- * Splits a game_time segment into chunks that fall within actual periods
- * Excludes time between periods (breaks)
+ * Splits an Absolute Time segment into chunks that fall within active match periods.
+ * Automatically excludes time between periods (period breaks / halftime).
  */
 const splitSegmentByPeriods = (
   segment: { start: number; end: number },

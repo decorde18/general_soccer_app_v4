@@ -436,6 +436,10 @@ export default function GameManageClient() {
           toast.success("Substitution manually recorded.");
         }
 
+        // Reset any local transient pending sub states & re-sync game store
+        useGamePlayersStore.getState().setPlayers(
+          useGamePlayersStore.getState().players.map((p) => ({ ...p, subStatus: null }))
+        );
         await initializeGame(id, teamSeasonId);
         setIsSubModalOpen(false);
         setEditingSub(null);
@@ -989,8 +993,8 @@ export default function GameManageClient() {
             <p className="text-xs text-muted text-center py-6">No substitutions recorded yet.</p>
           ) : (
             game.gameSubs.map((s, idx) => {
-              const pIn = players.find((p) => p.playerGameId === s.in_player_id);
-              const pOut = players.find((p) => p.playerGameId === s.out_player_id);
+              const pIn = players.find((p) => String(p.playerGameId) === String(s.in_player_id) || String(p.id) === String(s.in_player_id));
+              const pOut = players.find((p) => String(p.playerGameId) === String(s.out_player_id) || String(p.id) === String(s.out_player_id));
               const subIdStr = getSubId(s);
               const isSelected = selectedSubIds.includes(subIdStr);
 

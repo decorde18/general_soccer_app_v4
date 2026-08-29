@@ -84,6 +84,7 @@ export interface GameStoreState {
   // Time calculations
   getGameTime: () => number;
   getPeriodTime: (atMs?: number) => number;
+  getScoreboardTime: (atMs?: number) => number;
   getPeriodDuration: (periodIndex: number) => number;
 
   // Game actions
@@ -636,6 +637,10 @@ const useGameStore = create<GameStoreState>((set, get) => {
         currentMs,
         periodStoppages,
       );
+    },
+
+    getScoreboardTime: (atMs?: number) => {
+      return get().getPeriodTime(atMs);
     },
 
     getPeriodDuration: (periodIndex) => {

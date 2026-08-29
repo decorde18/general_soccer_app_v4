@@ -50,22 +50,22 @@ describe("BroadcastScoreboard", () => {
     const { rerender } = render(
       <BroadcastScoreboard {...defaultProps} currentStage={GAME_STAGES.BEFORE_START} />
     );
-    expect(screen.getByRole("button", { name: "Start Period" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Start Match/i })).toBeInTheDocument();
 
     rerender(<BroadcastScoreboard {...defaultProps} currentStage={GAME_STAGES.DURING_PERIOD} />);
-    expect(screen.getByRole("button", { name: "End Period" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /End Period/i })).toBeInTheDocument();
 
     rerender(<BroadcastScoreboard {...defaultProps} currentStage={GAME_STAGES.IN_STOPPAGE} />);
-    expect(screen.getByRole("button", { name: "Resume Clock" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Resume Clock/i })).toBeInTheDocument();
   });
 
   it("calls callbacks when action buttons are clicked", () => {
     render(<BroadcastScoreboard {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "End Period" }));
+    fireEvent.click(screen.getByRole("button", { name: /End Period/i }));
     expect(defaultProps.onTogglePeriodClock).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole("button", { name: "Record Major Event" }));
+    fireEvent.click(screen.getByRole("button", { name: /Record Major Event/i }));
     expect(defaultProps.onOpenMajorEventModal).toHaveBeenCalledTimes(1);
   });
 });
