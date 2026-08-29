@@ -47,19 +47,7 @@ interface Player {
   isActive: boolean;
 }
 
-interface PlayerSeasonStats {
-  id: number;
-  playerId: number;
-  firstName: string;
-  lastName: string;
-  goals: number;
-  assists: number;
-  yellowCards: number;
-  redCards: number;
-  gamesPlayed: number;
-  gamesStarted: number;
-  minutesPlayed: number;
-}
+import type { PlayerSeasonStats } from "@/lib/data/queries";
 
 interface TeamStaffMember {
   id: number;
@@ -200,7 +188,13 @@ export default function TeamPageClient({
           <TeamSchedule teamSeasonId={teamSeason.id} games={games} />
         )}
 
-        {activeTab === "stats" && <TeamStats stats={stats} />}
+        {activeTab === "stats" && (
+          <TeamStats
+            stats={stats}
+            teamSeasonId={teamSeason.id}
+            leagueLinks={leagueLinks}
+          />
+        )}
       </div>
     </div>
   );

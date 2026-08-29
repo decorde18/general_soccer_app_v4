@@ -20,6 +20,9 @@ export default function NavLinks({ pathname, showDashboard, isAdmin }: NavLinksP
         <Link href="/" className={linkClass(pathname === "/")}>
           <span className="font-medium text-left">Home Match Center</span>
         </Link>
+        <Link href="/stats" className={linkClass(Boolean(pathname === "/stats" || pathname?.startsWith("/stats")))}>
+          <span className="font-medium text-left">Stats Center</span>
+        </Link>
         {showDashboard && (
           <>
             <Link href="/dashboard" className={linkClass(pathname === "/dashboard")}>

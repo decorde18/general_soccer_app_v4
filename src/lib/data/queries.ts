@@ -302,6 +302,15 @@ export interface ClubStaffMember {
   leftDate: string | null;
 }
 
+export interface StatsFilterOptions {
+  seasonId?: number;
+  leagueId?: number;
+  leagueNodeSeasonId?: number;
+  teamSeasonId?: number;
+  clubId?: number;
+  scope?: "season" | "career" | "competition";
+}
+
 export interface PlayerSeasonStats {
   id: number;
   playerId: number;
@@ -311,6 +320,8 @@ export interface PlayerSeasonStats {
   teamName: string;
   goals: number;
   assists: number;
+  points: number;
+  plusMinus: number;
   yellowCards: number;
   redCards: number;
   gamesPlayed: number;
@@ -323,6 +334,27 @@ export interface PlayerSeasonStats {
   penaltyGoals: number;
   statsSource: StatSource;
   notes: string | null;
+}
+
+export interface ComprehensiveTeamStats {
+  teamSeasonId: number;
+  teamName: string;
+  clubName: string;
+  seasonName?: string;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifferential: number;
+  pointsPerMatch: number;
+  goalsForPerGame: number;
+  goalsAgainstPerGame: number;
+  cleanSheets: number;
+  yellowCards: number;
+  redCards: number;
 }
 
 export interface TeamSeasonRecord {
@@ -1201,7 +1233,6 @@ async function getStatsForRoster(
   teamSeasonId: number,
 ): Promise<PlayerSeasonStats[]> {
   if (roster.length === 0) return [];
-
   const personIds = roster.map((r) => r.player_id);
 
   const playerGames = await prisma.player_games.findMany({
@@ -1210,60 +1241,19 @@ async function getStatsForRoster(
       team_season_id: teamSeasonId,
     },
     include: {
+      people: true,
+      team_seasons: { include: { teams: true } },
       game_events_discipline: true,
       game_events_player_actions: true,
       game_events_goals_game_events_goals_scorer_player_game_idToplayer_games: true,
       game_events_goals_game_events_goals_assist_player_game_idToplayer_games: true,
-      game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games: true,
-    },
-  });
-
-  const gameIds = Array.from(new Set(playerGames.map((pg) => pg.game_id)));
-
-  const games = await prisma.games.findMany({
-    where: { id: { in: gameIds } },
-    include: {
-      game_events_major: {
+      games: {
         include: {
-          game_events_goals: true,
+          game_subs: true,
+          game_events_major: { include: { game_events_goals: true } },
         },
       },
     },
-  });
-
-  const gameScoresMap = new Map<
-    number,
-    {
-      homeScore: number;
-      awayScore: number;
-      homeTeamSeasonId: number;
-      awayTeamSeasonId: number;
-    }
-  >();
-  games.forEach((g) => {
-    let homeScore = 0;
-    let awayScore = 0;
-    g.game_events_major?.forEach((major: any) => {
-      if (major.event_type === "goal" || (major.game_events_goals && major.game_events_goals.length > 0)) {
-        major.game_events_goals?.forEach((goal: any) => {
-          const isHomeScorer = goal.team_season_id === g.home_team_season_id;
-          if (
-            (isHomeScorer && !goal.is_own_goal) ||
-            (!isHomeScorer && goal.is_own_goal)
-          ) {
-            homeScore++;
-          } else {
-            awayScore++;
-          }
-        });
-      }
-    });
-    gameScoresMap.set(g.id, {
-      homeScore,
-      awayScore,
-      homeTeamSeasonId: g.home_team_season_id,
-      awayTeamSeasonId: g.away_team_season_id,
-    });
   });
 
   const pgMap = new Map<number, any[]>();
@@ -1285,6 +1275,7 @@ async function getStatsForRoster(
       let gamesPlayed = 0;
       let gamesStarted = 0;
       let minutesPlayed = 0;
+      let plusMinus = 0;
       let shots = 0;
       let shotsOnTarget = 0;
       let saves = 0;
@@ -1293,35 +1284,27 @@ async function getStatsForRoster(
 
       pgs.forEach((pg) => {
         const status = pg.game_status;
-        if (
-          status === "starter" ||
-          status === "goalkeeper" ||
-          status === "dressed"
-        ) {
+        const isStarted = pg.started || status === "starter" || status === "goalkeeper";
+        if (status === "starter" || status === "goalkeeper" || status === "dressed") {
           gamesPlayed++;
         }
-        if (pg.started || status === "starter" || status === "goalkeeper") {
+        if (isStarted) {
           gamesStarted++;
         }
 
         const scorerGoals =
-          pg.game_events_goals_game_events_goals_scorer_player_game_idToplayer_games ||
-          [];
+          pg.game_events_goals_game_events_goals_scorer_player_game_idToplayer_games || [];
         scorerGoals.forEach((goal: any) => {
           if (!goal.is_own_goal) {
             goals++;
-            if (
-              goal.goal_types &&
-              goal.goal_types.toLowerCase().includes("penalty")
-            ) {
+            if (goal.goal_types && goal.goal_types.toLowerCase().includes("penalty")) {
               penaltyGoals++;
             }
           }
         });
 
         const assistGoals =
-          pg.game_events_goals_game_events_goals_assist_player_game_idToplayer_games ||
-          [];
+          pg.game_events_goals_game_events_goals_assist_player_game_idToplayer_games || [];
         assists += assistGoals.length;
 
         pg.game_events_discipline?.forEach((card: any) => {
@@ -1343,21 +1326,63 @@ async function getStatsForRoster(
           }
         });
 
-        if (status === "goalkeeper") {
-          const gameScore = gameScoresMap.get(pg.game_id);
-          if (gameScore) {
-            const isHomeGK = gameScore.homeTeamSeasonId === teamSeasonId;
-            const opponentScore = isHomeGK
-              ? gameScore.awayScore
-              : gameScore.homeScore;
-            if (opponentScore === 0) {
-              cleanSheets++;
+        const game = pg.games;
+        if (game) {
+          const allSubs = game.game_subs || [];
+          const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id);
+          const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id);
+
+          let maxTimeSec = 4800;
+          allSubs.forEach((s: any) => {
+            if (s.sub_time && s.sub_time > maxTimeSec) maxTimeSec = s.sub_time;
+          });
+
+          const intervals: { start: number; end: number }[] = [];
+          let currentStart: number | null = isStarted ? 0 : null;
+
+          const events: { type: "in" | "out"; time: number }[] = [];
+          subsIn.forEach((s: any) => events.push({ type: "in", time: Number(s.sub_time || 0) }));
+          subsOut.forEach((s: any) => events.push({ type: "out", time: Number(s.sub_time || 0) }));
+          events.sort((a, b) => a.time - b.time);
+
+          events.forEach((ev) => {
+            if (ev.type === "in" && currentStart === null) {
+              currentStart = ev.time;
+            } else if (ev.type === "out" && currentStart !== null) {
+              intervals.push({ start: currentStart, end: ev.time });
+              currentStart = null;
             }
+          });
+          if (currentStart !== null) {
+            intervals.push({ start: currentStart, end: maxTimeSec });
           }
+
+          let totalSecondsPlayed = 0;
+          intervals.forEach((inv) => {
+            if (inv.end > inv.start) {
+              totalSecondsPlayed += inv.end - inv.start;
+            }
+          });
+          minutesPlayed += Math.round(totalSecondsPlayed / 60);
+
+          game.game_events_major?.forEach((major: any) => {
+            major.game_events_goals?.forEach((goal: any) => {
+              const goalTime = Number(major.game_time || 0);
+              const wasOnField = intervals.some(
+                (inv) => goalTime >= inv.start && goalTime <= inv.end
+              );
+              if (wasOnField) {
+                const isTeamGoal = goal.team_season_id === pg.team_season_id;
+                if ((isTeamGoal && !goal.is_own_goal) || (!isTeamGoal && goal.is_own_goal)) {
+                  plusMinus += 1;
+                } else {
+                  plusMinus -= 1;
+                }
+              }
+            });
+          });
         }
       });
-
-      minutesPlayed = gamesPlayed * 80;
 
       const person = r.people;
       return {
@@ -1369,6 +1394,8 @@ async function getStatsForRoster(
         teamName: r.team_seasons?.teams?.team_name ?? "",
         goals,
         assists,
+        points: goals * 2 + assists,
+        plusMinus,
         yellowCards,
         redCards,
         gamesPlayed,
@@ -1384,6 +1411,296 @@ async function getStatsForRoster(
       };
     })
     .sort((a, b) => b.goals - a.goals || a.lastName.localeCompare(b.lastName));
+}
+
+export async function getComprehensivePlayerStats(
+  options: StatsFilterOptions = {},
+): Promise<PlayerSeasonStats[]> {
+  const { seasonId, leagueId, leagueNodeSeasonId, teamSeasonId, clubId, scope } = options;
+
+  const playerGameWhere: any = {};
+
+  if (teamSeasonId) {
+    playerGameWhere.team_season_id = teamSeasonId;
+  }
+  if (seasonId) {
+    playerGameWhere.team_seasons = { season_id: seasonId };
+  }
+  if (clubId) {
+    playerGameWhere.team_seasons = {
+      ...playerGameWhere.team_seasons,
+      teams: { club_id: clubId },
+    };
+  }
+
+  if (leagueId || leagueNodeSeasonId) {
+    let targetLnsIds: number[] = [];
+    if (leagueNodeSeasonId) {
+      targetLnsIds = [leagueNodeSeasonId];
+    } else if (leagueId) {
+      const lnsList = await prisma.league_node_seasons.findMany({
+        where: {
+          league_nodes: {
+            league_id: leagueId,
+          },
+        },
+        select: { id: true },
+      });
+      targetLnsIds = lnsList.map((lns) => lns.id);
+    }
+
+    if (targetLnsIds.length > 0) {
+      playerGameWhere.games = {
+        game_league_nodes: {
+          some: { league_node_id: { in: targetLnsIds } },
+        },
+      };
+    } else {
+      // Specified league has no node seasons / linked games in database
+      return [];
+    }
+  }
+
+  const playerGames = await prisma.player_games.findMany({
+    where: playerGameWhere,
+    include: {
+      people: true,
+      team_seasons: {
+        include: {
+          teams: {
+            include: { clubs: true },
+          },
+        },
+      },
+      game_events_discipline: true,
+      game_events_player_actions: true,
+      game_events_goals_game_events_goals_scorer_player_game_idToplayer_games: true,
+      game_events_goals_game_events_goals_assist_player_game_idToplayer_games: true,
+      games: {
+        include: {
+          game_subs: true,
+          game_events_major: {
+            include: {
+              game_events_goals: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const mapKey = (pg: any) =>
+    scope === "career" ? `p_${pg.player_id}` : `p_${pg.player_id}_ts_${pg.team_season_id}`;
+
+  const aggregatedMap = new Map<string, PlayerSeasonStats>();
+
+  playerGames.forEach((pg: any) => {
+    if (!pg.people || isPlaceholderTeamName(pg.team_seasons?.teams?.team_name)) return;
+
+    const key = mapKey(pg);
+    if (!aggregatedMap.has(key)) {
+      aggregatedMap.set(key, {
+        id: pg.id,
+        playerId: pg.player_id,
+        firstName: pg.people.first_name,
+        lastName: pg.people.last_name,
+        teamSeasonId: pg.team_season_id,
+        teamName: pg.team_seasons?.teams?.team_name ?? "",
+        goals: 0,
+        assists: 0,
+        points: 0,
+        plusMinus: 0,
+        yellowCards: 0,
+        redCards: 0,
+        gamesPlayed: 0,
+        gamesStarted: 0,
+        minutesPlayed: 0,
+        shots: 0,
+        shotsOnTarget: 0,
+        saves: 0,
+        cleanSheets: 0,
+        penaltyGoals: 0,
+        statsSource: "calculated" as const,
+        notes: null,
+      });
+    }
+
+    const rec = aggregatedMap.get(key)!;
+
+    const status = pg.game_status;
+    const isStarted = pg.started || status === "starter" || status === "goalkeeper";
+
+    if (status === "starter" || status === "goalkeeper" || status === "dressed") {
+      rec.gamesPlayed++;
+    }
+    if (isStarted) {
+      rec.gamesStarted++;
+    }
+
+    const scorerGoals =
+      pg.game_events_goals_game_events_goals_scorer_player_game_idToplayer_games || [];
+    scorerGoals.forEach((goal: any) => {
+      if (!goal.is_own_goal) {
+        rec.goals++;
+        if (goal.goal_types && goal.goal_types.toLowerCase().includes("penalty")) {
+          rec.penaltyGoals++;
+        }
+      }
+    });
+
+    const assistGoals =
+      pg.game_events_goals_game_events_goals_assist_player_game_idToplayer_games || [];
+    rec.assists += assistGoals.length;
+
+    pg.game_events_discipline?.forEach((card: any) => {
+      if (card.card_type === "yellow") rec.yellowCards++;
+      else if (card.card_type === "red") rec.redCards++;
+      else if (card.card_type === "yellow_red") {
+        rec.yellowCards++;
+        rec.redCards++;
+      }
+    });
+
+    pg.game_events_player_actions?.forEach((act: any) => {
+      if (act.event_type === "shot") rec.shots++;
+      else if (act.event_type === "shot_on_target") {
+        rec.shots++;
+        rec.shotsOnTarget++;
+      } else if (act.event_type === "save") {
+        rec.saves++;
+      }
+    });
+
+    const game = pg.games;
+    if (game) {
+      const allSubs = game.game_subs || [];
+      const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id);
+      const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id);
+
+      let maxTimeSec = 4800;
+      allSubs.forEach((s: any) => {
+        if (s.sub_time && s.sub_time > maxTimeSec) maxTimeSec = s.sub_time;
+      });
+
+      const intervals: { start: number; end: number }[] = [];
+      let currentStart: number | null = isStarted ? 0 : null;
+
+      const events: { type: "in" | "out"; time: number }[] = [];
+      subsIn.forEach((s: any) => events.push({ type: "in", time: Number(s.sub_time || 0) }));
+      subsOut.forEach((s: any) => events.push({ type: "out", time: Number(s.sub_time || 0) }));
+      events.sort((a, b) => a.time - b.time);
+
+      events.forEach((ev) => {
+        if (ev.type === "in" && currentStart === null) {
+          currentStart = ev.time;
+        } else if (ev.type === "out" && currentStart !== null) {
+          intervals.push({ start: currentStart, end: ev.time });
+          currentStart = null;
+        }
+      });
+      if (currentStart !== null) {
+        intervals.push({ start: currentStart, end: maxTimeSec });
+      }
+
+      let totalSecondsPlayed = 0;
+      intervals.forEach((inv) => {
+        if (inv.end > inv.start) {
+          totalSecondsPlayed += inv.end - inv.start;
+        }
+      });
+      rec.minutesPlayed += Math.round(totalSecondsPlayed / 60);
+
+      game.game_events_major?.forEach((major: any) => {
+        major.game_events_goals?.forEach((goal: any) => {
+          const goalTime = Number(major.game_time || 0);
+          const wasOnField = intervals.some(
+            (inv) => goalTime >= inv.start && goalTime <= inv.end
+          );
+          if (wasOnField) {
+            const isTeamGoal = goal.team_season_id === pg.team_season_id;
+            if ((isTeamGoal && !goal.is_own_goal) || (!isTeamGoal && goal.is_own_goal)) {
+              rec.plusMinus += 1;
+            } else {
+              rec.plusMinus -= 1;
+            }
+          }
+        });
+      });
+    }
+  });
+
+  const result = Array.from(aggregatedMap.values()).map((r) => ({
+    ...r,
+    points: r.goals * 2 + r.assists,
+  }));
+
+  result.sort(
+    (a, b) =>
+      b.goals - a.goals ||
+      b.assists - a.assists ||
+      b.plusMinus - a.plusMinus ||
+      a.lastName.localeCompare(b.lastName)
+  );
+
+  return result;
+}
+
+export async function getComprehensiveTeamStats(
+  options: StatsFilterOptions = {},
+): Promise<ComprehensiveTeamStats[]> {
+  const { seasonId, leagueId, leagueNodeSeasonId, teamSeasonId } = options;
+
+  let records: TeamSeasonRecord[] = [];
+
+  let targetLnsId = leagueNodeSeasonId;
+  if (!targetLnsId && leagueId) {
+    const firstLns = await prisma.league_node_seasons.findFirst({
+      where: {
+        league_nodes: {
+          league_id: leagueId,
+        },
+      },
+      select: { id: true },
+    });
+    if (firstLns) {
+      targetLnsId = firstLns.id;
+    } else {
+      return [];
+    }
+  }
+
+  if (targetLnsId) {
+    records = await getTeamSeasonRecords(targetLnsId, teamSeasonId);
+  } else {
+    records = await getTeamSeasonRecords(undefined, teamSeasonId);
+  }
+
+  return records.map((r) => {
+    const gp = r.gamesPlayed || 0;
+    const gf = r.goalsFor || 0;
+    const ga = r.goalsAgainst || 0;
+    const pts = r.points || 0;
+
+    return {
+      teamSeasonId: r.teamSeasonId,
+      teamName: r.teamName,
+      clubName: r.clubName,
+      gamesPlayed: gp,
+      wins: r.wins || 0,
+      losses: r.losses || 0,
+      draws: r.draws || 0,
+      points: pts,
+      goalsFor: gf,
+      goalsAgainst: ga,
+      goalDifferential: gf - ga,
+      pointsPerMatch: gp > 0 ? Number((pts / gp).toFixed(2)) : 0,
+      goalsForPerGame: gp > 0 ? Number((gf / gp).toFixed(2)) : 0,
+      goalsAgainstPerGame: gp > 0 ? Number((ga / gp).toFixed(2)) : 0,
+      cleanSheets: 0,
+      yellowCards: 0,
+      redCards: 0,
+    };
+  });
 }
 
 // ─── Team Season Records (standings) ─────────────────────────────────────────

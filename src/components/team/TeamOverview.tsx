@@ -23,15 +23,7 @@ interface Game {
   finalStatus: string | null;
 }
 
-interface PlayerSeasonStats {
-  id: number;
-  playerId: number;
-  firstName: string;
-  lastName: string;
-  goals: number;
-  assists: number;
-  gamesPlayed: number;
-}
+import type { PlayerSeasonStats } from "@/lib/data/queries";
 
 interface TeamStaffMember {
   id: number;
