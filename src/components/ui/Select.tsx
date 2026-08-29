@@ -50,6 +50,8 @@ export default function Select({
   defaultValue,
   value,
   onChange,
+  value,
+  onChange,
   ...props
 }: any) {
   const widthClasses: Record<string, string> = {
@@ -79,6 +81,8 @@ export default function Select({
           defaultValue={defaultValue}
           value={value}
           onChange={handleChange}
+          value={value}
+          onChange={handleChange}
           className={cn(
             "appearance-none w-full px-4 py-2 rounded-md transition-colors border",
             "text-sm font-semibold",
@@ -92,6 +96,7 @@ export default function Select({
           )}
           {...props}
         >
+          {showPlaceholder && !hasCustomEmptyOption && (
           {showPlaceholder && !hasCustomEmptyOption && (
             <option value='' disabled>
               {placeholder}
