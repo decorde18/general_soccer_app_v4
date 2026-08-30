@@ -7,6 +7,7 @@ import { resolveKnockoutPlaceholders } from "@/lib/actions/league-actions";
 import { Zap, Calendar, MapPin, Trophy, Filter, Layers, Table, LayoutGrid } from "lucide-react";
 import { formatDateStandard, formatTimeStandard } from "@/lib/utils/dateTimeUtils";
 import LocationDetailsModal from "@/components/location/LocationDetailsModal";
+import LocationLink from "@/components/shared/LocationLink";
 
 interface GameRecord {
   id: number;
@@ -223,24 +224,13 @@ export default function TournamentScheduleView({
                       </div>
                     </td>
                     <td className="px-3 py-2 text-[11px]">
-                      {g.locationName ? (
-                        <button
-                          type="button"
-                          onClick={() => setSelectedLocationModal({ id: g.locationId ?? null, name: g.locationName, subName: g.sublocationName })}
-                          className="text-slate-300 hover:text-indigo-300 transition-colors flex items-center gap-1 text-[11px] hover:underline underline-offset-2 decoration-indigo-400/50 text-left cursor-pointer group"
-                          title="Click to view map & location details"
-                        >
-                          <MapPin className="h-3 w-3 text-indigo-400 shrink-0 group-hover:scale-105 transition-transform" />
-                          <span className="truncate max-w-[180px]">
-                            {g.locationName}{g.sublocationName ? ` (${g.sublocationName})` : ""}
-                          </span>
-                        </button>
-                      ) : (
-                        <span className="text-slate-500 flex items-center gap-1 text-[11px]">
-                          <MapPin className="h-3 w-3 text-slate-600 shrink-0" />
-                          Venue TBD
-                        </span>
-                      )}
+                      <LocationLink
+                        locationId={g.locationId}
+                        locationName={g.locationName}
+                        sublocationName={g.sublocationName}
+                        showIcon
+                        className="text-[11px]"
+                      />
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <Link
@@ -302,24 +292,13 @@ export default function TournamentScheduleView({
 
               {/* Footer Venue & Action */}
               <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
-                {g.locationName ? (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedLocationModal({ id: g.locationId ?? null, name: g.locationName, subName: g.sublocationName })}
-                    className="text-slate-400 hover:text-indigo-300 transition-colors flex items-center gap-1.5 truncate max-w-[240px] group cursor-pointer"
-                    title="Click to view venue details & map"
-                  >
-                    <MapPin className="h-3.5 w-3.5 text-indigo-400 shrink-0 group-hover:scale-110 transition-transform" />
-                    <span className="truncate underline underline-offset-2 decoration-indigo-500/40 group-hover:decoration-indigo-400 font-medium">
-                      {g.locationName} {g.sublocationName ? `(${g.sublocationName})` : ""}
-                    </span>
-                  </button>
-                ) : (
-                  <span className="text-slate-500 flex items-center gap-1 truncate max-w-[240px]">
-                    <MapPin className="h-3.5 w-3.5 text-slate-600 shrink-0" />
-                    Venue TBD
-                  </span>
-                )}
+                <LocationLink
+                  locationId={g.locationId}
+                  locationName={g.locationName}
+                  sublocationName={g.sublocationName}
+                  showIcon
+                  className="text-xs max-w-[240px]"
+                />
 
                 <Link
                   href={`/gamestats/${g.homeTeamSeasonId}/${g.id}`}
@@ -332,16 +311,6 @@ export default function TournamentScheduleView({
           ))}
         </div>
       )}
-
-      {/* LOCATION DETAILS & MAP MODAL */}
-      <LocationDetailsModal
-        isOpen={Boolean(selectedLocationModal)}
-        locationId={selectedLocationModal?.id ?? null}
-        locationNameFallback={selectedLocationModal?.name}
-        sublocationName={selectedLocationModal?.subName}
-        onClose={() => setSelectedLocationModal(null)}
-      />
-
     </div>
   );
 }

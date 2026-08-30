@@ -19,6 +19,9 @@ import {
   Save,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
+import Select from "@/components/ui/Select";
+import LocationLink from "@/components/shared/LocationLink";
 import Link from "next/link";
 import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
 import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
@@ -40,7 +43,9 @@ export interface MasterGameRow {
   gameType: string;
   startDate: string;
   startTime: string | null;
+  locationId?: number | null;
   locationName: string | null;
+  sublocationName?: string | null;
   homeScore: number | null;
   awayScore: number | null;
   finalStatus: string | null;
@@ -454,14 +459,13 @@ export default function MasterScoreEntryClient({
 
                     {/* Location */}
                     <td className="py-3 px-4 text-muted text-xs">
-                      {game.locationName ? (
-                        <span className="flex items-center gap-1 max-w-[160px] truncate" title={game.locationName}>
-                          <MapPin size={12} className="text-muted/70 shrink-0" />
-                          <span>{game.locationName}</span>
-                        </span>
-                      ) : (
-                        <span className="text-muted/50 italic">TBD</span>
-                      )}
+                      <LocationLink
+                        locationId={game.locationId}
+                        locationName={game.locationName}
+                        sublocationName={game.sublocationName}
+                        showIcon
+                        className="text-xs max-w-[160px]"
+                      />
                     </td>
 
                     {/* Score (Normal vs Batch Input) */}

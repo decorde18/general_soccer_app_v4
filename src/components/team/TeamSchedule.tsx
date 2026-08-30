@@ -43,8 +43,8 @@ interface TeamScheduleProps {
   games: Game[];
 }
 
+import LocationLink from "@/components/shared/LocationLink";
 import { formatDateStandard, formatTimeStandard } from "@/lib/utils/dateTimeUtils";
-import LocationDetailsModal from "@/components/location/LocationDetailsModal";
 
 function formatDate(dateStr: string) {
   return formatDateStandard(dateStr, "full");
@@ -340,19 +340,13 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                         <Trophy size={11} />
                         <span>{scoreLabel}</span>
                       </div>
-                      {game.locationName && (
-                        <button
-                          type="button"
-                          onClick={() => setSelectedLocationModal({ id: game.locationId ?? null, name: game.locationName, subName: game.sublocationName })}
-                          className="flex items-center gap-1.5 text-xs text-muted hover:text-primary transition-colors max-w-[200px] truncate group cursor-pointer text-right justify-end"
-                          title="Click to view venue details & map"
-                        >
-                          <MapPin size={14} className="shrink-0 text-primary group-hover:scale-110 transition-transform" />
-                          <span className="truncate underline underline-offset-2 decoration-primary/40 group-hover:decoration-primary">
-                            {game.sublocationName ? `${game.locationName} (${game.sublocationName})` : game.locationName}
-                          </span>
-                        </button>
-                      )}
+                      <LocationLink
+                        locationId={game.locationId}
+                        locationName={game.locationName}
+                        sublocationName={game.sublocationName}
+                        showIcon
+                        className="text-xs max-w-[200px]"
+                      />
 
                       <div className="flex items-center gap-2 mt-1">
                         {canManage && (
@@ -425,16 +419,6 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
           onClose={() => setIsScheduleModalOpen(false)}
         />
       )}
-
-      {/* LOCATION DETAILS & MAP MODAL */}
-      <LocationDetailsModal
-        isOpen={Boolean(selectedLocationModal)}
-        locationId={selectedLocationModal?.id ?? null}
-        locationNameFallback={selectedLocationModal?.name}
-        sublocationName={selectedLocationModal?.subName}
-        onClose={() => setSelectedLocationModal(null)}
-      />
-
     </div>
   );
 }

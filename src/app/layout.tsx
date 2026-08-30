@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getServerAuthSession } from "@/lib/auth";
 
 import { Toaster } from "sonner";
 import AuthProvider from "@/components/AuthProvider";
+import { EntityModalProvider } from "@/providers/EntityModalProvider";
 
 export const dynamic = "force-dynamic";
 
@@ -37,8 +37,10 @@ export default async function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider session={session}>
-          {children}
-          <Toaster richColors closeButton position='top-right' />
+          <EntityModalProvider>
+            {children}
+            <Toaster richColors closeButton position='top-right' />
+          </EntityModalProvider>
         </AuthProvider>
       </body>
     </html>
