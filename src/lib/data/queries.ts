@@ -1404,6 +1404,34 @@ async function getStatsForRoster(
         });
 
         const game = pg.games;
+        const isGk = status === "goalkeeper" || pg.position_id === 1;
+
+        if (isGk && game) {
+          let opposingGoals = 0;
+          let hasGoalEvents = false;
+          game.game_events_major?.forEach((major: any) => {
+            major.game_events_goals?.forEach((goal: any) => {
+              hasGoalEvents = true;
+              const isOpposingGoal =
+                (goal.team_season_id !== pg.team_season_id && !goal.is_own_goal) ||
+                (goal.team_season_id === pg.team_season_id && goal.is_own_goal);
+              if (isOpposingGoal) {
+                opposingGoals++;
+              }
+            });
+          });
+          if (!hasGoalEvents) {
+            opposingGoals =
+              pg.team_season_id === game.home_team_season_id
+                ? (game.away_score ?? 0)
+                : (game.home_score ?? 0);
+          }
+
+          if (opposingGoals === 0) {
+            cleanSheets++;
+          }
+        }
+
         if (game) {
           game.game_events_major?.forEach((major: any) => {
             major.game_events_goals?.forEach((goal: any) => {
@@ -1623,6 +1651,34 @@ export async function getComprehensivePlayerStats(
     });
 
     const game = pg.games;
+    const isGk = status === "goalkeeper" || pg.position_id === 1;
+
+    if (isGk && game) {
+      let opposingGoals = 0;
+      let hasGoalEvents = false;
+      game.game_events_major?.forEach((major: any) => {
+        major.game_events_goals?.forEach((goal: any) => {
+          hasGoalEvents = true;
+          const isOpposingGoal =
+            (goal.team_season_id !== pg.team_season_id && !goal.is_own_goal) ||
+            (goal.team_season_id === pg.team_season_id && goal.is_own_goal);
+          if (isOpposingGoal) {
+            opposingGoals++;
+          }
+        });
+      });
+      if (!hasGoalEvents) {
+        opposingGoals =
+          pg.team_season_id === game.home_team_season_id
+            ? (game.away_score ?? 0)
+            : (game.home_score ?? 0);
+      }
+
+      if (opposingGoals === 0) {
+        rec.cleanSheets++;
+      }
+    }
+
     if (game) {
       game.game_events_major?.forEach((major: any) => {
         major.game_events_goals?.forEach((goal: any) => {
@@ -3061,6 +3117,35 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
         if (act.event_type === "shot" || act.event_type === "shot_on_target") shots++;
         else if (act.event_type === "save") saves++;
       });
+
+      const game = pg.games;
+      const isGk = status === "goalkeeper" || pg.position_id === 1;
+
+      if (isGk && game) {
+        let opposingGoals = 0;
+        let hasGoalEvents = false;
+        game.game_events_major?.forEach((major: any) => {
+          major.game_events_goals?.forEach((goal: any) => {
+            hasGoalEvents = true;
+            const isOpposingGoal =
+              (goal.team_season_id !== pg.team_season_id && !goal.is_own_goal) ||
+              (goal.team_season_id === pg.team_season_id && goal.is_own_goal);
+            if (isOpposingGoal) {
+              opposingGoals++;
+            }
+          });
+        });
+        if (!hasGoalEvents) {
+          opposingGoals =
+            pg.team_season_id === game.home_team_season_id
+              ? (game.away_score ?? 0)
+              : (game.home_score ?? 0);
+        }
+
+        if (opposingGoals === 0) {
+          cleanSheets++;
+        }
+      }
 
       minutesPlayed += gameMins;
     });
