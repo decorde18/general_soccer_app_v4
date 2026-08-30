@@ -11,67 +11,8 @@ import useGamePlayersStore, { Player } from "./gamePlayersStore";
 
 const normalizeSubs = (subs: any[]): any[] =>
   (subs || [])
-    .filter((sub) => sub.gameTime !== null)
-    .sort((a, b) => (a.gameTime ?? 0) - (b.gameTime ?? 0));
-
-/**
- * Splits an Absolute Time segment into chunks that fall within active match periods.
- * Automatically excludes time between periods (period breaks / halftime).
- */
-const splitSegmentByPeriods = (
-  segment: { start: number; end: number },
-  periods: any[],
-  gameStartTime: number,
-) => {
-  const chunks: { start: number; end: number; periodNumber: number }[] = [];
-
-  periods.forEach((period) => {
-    if (!period.startTime) return;
-
-    const periodStartGameTime = Math.floor(
-      (period.startTime - gameStartTime) / 1000,
-    );
-    const periodEndGameTime = period.endTime
-      ? Math.floor((period.endTime - gameStartTime) / 1000)
-      : Infinity;
-
-    const chunkStart = Math.max(segment.start, periodStartGameTime);
-    const chunkEnd = Math.min(segment.end, periodEndGameTime);
-
-    if (chunkEnd > chunkStart) {
-      chunks.push({
-        start: chunkStart,
-        end: chunkEnd,
-        periodNumber: period.periodNumber,
-      });
-    }
-  });
-
-  return chunks;
-};
-
-/**
- * Calculate stoppage time within a specific time range
- * Assumes stoppage start/end are already in game_time seconds
- */
-const calculateStoppageTimeInRange = (
-  stoppages: any[],
-  rangeStart: number,
-  rangeEnd: number,
-  periodNumber: number,
-  currentGameTime?: number,
-) =>
-  stoppages
-    .filter((s) => (s.periodNumber === periodNumber || s.period === periodNumber) && (s.clock_should_run === 0 || s.clockShouldRun === 0))
-    .reduce((total, stoppage) => {
-      const stopStart = stoppage.startTime ?? stoppage.game_time ?? 0;
-      const stopEnd = stoppage.endTime ?? stoppage.end_time ?? (currentGameTime !== undefined ? currentGameTime : rangeEnd);
-      const overlapStart = Math.max(stopStart, rangeStart);
-      const overlapEnd = Math.min(stopEnd, rangeEnd);
-      return overlapEnd > overlapStart
-        ? total + (overlapEnd - overlapStart)
-        : total;
-    }, 0);
+    .filter((sub) => sub.gameTime !== null && sub.gameTime !== undefined || sub.sub_time !== null && sub.sub_time !== undefined)
+    .sort((a, b) => Number(a.gameTime ?? a.sub_time ?? 0) - Number(b.gameTime ?? b.sub_time ?? 0));
 
 /**
  * Determine if a player is currently on the field
@@ -80,15 +21,20 @@ const isPlayerOnFieldNow = (player: Player) => {
   const ins = normalizeSubs(player.ins);
   const outs = normalizeSubs(player.outs);
 
+  const events: { type: "IN" | "OUT"; gameTime: number }[] = [];
+  ins.forEach((i) => events.push({ type: "IN", gameTime: Number(i.gameTime ?? i.sub_time ?? 0) }));
+  outs.forEach((o) => events.push({ type: "OUT", gameTime: Number(o.gameTime ?? o.sub_time ?? 0) }));
+  events.sort((a, b) => a.gameTime - b.gameTime);
+
   const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
+  let onField = isStarter;
 
-  const lastIn = ins[ins.length - 1];
-  const lastOut = outs[outs.length - 1];
+  events.forEach((evt) => {
+    if (evt.type === "IN") onField = true;
+    else if (evt.type === "OUT") onField = false;
+  });
 
-  if (isStarter && !lastIn && !lastOut) return true;
-  if (!lastIn) return false;
-
-  return !lastOut || lastIn.gameTime > lastOut.gameTime;
+  return onField;
 };
 
 /* ==================== STORE ==================== */
@@ -115,56 +61,68 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     if (!player) return 0;
 
     const game = useGameStore.getState().game;
-    if (!game || !game.gameStartTime) return 0;
+    if (!game) return 0;
+
+    const periods = game.periods || [];
+    const regSecs = (game.settings?.periodDuration) || 2400;
+    let matchEndSecs = 0;
+
+    if (periods.length > 0) {
+      periods.forEach((p: any) => {
+        let pDur = 0;
+        if (p.endTime && p.startTime) {
+          pDur = Math.round((p.endTime - p.startTime) / 1000);
+        } else {
+          pDur = regSecs;
+        }
+        matchEndSecs += pDur;
+      });
+    } else {
+      matchEndSecs = regSecs * 2;
+    }
+
+    const effectiveTime = currentGameTime > 0 ? currentGameTime : matchEndSecs;
 
     const ins = normalizeSubs(player.ins);
     const outs = normalizeSubs(player.outs);
-    const periods = game.periods || [];
-    const stoppages = (game.stoppages as any) || [];
+
+    const events: { type: "IN" | "OUT"; gameTime: number }[] = [];
+    ins.forEach((i) => events.push({ type: "IN", gameTime: Number(i.gameTime ?? i.sub_time ?? 0) }));
+    outs.forEach((o) => events.push({ type: "OUT", gameTime: Number(o.gameTime ?? o.sub_time ?? 0) }));
+    events.sort((a, b) => a.gameTime - b.gameTime);
 
     const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
-    const segments: { start: number; end: number }[] = [];
+    const intervals: { start: number; end: number }[] = [];
 
-    if (isStarter) {
-      const firstOut = outs[0];
-      segments.push({
-        start: 0,
-        end: firstOut ? firstOut.gameTime : currentGameTime,
-      });
+    let onField = isStarter;
+    let shiftStart: number | null = isStarter ? 0 : null;
 
-      for (let i = 0; i < ins.length; i++) {
-        const start = ins[i].gameTime;
-        const end = outs[i + 1] ? outs[i + 1].gameTime : currentGameTime;
-        if (end > start) segments.push({ start, end });
+    events.forEach((evt) => {
+      if (evt.type === "IN") {
+        if (!onField) {
+          onField = true;
+          shiftStart = evt.gameTime;
+        }
+      } else if (evt.type === "OUT") {
+        if (onField && shiftStart !== null) {
+          if (evt.gameTime > shiftStart) {
+            intervals.push({ start: shiftStart, end: evt.gameTime });
+          }
+          onField = false;
+          shiftStart = null;
+        }
       }
-    } else {
-      for (let i = 0; i < ins.length; i++) {
-        const start = ins[i].gameTime;
-        const end = outs[i] ? outs[i].gameTime : currentGameTime;
-        if (end > start) segments.push({ start, end });
+    });
+
+    if (onField && shiftStart !== null) {
+      if (effectiveTime > shiftStart) {
+        intervals.push({ start: shiftStart, end: effectiveTime });
       }
     }
 
     let total = 0;
-
-    segments.forEach((segment) => {
-      const chunks = splitSegmentByPeriods(
-        segment,
-        periods,
-        game.gameStartTime as number,
-      );
-
-      chunks.forEach((chunk) => {
-        const chunkTime = chunk.end - chunk.start;
-        const stoppageTime = calculateStoppageTimeInRange(
-          stoppages,
-          chunk.start,
-          chunk.end,
-          chunk.periodNumber,
-          currentGameTime
-        );
-        total += Math.max(0, chunkTime - stoppageTime);
-      });
+    intervals.forEach((inv) => {
+      total += Math.max(0, inv.end - inv.start);
     });
 
     return Math.round(total);
@@ -174,7 +132,7 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     if (!player) return 0;
 
     const game = useGameStore.getState().game;
-    if (!game || !game.gameStartTime) return 0;
+    if (!game) return 0;
 
     if (!isPlayerOnFieldNow(player)) return 0;
 
@@ -182,27 +140,8 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     const lastIn = ins[ins.length - 1];
     if (!lastIn) return 0;
 
-    const periods = game.periods || [];
-    const stoppages = (game.stoppages as any) || [];
-
-    const segment = { start: lastIn.gameTime, end: currentGameTime };
-    const chunks = splitSegmentByPeriods(segment, periods, game.gameStartTime as number);
-
-    let total = 0;
-
-    chunks.forEach((chunk) => {
-      const chunkTime = chunk.end - chunk.start;
-      const stoppageTime = calculateStoppageTimeInRange(
-        stoppages,
-        chunk.start,
-        chunk.end,
-        chunk.periodNumber,
-        currentGameTime
-      );
-      total += Math.max(0, chunkTime - stoppageTime);
-    });
-
-    return Math.round(total);
+    const lastInTime = Number(lastIn.gameTime ?? lastIn.sub_time ?? 0);
+    return Math.max(0, Math.round(currentGameTime - lastInTime));
   },
 
   calculateCurrentTimeOffField: (player, currentGameTime) => {
@@ -214,7 +153,8 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     if (!outs.length) return Math.round(currentGameTime);
 
     const lastOut = outs[outs.length - 1];
-    return Math.max(0, Math.round(currentGameTime - lastOut.gameTime));
+    const lastOutTime = Number(lastOut.gameTime ?? lastOut.sub_time ?? 0);
+    return Math.max(0, Math.round(currentGameTime - lastOutTime));
   },
 
   isPlayerOnField: (player) => !!player && isPlayerOnFieldNow(player),
@@ -223,16 +163,26 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     if (!player) return false;
 
     const ins = normalizeSubs(player.ins).filter(
-      (sub) => sub.gameTime <= gameTime,
+      (sub) => Number(sub.gameTime ?? sub.sub_time ?? 0) <= gameTime
     );
     const outs = normalizeSubs(player.outs).filter(
-      (sub) => sub.gameTime <= gameTime,
+      (sub) => Number(sub.gameTime ?? sub.sub_time ?? 0) <= gameTime
     );
 
-    const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
-    const effectiveIns = isStarter ? ins.length + 1 : ins.length;
+    const events: { type: "IN" | "OUT"; gameTime: number }[] = [];
+    ins.forEach((i) => events.push({ type: "IN", gameTime: Number(i.gameTime ?? i.sub_time ?? 0) }));
+    outs.forEach((o) => events.push({ type: "OUT", gameTime: Number(o.gameTime ?? o.sub_time ?? 0) }));
+    events.sort((a, b) => a.gameTime - b.gameTime);
 
-    return effectiveIns > outs.length;
+    const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
+    let onField = isStarter;
+
+    events.forEach((evt) => {
+      if (evt.type === "IN") onField = true;
+      else if (evt.type === "OUT") onField = false;
+    });
+
+    return onField;
   },
 
   /* ==================== PLUS / MINUS ==================== */
@@ -246,7 +196,7 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     let plusMinus = 0;
 
     (game.gameEventsGoals || []).forEach((goal: any) => {
-      if (get().isPlayerOnFieldAtTime(player, goal.game_time)) {
+      if (get().isPlayerOnFieldAtTime(player, Number(goal.game_time ?? 0))) {
         plusMinus += goal.team_season_id === player.teamSeasonId ? 1 : -1;
       }
     });
@@ -282,54 +232,70 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     if (!player) return 0;
 
     const game = useGameStore.getState().game;
-    if (!game || !game.gameStartTime) return 0;
+    if (!game) return 0;
+
+    const periods = game.periods || [];
+    const regSecs = (game.settings?.periodDuration) || 2400;
+    let matchEndSecs = 0;
+
+    if (periods.length > 0) {
+      periods.forEach((p: any) => {
+        let pDur = 0;
+        if (p.endTime && p.startTime) {
+          pDur = Math.round((p.endTime - p.startTime) / 1000);
+        } else {
+          pDur = regSecs;
+        }
+        matchEndSecs += pDur;
+      });
+    } else {
+      matchEndSecs = regSecs * 2;
+    }
+
+    const effectiveTime = currentGameTime > 0 ? currentGameTime : matchEndSecs;
 
     const ins = normalizeSubs(player.ins);
     const outs = normalizeSubs(player.outs);
-    const periods = game.periods || [];
-
-    const stoppages =
-      game.gameEventsMajor?.filter((e: any) => e.clock_should_run === 0) || [];
-
-    const gkSegments: { start: number; end: number }[] = [];
-    const startedAsGK = player.gameStatus === "goalkeeper";
-
     const gkIns = ins.filter((s) => s.gkSub);
     const gkOuts = outs.filter((s) => s.gkSub);
 
-    if (startedAsGK) {
-      const firstOut = gkOuts[0];
-      gkSegments.push({
-        start: 0,
-        end: firstOut ? firstOut.gameTime : currentGameTime,
-      });
-    }
+    const events: { type: "IN" | "OUT"; gameTime: number }[] = [];
+    gkIns.forEach((i) => events.push({ type: "IN", gameTime: Number(i.gameTime ?? i.sub_time ?? 0) }));
+    gkOuts.forEach((o) => events.push({ type: "OUT", gameTime: Number(o.gameTime ?? o.sub_time ?? 0) }));
+    events.sort((a, b) => a.gameTime - b.gameTime);
 
-    for (let i = 0; i < gkIns.length; i++) {
-      const start = gkIns[i].gameTime;
-      const end = gkOuts[i] ? gkOuts[i].gameTime : currentGameTime;
-      if (end > start) gkSegments.push({ start, end });
+    const startedAsGK = player.gameStatus === "goalkeeper";
+    const intervals: { start: number; end: number }[] = [];
+
+    let isGK = startedAsGK;
+    let shiftStart: number | null = startedAsGK ? 0 : null;
+
+    events.forEach((evt) => {
+      if (evt.type === "IN") {
+        if (!isGK) {
+          isGK = true;
+          shiftStart = evt.gameTime;
+        }
+      } else if (evt.type === "OUT") {
+        if (isGK && shiftStart !== null) {
+          if (evt.gameTime > shiftStart) {
+            intervals.push({ start: shiftStart, end: evt.gameTime });
+          }
+          isGK = false;
+          shiftStart = null;
+        }
+      }
+    });
+
+    if (isGK && shiftStart !== null) {
+      if (effectiveTime > shiftStart) {
+        intervals.push({ start: shiftStart, end: effectiveTime });
+      }
     }
 
     let total = 0;
-
-    gkSegments.forEach((segment) => {
-      const chunks = splitSegmentByPeriods(
-        segment,
-        periods,
-        game.gameStartTime as number,
-      );
-
-      chunks.forEach((chunk) => {
-        const chunkTime = chunk.end - chunk.start;
-        const stoppageTime = calculateStoppageTimeInRange(
-          stoppages,
-          chunk.start,
-          chunk.end,
-          chunk.periodNumber,
-        );
-        total += Math.max(0, chunkTime - stoppageTime);
-      });
+    intervals.forEach((inv) => {
+      total += Math.max(0, inv.end - inv.start);
     });
 
     return Math.round(total);

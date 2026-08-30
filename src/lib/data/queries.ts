@@ -1794,7 +1794,13 @@ export async function getTeamSeasonRecords(
   let enrolledTeamSeasonIds: number[] = [];
   const enrolledTeamSeasonsMap = new Map<number, any>();
 
+  let targetNodeSeasonIds: number[] = [];
+  let targetNodeIds: number[] = [];
+  let currentLns: any = null;
+
   if (leagueNodeSeasonId) {
+    targetNodeSeasonIds.push(leagueNodeSeasonId);
+
     const enrollments = await prisma.team_league_enrollments.findMany({
       where: { league_node_season_id: leagueNodeSeasonId, is_active: true },
       include: {
@@ -1807,23 +1813,44 @@ export async function getTeamSeasonRecords(
     enrollments.forEach((e) => {
       enrolledTeamSeasonsMap.set(e.team_season_id, e.team_seasons);
     });
+
+    currentLns = await prisma.league_node_seasons.findUnique({
+      where: { id: leagueNodeSeasonId },
+      include: { league_nodes: true },
+    });
+
+    if (currentLns) {
+      if (currentLns.league_node_id) targetNodeIds.push(currentLns.league_node_id);
+
+      if (currentLns.league_nodes?.parent_id) {
+        targetNodeIds.push(currentLns.league_nodes.parent_id);
+        const parentLns = await prisma.league_node_seasons.findFirst({
+          where: { league_node_id: currentLns.league_nodes.parent_id, season_id: currentLns.season_id },
+        });
+        if (parentLns) targetNodeSeasonIds.push(parentLns.id);
+      }
+
+      const childNodes = await prisma.league_nodes.findMany({
+        where: { parent_id: currentLns.league_node_id },
+      });
+      childNodes.forEach((cn) => targetNodeIds.push(cn.id));
+    }
   }
 
+  const allNodeMatchIds = Array.from(new Set([...targetNodeSeasonIds, ...targetNodeIds]));
+
   const orConditions: any[] = [];
-  if (leagueNodeSeasonId) {
+  if (allNodeMatchIds.length > 0) {
     orConditions.push({
       game_league_nodes: {
-        some: { league_node_id: leagueNodeSeasonId },
+        some: { league_node_id: { in: allNodeMatchIds } },
       },
     });
-    if (enrolledTeamSeasonIds.length > 0) {
-      orConditions.push({
-        home_team_season_id: { in: enrolledTeamSeasonIds },
-      });
-      orConditions.push({
-        away_team_season_id: { in: enrolledTeamSeasonIds },
-      });
-    }
+    orConditions.push({
+      game_standings_inclusions: {
+        some: { league_node_id: { in: allNodeMatchIds }, counts_for_standings: true },
+      },
+    });
   }
   if (teamSeasonId) {
     orConditions.push({ home_team_season_id: teamSeasonId });
@@ -1967,14 +1994,30 @@ export async function getTeamSeasonRecords(
         }
       }
 
-      const homeEnrolled = leagueNodeSeasonId ? enrolledTeamSeasonsMap.has(g.home_team_season_id) : true;
-      const awayEnrolled = leagueNodeSeasonId ? enrolledTeamSeasonsMap.has(g.away_team_season_id) : true;
-
       if (leagueNodeSeasonId) {
-        if (!homeEnrolled && !awayEnrolled) {
+        const isTaggedInTargetNode =
+          g.game_league_nodes?.some((n: any) => allNodeMatchIds.includes(n.league_node_id)) ||
+          g.game_standings_inclusions?.some((inc: any) => allNodeMatchIds.includes(inc.league_node_id) && inc.counts_for_standings !== false);
+
+        if (!isTaggedInTargetNode) {
           return;
         }
+
+        const isDirectlyTaggedOnNode =
+          g.game_league_nodes?.some((n: any) => n.league_node_id === leagueNodeSeasonId || (currentLns?.league_node_id && n.league_node_id === currentLns.league_node_id)) ||
+          g.game_standings_inclusions?.some((inc: any) => (inc.league_node_id === leagueNodeSeasonId || (currentLns?.league_node_id && inc.league_node_id === currentLns.league_node_id)) && inc.counts_for_standings !== false);
+
+        if (!isDirectlyTaggedOnNode && enrolledTeamSeasonIds.length > 0) {
+          const homeEnrolled = enrolledTeamSeasonsMap.has(g.home_team_season_id);
+          const awayEnrolled = enrolledTeamSeasonsMap.has(g.away_team_season_id);
+          if (!homeEnrolled && !awayEnrolled) {
+            return;
+          }
+        }
       }
+
+      const homeEnrolled = leagueNodeSeasonId ? enrolledTeamSeasonsMap.has(g.home_team_season_id) : true;
+      const awayEnrolled = leagueNodeSeasonId ? enrolledTeamSeasonsMap.has(g.away_team_season_id) : true;
 
       const homeRec =
         (!teamSeasonId || g.home_team_season_id === teamSeasonId) &&

@@ -101,7 +101,18 @@ export default function GameSummaryClient() {
 
   const teamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
   const gameIdVal = game.id || game.game_id || "";
-  const gameTimeSeconds = useGameStore.getState().getGameTime() || 0;
+  const calculateMatchEndSeconds = () => {
+    if (!game || !game.periods || game.periods.length === 0) return 4800;
+    const regSecs = (game.settings?.periodDuration) || 2400;
+    return game.periods.reduce((total, p) => {
+      if (p.endTime && p.startTime) {
+        return total + Math.round((p.endTime - p.startTime) / 1000);
+      }
+      return total + regSecs;
+    }, 0);
+  };
+  const matchDurationSeconds = calculateMatchEndSeconds();
+  const gameTimeSeconds = useGameStore.getState().getGameTime() || matchDurationSeconds;
   const gkTimesMap = calculateAllGoalkeeperTime(gameIdVal, gameTimeSeconds);
 
   // Aggregate team stats
@@ -144,28 +155,25 @@ export default function GameSummaryClient() {
     // Period Duration for cumulative match time calculation (default: 40 mins = 2400s)
     const regPeriodSecs = (game.settings?.periodDuration) || 2400;
 
-    // Helper to normalize period game_time and compute cumulative match time
-    const normalizeAndComputeTime = (period: number, rawInputSecs: number) => {
+    // Helper to process DB game_time (stored as continuous seconds from kickoff)
+    const computeEventTime = (period: number, dbGameTime: number) => {
+      const cumSecs = Math.max(0, Number(dbGameTime || 0));
       const p = Math.max(1, period || 1);
-      let gTime = Math.max(0, Number(rawInputSecs || 0));
 
-      // Safeguard: If gameTime was stored as cumulative time in DB (e.g. 2688s in period 2), normalize to period-relative time
-      if (p > 1 && gTime >= (p - 1) * regPeriodSecs) {
-        gTime = gTime - (p - 1) * regPeriodSecs;
+      let precedingOffset = 0;
+      for (let i = 1; i < p; i++) {
+        const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
+        if (matchingP && matchingP.endTime && matchingP.startTime) {
+          precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
+        } else {
+          precedingOffset += regPeriodSecs;
+        }
       }
 
-      const regPeriodCount = game.settings?.periodCount || 2;
-      let cumSecs = 0;
-
-      if (p <= regPeriodCount) {
-        cumSecs = (p - 1) * regPeriodSecs + gTime;
-      } else {
-        const otPeriodSecs = (game.settings?.overtimeDuration) || 600;
-        cumSecs = regPeriodCount * regPeriodSecs + (p - regPeriodCount - 1) * otPeriodSecs + gTime;
-      }
+      const periodRelativeTime = Math.max(0, cumSecs - precedingOffset);
 
       return {
-        gameTime: gTime,
+        gameTime: periodRelativeTime,
         cumulativeTime: cumSecs,
         matchMinute: Math.floor(cumSecs / 60),
       };
@@ -174,9 +182,9 @@ export default function GameSummaryClient() {
     // Calculate maximum game_time in each period to ensure Whistle/Full Time markers sit cleanly at the end
     const maxGameTimeByPeriod = new Map<number, number>();
     const trackMaxTime = (p: number, t: number) => {
-      const normalized = normalizeAndComputeTime(p, t).gameTime;
+      const cumSecs = Number(t || 0);
       const curr = maxGameTimeByPeriod.get(p) || 0;
-      if (normalized > curr) maxGameTimeByPeriod.set(p, normalized);
+      if (cumSecs > curr) maxGameTimeByPeriod.set(p, cumSecs);
     };
 
     (game.gameEventsMajor || []).forEach((m) => trackMaxTime(Number(m.period || 1), Number(m.game_time || 0)));
@@ -188,7 +196,17 @@ export default function GameSummaryClient() {
     (game.periods || []).forEach((p) => {
       const periodNum = p.periodNumber || 1;
       const periodLabel = periodNum <= (game.settings?.periodCount || 2) ? `Period ${periodNum}` : `OT ${periodNum - (game.settings?.periodCount || 2)}`;
-      const startTimes = normalizeAndComputeTime(periodNum, 0);
+      
+      let startOffset = 0;
+      for (let i = 1; i < periodNum; i++) {
+        const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
+        if (matchingP && matchingP.endTime && matchingP.startTime) {
+          startOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
+        } else {
+          startOffset += regPeriodSecs;
+        }
+      }
+      const startTimes = computeEventTime(periodNum, startOffset);
 
       // Period Start Marker
       compiled.push({
@@ -210,17 +228,17 @@ export default function GameSummaryClient() {
       // Period End Marker (if finished)
       if (p.endTime && p.startTime) {
         const measuredSecs = Math.round((p.endTime - p.startTime) / 1000);
-        const maxEventSecs = maxGameTimeByPeriod.get(periodNum) || 0;
-        // Period end time is at least the regular period duration or max event time
-        const periodEndGameTime = Math.max(measuredSecs, maxEventSecs + 1, regPeriodSecs);
-        const endTimes = normalizeAndComputeTime(periodNum, periodEndGameTime);
+        const endCumSecs = startOffset + measuredSecs;
+        const maxCumSecs = maxGameTimeByPeriod.get(periodNum) || 0;
+        const finalEndCumSecs = Math.max(endCumSecs, maxCumSecs + 1, startOffset + regPeriodSecs);
+        const endTimes = computeEventTime(periodNum, finalEndCumSecs);
 
         compiled.push({
           id: `period_end_${periodNum}`,
           rawId: p.id,
           rawType: "major",
           period: periodNum,
-          gameTime: periodEndGameTime,
+          gameTime: endTimes.gameTime,
           cumulativeTime: endTimes.cumulativeTime,
           matchMinute: endTimes.matchMinute,
           category: "period_marker",
@@ -228,7 +246,7 @@ export default function GameSummaryClient() {
           teamName: "Match Official",
           title: periodNum === (game.settings?.periodCount || 2) ? "🏁 Full Time — End of Match" : `⏸️ Whistle — End of ${periodLabel}`,
           colorClass: "text-slate-600 bg-slate-500/10 border-slate-500/30",
-          notes: `Official ${periodLabel} End (${formatSecondsToMmss(periodEndGameTime)} played)`,
+          notes: `Official ${periodLabel} End (${formatSecondsToMmss(endTimes.gameTime)} played)`,
         });
       }
     });
@@ -236,7 +254,7 @@ export default function GameSummaryClient() {
     // 2. Major Events (Goals, Discipline, Penalties, Stoppages)
     (game.gameEventsMajor || []).forEach((m) => {
       const pNum = Number(m.period || 1);
-      const timeInfo = normalizeAndComputeTime(pNum, Number(m.game_time || 0));
+      const timeInfo = computeEventTime(pNum, Number(m.game_time || 0));
 
       if (m.event_type === "goal") {
         const linkedGoals = (game.gameEventsGoals || []).filter(
@@ -420,7 +438,7 @@ export default function GameSummaryClient() {
     // 3. Player Actions (Shots on Goal)
     (game.playerActions || []).forEach((pa: any) => {
       const pNum = Number(pa.period || 1);
-      const timeInfo = normalizeAndComputeTime(pNum, Number(pa.game_time || 0));
+      const timeInfo = computeEventTime(pNum, Number(pa.game_time || 0));
 
       const matchesGoal = compiled.some(
         (e) => e.category === "goal" && Math.abs(e.cumulativeTime - timeInfo.cumulativeTime) <= 2
@@ -453,7 +471,7 @@ export default function GameSummaryClient() {
     (game.gameSubs || []).forEach((s) => {
       if (s.sub_time !== null && s.sub_time !== undefined) {
         const pNum = Number(s.period || 1);
-        const timeInfo = normalizeAndComputeTime(pNum, Number(s.sub_time));
+        const timeInfo = computeEventTime(pNum, Number(s.sub_time));
 
         const pIn = s.in_player_id ? playerMap.get(String(s.in_player_id)) : null;
         const pOut = s.out_player_id ? playerMap.get(String(s.out_player_id)) : null;
@@ -483,7 +501,7 @@ export default function GameSummaryClient() {
     // 5. Team Events (Corners, Fouls, Offsides)
     (game.gameEventsTeam || []).forEach((te) => {
       const pNum = Number(te.period || 1);
-      const timeInfo = normalizeAndComputeTime(pNum, Number(te.game_time || 0));
+      const timeInfo = computeEventTime(pNum, Number(te.game_time || 0));
 
       const isOur = String(te.team_season_id) === String(ourTeamSeasonId);
       const titleMap: Record<string, string> = {

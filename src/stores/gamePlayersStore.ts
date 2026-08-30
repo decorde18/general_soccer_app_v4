@@ -3,6 +3,7 @@
 // UPDATED: Added goalkeeperTime field to player objects
 import { create } from "zustand";
 import { apiFetch } from "@/app/api/fetcher";
+import useGameStore from "./gameStore";
 
 // ==================== TYPES ====================
 
