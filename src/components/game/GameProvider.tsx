@@ -91,14 +91,29 @@ export default function GameProvider({ children }: GameProviderProps) {
           return;
         }
 
-        // Then load players for this game
-        await loadPlayers(id, teamSeasonId);
+        // Check if game's teams have changed (e.g. bracket placeholder resolved to real team)
+        const latestGame = useGameStore.getState().game;
+        const numTeamSeasonId = Number(teamSeasonId);
+
+        if (
+          latestGame &&
+          latestGame.homeTeamSeasonId &&
+          latestGame.awayTeamSeasonId &&
+          numTeamSeasonId !== latestGame.homeTeamSeasonId &&
+          numTeamSeasonId !== latestGame.awayTeamSeasonId
+        ) {
+          console.log(`Bracket team resolved. Redirecting to active team season #${latestGame.homeTeamSeasonId}...`);
+          router.replace(`/gamestats/${latestGame.homeTeamSeasonId}/${id}`);
+          await loadPlayers(id, String(latestGame.homeTeamSeasonId));
+        } else {
+          // Load players for this game and team
+          await loadPlayers(id, teamSeasonId);
+        }
 
         // Cache successful load for offline resilience
-        const latestGame = useGameStore.getState().game;
-        const latestPlayers = useGamePlayersStore.getState().players;
-        if (latestGame && latestPlayers.length > 0) {
-          saveGameCache(id, latestGame, latestPlayers);
+        const currentPlayers = useGamePlayersStore.getState().players;
+        if (latestGame && currentPlayers.length > 0) {
+          saveGameCache(id, latestGame, currentPlayers);
         }
       } catch (error) {
         console.error("Error initializing game online, checking offline cache:", error);

@@ -15,6 +15,7 @@ import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
 import type { PlayerSeasonStats, ComprehensiveTeamStats } from "@/lib/data/queries";
 import { fetchPlayerStatsAction, fetchTeamStatsAction } from "@/lib/actions/stats-actions";
+import { formatTeamName } from "@/lib/utils/teamName";
 
 interface StatsCenterClientProps {
   initialPlayerStats: PlayerSeasonStats[];
@@ -83,7 +84,7 @@ export default function StatsCenterClient({
       { value: "", label: "-- All Teams --" },
       ...filteredTeams.map((t) => ({
         value: String(t.id),
-        label: t.clubName ? `${t.clubName} - ${t.name}` : t.name,
+        label: formatTeamName({ teamName: t.name, clubName: t.clubName }, "short"),
       })),
     ],
     [filteredTeams]

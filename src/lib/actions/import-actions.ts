@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireSession, verifyAdmin } from "@/lib/auth/auth-utils";
 
 import { resolveOrCreateDivisionHierarchy } from "@/lib/actions/league-actions";
+import { deriveClubAbbreviation } from "@/lib/utils/teamName";
 
 export interface TeamImportRecord {
   clubName: string;
@@ -233,7 +234,11 @@ export async function batchImportSchedule(
     });
     if (!homeClub) {
       homeClub = await prisma.clubs.create({
-        data: { name: rec.homeClubName.trim(), type: "club" },
+        data: {
+          name: rec.homeClubName.trim(),
+          abbreviation: deriveClubAbbreviation(rec.homeClubName.trim()),
+          type: "club",
+        },
       });
     }
 
@@ -265,7 +270,11 @@ export async function batchImportSchedule(
     });
     if (!awayClub) {
       awayClub = await prisma.clubs.create({
-        data: { name: rec.awayClubName.trim(), type: "club" },
+        data: {
+          name: rec.awayClubName.trim(),
+          abbreviation: deriveClubAbbreviation(rec.awayClubName.trim()),
+          type: "club",
+        },
       });
     }
 

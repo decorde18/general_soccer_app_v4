@@ -4,18 +4,20 @@ import { revalidatePath } from "next/cache";
 import { verifyAdmin } from "@/lib/auth/auth-utils";
 import prisma from "@/lib/prisma";
 import { clubSchema } from "@/lib/validations/schemas";
+import { deriveClubAbbreviation } from "@/lib/utils/teamName";
 
 export async function createClub(data: Record<string, string>) {
   await verifyAdmin();
 
   // Validate server-side with Zod
   const parsedData = clubSchema.parse(data);
+  const finalAbbrev = parsedData.abbreviation?.trim() || deriveClubAbbreviation(parsedData.name);
 
   try {
     const newClub = await prisma.clubs.create({
       data: {
         name: parsedData.name,
-        abbreviation: parsedData.abbreviation,
+        abbreviation: finalAbbrev,
         founded_year: parsedData.foundedYear || null,
         location: parsedData.location,
         location_id: parsedData.locationId,
@@ -41,12 +43,16 @@ export async function updateClub(id: unknown, data: Record<string, string>) {
 
   // Partial validation for updates
   const parsedData = clubSchema.partial().parse(data);
+  const finalAbbrev =
+    parsedData.abbreviation !== undefined
+      ? (parsedData.abbreviation?.trim() || (parsedData.name ? deriveClubAbbreviation(parsedData.name) : undefined))
+      : undefined;
 
   await prisma.clubs.update({
     where: { id: numId },
     data: {
       name: parsedData.name,
-      abbreviation: parsedData.abbreviation,
+      abbreviation: finalAbbrev,
       location_id:
         parsedData.locationId !== undefined ? parsedData.locationId : undefined,
       logo_url: parsedData.logoUrl,

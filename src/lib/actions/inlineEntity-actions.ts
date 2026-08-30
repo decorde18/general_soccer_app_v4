@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/auth-utils";
 import { teams_gender } from "@/generated/client";
 
+import { deriveClubAbbreviation } from "@/lib/utils/teamName";
+
 /**
  * Create a new Club inline
  */
@@ -19,10 +21,13 @@ export async function createInlineClub(data: {
     throw new Error("Club name is required.");
   }
 
+  const nameTrimmed = data.name.trim();
+  const finalAbbrev = data.abbreviation?.trim() || deriveClubAbbreviation(nameTrimmed);
+
   const club = await prisma.clubs.create({
     data: {
-      name: data.name.trim(),
-      abbreviation: data.abbreviation?.trim() || null,
+      name: nameTrimmed,
+      abbreviation: finalAbbrev,
       location: data.location?.trim() || null,
       is_active: true,
     },

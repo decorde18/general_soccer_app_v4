@@ -7,6 +7,7 @@
  */
 
 import prisma from "@/lib/prisma";
+import { formatTeamName } from "@/lib/utils/teamName";
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -701,7 +702,7 @@ export async function getTeamSeasons(
   return teamSeasons.map((r) => ({
     id: r.id,
     teamId: r.team_id,
-    teamName: r.teams.team_name,
+    teamName: formatTeamName({ team_name: r.teams.team_name, club: r.teams.clubs }, "short"),
     clubId: r.teams.club_id,
     clubName: r.teams.clubs.name,
     seasonId: r.season_id,
@@ -1124,11 +1125,17 @@ function mapGameRow(r: any): Game {
     seasonId: r.season_id,
     seasonName: r.seasons?.season_name ?? r.season_name,
     homeTeamSeasonId: r.home_team_season_id,
-    homeTeamName: homeTeam?.team_name ?? r.home_team_name,
+    homeTeamName: formatTeamName(
+      { team_name: homeTeam?.team_name ?? r.home_team_name, club: homeTeam?.clubs ?? { name: r.home_club_name, abbreviation: r.home_club_abbreviation } },
+      "short"
+    ),
     homeClubName: homeTeam?.clubs?.name ?? r.home_club_name,
     homeClubAbbreviation: homeTeam?.clubs?.abbreviation ?? null,
     awayTeamSeasonId: r.away_team_season_id,
-    awayTeamName: awayTeam?.team_name ?? r.away_team_name,
+    awayTeamName: formatTeamName(
+      { team_name: awayTeam?.team_name ?? r.away_team_name, club: awayTeam?.clubs ?? { name: r.away_club_name, abbreviation: r.away_club_abbreviation } },
+      "short"
+    ),
     awayClubName: awayTeam?.clubs?.name ?? r.away_club_name,
     awayClubAbbreviation: awayTeam?.clubs?.abbreviation ?? null,
     status: r.status as GameStatus,
@@ -1391,7 +1398,10 @@ async function getStatsForRoster(
         firstName: person.first_name,
         lastName: person.last_name,
         teamSeasonId: teamSeasonId,
-        teamName: r.team_seasons?.teams?.team_name ?? "",
+        teamName: formatTeamName(
+          { team_name: r.team_seasons?.teams?.team_name, club: r.team_seasons?.teams?.clubs },
+          "short"
+        ),
         goals,
         assists,
         points: goals * 2 + assists,
@@ -1505,7 +1515,10 @@ export async function getComprehensivePlayerStats(
         firstName: pg.people.first_name,
         lastName: pg.people.last_name,
         teamSeasonId: pg.team_season_id,
-        teamName: pg.team_seasons?.teams?.team_name ?? "",
+        teamName: formatTeamName(
+          { team_name: pg.team_seasons?.teams?.team_name, club: pg.team_seasons?.teams?.clubs },
+          "short"
+        ),
         goals: 0,
         assists: 0,
         points: 0,
@@ -1808,7 +1821,7 @@ export async function getTeamSeasonRecords(
       const key = `${tsId}_${leagueNodeSeasonId}`;
       recordsMap.set(key, {
         teamSeasonId: tsId,
-        teamName: ts.teams.team_name,
+        teamName: formatTeamName({ team_name: ts.teams.team_name, club: ts.teams.clubs }, "short"),
         clubName: ts.teams.clubs.name,
         leagueNodeSeasonId: leagueNodeSeasonId,
         wins: 0,
@@ -1834,7 +1847,7 @@ export async function getTeamSeasonRecords(
     if (!recordsMap.has(key)) {
       recordsMap.set(key, {
         teamSeasonId: tsId,
-        teamName: team?.team_name ?? tsId.toString(),
+        teamName: formatTeamName({ team_name: team?.team_name, club: team?.clubs }, "short"),
         clubName: team?.clubs?.name ?? "",
         leagueNodeSeasonId: lnId,
         wins: 0,
@@ -1970,7 +1983,7 @@ export async function getTeamSeasonRecords(
         {
           id: teamSeasonId,
           teamSeasonId: teamSeasonId,
-          teamName: team.team_name,
+          teamName: formatTeamName({ team_name: team.team_name, club: team.clubs }, "short"),
           clubName: team.clubs.name,
           leagueNodeSeasonId: null,
           wins: 0,

@@ -14,6 +14,7 @@ import { createTeam, updateTeam, deleteTeam } from "@/lib/actions/team-actions";
 import { useSessionContext } from "@/contexts/SessionProvider";
 import { getEffectiveRoles } from "@/lib/roles";
 import type { Role } from "@/components/entities/types";
+import { deriveClubAbbreviation } from "@/lib/utils/teamName";
 
 interface ClubRecord {
   id: number;
@@ -112,15 +113,18 @@ export default function ClubsDashboardClient({
   const handleClubSubmit = async (formData: Record<string, string>) => {
     startTransition(async () => {
       try {
+        const suggestedAbbrev = formData.abbreviation?.trim() || deriveClubAbbreviation(formData.name);
+        const submitData = { ...formData, abbreviation: suggestedAbbrev };
+
         if (editClubRecord) {
-          await updateClub(editClubRecord.id, formData);
+          await updateClub(editClubRecord.id, submitData);
           setClubs((prev) =>
             prev.map((c) =>
               c.id === editClubRecord.id
                 ? {
                     ...c,
                     name: formData.name,
-                    abbreviation: formData.abbreviation,
+                    abbreviation: suggestedAbbrev,
                     logoUrl: formData.logoUrl,
                     location: formData.location,
                     foundedYear: formData.foundedYear ? Number(formData.foundedYear) : null,
@@ -133,13 +137,13 @@ export default function ClubsDashboardClient({
           );
           toast.success("Club updated successfully");
         } else {
-          const newClub = await createClub(formData);
+          const newClub = await createClub(submitData);
           setClubs((prev) => [
             ...prev,
             {
               id: newClub.id,
               name: formData.name,
-              abbreviation: formData.abbreviation,
+              abbreviation: suggestedAbbrev,
               logoUrl: formData.logoUrl,
               location: formData.location,
               foundedYear: formData.foundedYear ? Number(formData.foundedYear) : null,

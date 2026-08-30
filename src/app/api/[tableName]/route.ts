@@ -61,6 +61,16 @@ const ALLOWED_TABLES = new Set([
   "v_game_events_penalties_complete",
 ]);
 
+const TABLE_ID_COLUMNS: Record<string, string> = {
+  v_games: "game_id",
+  v_players: "player_id",
+  v_player_games: "player_game_id",
+  v_player_game_stats_enhanced: "player_game_id",
+  v_game_events_goals_complete: "id",
+  v_game_events_discipline_complete: "id",
+  v_game_events_penalties_complete: "id",
+};
+
 const READ_ONLY_TABLES = new Set([
   "v_games",
   "v_players",
@@ -140,25 +150,27 @@ interface RouteContext {
 
 // ─── GET ─────────────────────────────────────────────────────────────────────
 export async function GET(req: Request, context: RouteContext) {
-  const { tableName } = await context.params;
-  const table = tableName;
+  try {
+    const { tableName } = await context.params;
+    const table = tableName;
 
-  if (!ALLOWED_TABLES.has(table)) {
-    return NextResponse.json({ error: `Table "${table}" not allowed` }, { status: 403 });
-  }
+    if (!ALLOWED_TABLES.has(table)) {
+      return NextResponse.json({ error: `Table "${table}" not allowed` }, { status: 403 });
+    }
 
-  const url = new URL(req.url);
-  const params = url.searchParams;
-  const id = params.get("id");
+    const url = new URL(req.url);
+    const params = url.searchParams;
+    const id = params.get("id");
+    const primaryIdCol = TABLE_ID_COLUMNS[table] || "id";
 
-  // ── GET by ID ──────────────────────────────────────────────────────────────
-  if (id) {
-    const sql = `SELECT * FROM \`${table}\` WHERE id = ? LIMIT 1`;
-    const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(sql, Number(id));
-    const row = rows[0];
-    if (!row) return notFound();
-    return NextResponse.json(serializeRow(row));
-  }
+    // ── GET by ID ──────────────────────────────────────────────────────────────
+    if (id) {
+      const sql = `SELECT * FROM \`${table}\` WHERE \`${primaryIdCol}\` = ? LIMIT 1`;
+      const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(sql, Number(id));
+      const row = rows[0];
+      if (!row) return notFound();
+      return NextResponse.json(serializeRow(row));
+    }
 
   // ── GET with filters / sort / pagination ───────────────────────────────────
   const whereClauses: string[] = [];
@@ -283,6 +295,11 @@ export async function GET(req: Request, context: RouteContext) {
   const allBindings = [...bindings, ...havingBindings];
   const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(sql, ...allBindings);
   return NextResponse.json(rows.map(serializeRow));
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[GET /${context}] DB error:`, msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
 
 // ─── POST ─────────────────────────────────────────────────────────────────────
