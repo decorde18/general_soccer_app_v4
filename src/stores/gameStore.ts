@@ -29,7 +29,8 @@ type EventTypeKey =
   | "discipline"
   | "penalty"
   | "player_action"
-  | "team";
+  | "team"
+  | "sub";
 
 const EVENT_TABLE_MAP: Record<EventTypeKey, string> = {
   major: "game_events_major",
@@ -38,6 +39,7 @@ const EVENT_TABLE_MAP: Record<EventTypeKey, string> = {
   penalty: "game_events_penalties",
   player_action: "game_events_player_actions",
   team: "game_events_team",
+  sub: "game_subs",
 };
 
 const DEFAULT_GAME_SETTINGS: GameSettings = {
@@ -1037,6 +1039,12 @@ const useGameStore = create<GameStoreState>((set, get) => {
             ...updates,
           }) as TeamStatTotals;
         }
+        if (eventType === "sub") {
+          const remainingSubs = (game.gameSubs || []).filter(
+            (s) => String(s.id) !== String(eventId) && String((s as any).sub_id) !== String(eventId)
+          );
+          updates.gameSubs = remainingSubs;
+        }
 
         get().updateGame(updates);
         useGamePlayersStore.getState().recalculatePlayerStatsFromEvents(
@@ -1064,6 +1072,9 @@ const useGameStore = create<GameStoreState>((set, get) => {
         }
         if (eventType === "team") {
           deletePromises.push(apiFetch("game_events_team", "DELETE", null, eventId));
+        }
+        if (eventType === "sub") {
+          deletePromises.push(apiFetch("game_subs", "DELETE", null, eventId));
         }
 
         Promise.all(deletePromises).catch((err) => {

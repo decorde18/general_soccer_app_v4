@@ -417,8 +417,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
     try {
       const isOpp = teamTarget === "opp";
-      const scorer = players.find((p) => String(p.id) === goalScorerId);
-      const assist = players.find((p) => String(p.id) === goalAssistId);
+      const scorer = players.find((p) => String(p.id) === goalScorerId || String(p.playerGameId) === goalScorerId);
+      const assist = players.find((p) => String(p.id) === goalAssistId || String(p.playerGameId) === goalAssistId);
       const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
       const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
       const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
@@ -427,16 +427,19 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       const goalTypesJson = JSON.stringify(goalMethodsArr.length > 0 ? goalMethodsArr : ["open_play"]);
 
       const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
-      const defendingGkPlayerGameId = isOpp || isOwnGoal ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : null) : null;
+      const defendingGkPlayerGameId = isOpp || isOwnGoal ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
 
       const tempGoalId = `temp_goal_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
+      const scorerPgId = !isOpp && scorer ? Number(scorer.playerGameId || scorer.id) : null;
+      const assistPgId = !isOpp && assist ? Number(assist.playerGameId || assist.id) : null;
+
       const payload = {
         game_id: Number(game.game_id || game.id),
         team_season_id: Number(teamSeasonVal),
-        scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
-        assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
+        scorer_player_game_id: scorerPgId,
+        assist_player_game_id: assistPgId,
         defending_gk_player_game_id: defendingGkPlayerGameId,
         opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
         is_own_goal: isOwnGoal,
@@ -605,7 +608,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
     try {
       const isOpp = teamTarget === "opp";
-      const player = players.find((p) => String(p.id) === cardPlayerId);
+      const player = players.find((p) => String(p.id) === cardPlayerId || String(p.playerGameId) === cardPlayerId);
       const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
       const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
       const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
@@ -614,10 +617,12 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       const tempCardId = `temp_card_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
+      const playerPgId = !isOpp && player ? Number(player.playerGameId || player.id) : null;
+
       const payload = {
         game_id: Number(game.game_id || game.id),
         team_season_id: Number(teamSeasonVal),
-        player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
+        player_game_id: playerPgId,
         opponent_jersey_number: isOpp && oppCardJersey ? Number(oppCardJersey) : null,
         card_type: cardType,
         card_reason: cardReason || null,
@@ -752,7 +757,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     startTransition(async () => {
       try {
         const isOpp = teamTarget === "opp";
-        const taker = players.find((p) => String(p.id) === pkTakerId);
+        const taker = players.find((p) => String(p.id) === pkTakerId || String(p.playerGameId) === pkTakerId);
         const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
         const finalOutcome = isReboundGoal ? "goal" : pkOutcome;
 
@@ -760,7 +765,9 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
         const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
         const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
-        const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : null) : null;
+        const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
+
+        const takerPgId = !isOpp && taker ? Number(taker.playerGameId || taker.id) : null;
 
         const majorRes = await fetch(`/api/game_events_major`, {
           method: "POST",
@@ -780,7 +787,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         const pkPayload = {
           major_event_id: Number(majorRes.id),
           team_season_id: Number(teamSeasonVal),
-          shooter_player_game_id: !isOpp && taker?.playerGameId ? Number(taker.playerGameId) : null,
+          shooter_player_game_id: takerPgId,
           opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
           outcome: finalOutcome,
         };
