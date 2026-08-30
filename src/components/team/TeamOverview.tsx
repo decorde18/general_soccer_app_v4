@@ -220,7 +220,7 @@ export default function TeamOverview({
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <span className="text-base font-extrabold text-text block">
-                            {game.homeScore} - {game.awayScore}
+                            {teamScore !== null && oppScore !== null ? `${teamScore} - ${oppScore}` : "TBD"}
                           </span>
                           {game.finalStatus && game.finalStatus !== "regulation" && (
                             <span className="text-[9px] text-muted font-bold uppercase tracking-wider block">

@@ -409,8 +409,9 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **22.4 Major Event Modal & Select Dropdown UI Cleanups**
   - [x] Removed duplicate inline clock pause checkbox from `MajorEventModal.tsx`.
   - [x] Updated `Select.tsx` to automatically suppress generic `-- Select an option --` when customized placeholder options exist.
-- [x] **22.5 Game Summary Box Score Minutes Played Calculation Fix (Game 882)**
-  - [x] Updated `GameSummaryClient.tsx` to pass continuous absolute game time (`getGameTime()`) instead of single-period time (`getPeriodTime()`), ensuring full-match players (Bryn) and subbed-in players (Isabella, Georgia) accumulate accurate match minutes.
+- [x] **22.6 Team Perspective Score Formatting**
+  - [x] Updated `TeamOverview.tsx` Recent Form and `TeamSchedule.tsx` game cards so all scores display from the active team's perspective (`teamScore - oppScore`).
+  - [x] Fixed away match wins (e.g., `@ Rush Union`) displaying as `3 - 0` (W) instead of `0 - 3`.
 
 ## Notes / Future Considerations
 

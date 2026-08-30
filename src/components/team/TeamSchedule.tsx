@@ -216,7 +216,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                   ? "border-success/25 bg-success/[0.03] opacity-70 grayscale-[20%] hover:grayscale-0 hover:opacity-100 shadow-sm border-l-4 border-l-success"
                   : "border-success/30 hover:border-success/60 bg-success/5 shadow-sm border-l-4 border-l-success";
                 scoreBadgeClass = "bg-success text-white border-success/30";
-                scoreLabel = "W";
+                scoreLabel = `W (${teamScore}-${oppScore})`;
                 resultTag = (
                   <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-success bg-success/15 border border-success/30 px-2.5 py-0.5 rounded shadow-inner">
                     Win
@@ -227,7 +227,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                   ? "border-danger/20 bg-danger/[0.015] opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100 shadow-sm border-l-4 border-l-danger"
                   : "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm border-l-4 border-l-danger";
                 scoreBadgeClass = "bg-danger text-white border-danger/30";
-                scoreLabel = "L";
+                scoreLabel = `L (${teamScore}-${oppScore})`;
                 resultTag = (
                   <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-danger bg-danger/15 border border-danger/30 px-2.5 py-0.5 rounded shadow-inner">
                     Loss
@@ -238,7 +238,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                   ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100 border-l-4 border-l-muted/40"
                   : "border-border/80 hover:border-muted/50 bg-surface/50 border-l-4 border-l-muted/40";
                 scoreBadgeClass = "bg-muted/15 text-muted border-border";
-                scoreLabel = "D";
+                scoreLabel = `D (${teamScore}-${oppScore})`;
                 resultTag = (
                   <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-muted bg-muted/15 border border-border px-2.5 py-0.5 rounded">
                     Draw
