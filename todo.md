@@ -413,6 +413,19 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Updated `TeamOverview.tsx` Recent Form and `TeamSchedule.tsx` game cards so all scores display from the active team's perspective (`teamScore - oppScore`).
   - [x] Fixed away match wins (e.g., `@ Rush Union`) displaying as `3 - 0` (W) instead of `0 - 3`.
 
+## Step 23: Universal Entity Links & Component Standardization System
+
+- [x] **23.1 Universal Interactive Location Link & Modal Provider**
+  - [x] Created `EntityModalProvider.tsx` mounted at root layout level to handle global entity modal triggers (`openLocationModal`).
+  - [x] Created `LocationLink.tsx` component supporting compact/abbreviated names in dense tables and full names in expanded card views.
+  - [x] Integrated `LocationLink` across team schedules, tournament schedules, match summary headers, and master score entry tables so clicking a location opens the interactive map modal everywhere.
+- [ ] **23.2 Universal Interactive Club & Team Links & Detail Modals**
+  - [x] Created `ClubLink.tsx` supporting short (abbreviated) vs long club names and logo badges.
+  - [ ] Build `ClubDetailsModal.tsx` showing club overview, enrolled team seasons, primary venue, and staff contacts.
+  - [ ] Integrate `ClubLink` and `TeamLink` across standings tables, leaderboards, match scoreboards, and roster views.
+- [ ] **23.3 System-Wide Component & Style Consistency Audit**
+  - [ ] Audit all remaining public and admin pages to ensure 100% usage of shared UI components (`Button`, `Card`, `Select`, `Input`, `Modal`) with zero unstyled native elements or ad-hoc modal triggers.
+
 ## Notes / Future Considerations
 
 - Advanced live match stream / video link embeds (`games.video_link`)
