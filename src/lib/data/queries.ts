@@ -1235,6 +1235,71 @@ export async function getPlayerStatsByPerson(
   return statsList;
 }
 
+/**
+ * Helper to calculate actual minutes played and on-field intervals for a player in a game.
+ * Unplayed/scheduled/postponed/cancelled games return isPlayedGame: false.
+ */
+function calculatePlayerGameMinutes(pg: any): {
+  isPlayedGame: boolean;
+  minutesPlayed: number;
+  intervals: { start: number; end: number }[];
+} {
+  const game = pg.games;
+  if (!game) {
+    return { isPlayedGame: false, minutesPlayed: 0, intervals: [] };
+  }
+
+  const status = game.status;
+  // Unplayed/scheduled/cancelled/postponed games MUST NOT contribute to player statistics
+  if (status === "scheduled" || status === "cancelled" || status === "postponed") {
+    return { isPlayedGame: false, minutesPlayed: 0, intervals: [] };
+  }
+
+  const statusInPg = pg.game_status;
+  const isStarted = pg.started || statusInPg === "starter" || statusInPg === "goalkeeper";
+
+  const allSubs = game.game_subs || [];
+  const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id);
+  const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id);
+
+  // Determine game duration based on actual period duration
+  const defaultDuration = (game.period_duration || 2400) * (game.default_reg_periods || 2);
+  let maxTimeSec = defaultDuration;
+  allSubs.forEach((s: any) => {
+    if (s.sub_time && s.sub_time > maxTimeSec) maxTimeSec = s.sub_time;
+  });
+
+  const intervals: { start: number; end: number }[] = [];
+  let currentStart: number | null = isStarted ? 0 : null;
+
+  const events: { type: "in" | "out"; time: number }[] = [];
+  subsIn.forEach((s: any) => events.push({ type: "in", time: Number(s.sub_time || 0) }));
+  subsOut.forEach((s: any) => events.push({ type: "out", time: Number(s.sub_time || 0) }));
+  events.sort((a, b) => a.time - b.time);
+
+  events.forEach((ev) => {
+    if (ev.type === "in" && currentStart === null) {
+      currentStart = ev.time;
+    } else if (ev.type === "out" && currentStart !== null) {
+      intervals.push({ start: currentStart, end: ev.time });
+      currentStart = null;
+    }
+  });
+  if (currentStart !== null) {
+    intervals.push({ start: currentStart, end: maxTimeSec });
+  }
+
+  let totalSecondsPlayed = 0;
+  intervals.forEach((inv) => {
+    if (inv.end > inv.start) {
+      totalSecondsPlayed += inv.end - inv.start;
+    }
+  });
+
+  const minutesPlayed = Math.round(totalSecondsPlayed / 60);
+  return { isPlayedGame: true, minutesPlayed, intervals };
+}
+
 async function getStatsForRoster(
   roster: any[],
   teamSeasonId: number,
@@ -1290,14 +1355,19 @@ async function getStatsForRoster(
       let penaltyGoals = 0;
 
       pgs.forEach((pg) => {
+        const { isPlayedGame, minutesPlayed: gameMins, intervals } = calculatePlayerGameMinutes(pg);
+        if (!isPlayedGame) return;
+
         const status = pg.game_status;
         const isStarted = pg.started || status === "starter" || status === "goalkeeper";
-        if (status === "starter" || status === "goalkeeper" || status === "dressed") {
+        if (status === "starter" || status === "goalkeeper" || status === "dressed" || gameMins > 0) {
           gamesPlayed++;
         }
         if (isStarted) {
           gamesStarted++;
         }
+
+        minutesPlayed += gameMins;
 
         const scorerGoals =
           pg.game_events_goals_game_events_goals_scorer_player_game_idToplayer_games || [];
@@ -1335,43 +1405,6 @@ async function getStatsForRoster(
 
         const game = pg.games;
         if (game) {
-          const allSubs = game.game_subs || [];
-          const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id);
-          const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id);
-
-          let maxTimeSec = 4800;
-          allSubs.forEach((s: any) => {
-            if (s.sub_time && s.sub_time > maxTimeSec) maxTimeSec = s.sub_time;
-          });
-
-          const intervals: { start: number; end: number }[] = [];
-          let currentStart: number | null = isStarted ? 0 : null;
-
-          const events: { type: "in" | "out"; time: number }[] = [];
-          subsIn.forEach((s: any) => events.push({ type: "in", time: Number(s.sub_time || 0) }));
-          subsOut.forEach((s: any) => events.push({ type: "out", time: Number(s.sub_time || 0) }));
-          events.sort((a, b) => a.time - b.time);
-
-          events.forEach((ev) => {
-            if (ev.type === "in" && currentStart === null) {
-              currentStart = ev.time;
-            } else if (ev.type === "out" && currentStart !== null) {
-              intervals.push({ start: currentStart, end: ev.time });
-              currentStart = null;
-            }
-          });
-          if (currentStart !== null) {
-            intervals.push({ start: currentStart, end: maxTimeSec });
-          }
-
-          let totalSecondsPlayed = 0;
-          intervals.forEach((inv) => {
-            if (inv.end > inv.start) {
-              totalSecondsPlayed += inv.end - inv.start;
-            }
-          });
-          minutesPlayed += Math.round(totalSecondsPlayed / 60);
-
           game.game_events_major?.forEach((major: any) => {
             major.game_events_goals?.forEach((goal: any) => {
               const goalTime = Number(major.game_time || 0);
@@ -1507,6 +1540,9 @@ export async function getComprehensivePlayerStats(
   playerGames.forEach((pg: any) => {
     if (!pg.people || isPlaceholderTeamName(pg.team_seasons?.teams?.team_name)) return;
 
+    const { isPlayedGame, minutesPlayed: gameMins, intervals } = calculatePlayerGameMinutes(pg);
+    if (!isPlayedGame) return;
+
     const key = mapKey(pg);
     if (!aggregatedMap.has(key)) {
       aggregatedMap.set(key, {
@@ -1543,12 +1579,14 @@ export async function getComprehensivePlayerStats(
     const status = pg.game_status;
     const isStarted = pg.started || status === "starter" || status === "goalkeeper";
 
-    if (status === "starter" || status === "goalkeeper" || status === "dressed") {
+    if (status === "starter" || status === "goalkeeper" || status === "dressed" || gameMins > 0) {
       rec.gamesPlayed++;
     }
     if (isStarted) {
       rec.gamesStarted++;
     }
+
+    rec.minutesPlayed += gameMins;
 
     const scorerGoals =
       pg.game_events_goals_game_events_goals_scorer_player_game_idToplayer_games || [];
@@ -1586,43 +1624,6 @@ export async function getComprehensivePlayerStats(
 
     const game = pg.games;
     if (game) {
-      const allSubs = game.game_subs || [];
-      const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id);
-      const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id);
-
-      let maxTimeSec = 4800;
-      allSubs.forEach((s: any) => {
-        if (s.sub_time && s.sub_time > maxTimeSec) maxTimeSec = s.sub_time;
-      });
-
-      const intervals: { start: number; end: number }[] = [];
-      let currentStart: number | null = isStarted ? 0 : null;
-
-      const events: { type: "in" | "out"; time: number }[] = [];
-      subsIn.forEach((s: any) => events.push({ type: "in", time: Number(s.sub_time || 0) }));
-      subsOut.forEach((s: any) => events.push({ type: "out", time: Number(s.sub_time || 0) }));
-      events.sort((a, b) => a.time - b.time);
-
-      events.forEach((ev) => {
-        if (ev.type === "in" && currentStart === null) {
-          currentStart = ev.time;
-        } else if (ev.type === "out" && currentStart !== null) {
-          intervals.push({ start: currentStart, end: ev.time });
-          currentStart = null;
-        }
-      });
-      if (currentStart !== null) {
-        intervals.push({ start: currentStart, end: maxTimeSec });
-      }
-
-      let totalSecondsPlayed = 0;
-      intervals.forEach((inv) => {
-        if (inv.end > inv.start) {
-          totalSecondsPlayed += inv.end - inv.start;
-        }
-      });
-      rec.minutesPlayed += Math.round(totalSecondsPlayed / 60);
-
       game.game_events_major?.forEach((major: any) => {
         major.game_events_goals?.forEach((goal: any) => {
           const goalTime = Number(major.game_time || 0);
@@ -3018,6 +3019,7 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
 
     let gamesPlayed = 0;
     let gamesStarted = 0;
+    let minutesPlayed = 0;
     let goals = 0;
     let assists = 0;
     let yellowCards = 0;
@@ -3027,8 +3029,11 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
     let cleanSheets = 0;
 
     pgs.forEach((pg) => {
+      const { isPlayedGame, minutesPlayed: gameMins } = calculatePlayerGameMinutes(pg);
+      if (!isPlayedGame) return;
+
       const status = pg.game_status;
-      if (status === "starter" || status === "goalkeeper" || status === "dressed") {
+      if (status === "starter" || status === "goalkeeper" || status === "dressed" || gameMins > 0) {
         gamesPlayed++;
       }
       if (pg.started || status === "starter" || status === "goalkeeper") {
@@ -3056,9 +3061,9 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
         if (act.event_type === "shot" || act.event_type === "shot_on_target") shots++;
         else if (act.event_type === "save") saves++;
       });
-    });
 
-    const minutesPlayed = gamesPlayed * 80;
+      minutesPlayed += gameMins;
+    });
 
     return {
       teamSeasonId: ts.id,

@@ -396,7 +396,9 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **21.5 Schedule Location Cell Font & Sublocation Display**
   - [x] Refined location cell styling in `TournamentScheduleView.tsx` (`text-[11px] font-normal hover:underline`) and added sublocation formatting (`Location Name (Sublocation)`).
 
-## Step 22: Master Score Entry Enhancements, Tournament Crossover Standings & Playing Time Fixes
+- [x] **22.4 Unplayed Games Exclusions & Actual Minutes Played Calculation**
+  - [x] Implemented `calculatePlayerGameMinutes()` helper in `queries.ts` to strictly ignore unplayed games (`scheduled`, `cancelled`, `postponed`) from player stats (`gamesPlayed`, `gamesStarted`, `minutesPlayed`).
+  - [x] Corrected minutes played calculation to compute exact on-field interval times based on actual match period durations instead of hardcoded defaults or counting future unplayed games.
 
 - [x] **22.1 Master Score Reporting Filters & Season Default**
   - [x] Added Season selector (defaulting to current active season) and specific Tournament / League dropdown filter in `MasterScoreEntryClient.tsx`.
