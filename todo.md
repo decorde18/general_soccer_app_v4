@@ -423,8 +423,11 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Created `ClubLink.tsx` supporting short (abbreviated) vs long club names and logo badges.
   - [ ] Build `ClubDetailsModal.tsx` showing club overview, enrolled team seasons, primary venue, and staff contacts.
   - [ ] Integrate `ClubLink` and `TeamLink` across standings tables, leaderboards, match scoreboards, and roster views.
-- [ ] **23.3 System-Wide Component & Style Consistency Audit**
-  - [ ] Audit all remaining public and admin pages to ensure 100% usage of shared UI components (`Button`, `Card`, `Select`, `Input`, `Modal`) with zero unstyled native elements or ad-hoc modal triggers.
+- [x] **23.4 League Structure Sub-Node Parent Select & Breadcrumb Enhancement**
+  - [x] Updated `LeaguesStructureClient.tsx` so top-level nodes directly under a League explicitly display `[League Name] (League Root)` in the Parent Node select bar instead of empty/disabled `Root Level (No Parent)`.
+  - [x] Enhanced parent node select options to render full hierarchical breadcrumb paths (e.g. `Girls > U15 > Premier`).
+  - [x] Added automatic hierarchy level re-calculation when changing parent node selection in the modal.
+  - [x] Added dedicated `+ Add Node` button to Hierarchy Explorer header bar.
 
 ## Notes / Future Considerations
 
