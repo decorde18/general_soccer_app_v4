@@ -98,9 +98,17 @@ export const seasonSchema = z.object({
   status: z.enum(["upcoming", "active", "completed", "archived"]).optional().default("upcoming"),
 });
 
+const preprocessOptionalNumber = z.preprocess((val) => {
+  if (val === "" || val === null || val === undefined || val === "undefined" || val === "null") {
+    return null;
+  }
+  const num = Number(val);
+  return isNaN(num) ? null : num;
+}, z.number().nullable().optional());
+
 export const leagueNodeSchema = z.object({
-  leagueId: z.coerce.number(),
-  parentId: z.coerce.number().optional().nullable().transform((val) => (val ? val : null)),
+  leagueId: preprocessOptionalNumber,
+  parentId: preprocessOptionalNumber,
   name: z.string().min(1, "Name is required"),
   nodeType: z.enum([
     "league",
@@ -113,8 +121,8 @@ export const leagueNodeSchema = z.object({
     "age_group",
     "gender",
   ]),
-  level: z.coerce.number().optional().nullable().transform((val) => (val !== undefined ? val : 0)),
-  displayOrder: z.coerce.number().optional().nullable().transform((val) => (val !== undefined ? val : 0)),
+  level: preprocessOptionalNumber,
+  displayOrder: preprocessOptionalNumber,
 });
 
 export const teamEnrollmentSchema = z.object({

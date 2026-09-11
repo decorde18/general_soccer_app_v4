@@ -37,6 +37,7 @@ import {
 } from "@/lib/actions/import-actions";
 import EntityMatchingWizardModal from "@/components/admin/importer/EntityMatchingWizardModal";
 import { createInlineLeague, createInlineLeagueNode, carryoverLeagueTeamsFromPreviousSeason } from "@/lib/actions/league-actions";
+import { discernVenueAndField } from "@/lib/utils/locationUtils";
 
 interface BatchImporterClientProps {
   seasons: { id: number; name: string }[];
@@ -63,27 +64,76 @@ function detectScheduleHeaderMapping(headers: string[]) {
   headers.forEach((header, idx) => {
     const h = header.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
 
-    if (h.includes("date") || h === "dt") {
+    // 1. START DATE: Exact match first, or partial if not set and not 'datesort'/'updated'
+    if (h === "date" || h === "gamedate" || h === "matchdate" || h === "dt") {
       sMap.startDate = idx;
-    } else if (h.includes("time") || h === "tm") {
+    } else if (sMap.startDate === -1 && h.includes("date") && !h.includes("sort") && !h.includes("update")) {
+      sMap.startDate = idx;
+    }
+
+    // 2. START TIME: Exact match first, or partial if not set
+    if (h === "time" || h === "gametime" || h === "matchtime" || h === "tm") {
       sMap.startTime = idx;
-    } else if (h.includes("homeclub")) {
+    } else if (sMap.startTime === -1 && h.includes("time") && !h.includes("sort") && !h.includes("update")) {
+      sMap.startTime = idx;
+    }
+
+    // 3. HOME CLUB & HOME TEAM
+    if (h === "homeclub" || h === "homeclubname") {
       sMap.homeClub = idx;
-    } else if (h.includes("hometeam") || h === "home" || h === "h") {
+    } else if (sMap.homeClub === -1 && h.includes("homeclub")) {
+      sMap.homeClub = idx;
+    }
+
+    if (h === "hometeam" || h === "hometeamname" || h === "home") {
       sMap.homeTeam = idx;
-    } else if (h.includes("awayclub")) {
+    } else if (sMap.homeTeam === -1 && (h.includes("hometeam") || h === "h")) {
+      sMap.homeTeam = idx;
+    }
+
+    // 4. AWAY CLUB & AWAY TEAM
+    if (h === "awayclub" || h === "awayclubname" || h === "visitorclub") {
       sMap.awayClub = idx;
-    } else if (h.includes("awayteam") || h === "away" || h === "a") {
+    } else if (sMap.awayClub === -1 && h.includes("awayclub")) {
+      sMap.awayClub = idx;
+    }
+
+    if (h === "awayteam" || h === "awayteamname" || h === "away" || h === "visitingteam") {
       sMap.awayTeam = idx;
-    } else if (h.includes("gender") || h === "sex") {
+    } else if (sMap.awayTeam === -1 && (h.includes("awayteam") || h === "a")) {
+      sMap.awayTeam = idx;
+    }
+
+    // 5. GENDER
+    if (h === "gender" || h === "sex") {
       sMap.gender = idx;
-    } else if (h.includes("location") || h.includes("venue") || h.includes("complex") || h.includes("facility")) {
+    }
+
+    // 6. LOCATION / VENUE / EXPORT SITE
+    if (h === "exportsite" || h === "venue" || h === "location" || h === "complex") {
       sMap.location = idx;
-    } else if (h.includes("field") || h.includes("pitch") || h.includes("sublocation") || h === "fieldno") {
+    } else if (sMap.location === -1 && (h.includes("location") || h.includes("venue") || h.includes("complex") || h.includes("facility"))) {
+      sMap.location = idx;
+    }
+
+    // 7. SUBLOCATION / FIELD / EXPORT FIELD
+    if (h === "exportfield" || h === "field" || h === "pitch" || h === "sublocation") {
       sMap.sublocation = idx;
-    } else if (h.includes("type") || h.includes("gametype")) {
+    } else if (sMap.sublocation === -1 && (h.includes("field") || h.includes("pitch") || h.includes("sublocation") || h === "fieldno")) {
+      sMap.sublocation = idx;
+    }
+
+    // 8. GAME TYPE / PLAY TYPE
+    if (h === "type" || h === "gametype") {
       sMap.gameType = idx;
-    } else if (h.includes("division") || h.includes("agegroup") || h.includes("bracket") || h.includes("group")) {
+    } else if (sMap.gameType === -1 && h.includes("gametype")) {
+      sMap.gameType = idx;
+    }
+
+    // 9. DIVISION NAME
+    if (h === "divisionname" || h === "division" || h === "agegroup" || h === "bracket" || h === "group") {
+      sMap.divisionName = idx;
+    } else if (sMap.divisionName === -1 && (h.includes("division") || h.includes("agegroup") || h.includes("bracket"))) {
       sMap.divisionName = idx;
     }
   });
@@ -237,6 +287,7 @@ export default function BatchImporterClient({
   const [unmatchedTeams, setUnmatchedTeams] = useState<string[]>([]);
   const [unmatchedLocations, setUnmatchedLocations] = useState<string[]>([]);
   const [unmatchedFields, setUnmatchedFields] = useState<string[]>([]);
+  const [dbClubs, setDbClubs] = useState<{ id: number; name: string; abbreviation?: string }[]>([]);
   const [dbLocations, setDbLocations] = useState<{ id: number; name: string; abbreviation?: string; address?: string | null }[]>([]);
   const [dbSublocations, setDbSublocations] = useState<{ id: number; name: string; code?: string; locationId?: number; locationName?: string }[]>([]);
 
@@ -645,8 +696,10 @@ export default function BatchImporterClient({
       const awayClubName = activeMapping.awayClub >= 0 ? parts[activeMapping.awayClub] || "" : "";
       const awayTeamName = activeMapping.awayTeam >= 0 ? parts[activeMapping.awayTeam] || homeTeamName : homeTeamName;
       const gender = activeMapping.gender >= 0 ? normalizeGenderInput(parts[activeMapping.gender]) : "boys";
-      const locationName = activeMapping.location >= 0 ? parts[activeMapping.location] || undefined : undefined;
-      const sublocationName = activeMapping.sublocation >= 0 ? parts[activeMapping.sublocation] || undefined : undefined;
+      const rawLoc = activeMapping.location >= 0 ? parts[activeMapping.location] || undefined : undefined;
+      const rawSub = activeMapping.sublocation >= 0 ? parts[activeMapping.sublocation] || undefined : undefined;
+      const discernedLoc = discernVenueAndField(rawLoc, rawSub);
+
       const rawType = activeMapping.gameType >= 0 ? parts[activeMapping.gameType] : undefined;
       const gameType = (rawType || defaultScheduleGameType).toLowerCase() as any;
       const divisionName = activeMapping.divisionName >= 0 ? parts[activeMapping.divisionName] || undefined : undefined;
@@ -661,8 +714,8 @@ export default function BatchImporterClient({
         awayClubName,
         awayTeamName,
         gender,
-        locationName,
-        sublocationName,
+        locationName: discernedLoc.venueName || undefined,
+        sublocationName: discernedLoc.sublocationName || undefined,
         gameType,
         leagueId: selectedLeagueId ? Number(selectedLeagueId) : undefined,
         leagueNodeId: leagueNodeId ? Number(leagueNodeId) : undefined,
@@ -701,12 +754,22 @@ export default function BatchImporterClient({
           setRawText("");
           setUploadedFileName(null);
         } else {
-          // Check for unmatched schedule teams or clubs before saving to DB
+          // Fetch existing DB clubs, locations & sublocations for verification wizard
+          const { existingClubs, existingLocations, existingSublocations } = await getImportLocationsData();
+          setDbClubs(existingClubs);
+          setDbLocations(existingLocations);
+          setDbSublocations(existingSublocations);
+
+          const existingClubNames = new Set(existingClubs.map((c) => c.name.toLowerCase().trim()));
+          const existingClubAbbrs = new Set(
+            existingClubs.map((c) => (c.abbreviation || "").toLowerCase().trim()).filter(Boolean)
+          );
+
           const existingTeamFull = new Set(
-            availableTeamSeasons.map((ts) => `${ts.clubName} ${ts.teamName}`.toLowerCase().trim())
+            teamSeasons.map((ts) => `${ts.clubName} ${ts.teamName}`.toLowerCase().trim())
           );
           const existingTeamSimple = new Set(
-            availableTeamSeasons.map((ts) => ts.teamName.toLowerCase().trim())
+            teamSeasons.map((ts) => ts.teamName.toLowerCase().trim())
           );
 
           const missingTeams: string[] = [];
@@ -714,33 +777,41 @@ export default function BatchImporterClient({
           const missingLocs: string[] = [];
           const missingSublocs: string[] = [];
 
-          // Fetch existing DB locations & sublocations for verification wizard
-          const { existingLocations, existingSublocations } = await getImportLocationsData();
-          setDbLocations(existingLocations);
-          setDbSublocations(existingSublocations);
-
-          const existingLocNames = new Set(existingLocations.map((l) => l.name.toLowerCase()));
-          const existingLocAbbrs = new Set(existingLocations.map((l) => (l.abbreviation || "").toLowerCase()).filter(Boolean));
-          const existingSubCodes = new Set(existingSublocations.map((s) => (s.code || "").toLowerCase()).filter(Boolean));
-          const existingSubNames = new Set(existingSublocations.map((s) => s.name.toLowerCase()));
+          const existingLocNames = new Set(existingLocations.map((l) => l.name.toLowerCase().trim()));
+          const existingLocAbbrs = new Set(
+            existingLocations.map((l) => (l.abbreviation || "").toLowerCase().trim()).filter(Boolean)
+          );
+          const existingSubCodes = new Set(
+            existingSublocations.map((s) => (s.code || "").toLowerCase().trim()).filter(Boolean)
+          );
+          const existingSubNames = new Set(existingSublocations.map((s) => s.name.toLowerCase().trim()));
 
           parsedSchedule.forEach((rec) => {
+            // Check Club Matching
+            if (rec.homeClubName) {
+              const hcLower = rec.homeClubName.toLowerCase().trim();
+              if (!existingClubNames.has(hcLower) && !existingClubAbbrs.has(hcLower)) {
+                if (!missingClubs.includes(rec.homeClubName.trim())) missingClubs.push(rec.homeClubName.trim());
+              }
+            }
+            if (rec.awayClubName) {
+              const acLower = rec.awayClubName.toLowerCase().trim();
+              if (!existingClubNames.has(acLower) && !existingClubAbbrs.has(acLower)) {
+                if (!missingClubs.includes(rec.awayClubName.trim())) missingClubs.push(rec.awayClubName.trim());
+              }
+            }
+
+            // Check Team Matching
             const hFull = `${rec.homeClubName} ${rec.homeTeamName}`.toLowerCase().trim();
             const hSimple = rec.homeTeamName.toLowerCase().trim();
             if (!existingTeamFull.has(hFull) && !existingTeamSimple.has(hSimple)) {
-              if (!missingTeams.includes(rec.homeTeamName)) missingTeams.push(rec.homeTeamName);
-            }
-            if (rec.homeClubName && !missingClubs.includes(rec.homeClubName)) {
-              missingClubs.push(rec.homeClubName);
+              if (!missingTeams.includes(rec.homeTeamName.trim())) missingTeams.push(rec.homeTeamName.trim());
             }
 
             const aFull = `${rec.awayClubName} ${rec.awayTeamName}`.toLowerCase().trim();
             const aSimple = rec.awayTeamName.toLowerCase().trim();
             if (!existingTeamFull.has(aFull) && !existingTeamSimple.has(aSimple)) {
-              if (!missingTeams.includes(rec.awayTeamName)) missingTeams.push(rec.awayTeamName);
-            }
-            if (rec.awayClubName && !missingClubs.includes(rec.awayClubName)) {
-              missingClubs.push(rec.awayClubName);
+              if (!missingTeams.includes(rec.awayTeamName.trim())) missingTeams.push(rec.awayTeamName.trim());
             }
 
             // Check location matching
@@ -767,7 +838,7 @@ export default function BatchImporterClient({
             }
           });
 
-          if (missingTeams.length > 0 || missingLocs.length > 0 || missingSublocs.length > 0) {
+          if (missingClubs.length > 0 || missingTeams.length > 0 || missingLocs.length > 0 || missingSublocs.length > 0) {
             setUnmatchedTeams(missingTeams);
             setUnmatchedClubs(missingClubs);
             setUnmatchedLocations(missingLocs);
@@ -1769,8 +1840,8 @@ export default function BatchImporterClient({
         unmatchedTeams={unmatchedTeams}
         unmatchedLocations={unmatchedLocations}
         unmatchedFields={unmatchedFields}
-        existingClubs={[]}
-        existingTeams={availableTeamSeasons.map((ts) => ({ id: ts.id, name: ts.teamName, clubName: ts.clubName }))}
+        existingClubs={dbClubs}
+        existingTeams={teamSeasons.map((ts) => ({ id: ts.id, name: ts.teamName, clubName: ts.clubName }))}
         existingLocations={dbLocations}
         existingSublocations={dbSublocations}
         onComplete={(resolvedMappings) => {

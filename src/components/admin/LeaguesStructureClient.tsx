@@ -92,6 +92,7 @@ export default function LeaguesStructureClient({
     nodeType: string;
     level: number;
     displayOrder: number;
+    leagueId?: number;
   } | null>(null);
 
   const [isDeleteNodeOpen, setIsDeleteNodeOpen] = useState(false);
@@ -103,8 +104,7 @@ export default function LeaguesStructureClient({
   // Form states
   const [nodeFormName, setNodeFormName] = useState("");
   const [nodeFormType, setNodeFormType] = useState("conference");
-  const [nodeFormLevel, setNodeFormLevel] = useState("0");
-  const [nodeFormOrder, setNodeFormOrder] = useState("0");
+  const [nodeFormOrder, setNodeFormOrder] = useState("");
   const [nodeFormParentId, setNodeFormParentId] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -318,19 +318,57 @@ export default function LeaguesStructureClient({
 
   // ─── Actions Handlers ───────────────────────────────────────────────────────
 
+  // Helper to format options for parent node select dropdown with breadcrumb trail
+  const getParentNodeOptions = (leagueId: number, excludeNodeId?: number) => {
+    const league = leaguesData.find((l) => Number(l.value) === leagueId);
+    const leagueName = league ? league.label : "League";
+
+    const options: { value: string; label: string }[] = [
+      {
+        value: "",
+        label: `${leagueName} (League Root)`,
+      },
+    ];
+
+    const nodesInLeague = leagueNodesRecords.filter(
+      (n) => n.leagueId === leagueId && n.id !== excludeNodeId,
+    );
+
+    nodesInLeague.forEach((n) => {
+      const crumbs = getBreadcrumbs(n.id);
+      const pathLabel = crumbs.length > 1 ? crumbs.slice(1).join(" > ") : n.name;
+      options.push({
+        value: String(n.id),
+        label: pathLabel,
+      });
+    });
+
+    return options;
+  };
+
+  // Helper to handle parent node selection change
+  const handleParentIdChange = (newParentId: string) => {
+    setNodeFormParentId(newParentId);
+  };
+
   // Open Add Child Node modal
   const handleOpenAddNode = (parent: typeof addParentItem) => {
-    setAddParentItem(parent);
+    let effectiveParent = parent;
+    if (!effectiveParent && leaguesData.length > 0) {
+      const firstLeague = leaguesData[0];
+      effectiveParent = {
+        id: `league-${firstLeague.value}`,
+        name: firstLeague.label,
+        type: "league",
+        leagueId: Number(firstLeague.value),
+      };
+    }
+
+    setAddParentItem(effectiveParent);
     setNodeFormName("");
     setNodeFormType("conference");
-    setNodeFormParentId(parent?.type === "node" ? String(parent.nodeId) : "");
-    if (parent?.type === "node") {
-      const pNode = leagueNodesRecords.find((n) => n.id === parent.nodeId);
-      setNodeFormLevel(String((pNode?.level || 0) + 1));
-    } else {
-      setNodeFormLevel("1");
-    }
-    setNodeFormOrder("10");
+    setNodeFormParentId(effectiveParent?.type === "node" ? String(effectiveParent.nodeId) : "");
+    setNodeFormOrder("");
     setIsAddNodeOpen(true);
   };
 
@@ -341,16 +379,27 @@ export default function LeaguesStructureClient({
 
     setIsSaving(true);
     try {
+      const selectedParentNode = leagueNodesRecords.find(
+        (n) => String(n.id) === nodeFormParentId,
+      );
+      const rawLeagueId = selectedParentNode
+        ? selectedParentNode.leagueId
+        : addParentItem.leagueId;
+
+      const targetLeagueId =
+        rawLeagueId && !isNaN(Number(rawLeagueId))
+          ? String(rawLeagueId)
+          : leaguesData[0]?.value || "";
+
       await createLeagueNode({
-        leagueId: String(addParentItem.leagueId),
-        parentId: nodeFormParentId,
+        ...(targetLeagueId ? { leagueId: targetLeagueId } : {}),
+        ...(nodeFormParentId ? { parentId: nodeFormParentId } : {}),
         name: nodeFormName.trim(),
         nodeType: nodeFormType,
-        level: nodeFormLevel,
-        displayOrder: nodeFormOrder,
+        ...(nodeFormOrder.trim() ? { displayOrder: nodeFormOrder.trim() } : {}),
       });
 
-      toast.success(`Sub-node "${nodeFormName}" created successfully`);
+      toast.success(`Node "${nodeFormName}" created successfully`);
       setIsAddNodeOpen(false);
       router.refresh();
     } catch (err: any) {
@@ -365,8 +414,7 @@ export default function LeaguesStructureClient({
     setEditItem(node);
     setNodeFormName(node.name);
     setNodeFormType(node.nodeType);
-    setNodeFormLevel(String(node.level || 0));
-    setNodeFormOrder(String(node.displayOrder || 0));
+    setNodeFormOrder(node.displayOrder ? String(node.displayOrder) : "");
     setNodeFormParentId(node.parentId ? String(node.parentId) : "");
     setIsEditNodeOpen(true);
   };
@@ -378,12 +426,24 @@ export default function LeaguesStructureClient({
 
     setIsSaving(true);
     try {
+      const selectedParentNode = leagueNodesRecords.find(
+        (n) => String(n.id) === nodeFormParentId,
+      );
+      const rawLeagueId = selectedParentNode
+        ? selectedParentNode.leagueId
+        : editItem.leagueId;
+
+      const targetLeagueId =
+        rawLeagueId && !isNaN(Number(rawLeagueId))
+          ? String(rawLeagueId)
+          : leaguesData[0]?.value || "";
+
       await updateLeagueNode(editItem.id, {
+        ...(targetLeagueId ? { leagueId: targetLeagueId } : {}),
+        parentId: nodeFormParentId,
         name: nodeFormName.trim(),
         nodeType: nodeFormType,
-        level: nodeFormLevel,
-        displayOrder: nodeFormOrder,
-        parentId: nodeFormParentId,
+        ...(nodeFormOrder.trim() ? { displayOrder: nodeFormOrder.trim() } : {}),
       });
 
       toast.success(`Node updated successfully`);
@@ -682,13 +742,37 @@ export default function LeaguesStructureClient({
       <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 items-start'>
         {/* LEFT COLUMN: Tree Explorer */}
         <div className='lg:col-span-5 bg-surface border border-border/80 rounded-xl p-4 shadow-sm flex flex-col gap-4 max-h-[75vh]'>
-          <div className='flex items-center gap-2'>
-            <h3 className='font-bold text-sm text-text uppercase tracking-wider'>
-              Hierarchy Explorer
-            </h3>
-            <span className='text-xs px-2 py-0.5 bg-border rounded-full text-muted font-bold'>
-              {filteredTree.length} roots
-            </span>
+          <div className='flex items-center justify-between gap-2'>
+            <div className='flex items-center gap-2'>
+              <h3 className='font-bold text-sm text-text uppercase tracking-wider'>
+                Hierarchy Explorer
+              </h3>
+              <span className='text-xs px-2 py-0.5 bg-border rounded-full text-muted font-bold'>
+                {filteredTree.length} roots
+              </span>
+            </div>
+
+            <Button
+              variant='outline'
+              size='xs'
+              className='flex items-center gap-1'
+              onClick={() => {
+                if (selectedInfo) {
+                  handleOpenAddNode({
+                    id: selectedItemId!,
+                    name: selectedInfo.name,
+                    type: selectedInfo.type === "enrollment" ? "node" : selectedInfo.type,
+                    leagueId: selectedInfo.leagueId || (selectedInfo.record as any).leagueId,
+                    nodeId: selectedInfo.type === "node" ? selectedInfo.id : undefined,
+                  });
+                } else {
+                  handleOpenAddNode(null);
+                }
+              }}
+            >
+              <Plus size={12} />
+              <span>Add Node</span>
+            </Button>
           </div>
 
           {/* Tree Search Box */}
@@ -1053,10 +1137,11 @@ export default function LeaguesStructureClient({
             <label className='text-sm font-bold text-text'>Parent Node</label>
             <Select
               value={nodeFormParentId}
-              onChange={(e: any) => setNodeFormParentId(e.target.value)}
-              placeholder="Root Level (No Parent)"
-              options={leagueNodesOptionsData}
-              showPlaceholder={true}
+              onChange={(e: any) => handleParentIdChange(e.target.value)}
+              options={getParentNodeOptions(
+                addParentItem?.leagueId || Number(leaguesData[0]?.value || 0),
+              )}
+              showPlaceholder={false}
             />
           </div>
 
@@ -1090,29 +1175,16 @@ export default function LeaguesStructureClient({
             />
           </div>
 
-          <div className='grid grid-cols-2 gap-4'>
-            <div className='space-y-1.5'>
-              <label className='text-sm font-bold text-text'>
-                Hierarchy Level
-              </label>
-              <Input
-                type='number'
-                placeholder='e.g. 1'
-                value={nodeFormLevel}
-                onChange={(e: any) => setNodeFormLevel(e.target.value)}
-              />
-            </div>
-            <div className='space-y-1.5'>
-              <label className='text-sm font-bold text-text'>
-                Display Order
-              </label>
-              <Input
-                type='number'
-                placeholder='e.g. 10'
-                value={nodeFormOrder}
-                onChange={(e: any) => setNodeFormOrder(e.target.value)}
-              />
-            </div>
+          <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>
+              Sort Order (Optional)
+            </label>
+            <Input
+              type='number'
+              placeholder='Auto-assigned if blank (e.g. 10, 20...)'
+              value={nodeFormOrder}
+              onChange={(e: any) => setNodeFormOrder(e.target.value)}
+            />
           </div>
 
           <div className='flex justify-end gap-2 border-t border-border pt-4 mt-6'>
@@ -1143,10 +1215,12 @@ export default function LeaguesStructureClient({
             <label className='text-sm font-bold text-text'>Parent Node</label>
             <Select
               value={nodeFormParentId}
-              onChange={(e: any) => setNodeFormParentId(e.target.value)}
-              placeholder="Root Level (No Parent)"
-              options={leagueNodesOptionsData.filter(opt => Number(opt.value) !== editItem?.id)}
-              showPlaceholder={true}
+              onChange={(e: any) => handleParentIdChange(e.target.value)}
+              options={getParentNodeOptions(
+                editItem?.leagueId || Number(leaguesData[0]?.value || 0),
+                editItem?.id,
+              )}
+              showPlaceholder={false}
             />
           </div>
 
@@ -1179,27 +1253,16 @@ export default function LeaguesStructureClient({
             />
           </div>
 
-          <div className='grid grid-cols-2 gap-4'>
-            <div className='space-y-1.5'>
-              <label className='text-sm font-bold text-text'>
-                Hierarchy Level
-              </label>
-              <Input
-                type='number'
-                value={nodeFormLevel}
-                onChange={(e: any) => setNodeFormLevel(e.target.value)}
-              />
-            </div>
-            <div className='space-y-1.5'>
-              <label className='text-sm font-bold text-text'>
-                Display Order
-              </label>
-              <Input
-                type='number'
-                value={nodeFormOrder}
-                onChange={(e: any) => setNodeFormOrder(e.target.value)}
-              />
-            </div>
+          <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>
+              Sort Order (Optional)
+            </label>
+            <Input
+              type='number'
+              placeholder='e.g. 10'
+              value={nodeFormOrder}
+              onChange={(e: any) => setNodeFormOrder(e.target.value)}
+            />
           </div>
 
           <div className='flex justify-end gap-2 border-t border-border pt-4 mt-6'>

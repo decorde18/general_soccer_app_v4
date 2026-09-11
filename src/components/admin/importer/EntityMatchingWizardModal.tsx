@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckCircle2, ChevronRight, Building2, Shield, MapPin, Layers, Search, Sparkles, Loader2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { lookupEntityDetails, EntityLookupResult } from "@/lib/actions/entityLookup-actions";
@@ -54,6 +54,53 @@ export default function EntityMatchingWizardModal({
   // Web/AI Lookup States
   const [lookupResults, setLookupResults] = useState<Record<string, EntityLookupResult>>({});
   const [loadingLookups, setLoadingLookups] = useState<Record<string, boolean>>({});
+
+  // Auto-match candidates on open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const initialMappings: Record<string, { matchedId: number | null; createNew: boolean }> = { ...mappings };
+
+    // Auto-match Clubs
+    unmatchedClubs.forEach((club) => {
+      if (initialMappings[club]) return;
+      const cLower = club.toLowerCase().trim();
+      const match = existingClubs.find(
+        (c) => cLower.includes(c.name.toLowerCase().trim()) || c.name.toLowerCase().trim().includes(cLower)
+      );
+      if (match) {
+        initialMappings[club] = { matchedId: match.id, createNew: false };
+      }
+    });
+
+    // Auto-match Teams
+    unmatchedTeams.forEach((team) => {
+      if (initialMappings[team]) return;
+      const tLower = team.toLowerCase().trim();
+      const match = existingTeams.find((t) => {
+        const full = `${t.clubName} ${t.name}`.toLowerCase().trim();
+        const simple = t.name.toLowerCase().trim();
+        return tLower === full || tLower === simple || tLower.includes(simple) || simple.includes(tLower);
+      });
+      if (match) {
+        initialMappings[team] = { matchedId: match.id, createNew: false };
+      }
+    });
+
+    // Auto-match Locations
+    unmatchedLocations.forEach((loc) => {
+      if (initialMappings[loc]) return;
+      const lLower = loc.toLowerCase().trim();
+      const match = existingLocations.find(
+        (l) => lLower.includes(l.name.toLowerCase().trim()) || l.name.toLowerCase().trim().includes(lLower)
+      );
+      if (match) {
+        initialMappings[loc] = { matchedId: match.id, createNew: false };
+      }
+    });
+
+    setMappings(initialMappings);
+  }, [isOpen, unmatchedClubs, unmatchedTeams, unmatchedLocations, existingClubs, existingTeams, existingLocations]);
 
   if (!isOpen) return null;
 

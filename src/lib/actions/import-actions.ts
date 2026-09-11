@@ -6,6 +6,7 @@ import { requireSession, verifyAdmin } from "@/lib/auth/auth-utils";
 
 import { resolveOrCreateDivisionHierarchy } from "@/lib/actions/league-actions";
 import { deriveClubAbbreviation } from "@/lib/utils/teamName";
+import { discernVenueAndField } from "@/lib/utils/locationUtils";
 
 export interface TeamImportRecord {
   clubName: string;
@@ -229,10 +230,17 @@ export async function batchImportSchedule(
     const genderEnum = mapGenderToEnum(rec.gender);
 
     // 1. Resolve Home Team & Club
-    let homeClub = await prisma.clubs.findFirst({
-      where: { name: { equals: rec.homeClubName.trim() } },
-    });
-    if (!homeClub) {
+    let homeClub: any = null;
+    const mappedHomeClub = resolvedMappings?.[rec.homeClubName];
+    if (mappedHomeClub?.matchedId) {
+      homeClub = await prisma.clubs.findUnique({ where: { id: mappedHomeClub.matchedId } });
+    }
+    if (!homeClub && rec.homeClubName) {
+      homeClub = await prisma.clubs.findFirst({
+        where: { name: { equals: rec.homeClubName.trim() } },
+      });
+    }
+    if (!homeClub && rec.homeClubName) {
       homeClub = await prisma.clubs.create({
         data: {
           name: rec.homeClubName.trim(),
@@ -242,33 +250,58 @@ export async function batchImportSchedule(
       });
     }
 
-    let homeTeam = await prisma.teams.findFirst({
-      where: {
-        club_id: homeClub.id,
-        team_name: { equals: rec.homeTeamName.trim() },
-        gender: genderEnum,
-      },
-    });
-    if (!homeTeam) {
+    let homeTeam: any = null;
+    const mappedHomeTeam = resolvedMappings?.[rec.homeTeamName];
+    let homeTeamSeason: any = null;
+
+    if (mappedHomeTeam?.matchedId) {
+      homeTeamSeason = await prisma.team_seasons.findUnique({
+        where: { id: mappedHomeTeam.matchedId },
+        include: { teams: true },
+      });
+      if (homeTeamSeason) {
+        homeTeam = homeTeamSeason.teams;
+      }
+    }
+
+    if (!homeTeam && homeClub) {
+      homeTeam = await prisma.teams.findFirst({
+        where: {
+          club_id: homeClub.id,
+          team_name: { equals: rec.homeTeamName.trim() },
+          gender: genderEnum,
+        },
+      });
+    }
+    if (!homeTeam && homeClub) {
       homeTeam = await prisma.teams.create({
         data: { club_id: homeClub.id, team_name: rec.homeTeamName.trim(), gender: genderEnum },
       });
     }
 
-    let homeTeamSeason = await prisma.team_seasons.findFirst({
-      where: { team_id: homeTeam.id, season_id: seasonId },
-    });
-    if (!homeTeamSeason) {
+    if (!homeTeamSeason && homeTeam) {
+      homeTeamSeason = await prisma.team_seasons.findFirst({
+        where: { team_id: homeTeam.id, season_id: seasonId },
+      });
+    }
+    if (!homeTeamSeason && homeTeam) {
       homeTeamSeason = await prisma.team_seasons.create({
         data: { team_id: homeTeam.id, season_id: seasonId },
       });
     }
 
     // 2. Resolve Away Team & Club
-    let awayClub = await prisma.clubs.findFirst({
-      where: { name: { equals: rec.awayClubName.trim() } },
-    });
-    if (!awayClub) {
+    let awayClub: any = null;
+    const mappedAwayClub = resolvedMappings?.[rec.awayClubName];
+    if (mappedAwayClub?.matchedId) {
+      awayClub = await prisma.clubs.findUnique({ where: { id: mappedAwayClub.matchedId } });
+    }
+    if (!awayClub && rec.awayClubName) {
+      awayClub = await prisma.clubs.findFirst({
+        where: { name: { equals: rec.awayClubName.trim() } },
+      });
+    }
+    if (!awayClub && rec.awayClubName) {
       awayClub = await prisma.clubs.create({
         data: {
           name: rec.awayClubName.trim(),
@@ -278,51 +311,75 @@ export async function batchImportSchedule(
       });
     }
 
-    let awayTeam = await prisma.teams.findFirst({
-      where: {
-        club_id: awayClub.id,
-        team_name: { equals: rec.awayTeamName.trim() },
-        gender: genderEnum,
-      },
-    });
-    if (!awayTeam) {
+    let awayTeam: any = null;
+    const mappedAwayTeam = resolvedMappings?.[rec.awayTeamName];
+    let awayTeamSeason: any = null;
+
+    if (mappedAwayTeam?.matchedId) {
+      awayTeamSeason = await prisma.team_seasons.findUnique({
+        where: { id: mappedAwayTeam.matchedId },
+        include: { teams: true },
+      });
+      if (awayTeamSeason) {
+        awayTeam = awayTeamSeason.teams;
+      }
+    }
+
+    if (!awayTeam && awayClub) {
+      awayTeam = await prisma.teams.findFirst({
+        where: {
+          club_id: awayClub.id,
+          team_name: { equals: rec.awayTeamName.trim() },
+          gender: genderEnum,
+        },
+      });
+    }
+    if (!awayTeam && awayClub) {
       awayTeam = await prisma.teams.create({
         data: { club_id: awayClub.id, team_name: rec.awayTeamName.trim(), gender: genderEnum },
       });
     }
 
-    let awayTeamSeason = await prisma.team_seasons.findFirst({
-      where: { team_id: awayTeam.id, season_id: seasonId },
-    });
-    if (!awayTeamSeason) {
+    if (!awayTeamSeason && awayTeam) {
+      awayTeamSeason = await prisma.team_seasons.findFirst({
+        where: { team_id: awayTeam.id, season_id: seasonId },
+      });
+    }
+    if (!awayTeamSeason && awayTeam) {
       awayTeamSeason = await prisma.team_seasons.create({
         data: { team_id: awayTeam.id, season_id: seasonId },
       });
     }
 
-    // 3. Resolve Location & Sublocation with smart matching
+    // 3. Resolve Location & Sublocation with smart matching and discernment
     let locationId: number | null = null;
     let sublocationId: number | null = null;
 
     const rawLocName = rec.locationName ? rec.locationName.trim() : "";
     const rawSubName = rec.sublocationName ? rec.sublocationName.trim() : "";
+    const discerned = discernVenueAndField(rawLocName, rawSubName);
+    const venueName = discerned.venueName || rawLocName;
+    const fieldName = discerned.sublocationName || rawSubName;
 
-    if (rawLocName) {
+    if (venueName) {
       // Check mapped location first
-      const mappedLoc = resolvedMappings?.locations?.[rawLocName];
-      const mappedSub = resolvedMappings?.sublocations?.[rawSubName || rawLocName];
+      const mappedLoc =
+        resolvedMappings?.[venueName] ||
+        resolvedMappings?.[rawLocName] ||
+        resolvedMappings?.locations?.[venueName] ||
+        resolvedMappings?.locations?.[rawLocName];
 
       if (mappedLoc?.matchedId) {
         locationId = mappedLoc.matchedId;
       } else {
-        // Search by Name OR Abbreviation OR Sublocation Code (e.g. OCH1 -> O.C. Hubert Park)
+        // Search by Name OR Abbreviation OR Sublocation Code
         let location = await prisma.locations.findFirst({
           where: {
             OR: [
-              { name: { equals: rawLocName } },
-              { abbreviation: { equals: rawLocName } },
-              { locations_sublocations: { some: { description: rawLocName } } },
-              { locations_sublocations: { some: { name: rawLocName } } },
+              { name: { equals: venueName } },
+              { abbreviation: { equals: venueName } },
+              { locations_sublocations: { some: { description: venueName } } },
+              { locations_sublocations: { some: { name: venueName } } },
             ],
           },
           include: { locations_sublocations: true },
@@ -330,19 +387,19 @@ export async function batchImportSchedule(
 
         if (!location) {
           location = await prisma.locations.create({
-            data: { name: rawLocName },
+            data: { name: venueName },
             include: { locations_sublocations: true },
           });
         }
         locationId = location.id;
 
-        // Try to deduce sublocation automatically if code or name matches (e.g. OCH1 -> Field 1)
+        // Try to deduce sublocation automatically if code or name matches
         if (location && !sublocationId) {
           const matchingSub = location.locations_sublocations.find(
             (sub) =>
-              sub.description?.toLowerCase() === rawLocName.toLowerCase() ||
-              sub.name.toLowerCase() === rawLocName.toLowerCase() ||
-              (rawSubName && sub.name.toLowerCase() === rawSubName.toLowerCase())
+              sub.description?.toLowerCase() === venueName.toLowerCase() ||
+              sub.name.toLowerCase() === venueName.toLowerCase() ||
+              (fieldName && sub.name.toLowerCase() === fieldName.toLowerCase())
           );
           if (matchingSub) {
             sublocationId = matchingSub.id;
@@ -350,24 +407,32 @@ export async function batchImportSchedule(
         }
       }
 
-      if (mappedSub?.matchedId) {
-        sublocationId = mappedSub.matchedId;
-      } else if (rawSubName && locationId && !sublocationId) {
-        let subloc = await prisma.locations_sublocations.findFirst({
-          where: {
-            location_id: locationId,
-            OR: [
-              { name: { equals: rawSubName } },
-              { description: { equals: rawSubName } },
-            ],
-          },
-        });
-        if (!subloc) {
-          subloc = await prisma.locations_sublocations.create({
-            data: { location_id: locationId, name: rawSubName },
+      if (fieldName && locationId) {
+        const mappedSub =
+          resolvedMappings?.[fieldName] ||
+          resolvedMappings?.[rawSubName] ||
+          resolvedMappings?.sublocations?.[fieldName] ||
+          resolvedMappings?.sublocations?.[rawSubName];
+
+        if (mappedSub?.matchedId) {
+          sublocationId = mappedSub.matchedId;
+        } else if (!sublocationId) {
+          let subloc = await prisma.locations_sublocations.findFirst({
+            where: {
+              location_id: locationId,
+              OR: [
+                { name: { equals: fieldName } },
+                { description: { equals: fieldName } },
+              ],
+            },
           });
+          if (!subloc) {
+            subloc = await prisma.locations_sublocations.create({
+              data: { location_id: locationId, name: fieldName },
+            });
+          }
+          sublocationId = subloc.id;
         }
-        sublocationId = subloc.id;
       }
     }
 
@@ -761,6 +826,15 @@ export async function batchImportRoster(
  */
 export async function getImportLocationsData() {
   await requireSession();
+  const clubs = await prisma.clubs.findMany({
+    select: {
+      id: true,
+      name: true,
+      abbreviation: true,
+    },
+    orderBy: { name: "asc" },
+  });
+
   const locations = await prisma.locations.findMany({
     include: {
       addresses: true,
@@ -768,6 +842,12 @@ export async function getImportLocationsData() {
     },
     orderBy: { name: "asc" },
   });
+
+  const existingClubs = clubs.map((c) => ({
+    id: c.id,
+    name: c.name,
+    abbreviation: c.abbreviation ?? "",
+  }));
 
   const existingLocations = locations.map((loc) => ({
     id: loc.id,
@@ -788,5 +868,5 @@ export async function getImportLocationsData() {
     }))
   );
 
-  return { existingLocations, existingSublocations };
+  return { existingClubs, existingLocations, existingSublocations };
 }
