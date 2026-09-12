@@ -11,6 +11,7 @@ import {
   DetailedGoalEntry,
   DetailedCardEntry,
 } from "@/lib/actions/quickScore-actions";
+import { apiFetch } from "@/app/api/fetcher";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
@@ -109,38 +110,81 @@ export default function QuickScoreModal({
     startTransition(async () => {
       try {
         if (entryMode === "simple") {
-          const res = await recordQuickScore({
-            gameId,
-            homeScore,
-            awayScore,
-            countsForStandings,
-          });
-          if (res.success) {
+          let res: any;
+          try {
+            res = await recordQuickScore({
+              gameId,
+              homeScore,
+              awayScore,
+              countsForStandings,
+            });
+          } catch (actionErr: any) {
+            if (actionErr.message?.includes("was not found on the server") || actionErr.message?.includes("Server Action")) {
+              res = await apiFetch("games/quick-score", "POST", {
+                gameId,
+                homeScore,
+                awayScore,
+                countsForStandings,
+              });
+            } else {
+              throw actionErr;
+            }
+          }
+          if (res?.success) {
             if (onSuccess) onSuccess();
             onClose();
           }
         } else {
-          const res = await recordDetailedMatchScore({
-            gameId,
-            homeScore,
-            awayScore,
-            countsForStandings,
-            goals,
-            cards,
-            teamTotals: {
-              homeShots: Number(homeShots) || undefined,
-              awayShots: Number(awayShots) || undefined,
-              homeSaves: Number(homeSaves) || undefined,
-              awaySaves: Number(awaySaves) || undefined,
-              homeCorners: Number(homeCorners) || undefined,
-              awayCorners: Number(awayCorners) || undefined,
-              homeFouls: Number(homeFouls) || undefined,
-              awayFouls: Number(awayFouls) || undefined,
-              homeOffsides: Number(homeOffsides) || undefined,
-              awayOffsides: Number(awayOffsides) || undefined,
-            },
-          });
-          if (res.success) {
+          let res: any;
+          try {
+            res = await recordDetailedMatchScore({
+              gameId,
+              homeScore,
+              awayScore,
+              countsForStandings,
+              goals,
+              cards,
+              teamTotals: {
+                homeShots: Number(homeShots) || undefined,
+                awayShots: Number(awayShots) || undefined,
+                homeSaves: Number(homeSaves) || undefined,
+                awaySaves: Number(awaySaves) || undefined,
+                homeCorners: Number(homeCorners) || undefined,
+                awayCorners: Number(awayCorners) || undefined,
+                homeFouls: Number(homeFouls) || undefined,
+                awayFouls: Number(awayFouls) || undefined,
+                homeOffsides: Number(homeOffsides) || undefined,
+                awayOffsides: Number(awayOffsides) || undefined,
+              },
+            });
+          } catch (actionErr: any) {
+            if (actionErr.message?.includes("was not found on the server") || actionErr.message?.includes("Server Action")) {
+              res = await apiFetch("games/quick-score", "POST", {
+                type: "detailed",
+                gameId,
+                homeScore,
+                awayScore,
+                countsForStandings,
+                goals,
+                cards,
+                teamTotals: {
+                  homeShots: Number(homeShots) || undefined,
+                  awayShots: Number(awayShots) || undefined,
+                  homeSaves: Number(homeSaves) || undefined,
+                  awaySaves: Number(awaySaves) || undefined,
+                  homeCorners: Number(homeCorners) || undefined,
+                  awayCorners: Number(awayCorners) || undefined,
+                  homeFouls: Number(homeFouls) || undefined,
+                  awayFouls: Number(awayFouls) || undefined,
+                  homeOffsides: Number(homeOffsides) || undefined,
+                  awayOffsides: Number(awayOffsides) || undefined,
+                },
+              });
+            } else {
+              throw actionErr;
+            }
+          }
+          if (res?.success) {
             if (onSuccess) onSuccess();
             onClose();
           }

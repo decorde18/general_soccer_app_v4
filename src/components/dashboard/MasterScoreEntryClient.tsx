@@ -27,6 +27,7 @@ import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
 import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
 import { formatDateStandard, formatTimeStandard } from "@/components/ui/DateSelect";
 import { recordQuickScore } from "@/lib/actions/quickScore-actions";
+import { apiFetch } from "@/app/api/fetcher";
 import { toast } from "sonner";
 
 export interface MasterGameRow {
@@ -186,12 +187,26 @@ export default function MasterScoreEntryClient({
           const targetGame = games.find((g) => g.id === gameId);
           const countsForStandings = targetGame?.countsForStandings ?? true;
 
-          const res = await recordQuickScore({
-            gameId,
-            homeScore: homeScoreNum,
-            awayScore: awayScoreNum,
-            countsForStandings,
-          });
+          let res: any;
+          try {
+            res = await recordQuickScore({
+              gameId,
+              homeScore: homeScoreNum,
+              awayScore: awayScoreNum,
+              countsForStandings,
+            });
+          } catch (actionErr: any) {
+            if (actionErr.message?.includes("was not found on the server") || actionErr.message?.includes("Server Action")) {
+              res = await apiFetch("games/quick-score", "POST", {
+                gameId,
+                homeScore: homeScoreNum,
+                awayScore: awayScoreNum,
+                countsForStandings,
+              });
+            } else {
+              throw actionErr;
+            }
+          }
 
           if (res.success) {
             savedCount++;
