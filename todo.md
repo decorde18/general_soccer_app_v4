@@ -461,7 +461,8 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Enforce 12-hour AM/PM time formatting (`formatTimeStandard`) across all recent/upcoming match cards, dashboards, schedules, and modals (preventing raw military `13:30:00` display).
   - [x] Verify zero direct `.toLocaleTimeString()` or `.getUTCHours()` calls exist in component files.
 - [ ] **24.5 Responsive Layout & Touch Target Verification**
-  - [ ] Audit all views for zero horizontal scrolling on mobile/tablet screens.
+  - [x] Implement dedicated mobile phone card view (`block md:hidden`) for Score Reporting Center (`/dashboard/scores` in `MasterScoreEntryClient.tsx`), with collapsible mobile filter panel, touch-friendly score inputs, venue links, and quick score triggers.
+  - [ ] Audit all remaining views for zero horizontal scrolling on mobile/tablet screens.
   - [ ] Verify table row padding (`py-0.5 px-1.5`) and minimum touch targets (`44px`) for action buttons.
 - [ ] **24.6 Standings, Enrollment & Hierarchy Integrity**
   - [ ] Enforce terminal subnode hierarchy filtering and full breadcrumb formatting across all league node selectors.
@@ -473,5 +474,8 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - Historical season archiving and player career stats aggregation
 - High school team player status management (available players, trying out, interested)
 - Uniforms and numbers assignment tool
+- **Modular Player Stats Aggregation Architecture**: Single-game calculator helper (`calculatePlayerGameMinutes(pg)`) evaluates base stats per match; aggregate views (`getComprehensivePlayerStats`, `getStatsForRoster`, `getPlayerProfileStats`) sum results across games matching active filters (season, competition, club, team).
 
-Shouldn't player stats start with game stats calculations (using same calculations for game summary) then just add all games that are part of the filter being requested - if full season, add all games, if competition add only games of competition, etc. Especially as we add new filters, we need to be able to query and combine data in an organized way and quick way.
+double check for mobile phone responsive
+team game schedule needs to be responsive
+on league creation, we need set league rules, 9v9, halve times etc

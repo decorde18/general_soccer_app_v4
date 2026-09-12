@@ -104,6 +104,7 @@ export default function MasterScoreEntryClient({
 
   const [quickScoreGame, setQuickScoreGame] = useState<MasterGameRow | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // Filtered games
   const filteredGames = useMemo(() => {
@@ -277,14 +278,23 @@ export default function MasterScoreEntryClient({
 
       {/* FILTER CONTROLS */}
       <div className="bg-surface border border-border/80 p-5 rounded-2xl shadow-sm space-y-4">
-        <div className="flex items-center gap-2 border-b border-border/50 pb-2.5">
-          <Filter size={16} className="text-primary" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
-            Filter Matches & Fixtures
-          </h3>
+        <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-primary" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
+              Filter Matches & Fixtures
+            </h3>
+          </div>
+          <button
+            onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+            className="sm:hidden text-xs font-bold text-primary flex items-center gap-1 cursor-pointer py-1 px-2.5 bg-primary/10 rounded-lg"
+          >
+            <Filter size={13} />
+            <span>{isMobileFilterOpen ? "Hide Filters" : "Show Filters"}</span>
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 items-center">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 items-center ${isMobileFilterOpen ? "grid" : "hidden sm:grid"}`}>
           {/* Season Filter */}
           <div>
             <Select
@@ -379,7 +389,7 @@ export default function MasterScoreEntryClient({
         <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
             <Zap size={16} />
-            <span>Batch Score Entry Mode Active: Enter scores directly in table rows below, then click "Save All Scores".</span>
+            <span>Batch Score Entry Mode Active: Enter scores directly below, then click "Save All Scores".</span>
           </div>
           <button
             onClick={handleSaveAllBatchScores}
@@ -391,8 +401,146 @@ export default function MasterScoreEntryClient({
         </div>
       )}
 
-      {/* GAMES TABLE */}
-      <div className="overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-sm">
+      {/* MOBILE CARDS VIEW (block md:hidden) */}
+      <div className="block md:hidden space-y-3">
+        {filteredGames.length === 0 ? (
+          <div className="py-12 text-center text-muted font-medium bg-surface border border-border/80 rounded-2xl p-6">
+            No games found matching your filters.
+          </div>
+        ) : (
+          filteredGames.map((game) => {
+            const isCompleted = game.status === "completed";
+            const batchVal = batchScores[game.id];
+
+            return (
+              <div
+                key={game.id}
+                className="bg-surface border border-border/80 rounded-2xl p-4 shadow-xs space-y-3"
+              >
+                {/* Top Bar: Date, Time & Badges */}
+                <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-2 text-xs">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="font-bold text-text flex items-center gap-1">
+                      <Calendar size={13} className="text-primary shrink-0" />
+                      <span>{formatDate(game.startDate)}</span>
+                    </div>
+                    <div className="text-muted flex items-center gap-1">
+                      <Clock size={11} className="shrink-0" />
+                      <span>{formatTime(game.startTime)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted bg-background border border-border px-1.5 py-0.5 rounded capitalize">
+                      {game.gameType}
+                    </span>
+                    {game.countsForStandings !== false ? (
+                      <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                        <Check size={10} />
+                        <span>Counts</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase text-muted bg-background border border-border px-1.5 py-0.5 rounded">
+                        <X size={10} />
+                        <span>Excluded</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Teams & Score Row */}
+                <div className="grid grid-cols-12 items-center gap-2 py-0.5">
+                  {/* Teams */}
+                  <div className="col-span-8 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">H</span>
+                      <span className="font-bold text-text text-xs truncate" title={`${game.homeClubName || ""} ${game.homeTeamName}`}>
+                        {game.homeClubName || ""} {game.homeTeamName}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded shrink-0">A</span>
+                      <span className="font-bold text-text text-xs truncate" title={`${game.awayClubName || ""} ${game.awayTeamName}`}>
+                        {game.awayClubName || ""} {game.awayTeamName}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Score Display or Batch Input */}
+                  <div className="col-span-4 flex justify-end">
+                    {isBatchEditMode ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="H"
+                          value={batchVal ? batchVal.home : (game.homeScore ?? "")}
+                          onChange={(e) => handleBatchInputChange(game.id, "home", e.target.value)}
+                          className="w-11 text-center font-bold text-xs py-1.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <span className="text-muted font-bold">-</span>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="A"
+                          value={batchVal ? batchVal.away : (game.awayScore ?? "")}
+                          onChange={(e) => handleBatchInputChange(game.id, "away", e.target.value)}
+                          className="w-11 text-center font-bold text-xs py-1.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
+                      </div>
+                    ) : isCompleted && game.homeScore !== null && game.awayScore !== null ? (
+                      <span className="inline-flex items-center gap-1 font-black text-sm text-text bg-background border border-border px-2.5 py-1 rounded-xl shadow-xs">
+                        <span>{game.homeScore}</span>
+                        <span className="text-muted text-xs">-</span>
+                        <span>{game.awayScore}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+                        Scheduled
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Location & Action Buttons Bar */}
+                <div className="pt-2.5 border-t border-border/50 flex items-center justify-between gap-2">
+                  <LocationLink
+                    locationId={game.locationId}
+                    locationName={game.locationName}
+                    sublocationName={game.sublocationName}
+                    showIcon
+                    className="text-xs max-w-[160px]"
+                  />
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {canManage && (
+                      <button
+                        onClick={() => setQuickScoreGame(game)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-extrabold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 rounded-xl transition-all cursor-pointer min-h-[36px]"
+                        title="Quick Score Entry"
+                      >
+                        <Edit3 size={13} />
+                        <span>{isCompleted ? "Edit" : "Score"}</span>
+                      </button>
+                    )}
+
+                    <Link
+                      href={`/gamestats/${game.homeTeamSeasonId}/${game.id}`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-extrabold text-primary bg-primary/10 hover:bg-primary/20 rounded-xl transition-all min-h-[36px]"
+                    >
+                      <SquareChevronRight size={13} />
+                      <span>Details</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* DESKTOP GAMES TABLE (hidden md:block) */}
+      <div className="hidden md:block overflow-x-auto rounded-2xl border border-border/80 bg-surface shadow-sm">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="border-b border-border bg-background/50 text-[10px] font-bold uppercase tracking-wider text-muted">
