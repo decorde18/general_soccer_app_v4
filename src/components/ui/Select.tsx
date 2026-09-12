@@ -35,13 +35,14 @@
  */
 
 import React from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Select({
   label,
   options = [],
   disabled = false,
+  isLoading = false,
   error = false,
   className = "",
   width = "auto", // "auto", "sm", "md", "lg", "full"
@@ -75,7 +76,7 @@ export default function Select({
     <div className={cn("relative", widthClasses[width])}>
       <div className='relative'>
         <select
-          disabled={disabled}
+          disabled={disabled || isLoading}
           defaultValue={defaultValue}
           value={value}
           onChange={handleChange}
@@ -83,7 +84,7 @@ export default function Select({
             "appearance-none w-full px-4 py-2 rounded-md transition-colors border",
             "text-sm font-semibold",
             "cursor-pointer",
-            disabled && "opacity-50 cursor-not-allowed",
+            (disabled || isLoading) && "opacity-60 cursor-not-allowed",
             error
               ? "bg-danger/10 hover:bg-danger/20 border-danger text-danger"
               : "bg-surface hover:bg-white/80 border-border",
@@ -113,10 +114,17 @@ export default function Select({
           </label>
         )}
 
-        <ChevronDown
-          size={16}
-          className='absolute right-4 top-1/2 -translate-y-1/2 text-muted/60 pointer-events-none'
-        />
+        {isLoading ? (
+          <Loader2
+            size={16}
+            className='absolute right-4 top-1/2 -translate-y-1/2 text-primary animate-spin pointer-events-none'
+          />
+        ) : (
+          <ChevronDown
+            size={16}
+            className='absolute right-4 top-1/2 -translate-y-1/2 text-muted/60 pointer-events-none'
+          />
+        )}
       </div>
     </div>
   );

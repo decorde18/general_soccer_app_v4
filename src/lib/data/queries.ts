@@ -8,6 +8,7 @@
 
 import prisma from "@/lib/prisma";
 import { formatTeamName } from "@/lib/utils/teamName";
+import { calculateActivePlayerTimeOnField } from "@/lib/utils/dateTimeUtils";
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -1262,42 +1263,50 @@ function calculatePlayerGameMinutes(pg: any): {
   const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id);
   const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id);
 
-  // Determine game duration based on actual period duration
-  const defaultDuration = (game.period_duration || 2400) * (game.default_reg_periods || 2);
-  let maxTimeSec = defaultDuration;
-  allSubs.forEach((s: any) => {
-    if (s.sub_time && s.sub_time > maxTimeSec) maxTimeSec = s.sub_time;
-  });
+  const periodData = (game.game_periods || []).slice().sort((a: any, b: any) => a.period_number - b.period_number);
+  const p1Start = periodData[0]?.start_time ? Number(periodData[0].start_time) : null;
+  const periodIntervals: { start: number; end: number }[] = [];
+  const regSecs = game.period_duration || 2400;
 
-  const intervals: { start: number; end: number }[] = [];
-  let currentStart: number | null = isStarted ? 0 : null;
-
-  const events: { type: "in" | "out"; time: number }[] = [];
-  subsIn.forEach((s: any) => events.push({ type: "in", time: Number(s.sub_time || 0) }));
-  subsOut.forEach((s: any) => events.push({ type: "out", time: Number(s.sub_time || 0) }));
-  events.sort((a, b) => a.time - b.time);
-
-  events.forEach((ev) => {
-    if (ev.type === "in" && currentStart === null) {
-      currentStart = ev.time;
-    } else if (ev.type === "out" && currentStart !== null) {
-      intervals.push({ start: currentStart, end: ev.time });
-      currentStart = null;
-    }
-  });
-  if (currentStart !== null) {
-    intervals.push({ start: currentStart, end: maxTimeSec });
+  if (p1Start && periodData.length > 0) {
+    periodData.forEach((p: any, idx: number) => {
+      const pStartMs = p.start_time ? Number(p.start_time) : null;
+      const pEndMs = p.end_time ? Number(p.end_time) : null;
+      if (pStartMs) {
+        const startSec = Math.max(0, Math.floor((pStartMs - p1Start) / 1000));
+        let endSec = startSec + regSecs;
+        if (pEndMs) {
+          endSec = Math.max(startSec, Math.floor((pEndMs - p1Start) / 1000));
+        }
+        periodIntervals.push({ start: startSec, end: endSec });
+      } else {
+        const startSec = idx * regSecs;
+        periodIntervals.push({ start: startSec, end: startSec + regSecs });
+      }
+    });
+  } else {
+    const totalReg = regSecs * (game.default_reg_periods || 2);
+    periodIntervals.push({ start: 0, end: totalReg });
   }
 
-  let totalSecondsPlayed = 0;
-  intervals.forEach((inv) => {
-    if (inv.end > inv.start) {
-      totalSecondsPlayed += inv.end - inv.start;
-    }
-  });
+  const stoppageIntervals = (game.game_events_major || [])
+    .filter((e: any) => e.clock_should_run === false || e.clock_should_run === 0)
+    .map((e: any) => ({
+      startTime: Number(e.game_time || 0),
+      endTime: e.end_time !== null && e.end_time !== undefined ? Number(e.end_time) : null,
+    }));
 
-  const minutesPlayed = Math.round(totalSecondsPlayed / 60);
-  return { isPlayedGame: true, minutesPlayed, intervals };
+  const activeSeconds = calculateActivePlayerTimeOnField(
+    isStarted,
+    subsIn,
+    subsOut,
+    periodIntervals,
+    stoppageIntervals,
+    0
+  );
+
+  const minutesPlayed = Math.round(activeSeconds / 60);
+  return { isPlayedGame: true, minutesPlayed, intervals: [] };
 }
 
 async function getStatsForRoster(
@@ -1322,6 +1331,7 @@ async function getStatsForRoster(
       games: {
         include: {
           game_subs: true,
+          game_periods: true,
           game_events_major: { include: { game_events_goals: true } },
         },
       },

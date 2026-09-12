@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireSession, verifyTeamAccess } from "@/lib/auth/auth-utils";
+import { parseGameDatesAndTimesUTC } from "@/lib/utils/dateTimeUtils";
 
 export interface CompetitionNodeInput {
   nodeId: number;
@@ -195,9 +196,8 @@ export async function createGame(data: CreateGameData) {
 
   let startTimeObj: Date | null = null;
   if (data.startTime) {
-    const [hours, minutes] = data.startTime.split(":").map(Number);
-    startTimeObj = new Date(startDateObj);
-    startTimeObj.setHours(hours, minutes, 0, 0);
+    const { startTime } = parseGameDatesAndTimesUTC(data.startDate, data.startTime);
+    startTimeObj = startTime;
   }
 
   // 1. Create the game row
@@ -256,6 +256,8 @@ export async function createGame(data: CreateGameData) {
     }
   }
 
+  await ensureBothTeamsEnrolledInGameLeagueNodes(game.id);
+
   revalidatePath("/dashboard");
   revalidatePath("/leagues");
   revalidatePath(`/teams/${data.homeTeamSeasonId}`);
@@ -283,11 +285,9 @@ export async function updateGame(
   if (data.startDate) updateData.start_date = new Date(data.startDate);
   if (data.startTime !== undefined) {
     if (data.startTime) {
-      const baseDate = data.startDate ? new Date(data.startDate) : game.start_date;
-      const [hours, minutes] = data.startTime.split(":").map(Number);
-      const t = new Date(baseDate);
-      t.setHours(hours, minutes, 0, 0);
-      updateData.start_time = t;
+      const dateStr = data.startDate || (game.start_date ? game.start_date.toISOString().split("T")[0] : "2026-01-01");
+      const { startTime } = parseGameDatesAndTimesUTC(dateStr, data.startTime);
+      updateData.start_time = startTime;
     } else {
       updateData.start_time = null;
     }
@@ -310,12 +310,138 @@ export async function updateGame(
     data: updateData,
   });
 
+  if (data.competitionNodes !== undefined) {
+    // Delete existing competition node associations
+    await prisma.game_league_nodes.deleteMany({ where: { game_id: gameId } });
+    await prisma.game_standings_inclusions.deleteMany({ where: { game_id: gameId } });
+
+    // Re-create updated competition node associations
+    for (const item of data.competitionNodes) {
+      if (!item.nodeId) continue;
+      const resolved = await ensureLeagueNodeSeason(item.nodeId, game.season_id);
+      if (resolved) {
+        const existingGln = await prisma.game_league_nodes.findFirst({
+          where: { game_id: gameId, league_node_id: resolved.nodeSeasonId },
+        });
+        if (!existingGln) {
+          await prisma.game_league_nodes.create({
+            data: {
+              game_id: gameId,
+              league_node_id: resolved.nodeSeasonId,
+              is_primary: item.isPrimary ?? true,
+            },
+          });
+        }
+
+        const existingGsi = await prisma.game_standings_inclusions.findFirst({
+          where: { game_id: gameId, league_node_id: resolved.leagueNodeId },
+        });
+        if (!existingGsi) {
+          await prisma.game_standings_inclusions.create({
+            data: {
+              game_id: gameId,
+              league_node_id: resolved.leagueNodeId,
+              counts_for_standings: item.countsForStandings ?? true,
+            },
+          });
+        }
+      }
+    }
+  }
+
+  await ensureBothTeamsEnrolledInGameLeagueNodes(gameId);
+
   revalidatePath("/dashboard");
   revalidatePath("/leagues");
   revalidatePath(`/teams/${game.home_team_season_id}`);
   revalidatePath(`/teams/${game.away_team_season_id}`);
 
   return { success: true, game: updated };
+}
+
+function buildHierarchyTitle(node: any): string {
+  if (!node) return "League";
+  const parts: string[] = [node.name];
+  let curr = node.league_nodes;
+  while (curr) {
+    parts.unshift(curr.name);
+    curr = curr.league_nodes;
+  }
+  if (node.leagues?.name) {
+    parts.unshift(node.leagues.name);
+  }
+  return parts.join(" > ");
+}
+
+/**
+ * Fetch attached competition nodes and standing inclusions for editing a game
+ */
+export async function getGameEditDetailsAction(gameId: number) {
+  const game = await prisma.games.findUnique({
+    where: { id: gameId },
+    include: {
+      game_league_nodes: {
+        include: {
+          league_node_seasons: {
+            include: {
+              league_nodes: {
+                include: {
+                  leagues: true,
+                  league_nodes: {
+                    include: {
+                      league_nodes: {
+                        include: {
+                          league_nodes: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      game_standings_inclusions: {
+        include: {
+          league_nodes: {
+            include: {
+              leagues: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!game) return null;
+
+  const attachedCompetitions = game.game_league_nodes.map((gln) => {
+    const lns = gln.league_node_seasons;
+    const node = lns?.league_nodes;
+    const gsi = game.game_standings_inclusions.find(
+      (inc) => inc.league_node_id === node?.id
+    );
+
+    return {
+      nodeId: node?.id || 0,
+      nodeSeasonId: gln.league_node_id,
+      isPrimary: gln.is_primary,
+      countsForStandings: gsi ? gsi.counts_for_standings !== false : true,
+      leagueId: node?.league_id || 0,
+      leagueName: node?.leagues?.name || "League",
+      nodeName: node?.name || "",
+      isTournament: node?.leagues?.is_tournament || false,
+      displayName: node ? buildHierarchyTitle(node) : "League",
+    };
+  });
+
+  return {
+    gameId: game.id,
+    seasonId: game.season_id,
+    gameType: game.game_type,
+    attachedCompetitions,
+  };
 }
 
 /**
@@ -395,6 +521,20 @@ export async function getSchedulerOptions() {
     prisma.league_nodes.findMany({
       include: {
         leagues: true,
+        league_nodes: {
+          include: {
+            league_nodes: {
+              include: {
+                league_nodes: {
+                  include: {
+                    league_nodes: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        other_league_nodes: true,
       },
       orderBy: { name: "asc" },
     }),
@@ -428,6 +568,10 @@ export async function getSchedulerOptions() {
     };
   });
 
+  const terminalNodes = leagueNodes.filter(
+    (node) => !node.other_league_nodes || node.other_league_nodes.length === 0
+  );
+
   return {
     seasons: seasons.map((s) => ({
       id: s.id,
@@ -440,13 +584,13 @@ export async function getSchedulerOptions() {
       location: c.location,
     })),
     teams: teamsList,
-    leagueNodes: leagueNodes.map((node) => ({
+    leagueNodes: terminalNodes.map((node) => ({
       id: node.id,
       leagueId: node.league_id,
       leagueName: node.leagues?.name || "League",
       nodeName: node.name,
       isTournament: node.leagues?.is_tournament || false,
-      displayName: `${node.leagues?.name || "League"} — ${node.name}`,
+      displayName: buildHierarchyTitle(node),
     })),
     enrollments: enrollments.map((e) => ({
       teamSeasonId: e.team_season_id,
@@ -525,4 +669,68 @@ export async function getLatestGameDefaults(teamSeasonId: number) {
     periodDuration: latestGame.period_duration ? Math.round(latestGame.period_duration / 60) : 40,
     playersOnField,
   };
+}
+
+/**
+ * Ensures that both the Home and Away team of a game are enrolled
+ * in team_league_enrollments for all attached league node seasons.
+ * Rule: "If it is a league game for one, it is a league game for both."
+ */
+export async function ensureBothTeamsEnrolledInGameLeagueNodes(gameId: number) {
+  const game = await prisma.games.findUnique({
+    where: { id: gameId },
+    include: {
+      game_league_nodes: true,
+    },
+  });
+
+  if (!game) return;
+
+  const { home_team_season_id, away_team_season_id } = game;
+  const teamSeasonIds = [home_team_season_id, away_team_season_id].filter(Boolean);
+
+  for (const gln of game.game_league_nodes) {
+    const lnsId = gln.league_node_id; // in schema, league_node_id is league_node_seasons.id
+    if (!lnsId) continue;
+
+    for (const tsId of teamSeasonIds) {
+      const existing = await prisma.team_league_enrollments.findFirst({
+        where: {
+          team_season_id: tsId,
+          league_node_season_id: lnsId,
+        },
+      });
+
+      if (!existing) {
+        await prisma.team_league_enrollments.create({
+          data: {
+            team_season_id: tsId,
+            league_node_season_id: lnsId,
+            is_active: true,
+          },
+        });
+      }
+    }
+
+    // Ensure game_standings_inclusions entry exists for the underlying league_node_id
+    const lns = await prisma.league_node_seasons.findUnique({
+      where: { id: lnsId },
+    });
+
+    if (lns?.league_node_id) {
+      const existingGsi = await prisma.game_standings_inclusions.findFirst({
+        where: { game_id: gameId, league_node_id: lns.league_node_id },
+      });
+
+      if (!existingGsi) {
+        await prisma.game_standings_inclusions.create({
+          data: {
+            game_id: gameId,
+            league_node_id: lns.league_node_id,
+            counts_for_standings: game.game_type !== "friendly",
+          },
+        });
+      }
+    }
+  }
 }

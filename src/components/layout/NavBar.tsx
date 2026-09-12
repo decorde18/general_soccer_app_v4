@@ -1,4 +1,5 @@
 "use client";
+import { useState, useTransition, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -21,6 +22,7 @@ import ClubSelector from "./ClubSelector";
 import SidebarTeamSelector from "./SidebarTeamSelector";
 import NavLinks from "./NavLinks";
 import SidebarFooter from "./SidebarFooter";
+import { useTeamLoadingStore } from "@/stores/teamLoadingStore";
 
 interface NavBarProps {
   user?: NavUser;
@@ -40,6 +42,15 @@ export default function NavBar({ user }: NavBarProps) {
   const { activeView, changeActiveView } = useActiveRoleView();
   const [selectedClubId, setSelectedClubId] = useSelectedClub(teamSeasons, loading);
 
+  const [isNavigating, startTransition] = useTransition();
+  const [optimisticTeamId, setOptimisticTeamId] = useState<string | null>(null);
+
+  const setGlobalTeamLoading = useTeamLoadingStore((s) => s.setIsTeamLoading);
+
+  useEffect(() => {
+    setOptimisticTeamId(null);
+  }, [pathname]);
+
   const showActiveViewSelect = !!(originalRoles?.isAdmin || originalRoles?.clubAdmin);
   const currentActiveViewValue = getCurrentActiveViewValue(activeView, activeRoles);
 
@@ -52,6 +63,20 @@ export default function NavBar({ user }: NavBarProps) {
 
   const urlTeamMatch = pathname?.match(/\/teams\/(\d+)/);
   const currentUrlTeamSeasonId = urlTeamMatch ? urlTeamMatch[1] : "";
+
+  const activeTeamId = optimisticTeamId ?? currentUrlTeamSeasonId;
+  const isTeamLoading = isNavigating || (optimisticTeamId !== null && optimisticTeamId !== currentUrlTeamSeasonId);
+
+  useEffect(() => {
+    if (isTeamLoading) {
+      const targetTeam = filteredTeamsForSelect.find(
+        (t) => String(t.id) === String(activeTeamId),
+      );
+      setGlobalTeamLoading(true, targetTeam?.teamName || null);
+    } else {
+      setGlobalTeamLoading(false, null);
+    }
+  }, [isTeamLoading, activeTeamId, filteredTeamsForSelect, setGlobalTeamLoading]);
 
   return (
     <>
@@ -86,9 +111,15 @@ export default function NavBar({ user }: NavBarProps) {
           {currentUser && !loading && (
             <SidebarTeamSelector
               teams={filteredTeamsForSelect}
-              currentTeamId={currentUrlTeamSeasonId}
+              currentTeamId={activeTeamId}
+              isLoading={isTeamLoading}
               onChange={(e) => {
-                if (e.target.value) router.push(`/teams/${e.target.value}`);
+                const newId = e.target.value;
+                if (!newId) return;
+                setOptimisticTeamId(newId);
+                startTransition(() => {
+                  router.push(`/teams/${newId}`);
+                });
               }}
             />
           )}

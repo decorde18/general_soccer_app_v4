@@ -16,14 +16,18 @@ import {
   FolderOpen,
   Calendar,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Dialog from "@/components/ui/Dialog";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
+import ClubTeamSelect from "@/components/ui/ClubTeamSelect";
+import { Loader2 } from "lucide-react";
 import {
   createLeagueNode,
   updateLeagueNode,
@@ -37,7 +41,16 @@ import {
 interface LeaguesStructureClientProps {
   leaguesData: { label: string; value: string }[];
   leagueNodesOptionsData: { label: string; value: string }[];
-  teamSeasonsData: { label: string; value: string }[];
+  teamSeasonsData: {
+    label: string;
+    value: string;
+    id?: number | string;
+    teamName?: string;
+    clubId?: string | number;
+    clubName?: string;
+    seasonId?: string | number;
+    seasonName?: string;
+  }[];
   seasonsData: { label: string; value: string }[];
   leagueNodesRecords: any[];
   teamEnrollmentsRecords: any[];
@@ -297,6 +310,20 @@ export default function LeaguesStructureClient({
     return null;
   }, [selectedItemId, leaguesData, leagueNodesRecords, teamEnrollmentsRecords]);
 
+  // Resolve target league ID for viewing public standings & schedule
+  const effectiveLeagueId = useMemo(() => {
+    if (!selectedInfo) return null;
+    if (selectedInfo.type === "league") return selectedInfo.id;
+    if (selectedInfo.type === "node") return selectedInfo.leagueId;
+    if (selectedInfo.type === "enrollment") {
+      const node = leagueNodesRecords.find(
+        (n) => n.id === (selectedInfo.record as any)?.leagueNodeId,
+      );
+      return node?.leagueId || null;
+    }
+    return null;
+  }, [selectedInfo, leagueNodesRecords]);
+
   // Teams currently enrolled in the selected node for this season
   const selectedNodeEnrollments = useMemo(() => {
     if (selectedInfo?.type !== "node") return [];
@@ -310,11 +337,27 @@ export default function LeaguesStructureClient({
   // Options for team seasons available to enroll in the selected node (exclude already enrolled)
   const availableTeamSeasonOptions = useMemo(() => {
     if (selectedInfo?.type !== "node") return [];
-    const enrolledIds = selectedNodeEnrollments.map((e) => e.teamSeasonId);
-    return teamSeasonsData.filter(
-      (ts) => !enrolledIds.includes(Number(ts.value)),
+    const enrolledIds = new Set(
+      selectedNodeEnrollments.map((e) => Number(e.teamSeasonId)),
     );
-  }, [selectedInfo, selectedNodeEnrollments, teamSeasonsData]);
+    return teamSeasonsData
+      .filter((ts) => {
+        const isNotEnrolled = !enrolledIds.has(Number(ts.value));
+        const isMatchingSeason = ts.seasonId
+          ? String(ts.seasonId) === String(selectedSeasonId)
+          : true;
+        return isNotEnrolled && isMatchingSeason;
+      })
+      .map((ts) => ({
+        id: ts.value,
+        teamName: ts.teamName || ts.label.split(" - ")[1] || ts.label,
+        clubId: ts.clubId,
+        clubName: ts.clubName || ts.label.split(" - ")[0],
+        seasonId: ts.seasonId,
+        seasonName: ts.seasonName,
+        label: ts.label,
+      }));
+  }, [selectedInfo, selectedNodeEnrollments, teamSeasonsData, selectedSeasonId]);
 
   // ─── Actions Handlers ───────────────────────────────────────────────────────
 
@@ -599,6 +642,18 @@ export default function LeaguesStructureClient({
 
           {/* Quick Hover Actions */}
           <div className='flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity'>
+            {node.leagueId && (
+              <Link
+                href={`/leagues/${node.leagueId}`}
+                target='_blank'
+                rel='noopener noreferrer'
+                onClick={(e) => e.stopPropagation()}
+                title='View Standings & Schedule'
+                className='p-1 hover:bg-amber-500/20 rounded text-amber-500 transition-colors'
+              >
+                <Trophy size={12} />
+              </Link>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -711,8 +766,21 @@ export default function LeaguesStructureClient({
           </p>
         </div>
 
-        {/* Season Selector Dropdown */}
-        <div className='flex items-center gap-2 bg-surface/50 border border-border px-3 py-1.5 rounded-xl'>
+        <div className='flex items-center gap-3 flex-wrap sm:flex-nowrap'>
+          <Link href='/leagues' target='_blank' rel='noopener noreferrer'>
+            <Button
+              variant='outline'
+              size='sm'
+              className='flex items-center gap-1.5 hover:border-amber-500/50 hover:text-amber-500 transition-colors'
+            >
+              <Trophy size={14} className='text-amber-500' />
+              <span>Public Standings</span>
+              <ExternalLink size={12} className='opacity-70' />
+            </Button>
+          </Link>
+
+          {/* Season Selector Dropdown */}
+          <div className='flex items-center gap-2 bg-surface/50 border border-border px-3 py-1.5 rounded-xl'>
           <Calendar size={16} className='text-primary' />
           <span className='text-xs font-semibold text-muted'>
             Enrollments Season:
@@ -737,6 +805,7 @@ export default function LeaguesStructureClient({
           </select>
         </div>
       </div>
+    </div>
 
       {/* Main Two Column Explorer Grid */}
       <div className='grid grid-cols-1 lg:grid-cols-12 gap-6 items-start'>
@@ -837,7 +906,26 @@ export default function LeaguesStructureClient({
                 </div>
 
                 {/* Operations Trigger Buttons */}
-                <div className='flex gap-2'>
+                <div className='flex gap-2 flex-wrap'>
+                  {effectiveLeagueId && (
+                    <Link
+                      href={`/leagues/${effectiveLeagueId}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                    >
+                      <Button
+                        variant='primary'
+                        size='sm'
+                        className='flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-none shadow-sm'
+                        title='View public standings & schedules'
+                      >
+                        <Trophy size={14} />
+                        <span>View Standings</span>
+                        <ExternalLink size={12} className='opacity-80' />
+                      </Button>
+                    </Link>
+                  )}
+
                   <Button
                     variant='outline'
                     size='sm'
@@ -984,29 +1072,39 @@ export default function LeaguesStructureClient({
                     </span>
                   </div>
 
-                  {/* Enroll team form */}
+                  {/* Enroll team form (Select Club first, then Team) */}
                   <form
                     onSubmit={handleEnrollTeamSubmit}
-                    className='flex gap-2'
+                    className='space-y-3 bg-surface-hover/30 border border-border/60 rounded-xl p-4'
                   >
-                    <div className='flex-1'>
-                      <Select
-                        value={enrollFormTeamSeasonId}
-                        onChange={(e: any) =>
-                          setEnrollFormTeamSeasonId(e.target.value)
-                        }
-                        placeholder='Choose team to enroll...'
-                        options={availableTeamSeasonOptions}
-                        className='w-full text-sm'
-                      />
+                    <ClubTeamSelect
+                      teamSeasons={availableTeamSeasonOptions}
+                      value={enrollFormTeamSeasonId}
+                      onChange={(val) => setEnrollFormTeamSeasonId(val)}
+                      disabled={isEnrolling}
+                      clubLabel="1. Select Club"
+                      teamLabel="2. Select Team to Enroll"
+                      layout="horizontal"
+                    />
+                    <div className='flex justify-end pt-1'>
+                      <Button
+                        type='submit'
+                        disabled={isEnrolling || !enrollFormTeamSeasonId}
+                        className='whitespace-nowrap flex items-center gap-2'
+                      >
+                        {isEnrolling ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Enrolling...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus size={14} />
+                            <span>Enroll Team in Division</span>
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    <Button
-                      type='submit'
-                      disabled={isEnrolling || !enrollFormTeamSeasonId}
-                      className='whitespace-nowrap'
-                    >
-                      {isEnrolling ? "Enrolling..." : "Enroll Team"}
-                    </Button>
                   </form>
 
                   {/* Enrolled teams list */}

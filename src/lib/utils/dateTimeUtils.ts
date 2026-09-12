@@ -438,14 +438,206 @@ export function calculatePeriodTime(
   return Math.max(0, totalPeriodSeconds - stoppageSeconds);
 }
 
+export interface PeriodInterval {
+  start: number; // absolute seconds from match start
+  end: number;   // absolute seconds from match start
+}
+
+export interface StoppageInterval {
+  startTime: number; // absolute seconds
+  endTime: number | null; // absolute seconds or null if ongoing
+}
+
 /**
- * Calculates player's actual time on field (playing time, excluding stoppages).
- * @param playerIns - Sub-in times (game seconds)
- * @param playerOuts - Sub-out times (game seconds)
- * @param isStarter - Whether player started
- * @param currentGameTime - Current game time (seconds)
- * @param stoppages - Stoppages (game seconds)
- * @returns Playing time in seconds
+ * Calculates player's actual time on field (active playing time, excluding halftime & stoppages).
+ */
+export function calculateActivePlayerTimeOnField(
+  isStarter: boolean,
+  subsIn: any[] = [],
+  subsOut: any[] = [],
+  periods: PeriodInterval[] = [],
+  stoppages: StoppageInterval[] = [],
+  currentGameTime: number = 0
+): number {
+  const normIn = (subsIn || [])
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const normOut = (subsOut || [])
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const events: { type: "IN" | "OUT"; time: number }[] = [];
+  normIn.forEach((t) => events.push({ type: "IN", time: t }));
+  normOut.forEach((t) => events.push({ type: "OUT", time: t }));
+  events.sort((a, b) => a.time - b.time);
+
+  let maxTimeline = currentGameTime;
+  if (periods && periods.length > 0) {
+    periods.forEach((p) => {
+      if (p.end > maxTimeline) maxTimeline = p.end;
+    });
+  }
+  events.forEach((ev) => {
+    if (ev.time > maxTimeline) maxTimeline = ev.time;
+  });
+
+  const onFieldIntervals: { start: number; end: number }[] = [];
+  let onField = isStarter;
+  let shiftStart: number | null = isStarter ? 0 : null;
+
+  events.forEach((evt) => {
+    if (evt.type === "IN") {
+      if (!onField) {
+        onField = true;
+        shiftStart = evt.time;
+      }
+    } else if (evt.type === "OUT") {
+      if (onField && shiftStart !== null) {
+        if (evt.time > shiftStart) {
+          onFieldIntervals.push({ start: shiftStart, end: evt.time });
+        }
+        onField = false;
+        shiftStart = null;
+      }
+    }
+  });
+
+  if (onField && shiftStart !== null && maxTimeline > shiftStart) {
+    onFieldIntervals.push({ start: shiftStart, end: maxTimeline });
+  }
+
+  const effectivePeriods =
+    periods && periods.length > 0
+      ? periods
+      : [{ start: 0, end: maxTimeline }];
+
+  let totalActiveSeconds = 0;
+
+  for (const inv of onFieldIntervals) {
+    for (const p of effectivePeriods) {
+      const overlapStart = Math.max(inv.start, p.start);
+      const overlapEnd = Math.min(inv.end, p.end);
+
+      if (overlapEnd > overlapStart) {
+        let activeSecs = overlapEnd - overlapStart;
+
+        for (const s of stoppages) {
+          const sEnd = s.endTime !== null && s.endTime !== undefined ? s.endTime : overlapEnd;
+          const sOverlapStart = Math.max(overlapStart, s.startTime);
+          const sOverlapEnd = Math.min(overlapEnd, sEnd);
+
+          if (sOverlapEnd > sOverlapStart) {
+            activeSecs -= sOverlapEnd - sOverlapStart;
+          }
+        }
+
+        totalActiveSeconds += Math.max(0, activeSecs);
+      }
+    }
+  }
+
+  return Math.round(totalActiveSeconds);
+}
+
+/**
+ * Calculates player's actual active time off field (bench time, excluding halftime & stoppages).
+ */
+export function calculateActivePlayerTimeOffField(
+  isStarter: boolean,
+  subsIn: any[] = [],
+  subsOut: any[] = [],
+  periods: PeriodInterval[] = [],
+  stoppages: StoppageInterval[] = [],
+  currentGameTime: number = 0
+): number {
+  const normIn = (subsIn || [])
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const normOut = (subsOut || [])
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const events: { type: "IN" | "OUT"; time: number }[] = [];
+  normIn.forEach((t) => events.push({ type: "IN", time: t }));
+  normOut.forEach((t) => events.push({ type: "OUT", time: t }));
+  events.sort((a, b) => a.time - b.time);
+
+  let maxTimeline = currentGameTime;
+  if (periods && periods.length > 0) {
+    periods.forEach((p) => {
+      if (p.end > maxTimeline) maxTimeline = p.end;
+    });
+  }
+  events.forEach((ev) => {
+    if (ev.time > maxTimeline) maxTimeline = ev.time;
+  });
+
+  const offFieldIntervals: { start: number; end: number }[] = [];
+  let onField = isStarter;
+  let lastStateChange = 0;
+
+  events.forEach((evt) => {
+    if (evt.type === "IN") {
+      if (!onField) {
+        if (evt.time > lastStateChange) {
+          offFieldIntervals.push({ start: lastStateChange, end: evt.time });
+        }
+        onField = true;
+        lastStateChange = evt.time;
+      }
+    } else if (evt.type === "OUT") {
+      if (onField) {
+        onField = false;
+        lastStateChange = evt.time;
+      }
+    }
+  });
+
+  if (!onField && maxTimeline > lastStateChange) {
+    offFieldIntervals.push({ start: lastStateChange, end: maxTimeline });
+  }
+
+  const effectivePeriods =
+    periods && periods.length > 0
+      ? periods
+      : [{ start: 0, end: maxTimeline }];
+
+  let totalActiveOffSeconds = 0;
+
+  for (const inv of offFieldIntervals) {
+    for (const p of effectivePeriods) {
+      const overlapStart = Math.max(inv.start, p.start);
+      const overlapEnd = Math.min(inv.end, p.end);
+
+      if (overlapEnd > overlapStart) {
+        let activeSecs = overlapEnd - overlapStart;
+
+        for (const s of stoppages) {
+          const sEnd = s.endTime !== null && s.endTime !== undefined ? s.endTime : overlapEnd;
+          const sOverlapStart = Math.max(overlapStart, s.startTime);
+          const sOverlapEnd = Math.min(overlapEnd, sEnd);
+
+          if (sOverlapEnd > sOverlapStart) {
+            activeSecs -= sOverlapEnd - sOverlapStart;
+          }
+        }
+
+        totalActiveOffSeconds += Math.max(0, activeSecs);
+      }
+    }
+  }
+
+  return Math.round(totalActiveOffSeconds);
+}
+
+/**
+ * Legacy wrapper for calculateActivePlayerTimeOnField.
  */
 export function calculatePlayerTimeOnField(
   playerIns: SubEvent[],
@@ -454,53 +646,14 @@ export function calculatePlayerTimeOnField(
   currentGameTime: number,
   stoppages: Stoppage[] = [],
 ): number {
-  const completedIns = (playerIns || []).filter((sub) => sub.gameTime !== null);
-  const completedOuts = (playerOuts || []).filter(
-    (sub) => sub.gameTime !== null,
+  return calculateActivePlayerTimeOnField(
+    isStarter,
+    playerIns,
+    playerOuts,
+    [],
+    stoppages,
+    currentGameTime
   );
-
-  // Build time ranges when player was on field
-  const ranges: TimeRange[] = [];
-
-  if (isStarter) {
-    if (completedOuts.length > 0) {
-      ranges.push({ start: 0, end: completedOuts[0].gameTime as number });
-    } else {
-      ranges.push({ start: 0, end: currentGameTime });
-    }
-  }
-
-  // Process ins and outs
-  for (let i = 0; i < completedIns.length; i++) {
-    const inTime = completedIns[i].gameTime as number;
-    const outTime =
-      (completedOuts[i + (isStarter ? 1 : 0)]?.gameTime as
-        | number
-        | undefined) || currentGameTime;
-    ranges.push({ start: inTime, end: outTime });
-  }
-
-  // Calculate time excluding stoppages
-  let totalTime = 0;
-  for (const range of ranges) {
-    let rangeTime = range.end - range.start;
-
-    // Subtract overlapping stoppages
-    for (const stoppage of stoppages) {
-      if (!stoppage.endTime) continue;
-
-      const overlapStart = Math.max(range.start, stoppage.startTime);
-      const overlapEnd = Math.min(range.end, stoppage.endTime);
-
-      if (overlapStart < overlapEnd) {
-        rangeTime -= overlapEnd - overlapStart;
-      }
-    }
-
-    totalTime += rangeTime;
-  }
-
-  return Math.max(0, totalTime);
 }
 
 // ==================== UNIFIED SYSTEM-WIDE DATE & TIME FORMATTERS ====================

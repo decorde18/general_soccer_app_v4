@@ -26,6 +26,7 @@ import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import Dialog from "@/components/ui/Dialog";
 import Input from "@/components/ui/Input";
+import ClubTeamSelect from "@/components/ui/ClubTeamSelect";
 
 interface AggregatedRolloverPlayer extends RolloverPlayer {
   sourceTeamLabel: string;
@@ -474,21 +475,19 @@ export default function PlayerRolloverClient({
             </h3>
 
             {/* Target Team Selector */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                Target Active Team Season *
-              </label>
-              <Select
-                value={targetId}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTargetId(e.target.value)}
-                options={newTargetTeamSeasons.map((ts) => ({
-                  value: String(ts.id),
-                  label: `${ts.clubName} — ${ts.teamName} (${ts.seasonName})`,
-                }))}
-                placeholder="Choose target team season..."
-                showPlaceholder={true}
-              />
-            </div>
+            <ClubTeamSelect
+              teamSeasons={newTargetTeamSeasons.map((ts) => ({
+                id: ts.id,
+                teamName: `${ts.teamName} (${ts.seasonName})`,
+                clubId: ts.clubId || ts.clubName,
+                clubName: ts.clubName,
+              }))}
+              value={targetId}
+              onChange={(val) => setTargetId(val)}
+              layout="vertical"
+              clubLabel="1. Select Target Club"
+              teamLabel="2. Select Target Team"
+            />
 
             {targetTeamSeason && (
               <div className="rounded-lg border border-slate-700/60 bg-slate-900/60 p-3.5 text-xs text-slate-300 space-y-1">

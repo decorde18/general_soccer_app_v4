@@ -1,18 +1,48 @@
 "use client";
 
-import React, { useState, useEffect, useTransition } from "react";
-import { X, Calendar, Clock, MapPin, Edit3, Trash2, Ban, CheckCircle, AlertTriangle } from "lucide-react";
+import React, { useState, useEffect, useTransition, useMemo } from "react";
+import {
+  X,
+  Calendar,
+  Clock,
+  MapPin,
+  Trash2,
+  Ban,
+  AlertTriangle,
+  Trophy,
+  Plus,
+  Layers,
+} from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
-import { updateGame, cancelGame, deleteGame, getVenueOptions } from "@/lib/actions/game-actions";
+import Checkbox from "@/components/ui/Checkbox";
+import Toggle from "@/components/ui/Toggle";
+import {
+  updateGame,
+  cancelGame,
+  deleteGame,
+  getVenueOptions,
+  getSchedulerOptions,
+  getGameEditDetailsAction,
+  CompetitionNodeInput,
+} from "@/lib/actions/game-actions";
 import { toast } from "sonner";
 
 interface VenueOption {
   id: number;
   name: string;
   sublocations: { id: number; name: string }[];
+}
+
+interface LeagueNodeOption {
+  id: number;
+  leagueId: number;
+  leagueName: string;
+  nodeName: string;
+  isTournament: boolean;
+  displayName: string;
 }
 
 interface GameEditModalProps {
@@ -49,9 +79,7 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
     (game.gameType as any) || "league"
   );
   const [status, setStatus] = useState(game.status || "scheduled");
-  const [homeScore, setHomeScore] = useState<string>(game.homeScore !== null ? String(game.homeScore) : "");
-  const [awayScore, setAwayScore] = useState<string>(game.awayScore !== null ? String(game.awayScore) : "");
-  
+
   const [playersOnField, setPlayersOnField] = useState<number>(
     game.settings?.playersOnField || 11
   );
@@ -62,6 +90,18 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
   const [venues, setVenues] = useState<VenueOption[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<number | undefined>(game.locationId || undefined);
   const [selectedSublocationId, setSelectedSublocationId] = useState<number | undefined>(game.sublocationId || undefined);
+
+  // Competition Nodes & Dual Enrollment states
+  const [leagueNodes, setLeagueNodes] = useState<LeagueNodeOption[]>([]);
+  const [primaryLeagueNodeId, setPrimaryLeagueNodeId] = useState<number | "">("");
+  const [primaryCountsForStandings, setPrimaryCountsForStandings] = useState<boolean>(true);
+  const [additionalCompetitions, setAdditionalCompetitions] = useState<
+    {
+      nodeId: number | "";
+      isTournament: boolean;
+      countsForStandings: boolean;
+    }[]
+  >([]);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -78,9 +118,37 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
       if (locId) setSelectedLocationId(locId);
       if (game.sublocationId) setSelectedSublocationId(game.sublocationId);
     });
+
+    getSchedulerOptions().then((data) => {
+      setLeagueNodes(data.leagueNodes || []);
+    });
+
+    getGameEditDetailsAction(game.id).then((details) => {
+      if (details && details.attachedCompetitions.length > 0) {
+        const primary = details.attachedCompetitions.find((c) => c.isPrimary) || details.attachedCompetitions[0];
+        if (primary) {
+          setPrimaryLeagueNodeId(primary.nodeId);
+          setPrimaryCountsForStandings(primary.countsForStandings);
+        }
+
+        const additional = details.attachedCompetitions.filter((c) => c !== primary);
+        setAdditionalCompetitions(
+          additional.map((c) => ({
+            nodeId: c.nodeId,
+            isTournament: c.isTournament,
+            countsForStandings: c.countsForStandings,
+          }))
+        );
+      }
+    });
   }, [game]);
 
   const activeVenue = venues.find((v) => v.id === selectedLocationId);
+
+  // Options filtering for primary competition
+  const primaryCompetitionOptions = useMemo(() => {
+    return leagueNodes;
+  }, [leagueNodes]);
 
   const handleSave = () => {
     setErrorMsg(null);
@@ -89,6 +157,26 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
         const durationNum = typeof periodDurationMins === "number" 
           ? periodDurationMins 
           : (parseInt(periodDurationMins) || 35);
+
+        const compNodes: CompetitionNodeInput[] = [];
+
+        if (primaryLeagueNodeId !== "") {
+          compNodes.push({
+            nodeId: Number(primaryLeagueNodeId),
+            isPrimary: true,
+            countsForStandings: primaryCountsForStandings,
+          });
+        }
+
+        additionalCompetitions.forEach((slot) => {
+          if (slot.nodeId !== "") {
+            compNodes.push({
+              nodeId: Number(slot.nodeId),
+              isPrimary: false,
+              countsForStandings: slot.countsForStandings,
+            });
+          }
+        });
 
         await updateGame(game.id, {
           startDate,
@@ -99,6 +187,7 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
           sublocationId: selectedSublocationId || null,
           periodDuration: durationNum * 60,
           notes: JSON.stringify({ playersOnField: Number(playersOnField) }),
+          competitionNodes: compNodes,
         });
 
         toast.success("Game updated successfully!");
@@ -140,7 +229,7 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
 
   return (
     <Modal isOpen={true} onClose={onClose} title={`Edit Game #${game.id}`}>
-      <div className="space-y-6">
+      <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-1">
         
         {/* Match Title Banner */}
         <div className="bg-surface/80 border border-border/80 p-4 rounded-xl flex items-center justify-between">
@@ -237,10 +326,10 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
                   value={gameType}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setGameType(e.target.value as any)}
                   options={[
-                    { value: "league", label: "League Play" },
-                    { value: "tournament", label: "Tournament Play" },
-                    { value: "friendly", label: "Friendly / Exhibition" },
+                    { value: "league", label: "League Match" },
+                    { value: "tournament", label: "Tournament Match" },
                     { value: "playoff", label: "Playoff / Cup Match" },
+                    { value: "friendly", label: "Friendly / Exhibition" },
                   ]}
                 />
               </div>
@@ -258,6 +347,164 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
                     { value: "cancelled", label: "Cancelled" },
                   ]}
                 />
+              </div>
+
+              {/* COMPETITIONS & DUAL ENROLLMENT SECTION */}
+              <div className="sm:col-span-2 space-y-3 bg-surface/50 border border-border/80 p-4 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Trophy size={16} className="text-amber-500" />
+                    <span className="text-xs font-bold text-text uppercase tracking-wider">
+                      Competition & Division Enrollment
+                    </span>
+                    {additionalCompetitions.length > 0 && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                        Dual Enrolled ({1 + additionalCompetitions.length})
+                      </span>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() =>
+                      setAdditionalCompetitions((prev) => [
+                        ...prev,
+                        { nodeId: "", isTournament: false, countsForStandings: true },
+                      ])
+                    }
+                    className="flex items-center gap-1 text-xs"
+                  >
+                    <Plus size={12} />
+                    <span>Add Dual Competition</span>
+                  </Button>
+                </div>
+
+                {/* Primary Competition Dropdown */}
+                <div className="p-3 bg-background/60 border border-border/70 rounded-xl space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-muted">
+                    Primary Competition / Division
+                  </label>
+                  <Select
+                    value={primaryLeagueNodeId}
+                    onChange={(e: any) => {
+                      const val = e.target.value ? Number(e.target.value) : "";
+                      setPrimaryLeagueNodeId(val);
+                      if (val !== "") {
+                        const matched = leagueNodes.find((n) => n.id === val);
+                        if (matched) {
+                          setGameType(matched.isTournament ? "tournament" : "league");
+                        }
+                      }
+                    }}
+                    options={primaryCompetitionOptions.map((n) => ({
+                      value: n.id,
+                      label: n.displayName,
+                    }))}
+                    placeholder="Select primary competition / division..."
+                    showPlaceholder={true}
+                    className="w-full text-sm"
+                  />
+
+                  {primaryLeagueNodeId !== "" && (
+                    <div className="pt-1.5 border-t border-border/40">
+                      <Checkbox
+                        label="Primary Competition: Counts for Official Standings"
+                        checked={primaryCountsForStandings}
+                        onChange={(e: any) => setPrimaryCountsForStandings(e.target.checked)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Competitions (Dual Enrollment) */}
+                {additionalCompetitions.map((slot, index) => {
+                  const filteredOptions = slot.isTournament
+                    ? leagueNodes.filter((n) => n.isTournament)
+                    : leagueNodes.filter((n) => !n.isTournament);
+                  const displayOptions = filteredOptions.length > 0 ? filteredOptions : leagueNodes;
+
+                  return (
+                    <div
+                      key={index}
+                      className="p-3 bg-background/60 border border-border/70 rounded-xl space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
+                          <Layers size={14} className="text-primary" />
+                          <span>Dual Enrolled Competition #{index + 2}</span>
+                        </span>
+
+                        <div className="flex items-center gap-3">
+                          <Toggle
+                            label={slot.isTournament ? "Tournament" : "League"}
+                            checked={slot.isTournament}
+                            onChange={(val: boolean) => {
+                              setAdditionalCompetitions((prev) =>
+                                prev.map((s, idx) =>
+                                  idx === index
+                                    ? { ...s, isTournament: val, nodeId: "" }
+                                    : s
+                                )
+                              );
+                            }}
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdditionalCompetitions((prev) =>
+                                prev.filter((_, idx) => idx !== index)
+                              );
+                            }}
+                            className="p-1 text-muted hover:text-danger transition-colors"
+                            title="Remove competition"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <Select
+                        value={slot.nodeId}
+                        onChange={(e: any) => {
+                          const val = e.target.value ? Number(e.target.value) : "";
+                          setAdditionalCompetitions((prev) =>
+                            prev.map((s, idx) => (idx === index ? { ...s, nodeId: val } : s))
+                          );
+                        }}
+                        options={displayOptions.map((n) => ({
+                          value: n.id,
+                          label: n.displayName,
+                        }))}
+                        placeholder={`Select dual-enrolled ${slot.isTournament ? "Tournament" : "League"}...`}
+                        showPlaceholder={true}
+                        className="w-full text-sm"
+                      />
+
+                      {slot.nodeId !== "" && (
+                        <div className="pt-1.5 border-t border-border/40">
+                          <Checkbox
+                            label={`${
+                              leagueNodes.find((n) => n.id === Number(slot.nodeId))?.displayName ||
+                              "Secondary Competition"
+                            }: Counts for Official Standings`}
+                            checked={slot.countsForStandings}
+                            onChange={(e: any) => {
+                              const val = e.target.checked;
+                              setAdditionalCompetitions((prev) =>
+                                prev.map((s, idx) =>
+                                  idx === index ? { ...s, countsForStandings: val } : s
+                                )
+                              );
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Match Format (Players on Field) */}

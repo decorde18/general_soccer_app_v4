@@ -247,16 +247,10 @@ export default function GameSchedulerModal({
       : leagueNodes;
   }, [leagueNodes, enrollments, myTeamSeasonId]);
 
-  // Filtered Primary competition options based on gameType
+  // Filtered Primary competition options
   const primaryCompetitionOptions = useMemo(() => {
-    if (gameType === "league") {
-      return primaryTeamEnrolledNodes.filter((n) => !n.isTournament);
-    }
-    if (gameType === "tournament") {
-      return primaryTeamEnrolledNodes.filter((n) => n.isTournament);
-    }
     return primaryTeamEnrolledNodes;
-  }, [primaryTeamEnrolledNodes, gameType]);
+  }, [primaryTeamEnrolledNodes]);
 
   // Perform dynamic venue double-booking check
   useEffect(() => {

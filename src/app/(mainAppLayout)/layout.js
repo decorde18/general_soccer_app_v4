@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import NavBar from "@/components/layout/NavBar";
 import HeaderSkeleton from "@/components/layout/HeaderSkeleton";
 import NavBarSkeleton from "@/components/layout/NavBarSkeleton";
+import MainContentOverlay from "@/components/layout/MainContentOverlay";
 import { getServerAuthSession } from "@/lib/auth";
 import { SessionProvider } from "@/contexts/SessionProvider";
 
@@ -18,7 +19,8 @@ export default async function MainAppLayout({ children }) {
         <Suspense fallback={<NavBarSkeleton />}>
           <NavBar user={user} />
         </Suspense>
-        <div className='main-content'>
+        <div className='main-content relative'>
+          <MainContentOverlay />
           <Suspense fallback={<HeaderSkeleton />}>
             <Header user={user} />
           </Suspense>

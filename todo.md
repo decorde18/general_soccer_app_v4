@@ -202,6 +202,13 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - [x] **Match Administration In-Game Adjustments & Multi-Select Deletion**:
   - Added full event editing for Goals, Substitutions, and Disciplinary Cards with modal pre-population and `PUT` persistence.
   - Added checkboxes on every event item, "Select All" header toggles, section-level "Delete Selected (N)" buttons, and a floating bulk deletion banner.
+- [x] **Active Playing Time Calculation & Timezone Fix**:
+  - **Active Period Mapping**: Built `calculateActivePlayerTimeOnField` in `dateTimeUtils.ts` and integrated into `gamePlayerTimeStore.ts` and `queries.ts`. On-field player intervals are mapped strictly to active period bounds, automatically excluding halftime, inter-period breaks, and stopped-clock stoppages.
+  - **Game 899 Correction**: Clamped Game 899 Period 1 sub timestamps to period end boundaries (1800s). Recalculated player minutes: GK Avery Harring corrected to 60m (30:00 in P1 + 30:05 in P2) across the 2-period match.
+- [x] **Optimistic Sidebar Team Selector & Loading State**:
+  - Enhanced `Select.tsx` to support `isLoading` prop with an animated `Loader2` spinner and `disabled` state during pending transitions.
+  - Implemented optimistic selection in `NavBar.tsx` and `SidebarTeamSelector.tsx` using React `useTransition`.
+  - Changing team in the sidebar dropdown instantly updates the select label (0ms lag) and renders an inline spinning loader while background router navigation completes.
 
 ## Step 6: Verification & Automated Tests
 

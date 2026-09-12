@@ -31,6 +31,12 @@ export default async function AdminLeaguesPage() {
   const teamSeasonsData = teamSeasons.map((ts) => ({
     label: `${ts.clubName} - ${ts.teamName} (${ts.seasonName})`,
     value: String(ts.id),
+    id: ts.id,
+    teamName: ts.teamName,
+    clubId: String(ts.clubId),
+    clubName: ts.clubName,
+    seasonId: String(ts.seasonId),
+    seasonName: ts.seasonName,
   }));
 
   const seasonsData = seasons.map((s) => ({

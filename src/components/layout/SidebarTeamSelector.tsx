@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import { Users, Loader2 } from "lucide-react";
 import Select from "@/components/ui/Select";
 import type { TeamSeason } from "@/types/nav";
 
@@ -6,20 +6,23 @@ interface SidebarTeamSelectorProps {
   teams: TeamSeason[];
   currentTeamId: string;
   onChange: (e: any) => void;
+  isLoading?: boolean;
 }
 
 export default function SidebarTeamSelector({
   teams,
   currentTeamId,
   onChange,
+  isLoading = false,
 }: SidebarTeamSelectorProps) {
   if (teams.length === 0) return null;
 
   if (teams.length === 1) {
     return (
       <div className="p-4 border-b border-border space-y-1.5">
-        <span className="text-xs font-semibold text-muted uppercase tracking-wider block">
-          Current Team
+        <span className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center justify-between">
+          <span>Current Team</span>
+          {isLoading && <Loader2 size={12} className="animate-spin text-primary" />}
         </span>
         <div className="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-surface/50">
           <Users size={16} className="text-primary flex-shrink-0" />
@@ -30,11 +33,13 @@ export default function SidebarTeamSelector({
   }
 
   return (
-    <div className="p-4 border-b border-border">
+    <div className="p-4 border-b border-border relative">
       <Select
         label="Current Team"
         value={currentTeamId}
         onChange={onChange}
+        isLoading={isLoading}
+        disabled={isLoading}
         options={teams.map((team) => ({ value: String(team.id), label: team.teamName }))}
         width="full"
         showPlaceholder={true}
