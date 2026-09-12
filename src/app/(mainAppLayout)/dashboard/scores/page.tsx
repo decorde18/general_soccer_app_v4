@@ -54,6 +54,7 @@ export default async function MasterScoresPage() {
     homeScore: g.homeScore,
     awayScore: g.awayScore,
     finalStatus: g.finalStatus,
+    leagueName: g.leagueName || null,
     countsForStandings: inclusionsMap.get(g.id) !== false,
   }));
 

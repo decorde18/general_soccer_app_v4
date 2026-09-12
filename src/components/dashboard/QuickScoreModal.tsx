@@ -217,8 +217,8 @@ export default function QuickScoreModal({
         {/* Score Header Board */}
         <div className="grid grid-cols-2 gap-4 items-center bg-background/50 border border-border/70 p-4 rounded-2xl">
           {/* Home Score */}
-          <div className="text-center space-y-1.5">
-            <label className="text-xs font-bold text-text truncate block">{homeTeamName}</label>
+          <div className="text-center space-y-1.5 min-w-0">
+            <label className="text-xs font-bold text-text truncate block cursor-help" title={homeTeamName}>{homeTeamName}</label>
             <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">Home</span>
             <input
               type="number"
@@ -231,8 +231,8 @@ export default function QuickScoreModal({
           </div>
 
           {/* Away Score */}
-          <div className="text-center space-y-1.5">
-            <label className="text-xs font-bold text-text truncate block">{awayTeamName}</label>
+          <div className="text-center space-y-1.5 min-w-0">
+            <label className="text-xs font-bold text-text truncate block cursor-help" title={awayTeamName}>{awayTeamName}</label>
             <span className="text-[10px] text-accent font-bold uppercase tracking-wider block">Away</span>
             <input
               type="number"

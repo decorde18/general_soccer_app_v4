@@ -436,9 +436,42 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Added automatic hierarchy level re-calculation when changing parent node selection in the modal.
   - [x] Added dedicated `+ Add Node` button to Hierarchy Explorer header bar.
 
+## Step 24: Application-Wide Quality, UI/UX System & Codebase Audit
+
+- [x] **24.7 League Details SSR & Game Summary Sortable Table Standardization**
+  - [x] **`/leagues/[leagueId]` SSR Deployment Fix**: Resolved Next.js App Router deployment error in `LeaguePageClient.tsx` by replacing `useEffect` `searchParams` sync loop with direct event handlers and adding null guards for division properties.
+  - [x] **Game Summary Sortable Generic Table Integration**: Updated `GenericTable.tsx` and `types.ts` to support `renderCell`, column alignments (`left`, `center`, `right`), and optional pagination toggles. Converted Field Players and Goalkeepers box scores in `GameSummaryClient.tsx` to use `<GenericTable>` with sortable stat columns.
+- [x] **24.8 Team 125 Concorde Fire Enrollment Cleanup, Substitution Matching & Spinner Overlay**
+  - [x] **Team 125 Concorde Fire Errant Enrollment Cleanup**: Removed erroneous dual-enrollment link on Game 899 pointing to Node 26 (Concorde Fire Challenge Cup) and deleted errant `team_league_enrollments` records (231 & 232). Team 125 (`/teams/125`) now correctly lists only its legitimate 2 competitions (Tennessee State League & Battleground Tournament of Champions).
+  - [x] **Player Minutes Calculation Fix (Season & Competition Stats)**: Corrected substitution matching in `calculatePlayerGameMinutes` (`queries.ts`) to check both `pg.id` (player_game_id) and `pg.player_id` (person_id). Starters and subbing players now calculate exact, accurate active on-field minutes across season and competition filters.
+  - [x] **Competition Filter Spinner Overlay**: Created reusable design system component `SpinnerOverlay.tsx` (`@/components/ui/SpinnerOverlay.tsx`) and integrated it into `TeamStats.tsx` to display smooth loading feedback during competition filter updates.
+
+- [ ] **24.1 Clean Up Obsolete & Temporary Root Files**
+  - [ ] Remove outdated scratch scripts (`fix_malia_pk.js`, `inspect_boxscore_times.js`, `inspect_errant_events.js`, `inspect_games_877_897.js`, `inspect_group_enrollments.js`, `inspect_group_nodes.js`, `inspect_nodes_schema.js`, `inspect_tophat_team_120.js`, `scratch_check_pk.js`, `test_actual_queries_standings.js`, `test_tophat_standings_fix.js`, `todo2.md`).
+- [ ] **24.2 Replace Raw HTML Controls with Design System Primitives**
+  - [ ] Replace raw `<select>` tags in `TeamRoster`, `LeaguePageClient`, `TournamentScheduleView`, `GameSummaryClient`, `DashboardClient`, `LeaguesStructureClient`, `MasterScoreEntryClient`, `EntityMatchingWizardModal`, `GuestPlayersClient` with `<Select />`.
+  - [ ] Replace raw `<button>` tags across client views with standardized `<Button />` components supporting `isLoading` and variant props (`primary`, `secondary`, `outline`, `danger`, `ghost`).
+  - [ ] Replace raw `<input>` elements in forms with standard `<Input />`, `<Checkbox />`, and `<Toggle />` components.
+- [ ] **24.3 Standardize Cascading Team Selectors & Interactive Entity Links**
+  - [ ] Enforce `ClubTeamSelect` across all team selector components (`/admin/leagues`, `PlayerRolloverClient`, `GameSchedulerModal`, team filters).
+  - [ ] Integrate `LocationLink`, `ClubLink`, and `TeamLink` across all tables, schedules, scoreboards, and summary cards.
+  - [ ] Build `ClubDetailsModal.tsx` and `TeamDetailsModal.tsx` for universal interactive entity popups.
+- [x] **24.4 Date, Time & Playing Time Standard Verification**
+  - [x] Audit all queries and components to ensure date/time saving uses `parseGameDatesAndTimesUTC` and display formatting uses `formatTimeStandard` / `formatDateStandard` from `dateTimeUtils.ts`.
+  - [x] Enforce 12-hour AM/PM time formatting (`formatTimeStandard`) across all recent/upcoming match cards, dashboards, schedules, and modals (preventing raw military `13:30:00` display).
+  - [x] Verify zero direct `.toLocaleTimeString()` or `.getUTCHours()` calls exist in component files.
+- [ ] **24.5 Responsive Layout & Touch Target Verification**
+  - [ ] Audit all views for zero horizontal scrolling on mobile/tablet screens.
+  - [ ] Verify table row padding (`py-0.5 px-1.5`) and minimum touch targets (`44px`) for action buttons.
+- [ ] **24.6 Standings, Enrollment & Hierarchy Integrity**
+  - [ ] Enforce terminal subnode hierarchy filtering and full breadcrumb formatting across all league node selectors.
+  - [ ] Guarantee automatic team enrollment and dual competition sync on game scheduling and updates.
+
 ## Notes / Future Considerations
 
 - Advanced live match stream / video link embeds (`games.video_link`)
 - Historical season archiving and player career stats aggregation
 - High school team player status management (available players, trying out, interested)
 - Uniforms and numbers assignment tool
+
+Shouldn't player stats start with game stats calculations (using same calculations for game summary) then just add all games that are part of the filter being requested - if full season, add all games, if competition add only games of competition, etc. Especially as we add new filters, we need to be able to query and combine data in an organized way and quick way.

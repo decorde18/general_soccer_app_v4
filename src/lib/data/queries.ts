@@ -8,7 +8,7 @@
 
 import prisma from "@/lib/prisma";
 import { formatTeamName } from "@/lib/utils/teamName";
-import { calculateActivePlayerTimeOnField } from "@/lib/utils/dateTimeUtils";
+import { calculateActivePlayerTimeOnField, getPlayerOnFieldIntervals } from "@/lib/utils/dateTimeUtils";
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -233,6 +233,7 @@ export interface Game {
   notes: string | null;
   videoLink: string | null;
   timezoneLabel: string | null;
+  leagueName?: string | null;
   settings: {
     playersOnField: number;
     periodCount?: number;
@@ -986,7 +987,11 @@ export async function getGames(filters?: {
         include: {
           league_node_seasons: {
             include: {
-              league_nodes: true,
+              league_nodes: {
+                include: {
+                  leagues: true,
+                },
+              },
             },
           },
         },
@@ -1020,7 +1025,11 @@ export async function getGameById(id: number): Promise<Game | null> {
         include: {
           league_node_seasons: {
             include: {
-              league_nodes: true,
+              league_nodes: {
+                include: {
+                  leagues: true,
+                },
+              },
             },
           },
         },
@@ -1118,7 +1127,10 @@ function mapGameRow(r: any): Game {
   const primaryNode =
     r.game_league_nodes?.find((n: any) => n.is_primary) ||
     r.game_league_nodes?.[0];
-  const nodeName = primaryNode?.league_node_seasons?.league_nodes?.name || "";
+  const leagueObj = primaryNode?.league_node_seasons?.league_nodes?.leagues;
+  const nodeObj = primaryNode?.league_node_seasons?.league_nodes;
+  const leagueName = leagueObj?.name || nodeObj?.name || null;
+  const nodeName = nodeObj?.name || "";
   const playersOnField = notesObj?.playersOnField ?? getPlayersOnFieldFromNodeName(nodeName);
 
   return {
@@ -1157,6 +1169,7 @@ function mapGameRow(r: any): Game {
     notes: r.notes ?? null,
     videoLink: r.video_link ?? null,
     timezoneLabel: r.timezone_label ?? null,
+    leagueName,
     settings: {
       playersOnField,
       periodCount: r.default_reg_periods ?? 2,
@@ -1260,12 +1273,13 @@ function calculatePlayerGameMinutes(pg: any): {
   const isStarted = pg.started || statusInPg === "starter" || statusInPg === "goalkeeper";
 
   const allSubs = game.game_subs || [];
-  const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id);
-  const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id);
+  const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id || s.in_player_id === pg.player_id);
+  const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id || s.out_player_id === pg.player_id);
 
   const periodData = (game.game_periods || []).slice().sort((a: any, b: any) => a.period_number - b.period_number);
   const p1Start = periodData[0]?.start_time ? Number(periodData[0].start_time) : null;
   const periodIntervals: { start: number; end: number }[] = [];
+  const periodOffsets = new Map<number, number>();
   const regSecs = game.period_duration || 2400;
 
   if (p1Start && periodData.length > 0) {
@@ -1279,22 +1293,45 @@ function calculatePlayerGameMinutes(pg: any): {
           endSec = Math.max(startSec, Math.floor((pEndMs - p1Start) / 1000));
         }
         periodIntervals.push({ start: startSec, end: endSec });
+        periodOffsets.set(p.period_number || idx + 1, startSec);
       } else {
         const startSec = idx * regSecs;
         periodIntervals.push({ start: startSec, end: startSec + regSecs });
+        periodOffsets.set(p.period_number || idx + 1, startSec);
       }
     });
   } else {
     const totalReg = regSecs * (game.default_reg_periods || 2);
     periodIntervals.push({ start: 0, end: totalReg });
+    periodOffsets.set(1, 0);
+    periodOffsets.set(2, regSecs);
   }
 
-  const stoppageIntervals = (game.game_events_major || [])
-    .filter((e: any) => e.clock_should_run === false || e.clock_should_run === 0)
-    .map((e: any) => ({
-      startTime: Number(e.game_time || 0),
-      endTime: e.end_time !== null && e.end_time !== undefined ? Number(e.end_time) : null,
-    }));
+  const majorEvents = (game.game_events_major || []).slice().sort((a: any, b: any) => {
+    if (a.period !== b.period) return a.period - b.period;
+    return Number(a.game_time || 0) - Number(b.game_time || 0);
+  });
+
+  const stoppageIntervals: { startTime: number; endTime: number | null }[] = [];
+  majorEvents.forEach((e: any, idx: number) => {
+    if (e.clock_should_run === false || e.clock_should_run === 0) {
+      const pOffset = periodOffsets.get(Number(e.period || 1)) || 0;
+      const startCumSecs = pOffset + Number(e.game_time || 0);
+      let endCumSecs: number | null = null;
+      if (e.end_time !== null && e.end_time !== undefined) {
+        endCumSecs = pOffset + Number(e.end_time);
+      } else {
+        const nextEvent = majorEvents.slice(idx + 1).find((ne: any) => ne.period === e.period);
+        if (nextEvent) {
+          endCumSecs = pOffset + Number(nextEvent.game_time || 0);
+        } else {
+          const pIdx = Number(e.period || 1) - 1;
+          if (periodIntervals[pIdx]) endCumSecs = periodIntervals[pIdx].end;
+        }
+      }
+      stoppageIntervals.push({ startTime: startCumSecs, endTime: endCumSecs });
+    }
+  });
 
   const activeSeconds = calculateActivePlayerTimeOnField(
     isStarted,
@@ -1305,8 +1342,16 @@ function calculatePlayerGameMinutes(pg: any): {
     0
   );
 
+  const shiftIntervals = getPlayerOnFieldIntervals(
+    isStarted,
+    subsIn,
+    subsOut,
+    periodIntervals,
+    0
+  );
+
   const minutesPlayed = Math.round(activeSeconds / 60);
-  return { isPlayedGame: true, minutesPlayed, intervals: [] };
+  return { isPlayedGame: true, minutesPlayed, intervals: shiftIntervals };
 }
 
 async function getStatsForRoster(
@@ -1533,7 +1578,7 @@ export async function getComprehensivePlayerStats(
     if (targetLnsIds.length > 0) {
       playerGameWhere.games = {
         game_league_nodes: {
-          some: { league_node_id: { in: targetLnsIds } },
+          some: { league_node_seasons: { id: { in: targetLnsIds } } },
         },
       };
     } else {
@@ -1560,6 +1605,7 @@ export async function getComprehensivePlayerStats(
       games: {
         include: {
           game_subs: true,
+          game_periods: true,
           game_events_major: {
             include: {
               game_events_goals: true,
@@ -3110,7 +3156,17 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
       game_events_player_actions: true,
       game_events_goals_game_events_goals_scorer_player_game_idToplayer_games: true,
       game_events_goals_game_events_goals_assist_player_game_idToplayer_games: true,
-      games: true,
+      games: {
+        include: {
+          game_subs: true,
+          game_periods: true,
+          game_events_major: {
+            include: {
+              game_events_goals: true,
+            },
+          },
+        },
+      },
     },
   });
 

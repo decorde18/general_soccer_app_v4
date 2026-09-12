@@ -22,6 +22,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
+import { formatTimeStandard } from "@/lib/utils/dateTimeUtils";
 
 interface DashboardClientProps {
   user: {
@@ -514,8 +515,8 @@ export default function DashboardClient({
                               {g.status}
                             </span>
                           </div>
-                          <p className="text-[10px] text-muted flex items-center gap-2">
-                            <span>📅 {g.startDate} {g.startTime || ""}</span>
+                          <p className="text-[10px] text-muted flex items-center gap-2 font-mono">
+                            <span>📅 {g.startDate} {g.startTime ? `@ ${formatTimeStandard(g.startTime)}` : ""}</span>
                             {g.locationName && <span>📍 {g.locationName}</span>}
                           </p>
                         </div>

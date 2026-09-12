@@ -11,6 +11,10 @@ import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
 import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
 import TournamentScheduleView from "@/components/league/TournamentScheduleView";
 
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import { formatTimeStandard } from "@/lib/utils/dateTimeUtils";
+
 interface StandingsRow {
   teamSeasonId: number;
   teamName: string;
@@ -63,7 +67,7 @@ export default function LeaguePageClient({
   governingBodyName,
   abbreviation,
   description,
-  divisions,
+  divisions = [],
   tournamentGames = [],
 }: LeaguePageClientProps) {
   const { data: session } = useSession();
@@ -78,58 +82,44 @@ export default function LeaguePageClient({
   const canManage = Boolean(session?.user);
 
   // Read initial states from URL query parameters
-  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") || "");
+  const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("q") || "");
   const [selectedGender, setSelectedGender] = useState<"all" | "boys" | "girls">(() => {
-    const gender = searchParams.get("gender");
+    const gender = searchParams?.get("gender");
     if (gender === "boys" || gender === "girls") return gender;
     return "all";
   });
-  const [selectedAge, setSelectedAge] = useState(() => searchParams.get("age") || "all");
+  const [selectedAge, setSelectedAge] = useState(() => searchParams?.get("age") || "all");
 
-  // Keep state and URL query params in sync without infinite loops
-  useEffect(() => {
-    const currentQ = searchParams.get("q") || "";
-    const currentGender = searchParams.get("gender") || "all";
-    const currentAge = searchParams.get("age") || "all";
-
-    if (
-      currentQ === searchQuery &&
-      currentGender === selectedGender &&
-      currentAge === selectedAge
-    ) {
-      return;
-    }
-
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (searchQuery) {
-      params.set("q", searchQuery);
-    } else {
-      params.delete("q");
-    }
-
-    if (selectedGender !== "all") {
-      params.set("gender", selectedGender);
-    } else {
-      params.delete("gender");
-    }
-
-    if (selectedAge !== "all") {
-      params.set("age", selectedAge);
-    } else {
-      params.delete("age");
-    }
-
+  const updateQueryParams = (newFilters: { q: string; gender: string; age: string }) => {
+    const params = new URLSearchParams();
+    if (newFilters.q) params.set("q", newFilters.q);
+    if (newFilters.gender !== "all") params.set("gender", newFilters.gender);
+    if (newFilters.age !== "all") params.set("age", newFilters.age);
     const query = params.toString();
     const dest = query ? `${pathname}?${query}` : pathname;
     router.replace(dest, { scroll: false });
-  }, [searchQuery, selectedGender, selectedAge, pathname, router, searchParams]);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    updateQueryParams({ q: val, gender: selectedGender, age: selectedAge });
+  };
+
+  const handleGenderChange = (val: "all" | "boys" | "girls") => {
+    setSelectedGender(val);
+    updateQueryParams({ q: searchQuery, gender: val, age: selectedAge });
+  };
+
+  const handleAgeChange = (val: string) => {
+    setSelectedAge(val);
+    updateQueryParams({ q: searchQuery, gender: selectedGender, age: val });
+  };
 
   // Dynamically extract unique age groups from active division names
   const availableAges = useMemo(() => {
     const ages = new Set<string>();
-    divisions.forEach((d) => {
-      const name = d.leagueNodeName.toLowerCase();
+    (divisions || []).forEach((d) => {
+      const name = (d.leagueNodeName || "").toLowerCase();
       const match = name.match(/\b(u\d+|\d+u)\b/);
       if (match) {
         ages.add(match[1].toUpperCase());
@@ -140,8 +130,8 @@ export default function LeaguePageClient({
 
   // Filter divisions list based on search and filters
   const filteredDivisions = useMemo(() => {
-    return divisions.filter((d) => {
-      const name = d.leagueNodeName.toLowerCase();
+    return (divisions || []).filter((d) => {
+      const name = (d.leagueNodeName || "").toLowerCase();
       
       if (searchQuery && !name.includes(searchQuery.toLowerCase())) {
         return false;
@@ -253,13 +243,13 @@ export default function LeaguePageClient({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
           {/* Text Search */}
           <div className="md:col-span-2 relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <input
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+            <Input
               type="text"
               placeholder="Search divisions (e.g. U13 Girls)..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text placeholder:text-muted/65 transition-all"
+              onChange={(e: any) => handleSearchChange(e.target.value)}
+              className="pl-9 text-sm"
             />
           </div>
 
@@ -267,8 +257,9 @@ export default function LeaguePageClient({
           <div className="flex rounded-xl bg-background border border-border/60 p-1">
             {(["all", "boys", "girls"] as const).map((gender) => (
               <button
+                type="button"
                 key={gender}
-                onClick={() => setSelectedGender(gender)}
+                onClick={() => handleGenderChange(gender)}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
                   selectedGender === gender ? "bg-primary text-white shadow-sm" : "text-muted hover:text-text"
                 }`}
@@ -279,18 +270,15 @@ export default function LeaguePageClient({
           </div>
 
           {/* Age group filter selector */}
-          <select
+          <Select
             value={selectedAge}
-            onChange={(e) => setSelectedAge(e.target.value)}
-            className="w-full py-2 px-3 text-sm bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text transition-all"
-          >
-            <option value="all">All Age Groups</option>
-            {availableAges.map((age) => (
-              <option key={age} value={age}>
-                {age}
-              </option>
-            ))}
-          </select>
+            onChange={(e: any) => handleAgeChange(e.target.value)}
+            options={[
+              { value: "all", label: "All Age Groups" },
+              ...availableAges.map((age) => ({ value: age, label: age })),
+            ]}
+            showPlaceholder={false}
+          />
         </div>
       </div>
 
@@ -392,6 +380,13 @@ export default function LeaguePageClient({
                     <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
                       {division.games.map((game) => {
                         const isCompleted = game.status === "completed";
+                        const homeClub = (game as any).homeClubAbbreviation || game.homeClubName || "";
+                        const awayClub = (game as any).awayClubAbbreviation || game.awayClubName || "";
+                        const fullHomeName = `${game.homeClubName || ""} ${game.homeTeamName}`.trim();
+                        const fullAwayName = `${game.awayClubName || ""} ${game.awayTeamName}`.trim();
+                        const shortHomeName = `${homeClub} ${game.homeTeamName}`.trim();
+                        const shortAwayName = `${awayClub} ${game.awayTeamName}`.trim();
+
                         return (
                           <Card key={game.id} variant="default" padding="sm" className="bg-surface/50 border-border/80 text-xs">
                             <div className="flex justify-between items-center text-[10px] text-muted mb-2 border-b border-border/40 pb-1">
@@ -404,26 +399,33 @@ export default function LeaguePageClient({
                             </div>
                             
                             <div className="space-y-1.5">
-                              <div className="flex justify-between items-center">
-                                <span className="font-medium truncate pr-2 max-w-[130px]">{game.homeClubName || ""} {game.homeTeamName}</span>
+                              <div className="flex justify-between items-center gap-2">
+                                <span className="font-medium truncate flex-1 min-w-0" title={fullHomeName}>
+                                  {shortHomeName}
+                                </span>
                                 {isCompleted ? (
                                   <span className="font-bold text-sm bg-background px-1.5 rounded">{game.homeScore}</span>
                                 ) : (
-                                  <span className="text-[10px] text-muted">Home</span>
+                                  <span className="text-[10px] text-muted flex-shrink-0">Home</span>
                                 )}
                               </div>
-                              <div className="flex justify-between items-center">
-                                <span className="font-medium truncate pr-2 max-w-[130px]">{game.awayClubName || ""} {game.awayTeamName}</span>
+                              <div className="flex justify-between items-center gap-2">
+                                <span className="font-medium truncate flex-1 min-w-0" title={fullAwayName}>
+                                  {shortAwayName}
+                                </span>
                                 {isCompleted ? (
                                   <span className="font-bold text-sm bg-background px-1.5 rounded">{game.awayScore}</span>
                                 ) : (
-                                  <span className="text-[10px] text-muted">Away</span>
+                                  <span className="text-[10px] text-muted flex-shrink-0">Away</span>
                                 )}
                               </div>
                             </div>
 
                             <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted">
-                              <span className="flex items-center gap-1"><Clock size={10} /> {game.startTime || "TBD"}</span>
+                              <span className="flex items-center gap-1 font-mono">
+                                <Clock size={10} />
+                                <span>{formatTimeStandard(game.startTime)}</span>
+                              </span>
 
                               {canManage && (
                                 <button
@@ -454,8 +456,8 @@ export default function LeaguePageClient({
       {quickScoreGame && (
         <QuickScoreModal
           gameId={quickScoreGame.id}
-          homeTeamName={`${quickScoreGame.homeClubName || ""} ${quickScoreGame.homeTeamName}`}
-          awayTeamName={`${quickScoreGame.awayClubName || ""} ${quickScoreGame.awayTeamName}`}
+          homeTeamName={`${(quickScoreGame as any).homeClubAbbreviation || quickScoreGame.homeClubName || ""} ${quickScoreGame.homeTeamName}`.trim()}
+          awayTeamName={`${(quickScoreGame as any).awayClubAbbreviation || quickScoreGame.awayClubName || ""} ${quickScoreGame.awayTeamName}`.trim()}
           currentHomeScore={quickScoreGame.homeScore}
           currentAwayScore={quickScoreGame.awayScore}
           onClose={() => setQuickScoreGame(null)}

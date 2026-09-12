@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import { formatTimeStandard } from "@/lib/utils/dateTimeUtils";
 import {
   addGuestPlayersToGames,
   removeGuestPlayerFromGame,
@@ -584,14 +585,14 @@ export default function GuestPlayersClient({
                     </div>
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="flex justify-between items-center text-[10px] text-muted">
-                        <span className="font-semibold">{game.startDate} {game.startTime || ""}</span>
+                        <span className="font-semibold">{game.startDate} {formatTimeStandard(game.startTime)}</span>
                         <span className={`px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90 ${
                           isHome ? "bg-emerald-500/10 text-emerald-400" : "bg-blue-500/10 text-blue-400"
                         }`}>
                           {isHome ? "Home" : "Away"}
                         </span>
                       </div>
-                      <div className="text-xs font-semibold text-text truncate">
+                      <div className="text-xs font-semibold text-text truncate" title={`${game.homeClubName || ""} ${game.homeTeamName} vs ${game.awayClubName || ""} ${game.awayTeamName}`}>
                         {game.homeClubName} {game.homeTeamName} vs {game.awayClubName} {game.awayTeamName}
                       </div>
                     </div>

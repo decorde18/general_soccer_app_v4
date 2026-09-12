@@ -85,11 +85,7 @@ export default function MasterScoreEntryClient({
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [games]);
 
-  const defaultSeasonId = useMemo(() => {
-    return seasonOptions.length > 0 ? String(seasonOptions[0].id) : "all";
-  }, [seasonOptions]);
-
-  const [seasonFilter, setSeasonFilter] = useState<string>(defaultSeasonId);
+  const [seasonFilter, setSeasonFilter] = useState<string>("all");
 
   const leagueOptions = useMemo(() => {
     const set = new Set<string>();
@@ -289,77 +285,79 @@ export default function MasterScoreEntryClient({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 items-center">
-          {/* Season Filter (Default Current Season) */}
+          {/* Season Filter */}
           <div>
-            <select
+            <Select
+              width="full"
+              showPlaceholder={false}
               value={seasonFilter}
-              onChange={(e) => setSeasonFilter(e.target.value)}
-              className="w-full py-2 px-3 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text font-bold"
-            >
-              <option value="all">All Seasons</option>
-              {seasonOptions.map((s) => (
-                <option key={s.id} value={String(s.id)}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+              onChange={(e: any) => setSeasonFilter(e.target.value)}
+              options={[
+                { value: "all", label: "All Seasons" },
+                ...seasonOptions.map((s) => ({ value: String(s.id), label: s.name })),
+              ]}
+            />
           </div>
 
           {/* Tournament / Specific League Filter */}
           <div>
-            <select
+            <Select
+              width="full"
+              showPlaceholder={false}
               value={leagueFilter}
-              onChange={(e) => setLeagueFilter(e.target.value)}
-              className="w-full py-2 px-3 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text font-bold"
-            >
-              <option value="all">All Tournaments & Leagues</option>
-              {leagueOptions.map((l) => (
-                <option key={l} value={l}>
-                  {l}
-                </option>
-              ))}
-            </select>
+              onChange={(e: any) => setLeagueFilter(e.target.value)}
+              options={[
+                { value: "all", label: "All Tournaments & Leagues" },
+                ...leagueOptions.map((l) => ({ value: l, label: l })),
+              ]}
+            />
           </div>
 
           {/* Status Filter */}
           <div>
-            <select
+            <Select
+              width="full"
+              showPlaceholder={false}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full py-2 px-3 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text"
-            >
-              <option value="all">All Match Statuses</option>
-              <option value="pending">Pending / Scheduled Only</option>
-              <option value="completed">Completed Only</option>
-            </select>
+              onChange={(e: any) => setStatusFilter(e.target.value as any)}
+              options={[
+                { value: "all", label: "All Match Statuses" },
+                { value: "pending", label: "Pending / Scheduled Only" },
+                { value: "completed", label: "Completed Only" },
+              ]}
+            />
           </div>
 
           {/* Match Type Filter */}
           <div>
-            <select
+            <Select
+              width="full"
+              showPlaceholder={false}
               value={gameTypeFilter}
-              onChange={(e) => setGameTypeFilter(e.target.value)}
-              className="w-full py-2 px-3 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text capitalize"
-            >
-              <option value="all">All Match Types</option>
-              <option value="league">League Matches</option>
-              <option value="tournament">Tournament Matches</option>
-              <option value="friendly">Friendlies</option>
-              <option value="playoff">Playoffs</option>
-            </select>
+              onChange={(e: any) => setGameTypeFilter(e.target.value)}
+              options={[
+                { value: "all", label: "All Match Types" },
+                { value: "league", label: "League Matches" },
+                { value: "tournament", label: "Tournament Matches" },
+                { value: "friendly", label: "Friendlies" },
+                { value: "playoff", label: "Playoffs" },
+              ]}
+            />
           </div>
 
           {/* Standings Filter */}
           <div>
-            <select
+            <Select
+              width="full"
+              showPlaceholder={false}
               value={standingsFilter}
-              onChange={(e) => setStandingsFilter(e.target.value as any)}
-              className="w-full py-2 px-3 text-xs bg-background border border-border/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-text"
-            >
-              <option value="all">All Standings Options</option>
-              <option value="yes">Counts for Standings</option>
-              <option value="no">Excluded from Standings</option>
-            </select>
+              onChange={(e: any) => setStandingsFilter(e.target.value as any)}
+              options={[
+                { value: "all", label: "All Standings Options" },
+                { value: "yes", label: "Counts for Standings" },
+                { value: "no", label: "Does Not Count" },
+              ]}
+            />
           </div>
 
           {/* Search Query */}

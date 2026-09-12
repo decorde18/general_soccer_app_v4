@@ -51,25 +51,32 @@ const BADGE_STYLES: Record<string, string> = {
 interface GenericTableProps<T extends Record<string, unknown>> {
   data: T[];
   columns: TableColumn[];
-  canEdit: boolean;
-  canDelete: boolean;
-  onEdit: (row: T) => void;
-  onDelete: (row: T) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  onEdit?: (row: T) => void;
+  onDelete?: (row: T) => void;
   globalFilter?: string;
+  showPagination?: boolean;
+  pageSize?: number;
 }
 
 export function GenericTable<T extends Record<string, unknown>>({
   data,
   columns,
-  canEdit,
-  canDelete,
+  canEdit = false,
+  canDelete = false,
   onEdit,
   onDelete,
   globalFilter = "",
+  showPagination = true,
+  pageSize = 10,
 }: GenericTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: showPagination ? pageSize : 1000,
+  });
 
   const tanstackColumns = useMemo<ColumnDef<T>[]>(() => {
     const cols: ColumnDef<T>[] = columns.map((col) => ({
@@ -79,6 +86,10 @@ export function GenericTable<T extends Record<string, unknown>>({
       enableSorting: col.sortable ?? false,
       cell: ({ getValue, row }) => {
         const val = getValue() as any;
+
+        if (col.renderCell) {
+          return col.renderCell(val, row.original);
+        }
 
         const cellContent = (() => {
           if (col.type === "badge" && col.options) {
@@ -128,7 +139,7 @@ export function GenericTable<T extends Record<string, unknown>>({
         enableSorting: false,
         cell: ({ row }) => (
           <div className='flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity justify-end leading-none'>
-            {canEdit && (
+            {canEdit && onEdit && (
               <button
                 onClick={() => onEdit(row.original)}
                 className='p-0.5 rounded text-muted hover:text-text hover:bg-muted/10 transition-colors inline-flex items-center justify-center leading-none'
@@ -137,7 +148,7 @@ export function GenericTable<T extends Record<string, unknown>>({
                 <Pencil size={12} />
               </button>
             )}
-            {canDelete && (
+            {canDelete && onDelete && (
               <button
                 onClick={() => onDelete(row.original)}
                 className='p-0.5 rounded text-muted hover:text-danger hover:bg-danger/10 transition-colors inline-flex items-center justify-center leading-none'
@@ -168,6 +179,12 @@ export function GenericTable<T extends Record<string, unknown>>({
     globalFilterFn: "includesString",
   });
 
+  const getAlignClass = (align?: "left" | "center" | "right") => {
+    if (align === "center") return "text-center justify-center";
+    if (align === "right") return "text-right justify-end";
+    return "text-left justify-start";
+  };
+
   return (
     <div>
       <div className='overflow-x-auto'>
@@ -177,18 +194,21 @@ export function GenericTable<T extends Record<string, unknown>>({
               <tr key={hg.id} className='border-b border-border h-6'>
                 {hg.headers.map((header) => {
                   const col = columns.find((c) => c.key === header.id);
+                  const alignClass = getAlignClass(col?.align);
+
                   return (
                     <th
                       key={header.id}
                       className={`
-                        px-2.5 py-0.5 text-left text-[10px] font-bold text-muted uppercase tracking-wide whitespace-nowrap leading-none align-middle h-6
+                        px-2.5 py-1 text-[10px] font-bold text-muted uppercase tracking-wide whitespace-nowrap leading-none align-middle h-6
+                        ${col?.align === "center" ? "text-center" : col?.align === "right" ? "text-right" : "text-left"}
                         ${col?.hiddenOnMobile ? "hidden md:table-cell" : ""}
                         ${header.id === "_actions" ? "w-12 text-right" : ""}
                       `}
                     >
                       {header.isPlaceholder ? null : (
                         <div
-                          className={`inline-flex items-center gap-0.5 leading-none ${header.column.getCanSort() ? "cursor-pointer select-none hover:text-text-label" : ""}`}
+                          className={`inline-flex items-center gap-0.5 leading-none ${alignClass} ${header.column.getCanSort() ? "cursor-pointer select-none hover:text-text-label" : ""}`}
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           {flexRender(
@@ -196,7 +216,7 @@ export function GenericTable<T extends Record<string, unknown>>({
                             header.getContext(),
                           )}
                           {header.column.getCanSort() && (
-                            <span className='text-muted/40 leading-none inline-flex items-center'>
+                            <span className='text-muted/40 leading-none inline-flex items-center ml-0.5'>
                               {header.column.getIsSorted() === "asc" ? (
                                 <ChevronUp size={10} />
                               ) : header.column.getIsSorted() === "desc" ? (
@@ -236,8 +256,9 @@ export function GenericTable<T extends Record<string, unknown>>({
                       <td
                         key={cell.id}
                         className={`
-                          px-2.5 py-0.5 text-text text-xs leading-none align-middle h-6
-                          ${cell.column.id === "name" ? "font-semibold text-text" : ""}
+                          px-2.5 py-1 text-text text-xs leading-none align-middle h-6
+                          ${col?.align === "center" ? "text-center" : col?.align === "right" ? "text-right" : "text-left"}
+                          ${cell.column.id === "name" || cell.column.id === "fullName" ? "font-semibold text-text" : ""}
                           ${col?.hiddenOnMobile ? "hidden md:table-cell" : ""}
                         `}
                       >
@@ -256,45 +277,47 @@ export function GenericTable<T extends Record<string, unknown>>({
       </div>
 
       {/* Pagination */}
-      <div className='flex items-center justify-between px-4 py-2 border-t border-border'>
-        <span className='text-xs text-muted'>
-          {table.getFilteredRowModel().rows.length === 0
-            ? "No results"
-            : `Showing ${pagination.pageIndex * pagination.pageSize + 1}–${Math.min(
-                (pagination.pageIndex + 1) * pagination.pageSize,
-                table.getFilteredRowModel().rows.length,
-              )} of ${table.getFilteredRowModel().rows.length}`}
-        </span>
-        <div className='flex items-center gap-1'>
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className='px-2.5 py-1 text-xs border border-border rounded-md text-text-label hover:bg-background disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
-          >
-            ‹
-          </button>
-          {Array.from({ length: table.getPageCount() }, (_, i) => (
+      {showPagination && (
+        <div className='flex items-center justify-between px-4 py-2 border-t border-border'>
+          <span className='text-xs text-muted'>
+            {table.getFilteredRowModel().rows.length === 0
+              ? "No results"
+              : `Showing ${pagination.pageIndex * pagination.pageSize + 1}–${Math.min(
+                  (pagination.pageIndex + 1) * pagination.pageSize,
+                  table.getFilteredRowModel().rows.length,
+                )} of ${table.getFilteredRowModel().rows.length}`}
+          </span>
+          <div className='flex items-center gap-1'>
             <button
-              key={i}
-              onClick={() => table.setPageIndex(i)}
-              className={`w-7 h-7 text-xs rounded-md border transition-colors ${
-                i === pagination.pageIndex
-                  ? "bg-primary text-white border-primary"
-                  : "border-border text-text-label hover:bg-background"
-              }`}
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className='px-2.5 py-1 text-xs border border-border rounded-md text-text-label hover:bg-background disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
             >
-              {i + 1}
+              ‹
             </button>
-          ))}
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className='px-2.5 py-1 text-xs border border-border rounded-md text-text-label hover:bg-background disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
-          >
-            ›
-          </button>
+            {Array.from({ length: table.getPageCount() }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => table.setPageIndex(i)}
+                className={`w-7 h-7 text-xs rounded-md border transition-colors ${
+                  i === pagination.pageIndex
+                    ? "bg-primary text-white border-primary"
+                    : "border-border text-text-label hover:bg-background"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className='px-2.5 py-1 text-xs border border-border rounded-md text-text-label hover:bg-background disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
+            >
+              ›
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

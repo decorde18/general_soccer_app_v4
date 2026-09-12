@@ -45,6 +45,8 @@ export interface TableColumn {
   options?: Record<string, "green" | "amber" | "red" | "gray" | "blue">;
   hiddenOnMobile?: boolean;
   linkPattern?: string;
+  align?: "left" | "center" | "right";
+  renderCell?: (value: any, row: any) => React.ReactNode;
 }
 
 export interface EntityConfig {

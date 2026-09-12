@@ -543,6 +543,69 @@ export function calculateActivePlayerTimeOnField(
 }
 
 /**
+ * Returns raw on-field shift intervals [{ start, end }] for a player in game seconds.
+ */
+export function getPlayerOnFieldIntervals(
+  isStarter: boolean,
+  subsIn: any[] = [],
+  subsOut: any[] = [],
+  periods: PeriodInterval[] = [],
+  currentGameTime: number = 0
+): { start: number; end: number }[] {
+  const normIn = (subsIn || [])
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const normOut = (subsOut || [])
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const events: { type: "IN" | "OUT"; time: number }[] = [];
+  normIn.forEach((t) => events.push({ type: "IN", time: t }));
+  normOut.forEach((t) => events.push({ type: "OUT", time: t }));
+  events.sort((a, b) => a.time - b.time);
+
+  let maxTimeline = currentGameTime;
+  if (periods && periods.length > 0) {
+    periods.forEach((p) => {
+      if (p.end > maxTimeline) maxTimeline = p.end;
+    });
+  }
+  events.forEach((ev) => {
+    if (ev.time > maxTimeline) maxTimeline = ev.time;
+  });
+
+  const onFieldIntervals: { start: number; end: number }[] = [];
+  let onField = isStarter;
+  let shiftStart: number | null = isStarter ? 0 : null;
+
+  events.forEach((evt) => {
+    if (evt.type === "IN") {
+      if (!onField) {
+        onField = true;
+        shiftStart = evt.time;
+      }
+    } else if (evt.type === "OUT") {
+      if (onField && shiftStart !== null) {
+        if (evt.time > shiftStart) {
+          onFieldIntervals.push({ start: shiftStart, end: evt.time });
+        }
+        onField = false;
+        shiftStart = null;
+      }
+    }
+  });
+
+  if (onField && shiftStart !== null && maxTimeline > shiftStart) {
+    onFieldIntervals.push({ start: shiftStart, end: maxTimeline });
+  }
+
+  return onFieldIntervals;
+}
+
+/**
  * Calculates player's actual active time off field (bench time, excluding halftime & stoppages).
  */
 export function calculateActivePlayerTimeOffField(

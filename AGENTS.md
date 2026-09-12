@@ -25,6 +25,7 @@ This file documents mandatory architectural rules and conventions for developers
   - Non-shifted literal game time (e.g. `8:00 AM`) is preserved as `08:00:00.000Z` in UTC so that clock hours never drift across client or server timezones.
 - **UI Display Standard**:
   - Always convert DB timestamps to UI display strings using `formatTimeStandard(timeInput)` or `formatDateStandard(dateInput)` from `@/lib/utils/dateTimeUtils`.
+  - All game start times across match cards, schedules, scoreboards, recent/upcoming matches, and modals MUST be rendered in 12-hour AM/PM format (e.g. `8:00 AM`, `1:30 PM`). Never display raw 24-hour military time strings (e.g. `13:30:00`) in UI views.
   - HTML `<input type="time" ...>` controls MUST format time values using `formatTime24(timeInput)`.
   - Never call raw `.toLocaleTimeString()` or `.getUTCHours()` directly in component files.
 
@@ -96,3 +97,34 @@ This file documents mandatory architectural rules and conventions for developers
   - Roster tables in live controls MUST maintain compact padding (`py-0.5 px-1.5`) and fixed row heights.
 - **Verification**:
   - All code changes MUST pass `npx tsc --noEmit` and `npx vitest run` with zero errors.
+
+---
+
+## 9. Design System Primitives & UI Component Enforcement
+
+- **No Raw HTML Input Controls**:
+  - Never render raw `<select>`, `<input>`, or native `<button>` tags when standard UI primitives exist in `@/components/ui/` (`Select`, `Input`, `Button`, `Checkbox`, `Toggle`, `Modal`, `Dialog`).
+- **Button Props & Loading State**:
+  - `Button` component MUST destructure `isLoading`, `variant`, `size`, and `disabled`. When `isLoading={true}`, the component MUST automatically render an inline loading spinner and set `disabled={true}`.
+- **Select Option Normalization**:
+  - `Select` component MUST automatically suppress redundant default options when custom placeholder choices exist.
+
+---
+
+## 10. Cascading Selectors & Interactive Entity Links
+
+- **Cascading Club → Team Selector**:
+  - Any UI screen requiring selection of a team MUST use `ClubTeamSelect` from `@/components/ui/ClubTeamSelect` to filter Club first, then Team.
+- **Universal Interactive Entity Links**:
+  - Render venues using `LocationLink` and clubs/teams using `ClubLink` / `TeamLink` to trigger standard interactive modals (`LocationDetailsModal`, `ClubDetailsModal`, `TeamDetailsModal`) across all tables, schedules, and summary cards.
+
+---
+
+## 11. Terminal Subnode Hierarchy & Competition Node Selection
+
+- **Terminal Leaf Subnode Scoping**:
+  - Competition node select dropdowns MUST filter to terminal leaf subnodes (`other_league_nodes.length === 0`). Intermediate parent category nodes MUST NOT be selectable as match or team enrollment targets.
+- **Full Hierarchy Path Formatting**:
+  - All competition node options MUST display full hierarchy breadcrumbs (`"League Name > Parent Node > Division Subnode"`).
+- **Dual Competition Enrollment & Auto-Sync**:
+  - Selecting a primary competition node MUST automatically sync `gameType` (`"tournament"` vs `"league"`), while allowing dual-enrolled secondary competitions to be attached via `+ Add Dual Competition`.

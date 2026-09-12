@@ -211,7 +211,7 @@ export default function StatsCenterClient({
             onClick={() => setActiveTab("players")}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all ${
               activeTab === "players"
-                ? "bg-primary text-primary-contrast shadow-sm"
+                ? "bg-primary text-white shadow-sm"
                 : "text-muted hover:text-text hover:bg-surface-hover"
             }`}
           >
@@ -222,7 +222,7 @@ export default function StatsCenterClient({
             onClick={() => setActiveTab("teams")}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-all ${
               activeTab === "teams"
-                ? "bg-primary text-primary-contrast shadow-sm"
+                ? "bg-primary text-white shadow-sm"
                 : "text-muted hover:text-text hover:bg-surface-hover"
             }`}
           >

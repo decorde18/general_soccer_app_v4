@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { getLeagueById, getLeagueNodeSeasons, getTeamSeasonRecords, getGames } from "@/lib/data/queries";
+import { getLeagueById, getLeagueNodeSeasons, getTeamSeasonRecords, getGames, getSeasons } from "@/lib/data/queries";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
@@ -34,10 +34,9 @@ export default async function LeagueDetailsPage({ params }: PageProps) {
     );
   }
 
-  const [league, nodeSeasons, allGames] = await Promise.all([
+  const [league, seasons] = await Promise.all([
     getLeagueById(idNumber),
-    getLeagueNodeSeasons(idNumber),
-    getGames({ leagueId: idNumber }),
+    getSeasons(),
   ]);
 
   if (!league) {
@@ -59,6 +58,14 @@ export default async function LeagueDetailsPage({ params }: PageProps) {
       </div>
     );
   }
+
+  const activeSeason = seasons.find((s) => s.isCurrent) || seasons[0];
+  const activeSeasonId = activeSeason?.id;
+
+  const [nodeSeasons, allGames] = await Promise.all([
+    getLeagueNodeSeasons(idNumber, activeSeasonId),
+    getGames({ leagueId: idNumber, seasonId: activeSeasonId }),
+  ]);
 
   // Load standings for each active division/node season
   const allDivisionsData = await Promise.all(
@@ -96,8 +103,10 @@ export default async function LeagueDetailsPage({ params }: PageProps) {
           gameType: g.gameType,
           homeTeamName: g.homeTeamName,
           homeClubName: g.homeClubName,
+          homeClubAbbreviation: g.homeClubAbbreviation,
           awayTeamName: g.awayTeamName,
           awayClubName: g.awayClubName,
+          awayClubAbbreviation: g.awayClubAbbreviation,
           homeScore: g.homeScore,
           awayScore: g.awayScore,
           locationName: g.locationName,
@@ -119,8 +128,10 @@ export default async function LeagueDetailsPage({ params }: PageProps) {
     startDate: g.startDate,
     startTime: g.startTime,
     homeClubName: g.homeClubName,
+    homeClubAbbreviation: g.homeClubAbbreviation,
     homeTeamName: g.homeTeamName,
     awayClubName: g.awayClubName,
+    awayClubAbbreviation: g.awayClubAbbreviation,
     awayTeamName: g.awayTeamName,
     homeTeamSeasonId: g.homeTeamSeasonId,
     awayTeamSeasonId: g.awayTeamSeasonId,

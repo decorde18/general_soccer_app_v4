@@ -14,6 +14,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
+import SpinnerOverlay from "@/components/ui/SpinnerOverlay";
 import type { PlayerSeasonStats, ComprehensiveTeamStats } from "@/lib/data/queries";
 import { fetchPlayerStatsAction, fetchTeamStatsAction } from "@/lib/actions/stats-actions";
 
@@ -169,7 +170,9 @@ export default function TeamStats({ stats: initialStats, teamSeasonId, leagueLin
   };
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6 min-h-[250px]">
+      <SpinnerOverlay isLoading={isPending} message="Updating team & player statistics..." />
+
       {/* FILTER & SUB-TAB CONTROLS */}
       <Card variant="outlined" padding="md" className="bg-surface/50">
         <div className="space-y-4">
@@ -180,7 +183,7 @@ export default function TeamStats({ stats: initialStats, teamSeasonId, leagueLin
                 onClick={() => setActiveSubTab("players")}
                 className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
                   activeSubTab === "players"
-                    ? "bg-primary text-primary-contrast shadow-sm"
+                    ? "bg-primary text-white shadow-sm"
                     : "text-muted hover:text-text"
                 }`}
               >
@@ -191,7 +194,7 @@ export default function TeamStats({ stats: initialStats, teamSeasonId, leagueLin
                 onClick={() => setActiveSubTab("team")}
                 className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
                   activeSubTab === "team"
-                    ? "bg-primary text-primary-contrast shadow-sm"
+                    ? "bg-primary text-white shadow-sm"
                     : "text-muted hover:text-text"
                 }`}
               >

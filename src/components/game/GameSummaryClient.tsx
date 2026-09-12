@@ -21,6 +21,8 @@ import {
 import { Card } from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import { GenericTable } from "@/components/ui/GenericTable";
+import { TableColumn } from "@/components/entities/types";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
 import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
@@ -732,6 +734,233 @@ export default function GameSummaryClient() {
     label: `Period ${p.periodNumber}`,
   }));
 
+  // Field Players Box Score Columns
+  const fieldPlayerColumns: TableColumn[] = useMemo(
+    () => [
+      {
+        key: "jerseyNumber",
+        label: "#",
+        type: "text",
+        sortable: true,
+        align: "left",
+        renderCell: (val: any) => (
+          <span className="font-mono font-bold text-primary">#{val || "?"}</span>
+        ),
+      },
+      {
+        key: "fullName",
+        label: "Player Name",
+        type: "text",
+        sortable: true,
+        align: "left",
+        renderCell: (val: any) => <span className="font-bold text-text">{val}</span>,
+      },
+      {
+        key: "gameStatus",
+        label: "Status",
+        type: "text",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => (
+          <span className="capitalize text-muted text-[10px] font-bold">{val}</span>
+        ),
+      },
+      {
+        key: "totalSec",
+        label: "MIN",
+        type: "number",
+        sortable: true,
+        align: "right",
+        renderCell: (val: any) => (
+          <span className="font-mono font-bold text-text">{formatSecondsToMmss(val)}</span>
+        ),
+      },
+      {
+        key: "plusMinus",
+        label: "+/-",
+        type: "number",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => {
+          const num = Number(val || 0);
+          const str = num > 0 ? `+${num}` : String(num);
+          return <span className="font-mono font-black text-slate-600">{str}</span>;
+        },
+      },
+      {
+        key: "goals",
+        label: "Goals",
+        type: "number",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => <span className="font-bold text-text">{val || 0}</span>,
+      },
+      {
+        key: "assists",
+        label: "Assists",
+        type: "number",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => <span className="font-bold text-text">{val || 0}</span>,
+      },
+      {
+        key: "shots",
+        label: "Shots",
+        type: "number",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => <span className="font-bold text-muted">{val || 0}</span>,
+      },
+      {
+        key: "cards",
+        label: "Cards",
+        type: "text",
+        sortable: false,
+        align: "center",
+        renderCell: (_: any, row: any) => (
+          <span>
+            {row.yellowCards > 0 && (
+              <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 rounded mr-1">
+                Y
+              </span>
+            )}
+            {row.redCards > 0 && (
+              <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-600 rounded">
+                R
+              </span>
+            )}
+            {!row.yellowCards && !row.redCards && "--"}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
+  const fieldPlayersTableData = useMemo(() => {
+    return fieldPlayers.map((p) => ({
+      ...p,
+      totalSec: calculateTotalTimeOnField(p, gameTimeSeconds),
+    }));
+  }, [fieldPlayers, gameTimeSeconds, calculateTotalTimeOnField]);
+
+  // Goalkeepers Box Score Columns
+  const goalkeeperColumns: TableColumn[] = useMemo(
+    () => [
+      {
+        key: "jerseyNumber",
+        label: "#",
+        type: "text",
+        sortable: true,
+        align: "left",
+        renderCell: (val: any) => (
+          <span className="font-mono font-bold text-emerald-600">#{val || "?"}</span>
+        ),
+      },
+      {
+        key: "fullName",
+        label: "Keeper Name",
+        type: "text",
+        sortable: true,
+        align: "left",
+        renderCell: (val: any) => <span className="font-bold text-text">{val}</span>,
+      },
+      {
+        key: "gameStatus",
+        label: "Status",
+        type: "text",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => (
+          <span className="capitalize text-muted text-[10px] font-bold">{val}</span>
+        ),
+      },
+      {
+        key: "totalSec",
+        label: "Total MIN",
+        type: "number",
+        sortable: true,
+        align: "right",
+        renderCell: (val: any) => (
+          <span className="font-mono font-bold text-text">{formatSecondsToMmss(val)}</span>
+        ),
+      },
+      {
+        key: "gkSec",
+        label: "MIN in Goal",
+        type: "number",
+        sortable: true,
+        align: "right",
+        renderCell: (val: any) => (
+          <span className="font-mono font-bold text-emerald-600">
+            {formatSecondsToMmss(val)}
+          </span>
+        ),
+      },
+      {
+        key: "saves",
+        label: "Saves",
+        type: "number",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => (
+          <span className="font-mono font-bold text-emerald-600">{val || 0}</span>
+        ),
+      },
+      {
+        key: "goalsAgainst",
+        label: "GA",
+        type: "number",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => (
+          <span className="font-mono font-bold text-rose-500">{val || 0}</span>
+        ),
+      },
+      {
+        key: "cleanSheet",
+        label: "Clean Sheet",
+        type: "boolean",
+        sortable: true,
+        align: "center",
+        renderCell: (val: any) => (
+          <span className="font-bold text-text">{val ? "Yes" : "No"}</span>
+        ),
+      },
+      {
+        key: "cards",
+        label: "Cards",
+        type: "text",
+        sortable: false,
+        align: "center",
+        renderCell: (_: any, row: any) => (
+          <span>
+            {row.yellowCards > 0 && (
+              <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 rounded mr-1">
+                Y
+              </span>
+            )}
+            {row.redCards > 0 && (
+              <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-600 rounded">
+                R
+              </span>
+            )}
+            {!row.yellowCards && !row.redCards && "--"}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
+  const goalkeepersTableData = useMemo(() => {
+    return goalkeepers.map((p) => ({
+      ...p,
+      totalSec: calculateTotalTimeOnField(p, gameTimeSeconds),
+      gkSec: gkTimesMap[p.id] || p.goalkeeperTime || 0,
+    }));
+  }, [goalkeepers, gameTimeSeconds, calculateTotalTimeOnField, gkTimesMap]);
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 select-none">
       {/* HEADER BANNER */}
@@ -818,8 +1047,9 @@ export default function GameSummaryClient() {
         </div>
       </div>
 
-      {/* TAB 1: BOX SCORE VIEW */}
-      {activeTab === "boxscore" && (
+
+  /* TAB 1: BOX SCORE VIEW */
+  {activeTab === "boxscore" && (
         <div className="space-y-8 animate-fadeIn">
           {/* TEAM STAT COMPARISON TABLE */}
           <Card variant="outlined" padding="lg" className="space-y-4 bg-surface shadow-xs">
@@ -863,53 +1093,11 @@ export default function GameSummaryClient() {
               </h3>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-border/70">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-background/60 text-[10px] font-bold uppercase text-muted">
-                    <th className="p-3">#</th>
-                    <th className="p-3">Player Name</th>
-                    <th className="p-3 text-center">Status</th>
-                    <th className="p-3 text-right">MIN</th>
-                    <th className="p-3 text-center">+/-</th>
-                    <th className="p-3 text-center">Goals</th>
-                    <th className="p-3 text-center">Assists</th>
-                    <th className="p-3 text-center">Shots</th>
-                    <th className="p-3 text-center">Cards</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {fieldPlayers.map((p) => {
-                    const totalSec = calculateTotalTimeOnField(p, gameTimeSeconds);
-                    const plusMinusStr = p.plusMinus > 0 ? `+${p.plusMinus}` : String(p.plusMinus || 0);
-
-                    return (
-                      <tr key={p.id} className="border-b border-border/40 hover:bg-background/25">
-                        <td className="p-3 font-mono font-bold text-primary">#{p.jerseyNumber || "?"}</td>
-                        <td className="p-3 font-bold text-text">{p.fullName}</td>
-                        <td className="p-3 text-center capitalize text-muted text-[10px] font-bold">
-                          {p.gameStatus}
-                        </td>
-                        <td className="p-3 text-right font-mono font-bold text-text">
-                          {formatSecondsToMmss(totalSec)}
-                        </td>
-                        <td className="p-3 text-center font-mono font-black text-slate-600">
-                          {plusMinusStr}
-                        </td>
-                        <td className="p-3 text-center font-bold text-text">{p.goals || 0}</td>
-                        <td className="p-3 text-center font-bold text-text">{p.assists || 0}</td>
-                        <td className="p-3 text-center font-bold text-muted">{p.shots || 0}</td>
-                        <td className="p-3 text-center font-bold text-text">
-                          {p.yellowCards > 0 && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 rounded mr-1">Y</span>}
-                          {p.redCards > 0 && <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-600 rounded">R</span>}
-                          {!p.yellowCards && !p.redCards && "--"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <GenericTable
+              data={fieldPlayersTableData}
+              columns={fieldPlayerColumns}
+              showPagination={false}
+            />
           </Card>
 
           {/* GOALKEEPERS BOX SCORE TABLE */}
@@ -922,53 +1110,11 @@ export default function GameSummaryClient() {
                 </h3>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-border/70">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-border bg-background/60 text-[10px] font-bold uppercase text-muted">
-                      <th className="p-3">#</th>
-                      <th className="p-3">Keeper Name</th>
-                      <th className="p-3 text-center">Status</th>
-                      <th className="p-3 text-right">Total MIN</th>
-                      <th className="p-3 text-right">MIN in Goal</th>
-                      <th className="p-3 text-center">Saves</th>
-                      <th className="p-3 text-center">GA</th>
-                      <th className="p-3 text-center">Clean Sheet</th>
-                      <th className="p-3 text-center">Cards</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {goalkeepers.map((p) => {
-                      const totalSec = calculateTotalTimeOnField(p, gameTimeSeconds);
-                      const gkSec = gkTimesMap[p.id] || p.goalkeeperTime || 0;
-
-                      return (
-                        <tr key={p.id} className="border-b border-border/40 hover:bg-background/25">
-                          <td className="p-3 font-mono font-bold text-emerald-600">#{p.jerseyNumber || "?"}</td>
-                          <td className="p-3 font-bold text-text">{p.fullName}</td>
-                          <td className="p-3 text-center capitalize text-muted text-[10px] font-bold">
-                            {p.gameStatus}
-                          </td>
-                          <td className="p-3 text-right font-mono font-bold text-text">
-                            {formatSecondsToMmss(totalSec)}
-                          </td>
-                          <td className="p-3 text-right font-mono font-bold text-emerald-600">
-                            {formatSecondsToMmss(gkSec)}
-                          </td>
-                          <td className="p-3 text-center font-mono font-bold text-emerald-600">{p.saves || 0}</td>
-                          <td className="p-3 text-center font-mono font-bold text-rose-500">{p.goalsAgainst || 0}</td>
-                          <td className="p-3 text-center font-bold text-text">{p.cleanSheet ? "Yes" : "No"}</td>
-                          <td className="p-3 text-center font-bold text-text">
-                            {p.yellowCards > 0 && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 rounded mr-1">Y</span>}
-                            {p.redCards > 0 && <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-600 rounded">R</span>}
-                            {!p.yellowCards && !p.redCards && "--"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <GenericTable
+                data={goalkeepersTableData}
+                columns={goalkeeperColumns}
+                showPagination={false}
+              />
             </Card>
           )}
         </div>
