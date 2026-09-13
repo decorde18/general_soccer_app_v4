@@ -1093,17 +1093,15 @@ const useGameStore = create<GameStoreState>((set, get) => {
         game.teamSeasonId ||
         (game.isHome ? game.home_team_season_id : game.away_team_season_id);
 
-      const isOurGoal =
-        String(goalEvent.team_season_id) === String(ourTeamSeasonId) && !goalEvent.is_own_goal;
-      const isTheirGoal =
-        String(goalEvent.team_season_id) !== String(ourTeamSeasonId) || goalEvent.is_own_goal;
+      const isOurScore = String(goalEvent.team_season_id) === String(ourTeamSeasonId);
+      const isTheirScore = String(goalEvent.team_season_id) !== String(ourTeamSeasonId);
 
       const updatedGame: Game = {
         ...game,
         gameEventsGoals: [...(game.gameEventsGoals || []), goalEvent],
         gameEventsMajor: [...(game.gameEventsMajor || []), majorEvent],
-        goalsFor: (game.goalsFor || 0) + (isOurGoal ? 1 : 0),
-        goalsAgainst: (game.goalsAgainst || 0) + (isTheirGoal ? 1 : 0),
+        goalsFor: (game.goalsFor || 0) + (isOurScore ? 1 : 0),
+        goalsAgainst: (game.goalsAgainst || 0) + (isTheirScore ? 1 : 0),
       };
 
       set({ game: updatedGame });
@@ -1145,23 +1143,20 @@ const useGameStore = create<GameStoreState>((set, get) => {
       const game = get().game;
       if (!game) return;
 
-      const teamSeasonId = game.isHome
-        ? game.home_team_season_id
-        : game.away_team_season_id;
+      const teamSeasonId =
+        game.teamSeasonId ||
+        (game.isHome ? game.home_team_season_id : game.away_team_season_id);
 
       // Find the goal to determine if it was ours or theirs
       const goalToRemove = game.gameEventsGoals.find(
         (g) => g.id === goalId || g.goal_id === goalId,
       );
-      const isOurGoal = Boolean(
-        goalToRemove &&
-        goalToRemove.team_season_id === teamSeasonId &&
-        !goalToRemove.is_own_goal,
+
+      const isOurScore = Boolean(
+        goalToRemove && String(goalToRemove.team_season_id) === String(teamSeasonId)
       );
-      const isTheirGoal = Boolean(
-        goalToRemove &&
-        (goalToRemove.team_season_id !== teamSeasonId ||
-          goalToRemove.is_own_goal),
+      const isTheirScore = Boolean(
+        goalToRemove && String(goalToRemove.team_season_id) !== String(teamSeasonId)
       );
 
       const updatedGame: Game = {
@@ -1172,8 +1167,8 @@ const useGameStore = create<GameStoreState>((set, get) => {
         gameEventsMajor: game.gameEventsMajor.filter(
           (m) => m.id !== majorEventId,
         ),
-        goalsFor: game.goalsFor - (isOurGoal ? 1 : 0),
-        goalsAgainst: game.goalsAgainst - (isTheirGoal ? 1 : 0),
+        goalsFor: Math.max(0, game.goalsFor - (isOurScore ? 1 : 0)),
+        goalsAgainst: Math.max(0, game.goalsAgainst - (isTheirScore ? 1 : 0)),
       };
 
       set({ game: updatedGame });

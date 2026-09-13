@@ -1063,10 +1063,7 @@ function mapGameRow(r: any): Game {
       if (major.event_type === "goal" || (major.game_events_goals && major.game_events_goals.length > 0)) {
         major.game_events_goals?.forEach((goal: any) => {
           const isHomeScorer = goal.team_season_id === r.home_team_season_id;
-          if (
-            (isHomeScorer && !goal.is_own_goal) ||
-            (!isHomeScorer && goal.is_own_goal)
-          ) {
+          if (goal.team_season_id === r.home_team_season_id) {
             homeScore = (homeScore || 0) + 1;
           } else {
             awayScore = (awayScore || 0) + 1;
@@ -1467,9 +1464,7 @@ async function getStatsForRoster(
           game.game_events_major?.forEach((major: any) => {
             major.game_events_goals?.forEach((goal: any) => {
               hasGoalEvents = true;
-              const isOpposingGoal =
-                (goal.team_season_id !== pg.team_season_id && !goal.is_own_goal) ||
-                (goal.team_season_id === pg.team_season_id && goal.is_own_goal);
+              const isOpposingGoal = goal.team_season_id !== pg.team_season_id;
               if (isOpposingGoal) {
                 opposingGoals++;
               }
@@ -1496,7 +1491,7 @@ async function getStatsForRoster(
               );
               if (wasOnField) {
                 const isTeamGoal = goal.team_season_id === pg.team_season_id;
-                if ((isTeamGoal && !goal.is_own_goal) || (!isTeamGoal && goal.is_own_goal)) {
+                if (goal.team_season_id === pg.team_season_id) {
                   plusMinus += 1;
                 } else {
                   plusMinus -= 1;
@@ -1715,9 +1710,7 @@ export async function getComprehensivePlayerStats(
       game.game_events_major?.forEach((major: any) => {
         major.game_events_goals?.forEach((goal: any) => {
           hasGoalEvents = true;
-          const isOpposingGoal =
-            (goal.team_season_id !== pg.team_season_id && !goal.is_own_goal) ||
-            (goal.team_season_id === pg.team_season_id && goal.is_own_goal);
+          const isOpposingGoal = goal.team_season_id !== pg.team_season_id;
           if (isOpposingGoal) {
             opposingGoals++;
           }
@@ -1744,7 +1737,7 @@ export async function getComprehensivePlayerStats(
           );
           if (wasOnField) {
             const isTeamGoal = goal.team_season_id === pg.team_season_id;
-            if ((isTeamGoal && !goal.is_own_goal) || (!isTeamGoal && goal.is_own_goal)) {
+            if (goal.team_season_id === pg.team_season_id) {
               rec.plusMinus += 1;
             } else {
               rec.plusMinus -= 1;
@@ -2014,7 +2007,7 @@ export async function getTeamSeasonRecords(
           major.game_events_goals?.forEach((goal: any) => {
             hasGoalEvents = true;
             const isHomeScorer = goal.team_season_id === g.home_team_season_id;
-            if ((isHomeScorer && !goal.is_own_goal) || (!isHomeScorer && goal.is_own_goal)) {
+            if (goal.team_season_id === g.home_team_season_id) {
               eventHomeGoals++;
             } else {
               eventAwayGoals++;
@@ -3236,9 +3229,7 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
         game.game_events_major?.forEach((major: any) => {
           major.game_events_goals?.forEach((goal: any) => {
             hasGoalEvents = true;
-            const isOpposingGoal =
-              (goal.team_season_id !== pg.team_season_id && !goal.is_own_goal) ||
-              (goal.team_season_id === pg.team_season_id && goal.is_own_goal);
+            const isOpposingGoal = goal.team_season_id !== pg.team_season_id;
             if (isOpposingGoal) {
               opposingGoals++;
             }

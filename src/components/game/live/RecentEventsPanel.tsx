@@ -49,9 +49,18 @@ export default function RecentEventsPanel(props: RecentEventsPanelProps) {
       if (g.major_event_id) linkedMajorIds.add(Number(g.major_event_id));
       const major = (game.gameEventsMajor || []).find((m) => Number(m.id) === Number(g.major_event_id));
       const eventTime = g.game_time ?? major?.game_time ?? 0;
-      const scorer = players.find((p) => Number(p.playerGameId) === Number(g.scorer_player_game_id));
-      const teamName = Number(g.team_season_id) === ourId ? "Us" : "Opponent";
-      const desc = `Goal for ${teamName} by ${scorer ? scorer.fullName : "Unknown"}${g.is_own_goal ? " (OG)" : ""}`;
+      const scorer = players.find((p) => Number(p.playerGameId) === Number(g.scorer_player_game_id) || Number(p.id) === Number(g.scorer_player_game_id));
+      const isOurPoint = Number(g.team_season_id) === ourId;
+      let desc = "";
+      if (g.is_own_goal) {
+        if (isOurPoint) {
+          desc = `⚽ Own Goal by Opponent (+1 to Us)`;
+        } else {
+          desc = `⚠️ Own Goal by ${scorer ? scorer.fullName : "Us"} (+1 to Opponent)`;
+        }
+      } else {
+        desc = `⚽ Goal for ${isOurPoint ? "Us" : "Opponent"} by ${scorer ? scorer.fullName : "Opponent"}`;
+      }
       list.push({ id: `goal-${g.id || g.goal_id}`, dbId: g.id || g.goal_id, time: eventTime, type: "goal", desc });
     });
 

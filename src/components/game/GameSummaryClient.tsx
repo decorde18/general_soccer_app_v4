@@ -117,9 +117,20 @@ export default function GameSummaryClient() {
   const gameTimeSeconds = useGameStore.getState().getGameTime() || matchDurationSeconds;
   const gkTimesMap = calculateAllGoalkeeperTime(gameIdVal, gameTimeSeconds);
 
-  // Aggregate team stats
-  const goalsFor = game.goalsFor ?? 0;
-  const goalsAgainst = game.goalsAgainst ?? 0;
+  const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
+  const ourTeamName = game.ourName || "Our Team";
+  const oppTeamName = game.opponentName || "Opponent";
+
+  // Aggregate team stats dynamically accounting for own goals
+  const goalsFor = useMemo(() => {
+    if (!game.gameEventsGoals || game.gameEventsGoals.length === 0) return game.goalsFor ?? 0;
+    return game.gameEventsGoals.filter((g: any) => String(g.team_season_id) === String(ourTeamSeasonId)).length;
+  }, [game.gameEventsGoals, game.goalsFor, ourTeamSeasonId]);
+
+  const goalsAgainst = useMemo(() => {
+    if (!game.gameEventsGoals || game.gameEventsGoals.length === 0) return game.goalsAgainst ?? 0;
+    return game.gameEventsGoals.filter((g: any) => String(g.team_season_id) !== String(ourTeamSeasonId)).length;
+  }, [game.gameEventsGoals, game.goalsAgainst, ourTeamSeasonId]);
 
   const yellowCardsCount = game.gameEventsDiscipline?.filter((d) => (d as any).card_type === "yellow").length || 0;
   const redCardsCount = game.gameEventsDiscipline?.filter((d) => (d as any).card_type === "red" || (d as any).card_type === "yellow_red").length || 0;
@@ -132,10 +143,6 @@ export default function GameSummaryClient() {
   const fieldPlayers = players.filter(
     (p) => calculateTotalTimeOnField(p, gameTimeSeconds) > 0 || p.gameStatus === "starter" || p.gameStatus === "dressed" || p.gameStatus === "goalkeeper"
   );
-
-  const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
-  const ourTeamName = game.ourName || "Our Team";
-  const oppTeamName = game.opponentName || "Opponent";
 
   // Build Player Map (Map player_game_id AND player_id to player data)
   const playerMap = useMemo(() => {
@@ -267,7 +274,7 @@ export default function GameSummaryClient() {
           linkedGoals.forEach((g: any, idx) => {
             const scorer = g.scorer_player_game_id ? playerMap.get(String(g.scorer_player_game_id)) : null;
             const assist = g.assist_player_game_id ? playerMap.get(String(g.assist_player_game_id)) : null;
-            const isOur = String(g.team_season_id) === String(ourTeamSeasonId) && !g.is_own_goal;
+            const isOurPoint = String(g.team_season_id) === String(ourTeamSeasonId);
 
             let methodStr = "";
             if (g.goal_types) {
@@ -277,6 +284,24 @@ export default function GameSummaryClient() {
                 if (Array.isArray(parsed)) methodStr = parsed.map((s: string) => String(s).replace("_", " ")).join(", ");
                 else methodStr = String(rawGoalTypes).replace("_", " ");
               } catch {}
+            }
+
+            let goalTitle = isOurPoint ? "⚽ GOAL!" : "⚽ OPPONENT GOAL";
+            let goalDetails = methodStr || "Goal";
+            let colorClass = isOurPoint
+              ? "text-emerald-600 bg-emerald-500/15 border-emerald-500/40"
+              : "text-rose-600 bg-rose-500/15 border-rose-500/40";
+
+            if (g.is_own_goal) {
+              if (isOurPoint) {
+                goalTitle = `⚽ OPPONENT OWN GOAL (+1 to ${ourTeamName})`;
+                goalDetails = "Own Goal by Opponent";
+                colorClass = "text-emerald-600 bg-emerald-500/15 border-emerald-500/40";
+              } else {
+                goalTitle = `⚠️ OUR OWN GOAL (+1 to ${oppTeamName})`;
+                goalDetails = scorer ? `Own Goal by #${scorer.jersey} ${scorer.name}` : "Own Goal by Our Team";
+                colorClass = "text-rose-600 bg-rose-500/15 border-rose-500/40";
+              }
             }
 
             compiled.push({
@@ -289,16 +314,14 @@ export default function GameSummaryClient() {
               cumulativeTime: timeInfo.cumulativeTime,
               matchMinute: timeInfo.matchMinute,
               category: "goal",
-              team: isOur ? "us" : "opp",
-              teamName: isOur ? ourTeamName : oppTeamName,
-              title: g.is_own_goal ? "⚽ OWN GOAL" : isOur ? "⚽ GOAL!" : "⚽ OPPONENT GOAL",
+              team: isOurPoint ? "us" : "opp",
+              teamName: isOurPoint ? ourTeamName : oppTeamName,
+              title: goalTitle,
               primaryPlayer: scorer ? { id: g.scorer_player_game_id, name: scorer.name, jerseyNumber: scorer.jersey } : undefined,
               secondaryPlayer: assist ? { id: g.assist_player_game_id, name: assist.name, jerseyNumber: assist.jersey } : undefined,
-              details: methodStr || (g.is_own_goal ? "Own Goal" : "Goal"),
-              notes: m.details || (isOur ? `Goal scored for ${ourTeamName}` : `Goal scored for ${oppTeamName}`),
-              colorClass: isOur
-                ? "text-emerald-600 bg-emerald-500/15 border-emerald-500/40"
-                : "text-rose-600 bg-rose-500/15 border-rose-500/40",
+              details: goalDetails,
+              notes: m.details || (isOurPoint ? `Goal scored for ${ourTeamName}` : `Goal scored for ${oppTeamName}`),
+              colorClass: colorClass,
               rawRecord: g,
             });
           });

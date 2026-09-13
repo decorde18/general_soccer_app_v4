@@ -53,6 +53,7 @@ export default function LivePlayerTable({
   const isPreGame =
     gameStore.game?.status === "scheduled" ||
     (gameStore.game && gameStore.getGameStage() === gameStore.GAME_STAGES.BEFORE_START);
+  const isBetweenPeriods = gameStore.getGameStage() === gameStore.GAME_STAGES.BETWEEN_PERIODS;
 
   return (
     <div className="border border-border/60 bg-background/25 rounded-lg p-1">
@@ -61,24 +62,32 @@ export default function LivePlayerTable({
           <tr className="border-b border-border/40 text-muted uppercase font-black text-[9px] h-5.5">
             <th className="py-0.5 px-1.5 text-center w-8 align-middle">#</th>
             <th className="py-0.5 px-1.5 w-1/3 align-middle">Name</th>
-            {isGk ? (
-              <>
-                <th className="py-0.5 px-1.5 text-right w-12 align-middle">Saves</th>
-                <th className="py-0.5 px-1.5 text-right w-12 align-middle">GA</th>
-              </>
+            {isPreGame ? (
+              <th className="py-0.5 px-1.5 text-center w-36 align-middle">Status</th>
             ) : (
               <>
-                <th className="py-0.5 px-1.5 text-right w-10 align-middle">Shots</th>
-                <th className="py-0.5 px-1.5 text-right w-10 align-middle">Goals</th>
-                <th className="py-0.5 px-1.5 text-right w-10 align-middle">Assts</th>
+                {isGk ? (
+                  <>
+                    <th className="py-0.5 px-1.5 text-right w-12 align-middle">Saves</th>
+                    <th className="py-0.5 px-1.5 text-right w-12 align-middle">GA</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="py-0.5 px-1.5 text-right w-10 align-middle">Shots</th>
+                    <th className="py-0.5 px-1.5 text-right w-10 align-middle">Goals</th>
+                    <th className="py-0.5 px-1.5 text-right w-10 align-middle">Assts</th>
+                  </>
+                )}
+                <th className="py-0.5 px-1.5 text-center w-10 align-middle">+/-</th>
+                <th className="py-0.5 px-1.5 text-right w-16 align-middle">Total Time</th>
+                {!isBetweenPeriods && (
+                  <th className="py-0.5 px-1.5 text-right w-16 align-middle">
+                    {isBench ? "Recent Bench" : "Shift Time"}
+                  </th>
+                )}
+                <th className="py-0.5 px-1.5 text-center w-36 align-middle">Action</th>
               </>
             )}
-            <th className="py-0.5 px-1.5 text-center w-10 align-middle">+/-</th>
-            <th className="py-0.5 px-1.5 text-right w-16 align-middle">Total Time</th>
-            <th className="py-0.5 px-1.5 text-right w-16 align-middle">
-              {isBench ? "Bench Time" : "Shift Time"}
-            </th>
-            <th className="py-0.5 px-1.5 text-center w-36 align-middle">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border/30">
@@ -141,14 +150,14 @@ export default function LivePlayerTable({
                 <td className="py-0.5 px-1.5 font-bold truncate align-middle" title={player.fullName}>
                   <div className="flex items-center gap-1.5">
                     <span>{player.fullName}</span>
-                    {Array.from({ length: stats.yellowCards }).map((_, idx) => (
+                    {!isPreGame && Array.from({ length: stats.yellowCards }).map((_, idx) => (
                       <span
                         key={`y-${idx}`}
                         className="inline-block w-2.5 h-3.5 bg-amber-400 border border-amber-500 rounded-xs shrink-0 shadow-xs"
                         style={{ minWidth: "10px", minHeight: "14px" }}
                       />
                     ))}
-                    {Array.from({ length: stats.redCards }).map((_, idx) => (
+                    {!isPreGame && Array.from({ length: stats.redCards }).map((_, idx) => (
                       <span
                         key={`r-${idx}`}
                         className="inline-block w-2.5 h-3.5 bg-rose-500 border border-rose-600 rounded-xs shrink-0 shadow-xs"
@@ -158,47 +167,8 @@ export default function LivePlayerTable({
                   </div>
                 </td>
 
-                {isGk ? (
-                  <>
-                    <td className="py-0.5 px-1.5 text-right font-mono font-bold text-emerald-600 align-middle">
-                      {stats.saves || "—"}
-                    </td>
-                    <td className="py-0.5 px-1.5 text-right font-mono font-bold text-rose-500 align-middle">
-                      {stats.goalsAgainst || "—"}
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className="py-0.5 px-1.5 text-right font-mono font-bold text-muted align-middle">
-                      {stats.shots || "—"}
-                    </td>
-                    <td className="py-0.5 px-1.5 text-right font-mono font-bold text-primary align-middle">
-                      {stats.goals || "—"}
-                    </td>
-                    <td className="py-0.5 px-1.5 text-right font-mono font-bold text-blue-600 align-middle">
-                      {stats.assists || "—"}
-                    </td>
-                  </>
-                )}
-
-                <td className="py-0.5 px-1.5 text-center font-mono font-black text-slate-600 align-middle">
-                  {player.plusMinus || 0}
-                </td>
-                <td className="py-0.5 px-1.5 text-right font-mono text-muted align-middle">
-                  {formatSecondsToMmss(totalTime)}
-                </td>
-                <td
-                  className={`py-0.5 px-1.5 text-right font-mono font-black align-middle ${
-                    isBench ? "text-amber-600" : "text-primary"
-                  }`}
-                >
-                  {formatSecondsToMmss(secondaryTime)}
-                </td>
-
-                <td className="py-0.5 px-1.5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
-                  {isRedCarded ? (
-                    <span className="text-[9px] font-bold text-rose-600 uppercase tracking-wide">SENT OFF</span>
-                  ) : isPreGame ? (
+                {isPreGame ? (
+                  <td className="py-0.5 px-1.5 text-center align-middle">
                     <span
                       className={`inline-block px-2.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
                         isBench
@@ -208,55 +178,102 @@ export default function LivePlayerTable({
                     >
                       {isBench ? "Bench" : "Starter"}
                     </span>
-                  ) : (
-                    <div className="flex gap-1.5 justify-center items-center">
-                      {!isBench && onQuickAction && (gameStore.getGameStage() === gameStore.GAME_STAGES.DURING_PERIOD || gameStore.getGameStage() === gameStore.GAME_STAGES.IN_STOPPAGE) && (
-                        <button
-                          onClick={() => onQuickAction(player.id, isGk ? "save" : "shot")}
-                          className={`h-5.5 py-0 px-2 rounded text-[10px] font-black uppercase border transition-all cursor-pointer shadow-2xs ${
-                            isGk
-                              ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700"
-                              : "bg-primary hover:bg-primary/90 text-white border-primary"
-                          }`}
-                        >
-                          {isGk ? "SAVE" : "SHOT"}
-                        </button>
-                      )}
-                      {isPendingOut ? (
-                        <span className="inline-block text-[9px] font-black text-rose-600 dark:text-rose-400 bg-rose-500/15 border border-rose-500/20 px-2 py-0.5 rounded uppercase tracking-tight">
-                          Pending Out
-                        </span>
-                      ) : isPendingIn ? (
-                        <span className="inline-block text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-2 py-0.5 rounded uppercase tracking-tight">
-                          Pending In
-                        </span>
-                      ) : isExhausted ? (
-                        <button
-                          onClick={() => onAttemptIneligibleSelect?.(player, eligibility.reason || "Re-entry limit reached")}
-                          className="px-2 py-0.5 border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800 text-slate-500 text-[9px] font-bold rounded shadow-2xs hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer transition-colors"
-                          title={eligibility.reason || "Re-entry limit reached. Click to request ref override."}
-                        >
-                          Exhausted
-                        </button>
+                  </td>
+                ) : (
+                  <>
+                    {isGk ? (
+                      <>
+                        <td className="py-0.5 px-1.5 text-right font-mono font-bold text-emerald-600 align-middle">
+                          {stats.saves || "—"}
+                        </td>
+                        <td className="py-0.5 px-1.5 text-right font-mono font-bold text-rose-500 align-middle">
+                          {stats.goalsAgainst || "—"}
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="py-0.5 px-1.5 text-right font-mono font-bold text-muted align-middle">
+                          {stats.shots || "—"}
+                        </td>
+                        <td className="py-0.5 px-1.5 text-right font-mono font-bold text-primary align-middle">
+                          {stats.goals || "—"}
+                        </td>
+                        <td className="py-0.5 px-1.5 text-right font-mono font-bold text-blue-600 align-middle">
+                          {stats.assists || "—"}
+                        </td>
+                      </>
+                    )}
+
+                    <td className="py-0.5 px-1.5 text-center font-mono font-black text-slate-600 align-middle">
+                      {player.plusMinus || 0}
+                    </td>
+                    <td className="py-0.5 px-1.5 text-right font-mono text-muted align-middle">
+                      {formatSecondsToMmss(totalTime)}
+                    </td>
+                    {!isBetweenPeriods && (
+                      <td
+                        className={`py-0.5 px-1.5 text-right font-mono font-black align-middle ${
+                          isBench ? "text-amber-600" : "text-primary"
+                        }`}
+                      >
+                        {formatSecondsToMmss(secondaryTime)}
+                      </td>
+                    )}
+
+                    <td className="py-0.5 px-1.5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
+                      {isRedCarded ? (
+                        <span className="text-[9px] font-bold text-rose-600 uppercase tracking-wide">SENT OFF</span>
                       ) : (
-                        <button
-                          onClick={() => onSelectPlayer?.(isSelected ? null : String(player.id))}
-                          className={`px-2.5 py-0.5 border rounded-md text-[10px] font-black shadow-xs shrink-0 cursor-pointer ${
-                            isBench
-                              ? isSelected
-                                ? "bg-emerald-500 text-white border-emerald-500"
-                                : "bg-primary text-white border-primary hover:bg-primary/95"
-                              : isSelected
-                              ? "bg-rose-500 text-white border-rose-500"
-                              : "bg-background border-border text-rose-500 hover:bg-rose-500/10"
-                          }`}
-                        >
-                          {isBench ? (isSelected ? "Selected" : "Sub In") : (isSelected ? "Selected" : "Sub Out")}
-                        </button>
+                        <div className="flex gap-1.5 justify-center items-center">
+                          {!isBench && onQuickAction && (gameStore.getGameStage() === gameStore.GAME_STAGES.DURING_PERIOD || gameStore.getGameStage() === gameStore.GAME_STAGES.IN_STOPPAGE) && (
+                            <button
+                              onClick={() => onQuickAction(player.id, isGk ? "save" : "shot")}
+                              className={`h-5.5 py-0 px-2 rounded text-[10px] font-black uppercase border transition-all cursor-pointer shadow-2xs ${
+                                isGk
+                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700"
+                                  : "bg-primary hover:bg-primary/90 text-white border-primary"
+                              }`}
+                            >
+                              {isGk ? "SAVE" : "SHOT"}
+                            </button>
+                          )}
+                          {isPendingOut ? (
+                            <span className="inline-block text-[9px] font-black text-rose-600 dark:text-rose-400 bg-rose-500/15 border border-rose-500/20 px-2 py-0.5 rounded uppercase tracking-tight">
+                              Pending Out
+                            </span>
+                          ) : isPendingIn ? (
+                            <span className="inline-block text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/20 px-2 py-0.5 rounded uppercase tracking-tight">
+                              Pending In
+                            </span>
+                          ) : isExhausted ? (
+                            <button
+                              onClick={() => onAttemptIneligibleSelect?.(player, eligibility.reason || "Re-entry limit reached")}
+                              className="px-2 py-0.5 border border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800 text-slate-500 text-[9px] font-bold rounded shadow-2xs hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+                              title={eligibility.reason || "Re-entry limit reached. Click to request ref override."}
+                            >
+                              Exhausted
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => onSelectPlayer?.(isSelected ? null : String(player.id))}
+                              className={`px-2.5 py-0.5 border rounded-md text-[10px] font-black shadow-xs shrink-0 cursor-pointer ${
+                                isBench
+                                  ? isSelected
+                                    ? "bg-emerald-500 text-white border-emerald-500"
+                                    : "bg-primary text-white border-primary hover:bg-primary/95"
+                                  : isSelected
+                                  ? "bg-rose-500 text-white border-rose-500"
+                                  : "bg-background border-border text-rose-500 hover:bg-rose-500/10"
+                              }`}
+                            >
+                              {isBench ? (isSelected ? "Selected" : "Sub In") : (isSelected ? "Selected" : "Sub Out")}
+                            </button>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  )}
-                </td>
+                    </td>
+                  </>
+                )}
               </tr>
             );
           })}

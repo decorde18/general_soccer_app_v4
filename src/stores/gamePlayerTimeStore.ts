@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import useGameStore from "./gameStore";
 import useGamePlayersStore, { Player } from "./gamePlayersStore";
-import { calculateActivePlayerTimeOnField, calculateActivePlayerTimeOffField } from "@/lib/utils/dateTimeUtils";
+import { calculateActivePlayerTimeOnField, calculateActivePlayerTimeOffField, calculateRecentPlayerTimeOffField } from "@/lib/utils/dateTimeUtils";
 
 /* ==================== HELPERS ==================== */
 
@@ -150,7 +150,7 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
 
     const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
 
-    return calculateActivePlayerTimeOffField(
+    return calculateRecentPlayerTimeOffField(
       isStarter,
       player.ins,
       player.outs,

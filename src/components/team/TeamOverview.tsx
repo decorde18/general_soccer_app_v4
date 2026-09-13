@@ -1,9 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Card } from "@/components/ui/Card";
-import { Calendar, MapPin, Clock, Trophy, Mail, Users, ArrowRight, User } from "lucide-react";
+import { Calendar, MapPin, Clock, Trophy, Mail, Users, ArrowRight, User, Edit3, SquareChevronRight } from "lucide-react";
 import { format } from "date-fns";
+import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
+import GameEditModal from "@/components/dashboard/GameEditModal";
 
 // Reusable interface mappings from our data queries
 interface Game {
@@ -80,6 +84,12 @@ export default function TeamOverview({
   staff,
   onViewTab,
 }: TeamOverviewProps) {
+  const { data: session } = useSession();
+  const canManage = Boolean(session?.user);
+
+  const [quickScoreGame, setQuickScoreGame] = useState<Game | null>(null);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
+
   const totalGames = record ? record.wins + record.losses + record.draws : 0;
   const winningPct = totalGames > 0 ? (record!.wins + record!.draws / 2) / totalGames : 0;
   
@@ -151,6 +161,41 @@ export default function TeamOverview({
                       <span>{nextMatch.locationName}</span>
                     </div>
                   )}
+
+                  {/* ACTION BUTTONS (EDIT, QUICK SCORE, ENTER GAME STATS / TRACK GAME) */}
+                  <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-border/40 w-full sm:w-auto justify-start sm:justify-end">
+                    {canManage && (
+                      <>
+                        <button
+                          onClick={() => setEditingGame(nextMatch)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-text hover:text-primary bg-background border border-border px-2.5 py-1 rounded-lg transition-colors shadow-2xs"
+                          title="Edit Game Details, Cancel, or Delete"
+                        >
+                          <Edit3 size={13} />
+                          <span>Edit</span>
+                        </button>
+
+                        <button
+                          onClick={() => setQuickScoreGame(nextMatch)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg transition-colors shadow-2xs"
+                          title="Quick Score Entry"
+                        >
+                          <Edit3 size={13} />
+                          <span>Quick Score</span>
+                        </button>
+                      </>
+                    )}
+
+                    <Link
+                      href={`/gamestats/${teamSeasonId}/${nextMatch.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 px-3 py-1 rounded-lg transition-all shadow-2xs"
+                    >
+                      <SquareChevronRight size={13} />
+                      <span>Enter Game Stats</span>
+                    </Link>
+                  </div>
                 </div>
 
               </div>
@@ -415,6 +460,27 @@ export default function TeamOverview({
         </div>
 
       </div>
+
+      {/* QUICK SCORE MODAL */}
+      {quickScoreGame && (
+        <QuickScoreModal
+          gameId={quickScoreGame.id}
+          homeTeamName={`${quickScoreGame.homeClubName} ${quickScoreGame.homeTeamName}`}
+          awayTeamName={`${quickScoreGame.awayClubName} ${quickScoreGame.awayTeamName}`}
+          currentHomeScore={quickScoreGame.homeScore}
+          currentAwayScore={quickScoreGame.awayScore}
+          onClose={() => setQuickScoreGame(null)}
+        />
+      )}
+
+      {/* GAME EDIT MODAL */}
+      {editingGame && (
+        <GameEditModal
+          game={editingGame as any}
+          onClose={() => setEditingGame(null)}
+          onSuccess={() => setEditingGame(null)}
+        />
+      )}
 
     </div>
   );

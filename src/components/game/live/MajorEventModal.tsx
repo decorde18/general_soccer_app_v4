@@ -28,6 +28,8 @@ import {
   ArrowRightLeft,
   Trash2,
   Droplets,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 
 export type MajorEventType =
@@ -85,6 +87,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
   // Live match clock state for modal header
   const [liveSeconds, setLiveSeconds] = useState<number>(0);
+  const [eventDurationSeconds, setEventDurationSeconds] = useState<number>(0);
   const [isPausedLocally, setIsPausedLocally] = useState<boolean>(false);
 
   // In-Stoppage Substitutions State
@@ -102,6 +105,24 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   );
 
   const eventOpenMsRef = useRef<number>(Date.now());
+
+  // Event Duration Live Timer
+  useEffect(() => {
+    if (!isOpen) {
+      setEventDurationSeconds(0);
+      return;
+    }
+    const startMs = activeStoppage?.start_time ? new Date(activeStoppage.start_time as any).getTime() : eventOpenMsRef.current;
+    const initialSecs = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+    setEventDurationSeconds(initialSecs);
+
+    const interval = setInterval(() => {
+      const elapsed = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+      setEventDurationSeconds(elapsed);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, activeStoppage?.start_time]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -414,6 +435,10 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       toast.error("Please select the goal scorer from currently on-field players.");
       return;
     }
+    if (teamTarget === "us" && isOwnGoal && !goalScorerId) {
+      toast.error("Please select the player on our team who committed the own goal.");
+      return;
+    }
 
     try {
       const isOpp = teamTarget === "opp";
@@ -421,19 +446,27 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       const assist = players.find((p) => String(p.id) === goalAssistId || String(p.playerGameId) === goalAssistId);
       const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
       const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
-      const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
+      
+      // Goal point belongs to the team receiving the score:
+      // - Standard Goal by Us / Opponent Own Goal -> ourTeamSeasonId
+      // - Standard Goal by Opponent / Our Team Own Goal -> oppTeamSeasonId
+      let teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
+      if (isOwnGoal) {
+        teamSeasonVal = teamTarget === "us" ? oppTeamSeasonId : ourTeamSeasonId;
+      }
+
       const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
       const goalMethodsArr = Array.from(selectedMethods);
       const goalTypesJson = JSON.stringify(goalMethodsArr.length > 0 ? goalMethodsArr : ["open_play"]);
 
       const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
-      const defendingGkPlayerGameId = isOpp || isOwnGoal ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
+      const defendingGkPlayerGameId = (isOpp && !isOwnGoal) || (teamTarget === "us" && isOwnGoal) ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
 
       const tempGoalId = `temp_goal_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
-      const scorerPgId = !isOpp && scorer ? Number(scorer.playerGameId || scorer.id) : null;
-      const assistPgId = !isOpp && assist ? Number(assist.playerGameId || assist.id) : null;
+      const scorerPgId = teamTarget === "us" && scorer ? Number(scorer.playerGameId || scorer.id) : null;
+      const assistPgId = teamTarget === "us" && !isOwnGoal && assist ? Number(assist.playerGameId || assist.id) : null;
 
       const payload = {
         game_id: Number(game.game_id || game.id),
@@ -510,8 +543,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         useGamePlayersStore.getState().players
       );
 
-      // CLOSE MODAL IMMEDIATELY
-      onClose();
+      // Check if pending subs exist to prompt user before closing
+      const queuedSubs = getPendingSubsSync();
+      if (queuedSubs.length > 0) {
+        setShowPendingSubPrompt(true);
+      } else {
+        onClose();
+      }
 
       // 2. Background Persistence (Non-blocking)
       (async () => {
@@ -663,8 +701,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         useGamePlayersStore.getState().players
       );
 
-      // CLOSE MODAL IMMEDIATELY
-      onClose();
+      // Check if pending subs exist to prompt user before closing
+      const queuedSubs = getPendingSubsSync();
+      if (queuedSubs.length > 0) {
+        setShowPendingSubPrompt(true);
+      } else {
+        onClose();
+      }
 
       // 2. Background Persistence
       (async () => {
@@ -754,21 +797,92 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       return;
     }
 
+    const isOpp = teamTarget === "opp";
+    const taker = players.find((p) => String(p.id) === pkTakerId || String(p.playerGameId) === pkTakerId);
+
+    // 1. GOAL OUTCOME: Route to Goal modal pre-populated with PK Taker & Method
+    if (pkOutcome === "goal") {
+      if (!isOpp && taker) {
+        setGoalScorerId(String(taker.id));
+      } else if (isOpp && oppPkTakerJersey) {
+        setOppScorerJersey(oppPkTakerJersey);
+      }
+      setTeamTarget(teamTarget);
+      setSelectedMethods(new Set(["direct_free_kick"]));
+      setGoalNotes(pkNotes || "Penalty Kick Goal");
+      setEventType("goal");
+      toast.info("Penalty Kick Goal selected — Complete Goal details below.");
+      return;
+    }
+
+    // 2. SAVE OR MISS OUTCOME: Log immediate player actions and PK event
     startTransition(async () => {
       try {
-        const isOpp = teamTarget === "opp";
-        const taker = players.find((p) => String(p.id) === pkTakerId || String(p.playerGameId) === pkTakerId);
         const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
-        const finalOutcome = isReboundGoal ? "goal" : pkOutcome;
-
         const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
         const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
         const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
+        
         const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
         const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
 
         const takerPgId = !isOpp && taker ? Number(taker.playerGameId || taker.id) : null;
 
+        // Log player action: shot_on_target for save, shot_off_target for miss
+        if (!isOpp && takerPgId) {
+          const actionType = pkOutcome === "saved" ? "shot" : "shot_off_target";
+          const tempActionId = `temp_act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+          
+          useGameStore.getState().addPlayerAction({
+            id: tempActionId,
+            game_id: Number(game.game_id || game.id),
+            team_season_id: Number(ourTeamSeasonId),
+            player_game_id: takerPgId,
+            event_type: actionType,
+            game_time: gameTimeSeconds,
+            period: game.currentPeriodIndex + 1,
+          } as any);
+
+          fetch("/api/game_events_player_actions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              game_id: Number(game.game_id || game.id),
+              player_game_id: takerPgId,
+              event_type: actionType,
+              game_time: gameTimeSeconds,
+              period: game.currentPeriodIndex + 1,
+            }),
+          }).catch((err) => console.error("Error persisting PK shot action:", err));
+        }
+
+        // ONLY log GK save if defending GK is on a team whose player stats we track (i.e. isOpp is true -> defending GK is OUR goalkeeper)
+        if (pkOutcome === "saved" && isOpp && defendingGkPlayerGameId) {
+          const tempSaveId = `temp_save_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+          useGameStore.getState().addPlayerAction({
+            id: tempSaveId,
+            game_id: Number(game.game_id || game.id),
+            team_season_id: Number(ourTeamSeasonId),
+            player_game_id: defendingGkPlayerGameId,
+            event_type: "save",
+            game_time: gameTimeSeconds,
+            period: game.currentPeriodIndex + 1,
+          } as any);
+
+          fetch("/api/game_events_player_actions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              game_id: Number(game.game_id || game.id),
+              player_game_id: defendingGkPlayerGameId,
+              event_type: "save",
+              game_time: gameTimeSeconds,
+              period: game.currentPeriodIndex + 1,
+            }),
+          }).catch((err) => console.error("Error persisting PK GK save action:", err));
+        }
+
+        // Save Major Event & Penalty Event
         const majorRes = await fetch(`/api/game_events_major`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -777,94 +891,39 @@ export default function MajorEventModal(props: MajorEventModalProps) {
             period: game.currentPeriodIndex + 1,
             event_type: "penalty",
             game_time: gameTimeSeconds,
-            clock_should_run: 0,
-            details: pkNotes || "Penalty Kick Stoppage",
+            clock_should_run: stopClock ? 0 : 1,
+            details: pkNotes || `Penalty Kick (${pkOutcome.toUpperCase()})`,
           }),
         }).then((r) => r.json());
 
-        if (!majorRes?.id) throw new Error("Failed to create major event record.");
-
-        const pkPayload = {
-          major_event_id: Number(majorRes.id),
-          team_season_id: Number(teamSeasonVal),
-          shooter_player_game_id: takerPgId,
-          opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
-          outcome: finalOutcome,
-        };
-
-        await fetch(`/api/game_events_penalties`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(pkPayload),
-        });
-
-        if (finalOutcome === "goal" || isReboundGoal) {
-          const pkGoalTypesJson = JSON.stringify([isReboundGoal ? "pk_rebound" : "penalty"]);
-          const goalPayload = {
-            major_event_id: Number(majorRes.id),
-            team_season_id: Number(teamSeasonVal),
-            scorer_player_game_id: !isOpp && taker?.playerGameId ? Number(taker.playerGameId) : null,
-            defending_gk_player_game_id: defendingGkPlayerGameId,
-            goal_types: pkGoalTypesJson,
-          };
-          const newGoal = await fetch(`/api/game_events_goals`, {
+        if (majorRes?.id) {
+          await fetch(`/api/game_events_penalties`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(goalPayload),
-          }).then((r) => r.json());
-
-          if (newGoal?.id) {
-            addGoalEvent(
-              {
-                id: newGoal.id,
-                major_event_id: newGoal.major_event_id,
-                team_season_id: Number(teamSeasonVal),
-                goal_types: pkGoalTypesJson,
-                scorer_player_game_id: !isOpp && taker?.playerGameId ? Number(taker.playerGameId) : null,
-              } as any,
-              {
-                id: newGoal.major_event_id,
-                game_id: Number(game.game_id || game.id),
-                period: game.currentPeriodIndex + 1,
-                game_time: gameTimeSeconds,
-                clock_should_run: 0,
-                details: pkNotes || "PK Goal Stoppage",
-                start_time: Date.now(),
-                end_time: null,
-              } as any
-            );
-
-            if (!isOpp && taker?.playerGameId) {
-              fetch("/api/game_events_player_actions", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  game_id: Number(game.game_id || game.id),
-                  player_game_id: Number(taker.playerGameId),
-                  event_type: "shot",
-                  game_time: gameTimeSeconds,
-                  period: game.currentPeriodIndex + 1,
-                }),
-              }).then((r) => r.json()).then((newAction) => {
-                if (newAction?.id) {
-                  useGameStore.getState().addPlayerAction({
-                    id: newAction.id,
-                    game_id: Number(game.game_id || game.id),
-                    team_season_id: Number(game.teamSeasonId),
-                    player_game_id: Number(taker.playerGameId),
-                    event_type: "shot",
-                    game_time: gameTimeSeconds,
-                    period: game.currentPeriodIndex + 1,
-                  } as any);
-                }
-              }).catch((err) => console.error("Error logging PK auto shot:", err));
-            }
-          }
+            body: JSON.stringify({
+              major_event_id: Number(majorRes.id),
+              team_season_id: Number(teamSeasonVal),
+              shooter_player_game_id: takerPgId,
+              opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
+              outcome: pkOutcome,
+            }),
+          });
         }
 
-        setEventType("stoppage");
-        setStoppageCategory("stoppage");
-        setStoppageDetails(pkNotes || `Kickoff / PK (${finalOutcome.toUpperCase()}) Stoppage`);
+        saveGameCache(
+          game.game_id || game.id || "",
+          useGameStore.getState().game,
+          useGamePlayersStore.getState().players
+        );
+
+        toast.success(`Penalty Kick (${pkOutcome.toUpperCase()}) recorded!`);
+
+        const pendingSubs = getPendingSubsSync();
+        if (pendingSubs.length > 0) {
+          setShowPendingSubPrompt(true);
+        } else {
+          onClose();
+        }
       } catch (err: any) {
         toast.error("Failed to record penalty kick: " + err.message);
       }
@@ -903,8 +962,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       useGamePlayersStore.getState().players
     );
 
-    // CLOSE MODAL IMMEDIATELY
-    onClose();
+    // Check if pending subs exist to prompt user before closing
+    const queuedSubs = getPendingSubsSync();
+    if (queuedSubs.length > 0) {
+      setShowPendingSubPrompt(true);
+    } else {
+      onClose();
+    }
 
     // 2. Background Persistence
     startTransition(async () => {
@@ -1028,17 +1092,24 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       subtitle="Immediate event logging with clock controls"
     >
       <div className="space-y-4 text-xs">
-        {/* Header Bar: Timed Match Clock & Single Pause Toggle */}
-        <div className="flex items-center justify-between p-3 bg-surface border border-border/80 rounded-xl shadow-2xs">
-          <div className="flex items-center gap-2.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Timed Match Clock:</span>
-            <span className={`font-mono font-black text-sm px-2.5 py-0.5 rounded-lg border ${
-              stopClock
-                ? "bg-amber-500/10 text-amber-500 border-amber-500/30 font-bold"
-                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-            }`}>
-              {formatSecondsToMmss(liveSeconds)}
-            </span>
+        {/* Header Bar: Timed Match Clock & Event Duration Clock & Single Pause Toggle */}
+        <div className="flex flex-wrap items-center justify-between p-3 bg-surface border border-border/80 rounded-xl shadow-2xs gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Game Clock:</span>
+              <span className={`font-mono font-black text-xs px-2 py-0.5 rounded-md border ${
+                stopClock
+                  ? "bg-amber-500/10 text-amber-500 border-amber-500/30 font-bold"
+                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+              }`}>
+                {formatSecondsToMmss(liveSeconds)}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-0.5 rounded-md text-indigo-400 font-mono font-bold text-xs">
+              <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400/80">Event Duration:</span>
+              <span className="text-xs font-black text-indigo-300 animate-pulse">{formatSecondsToMmss(eventDurationSeconds)}</span>
+            </div>
           </div>
 
           <button
@@ -1136,17 +1207,86 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         {/* ⚽ GOAL FORM */}
         {eventType === "goal" && (
           <div className="space-y-3.5 pt-2 border-t border-border/40">
-            <Checkbox
-              label="Own Goal?"
-              checked={isOwnGoal}
-              onChange={(val: any) => {
-                const isChecked = typeof val === "boolean" ? val : Boolean(val?.target?.checked);
-                setIsOwnGoal(isChecked);
-              }}
-            />
+            {/* Goal Type Selector: Standard Goal vs Own Goal */}
+            <div>
+              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
+                Goal Type
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsOwnGoal(false)}
+                  className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    !isOwnGoal
+                      ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-2xs"
+                      : "bg-surface border-border text-muted hover:border-emerald-500/40"
+                  }`}
+                >
+                  <Trophy size={14} className={!isOwnGoal ? "text-emerald-500" : "text-muted"} />
+                  <span>Standard Goal ⚽</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOwnGoal(true)}
+                  className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    isOwnGoal
+                      ? "bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400 shadow-2xs"
+                      : "bg-surface border-border text-muted hover:border-rose-500/40"
+                  }`}
+                >
+                  <AlertTriangle size={14} className={isOwnGoal ? "text-rose-500" : "text-muted"} />
+                  <span>Own Goal ⚠️</span>
+                </button>
+              </div>
+            </div>
 
+            {/* OWN GOAL SCORE EXPLANATION BANNER */}
+            {isOwnGoal && (
+              teamTarget === "us" ? (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-xl space-y-1 text-amber-600 dark:text-amber-400">
+                  <div className="flex items-center gap-1.5 text-xs font-black">
+                    <AlertTriangle size={16} className="text-amber-500 shrink-0" />
+                    <span>⚠️ OUR TEAM OWN GOAL</span>
+                  </div>
+                  <p className="text-[11px] font-medium text-text/80">
+                    A player on our team accidentally put the ball into <strong>OUR OWN NET</strong>.
+                  </p>
+                  <div className="pt-0.5 text-xs font-black text-rose-500 flex items-center gap-1">
+                    <span>➡️ Score Effect:</span>
+                    <span className="bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded text-rose-600 dark:text-rose-400">
+                      +1 Goal to {opponentShortName}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/40 rounded-xl space-y-1 text-emerald-600 dark:text-emerald-400">
+                  <div className="flex items-center gap-1.5 text-xs font-black">
+                    <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                    <span>⚽ OPPONENT OWN GOAL</span>
+                  </div>
+                  <p className="text-[11px] font-medium text-text/80">
+                    An opponent player accidentally put the ball into <strong>THEIR OWN NET</strong>.
+                  </p>
+                  <div className="pt-0.5 text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <span>➡️ Score Effect:</span>
+                    <span className="bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded">
+                      +1 Goal to OUR TEAM
+                    </span>
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* PLAYER SELECTION DROPDOWNS */}
             {teamTarget === "us" ? (
-              !isOwnGoal && (
+              isOwnGoal ? (
+                <Select
+                  label="Select Our Player who committed the Own Goal"
+                  value={goalScorerId}
+                  onChange={(e: any) => setGoalScorerId(e.target.value)}
+                  options={[{ value: "", label: "-- Select Player Responsible --" }, ...scorerOptions]}
+                />
+              ) : (
                 <>
                   <Select
                     label="Goal Scorer (On-Field Players Only)"
@@ -1170,12 +1310,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                   value={oppScorerJersey}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppScorerJersey(e.target.value)}
                 />
-                <Input
-                  label="Opponent Assist # (Optional)"
-                  placeholder="e.g. 10"
-                  value={oppAssistJersey}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppAssistJersey(e.target.value)}
-                />
+                {!isOwnGoal && (
+                  <Input
+                    label="Opponent Assist # (Optional)"
+                    placeholder="e.g. 10"
+                    value={oppAssistJersey}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppAssistJersey(e.target.value)}
+                  />
+                )}
               </div>
             )}
 

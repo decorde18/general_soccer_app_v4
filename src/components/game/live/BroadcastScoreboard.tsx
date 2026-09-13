@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Wifi, WifiOff, Menu } from "lucide-react";
+import { Wifi, WifiOff, Menu, Zap } from "lucide-react";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
 import { formatTeamName } from "@/lib/utils/teamName";
 import useGameStore from "@/stores/gameStore";
@@ -202,13 +202,21 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
           </div>
 
           {/* MAIN CLOCK DISPLAY */}
-          <div className="flex items-center gap-1 font-mono font-black text-2xl sm:text-3xl text-yellow-400 tracking-tight leading-none">
-            <span>{formatSecondsToMmss(calculatedDisplaySeconds)}</span>
-          </div>
+          {currentStage === GAME_STAGES.BETWEEN_PERIODS ? (
+            <div className="flex items-center gap-1 font-mono font-black text-xl sm:text-2xl text-amber-400 tracking-tight leading-none uppercase my-0.5">
+              <span>HALFTIME</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 font-mono font-black text-2xl sm:text-3xl text-yellow-400 tracking-tight leading-none">
+              <span>{formatSecondsToMmss(calculatedDisplaySeconds)}</span>
+            </div>
+          )}
 
           {/* CONTEXT SUB-LABEL */}
           <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
-            {clockMode === "period"
+            {currentStage === GAME_STAGES.BETWEEN_PERIODS
+              ? "PERIOD INTERMISSION"
+              : clockMode === "period"
               ? (clockDirection === "down" ? `${periodLabel} (REMAINING)` : periodLabel)
               : (clockDirection === "down" ? "MATCH REMAINING" : "CUMULATIVE MATCH TIME")}
           </span>
@@ -281,7 +289,18 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
           )}
         </div>
 
-        <div className="flex gap-2">
+        {/* FLIP-FLOPPED ACTION BUTTONS: Record Event INSIDE (left), End Period OUTSIDE (right) */}
+        <div className="flex items-center gap-2">
+          {props.onOpenMajorEventModal && (currentStage === GAME_STAGES.DURING_PERIOD || currentStage === GAME_STAGES.IN_STOPPAGE) && (
+            <button
+              onClick={props.onOpenMajorEventModal}
+              className="h-6 py-0 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-[10px] font-black shadow-xs transition-colors cursor-pointer uppercase tracking-wide flex items-center gap-1"
+            >
+              <Zap size={11} className="fill-current" />
+              <span>Record Major Event</span>
+            </button>
+          )}
+
           {currentStage !== GAME_STAGES.END_GAME && (
             <button
               onClick={onTogglePeriodClock}
@@ -289,14 +308,6 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
               className="h-6 py-0 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[10px] font-black shadow-xs disabled:opacity-50 transition-colors cursor-pointer uppercase tracking-wide"
             >
               {getClockButtonText()}
-            </button>
-          )}
-          {props.onOpenMajorEventModal && (currentStage === GAME_STAGES.DURING_PERIOD || currentStage === GAME_STAGES.IN_STOPPAGE) && (
-            <button
-              onClick={props.onOpenMajorEventModal}
-              className="h-6 py-0 px-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded text-[10px] font-black shadow-xs transition-colors cursor-pointer uppercase tracking-wide"
-            >
-              Record Major Event
             </button>
           )}
         </div>

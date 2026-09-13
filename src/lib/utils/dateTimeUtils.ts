@@ -700,6 +700,84 @@ export function calculateActivePlayerTimeOffField(
 }
 
 /**
+ * Calculates a player's MOST RECENT active time on the bench (seconds since last sub out or match start).
+ * Halftime breaks and stopped-clock stoppages do NOT accumulate as active bench time.
+ */
+export function calculateRecentPlayerTimeOffField(
+  isStarter: boolean,
+  subsIn: any[] = [],
+  subsOut: any[] = [],
+  periods: PeriodInterval[] = [],
+  stoppages: StoppageInterval[] = [],
+  currentGameTime: number = 0
+): number {
+  const normIn = (subsIn || [])
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const normOut = (subsOut || [])
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const events: { type: "IN" | "OUT"; time: number }[] = [];
+  normIn.forEach((t) => events.push({ type: "IN", time: t }));
+  normOut.forEach((t) => events.push({ type: "OUT", time: t }));
+  events.sort((a, b) => a.time - b.time);
+
+  let onField = isStarter;
+  let lastSubOutTime: number | null = isStarter ? null : 0;
+
+  events.forEach((evt) => {
+    if (evt.type === "IN") {
+      onField = true;
+      lastSubOutTime = null;
+    } else if (evt.type === "OUT") {
+      onField = false;
+      lastSubOutTime = evt.time;
+    }
+  });
+
+  if (onField || lastSubOutTime === null) {
+    return 0;
+  }
+
+  const startSec = lastSubOutTime;
+  const endSec = Math.max(startSec, currentGameTime);
+
+  const effectivePeriods =
+    periods && periods.length > 0
+      ? periods
+      : [{ start: 0, end: endSec }];
+
+  let activeOffSecs = 0;
+
+  for (const p of effectivePeriods) {
+    const overlapStart = Math.max(startSec, p.start);
+    const overlapEnd = Math.min(endSec, p.end);
+
+    if (overlapEnd > overlapStart) {
+      let activeSecs = overlapEnd - overlapStart;
+
+      for (const s of stoppages) {
+        const sEnd = s.endTime !== null && s.endTime !== undefined ? s.endTime : overlapEnd;
+        const sOverlapStart = Math.max(overlapStart, s.startTime);
+        const sOverlapEnd = Math.min(overlapEnd, sEnd);
+
+        if (sOverlapEnd > sOverlapStart) {
+          activeSecs -= sOverlapEnd - sOverlapStart;
+        }
+      }
+
+      activeOffSecs += Math.max(0, activeSecs);
+    }
+  }
+
+  return Math.round(activeOffSecs);
+}
+
+/**
  * Legacy wrapper for calculateActivePlayerTimeOnField.
  */
 export function calculatePlayerTimeOnField(

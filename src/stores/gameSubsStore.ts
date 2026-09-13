@@ -9,6 +9,7 @@ import useGamePlayersStore, {
 } from "./gamePlayersStore";
 import { apiFetch } from "@/app/api/fetcher";
 import useGameStore from "./gameStore";
+import { saveGameCache, enqueueOfflineAction } from "@/lib/offline/offlineSync";
 
 // ==================== TYPES ====================
 
@@ -557,138 +558,97 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
 
   confirmSub: async (subId) => {
     const gameStore = useGameStore.getState();
-    const gameStage = gameStore.getGameStage();
+    const gameTime = gameStore.getGameTime();
 
-    let gameTime: number;
+    const playersStore = useGamePlayersStore.getState();
+    const calculateFieldStatus = playersStore.calculateFieldStatus;
 
-    if (gameStage === "between_periods") {
-      console.log("Sub will be confirmed at start of next period");
-      return;
-    } else {
-      gameTime = gameStore.getGameTime();
+    // 1. SYNCHRONOUS OPTIMISTIC UPDATE (0ms Delay)
+    playersStore.setPlayers(
+      playersStore.players.map((player) => {
+        const updatedIns = (player.ins || []).map((s) =>
+          String(s.subId) === String(subId) ? { ...s, gameTime } : s,
+        );
+
+        const updatedOuts = (player.outs || []).map((s) =>
+          String(s.subId) === String(subId) ? { ...s, gameTime } : s,
+        );
+
+        const hasUpdatedIn = updatedIns.some(
+          (s) => String(s.subId) === String(subId) && s.gameTime !== null,
+        );
+        const hasUpdatedOut = updatedOuts.some(
+          (s) => String(s.subId) === String(subId) && s.gameTime !== null,
+        );
+
+        if (hasUpdatedIn || hasUpdatedOut) {
+          const updatedPlayer: Player = {
+            ...player,
+            ins: updatedIns,
+            outs: updatedOuts,
+          };
+
+          const pendingIns = updatedIns.filter((s) => s.gameTime === null);
+          const pendingOuts = updatedOuts.filter((s) => s.gameTime === null);
+
+          const subStatus = computeSubStatus(
+            pendingIns.length,
+            pendingOuts.length,
+          );
+
+          return {
+            ...updatedPlayer,
+            subStatus,
+            fieldStatus: calculateFieldStatus(updatedPlayer),
+          };
+        }
+
+        return player;
+      }),
+    );
+
+    // Update pendingSubs in gameStore
+    const currentPending = gameStore.game?.pendingSubs || [];
+    const updatedPending = currentPending.filter((s) => String(s.id) !== String(subId));
+    gameStore.updateGame({ pendingSubs: updatedPending as any });
+
+    // Save instant cache snapshot to localStorage
+    if (gameStore.game) {
+      saveGameCache(
+        gameStore.game.game_id || gameStore.game.id || "",
+        useGameStore.getState().game,
+        useGamePlayersStore.getState().players
+      );
     }
 
-    try {
-      // Get the sub details
-      const subs = await apiFetch<GameSub[] | GameSub>(
-        "game_subs",
-        "GET",
-        null,
-        null,
-        {
-          filters: { id: subId },
-        },
-      );
-      const sub = Array.isArray(subs) ? subs[0] : subs;
-
-      if (!sub) {
-        console.error("Sub not found");
-        return;
-      }
-
-      const isGkSub = sub.gk_sub === 1;
-
-      // Confirm the sub (set sub_time)
-      await apiFetch(`game_subs?id=${subId}`, "PUT", {
+    // 2. BACKGROUND SERVER PERSISTENCE (Non-blocking)
+    if (!String(subId).startsWith("temp_")) {
+      apiFetch(`game_subs?id=${subId}`, "PUT", {
         sub_time: gameTime,
+      }).catch((error) => {
+        console.warn("Background sub confirmation error, queued for sync:", error);
+        enqueueOfflineAction("substitution", `game_subs?id=${subId}`, "PUT", {
+          sub_time: gameTime,
+        });
       });
-
-      // Update ins/outs in player state - ONE operation
-      const playersStore = useGamePlayersStore.getState();
-      const calculateFieldStatus = playersStore.calculateFieldStatus;
-
-      playersStore.setPlayers(
-        playersStore.players.map((player) => {
-          const updatedIns = (player.ins || []).map((s) =>
-            s.subId === subId ? { ...s, gameTime } : s,
-          );
-
-          const updatedOuts = (player.outs || []).map((s) =>
-            s.subId === subId ? { ...s, gameTime } : s,
-          );
-
-          const hasUpdatedIn = updatedIns.some(
-            (s) => s.subId === subId && s.gameTime !== null,
-          );
-          const hasUpdatedOut = updatedOuts.some(
-            (s) => s.subId === subId && s.gameTime !== null,
-          );
-
-          if (hasUpdatedIn || hasUpdatedOut) {
-            const updatedPlayer: Player = {
-              ...player,
-              ins: updatedIns,
-              outs: updatedOuts,
-            };
-
-            // Calculate subStatus
-            const pendingIns = updatedIns.filter((s) => s.gameTime === null);
-            const pendingOuts = updatedOuts.filter((s) => s.gameTime === null);
-
-            const subStatus = computeSubStatus(
-              pendingIns.length,
-              pendingOuts.length,
-            );
-
-            return {
-              ...updatedPlayer,
-              subStatus,
-              fieldStatus: calculateFieldStatus(updatedPlayer),
-            };
-          }
-
-          return player;
-        }),
-      );
-
-      // ❌ DO NOT CALL updateAllSubStatuses
-      // await playersStore.updateAllSubStatuses(gameStore.game?.game_id);
-
-      console.log(
-        `Confirmed ${isGkSub ? "GK " : ""}sub ${subId} at game time ${gameTime} seconds`,
-      );
-    } catch (error) {
-      console.error("Error confirming sub:", error);
     }
   },
 
   // ==================== CONFIRM ALL PENDING SUBS ====================
 
   confirmAllPendingSubs: async () => {
-    const gameStore = useGameStore.getState();
-    const gameStage = gameStore.getGameStage();
-
     const pendingSubs = get().getPendingSubsSync();
-    const completeSubs = pendingSubs.filter((sub) => sub.isComplete);
-    const incompleteSubs = pendingSubs.filter((sub) => !sub.isComplete);
 
-    if (completeSubs.length === 0 && incompleteSubs.length === 0) {
-      console.log("No subs to confirm");
+    if (pendingSubs.length === 0) {
       return { confirmed: 0, errors: [] };
     }
 
-    if (gameStage === "between_periods") {
-      console.log("Subs will be confirmed at start of next period");
-      return {
-        confirmed: 0,
-        pending: completeSubs.length + incompleteSubs.length,
-      };
-    }
+    const subIds = pendingSubs.map((sub) => sub.subId);
 
-    // Confirm all subs (complete and incomplete)
-    const allSubsToConfirm = [...completeSubs, ...incompleteSubs];
+    // Confirm all pending subs optimistically
+    await Promise.all(subIds.map((id) => get().confirmSub(id)));
 
-    const results = await Promise.allSettled(
-      allSubsToConfirm.map((sub) => get().confirmSub(sub.subId)),
-    );
-
-    const errors = results
-      .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-      .map((r) => (r.reason?.message as string) || "Unknown error");
-
-    const confirmed = results.filter((r) => r.status === "fulfilled").length;
-
-    return { confirmed, errors };
+    return { confirmed: subIds.length, errors: [] };
   },
 
   // ==================== CANCEL SUB ====================
