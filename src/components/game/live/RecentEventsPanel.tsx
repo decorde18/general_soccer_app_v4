@@ -43,12 +43,29 @@ export default function RecentEventsPanel(props: RecentEventsPanelProps) {
     if (!game) return [];
     const list: RecentEvent[] = [];
 
+    const regPeriodSecs = (game.settings?.periodDuration) || 2400;
+    const getNormalizedTime = (period: number, rawTime: number) => {
+      const p = Math.max(1, period || 1);
+      const rawSecs = Number(rawTime || 0);
+      let precedingOffset = 0;
+      for (let i = 1; i < p; i++) {
+        const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
+        if (matchingP && matchingP.endTime && matchingP.startTime) {
+          precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
+        } else {
+          precedingOffset += regPeriodSecs;
+        }
+      }
+      return (p > 1 && rawSecs < precedingOffset) ? precedingOffset + rawSecs : rawSecs;
+    };
+
     const linkedMajorIds = new Set<number>();
 
     (game.gameEventsGoals || []).forEach((g: any) => {
       if (g.major_event_id) linkedMajorIds.add(Number(g.major_event_id));
       const major = (game.gameEventsMajor || []).find((m) => Number(m.id) === Number(g.major_event_id));
-      const eventTime = g.game_time ?? major?.game_time ?? 0;
+      const pNum = Number(g.period || major?.period || 1);
+      const eventTime = getNormalizedTime(pNum, g.game_time ?? major?.game_time ?? 0);
       const scorer = players.find((p) => Number(p.playerGameId) === Number(g.scorer_player_game_id) || Number(p.id) === Number(g.scorer_player_game_id));
       const isOurPoint = Number(g.team_season_id) === ourId;
       let desc = "";
@@ -67,7 +84,8 @@ export default function RecentEventsPanel(props: RecentEventsPanelProps) {
     (game.gameEventsDiscipline || []).forEach((d: any) => {
       if (d.major_event_id) linkedMajorIds.add(Number(d.major_event_id));
       const major = (game.gameEventsMajor || []).find((m) => Number(m.id) === Number(d.major_event_id));
-      const eventTime = d.game_time ?? major?.game_time ?? 0;
+      const pNum = Number(d.period || major?.period || 1);
+      const eventTime = getNormalizedTime(pNum, d.game_time ?? major?.game_time ?? 0);
       const player = players.find((p) => Number(p.playerGameId) === Number(d.player_game_id));
       const cardKind = String(d.card_type || d.card_color || "Card").toUpperCase();
       const desc = `${cardKind} Card to ${player ? player.fullName : "Unknown"}`;
@@ -75,15 +93,19 @@ export default function RecentEventsPanel(props: RecentEventsPanelProps) {
     });
 
     (game.gameEventsTeam || []).forEach((t: any) => {
+      const pNum = Number(t.period || 1);
+      const eventTime = getNormalizedTime(pNum, t.game_time ?? 0);
       const teamName = Number(t.team_season_id) === ourId ? "Us" : "Opponent";
       const desc = `Team ${t.event_type.toUpperCase()} for ${teamName}`;
-      list.push({ id: `team-${t.id}`, dbId: t.id, time: t.game_time ?? 0, type: "team", desc });
+      list.push({ id: `team-${t.id}`, dbId: t.id, time: eventTime, type: "team", desc });
     });
 
     (game.gameEventsMajor || []).forEach((m: any) => {
       if (!linkedMajorIds.has(Number(m.id)) && (m.details || m.event_type === "stoppage")) {
+        const pNum = Number(m.period || 1);
+        const eventTime = getNormalizedTime(pNum, m.game_time ?? 0);
         const desc = m.details ? `Stoppage: ${m.details}` : `Stoppage Event`;
-        list.push({ id: `major-${m.id}`, dbId: m.id, time: m.game_time ?? 0, type: "major", desc });
+        list.push({ id: `major-${m.id}`, dbId: m.id, time: eventTime, type: "major", desc });
       }
     });
 

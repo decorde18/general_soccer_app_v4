@@ -343,7 +343,21 @@ export default function GameManageClient() {
       try {
         const scorer = players.find((p) => String(p.playerGameId) === goalScorerId);
         const assist = players.find((p) => String(p.playerGameId) === goalAssistId);
-        const totalSeconds = Number(goalTimeMin) * 60 + Number(goalTimeSec);
+        const rawInputSecs = Number(goalTimeMin) * 60 + Number(goalTimeSec);
+        const pNum = Number(goalPeriod);
+        const regPeriodSecs = (game.settings?.periodDuration) || 2400;
+        let precedingOffset = 0;
+        for (let i = 1; i < pNum; i++) {
+          const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
+          if (matchingP && matchingP.endTime && matchingP.startTime) {
+            precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
+          } else {
+            precedingOffset += regPeriodSecs;
+          }
+        }
+        const totalSeconds = (pNum > 1 && rawInputSecs < precedingOffset)
+          ? precedingOffset + rawInputSecs
+          : rawInputSecs;
 
         if (editingGoal) {
           // Edit existing goal
@@ -503,7 +517,21 @@ export default function GameManageClient() {
     startTransition(async () => {
       try {
         const player = players.find((p) => String(p.playerGameId) === cardPlayerId);
-        const totalSeconds = Number(cardTimeMin) * 60 + Number(cardTimeSec);
+        const rawInputSecs = Number(cardTimeMin) * 60 + Number(cardTimeSec);
+        const pNum = Number(cardPeriod);
+        const regPeriodSecs = (game.settings?.periodDuration) || 2400;
+        let precedingOffset = 0;
+        for (let i = 1; i < pNum; i++) {
+          const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
+          if (matchingP && matchingP.endTime && matchingP.startTime) {
+            precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
+          } else {
+            precedingOffset += regPeriodSecs;
+          }
+        }
+        const totalSeconds = (pNum > 1 && rawInputSecs < precedingOffset)
+          ? precedingOffset + rawInputSecs
+          : rawInputSecs;
 
         if (editingCard) {
           const cardPayload = {
