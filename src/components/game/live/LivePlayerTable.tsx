@@ -80,11 +80,9 @@ export default function LivePlayerTable({
                 )}
                 <th className="py-0.5 px-1.5 text-center w-10 align-middle">+/-</th>
                 <th className="py-0.5 px-1.5 text-right w-16 align-middle">Total Time</th>
-                {!isBetweenPeriods && (
-                  <th className="py-0.5 px-1.5 text-right w-16 align-middle">
-                    {isBench ? "Recent Bench" : "Shift Time"}
-                  </th>
-                )}
+                <th className="py-0.5 px-1.5 text-right w-16 align-middle">
+                  {isBench ? "Recent Bench" : "Shift Time"}
+                </th>
                 <th className="py-0.5 px-1.5 text-center w-36 align-middle">Action</th>
               </>
             )}
@@ -210,15 +208,13 @@ export default function LivePlayerTable({
                     <td className="py-0.5 px-1.5 text-right font-mono text-muted align-middle">
                       {formatSecondsToMmss(totalTime)}
                     </td>
-                    {!isBetweenPeriods && (
-                      <td
-                        className={`py-0.5 px-1.5 text-right font-mono font-black align-middle ${
-                          isBench ? "text-amber-600" : "text-primary"
-                        }`}
-                      >
-                        {formatSecondsToMmss(secondaryTime)}
-                      </td>
-                    )}
+                    <td
+                      className={`py-0.5 px-1.5 text-right font-mono font-black align-middle ${
+                        isBench ? "text-amber-600" : "text-primary"
+                      }`}
+                    >
+                      {formatSecondsToMmss(secondaryTime)}
+                    </td>
 
                     <td className="py-0.5 px-1.5 text-center align-middle" onClick={(e) => e.stopPropagation()}>
                       {isRedCarded ? (

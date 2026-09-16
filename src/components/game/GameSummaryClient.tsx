@@ -17,6 +17,7 @@ import {
   Trash2,
   AlertTriangle,
   Save,
+  Zap,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
@@ -63,8 +64,8 @@ export default function GameSummaryClient() {
   const calculateTotalTimeOnField = useGamePlayerTimeStore((s) => s.calculateTotalTimeOnField);
   const calculateAllGoalkeeperTime = useGamePlayerTimeStore((s) => s.calculateAllGoalkeeperTime);
 
-  // Tab State: "boxscore" | "playbyplay"
-  const [activeTab, setActiveTab] = useState<"boxscore" | "playbyplay">("boxscore");
+  // Tab State: "boxscore" | "majorevents" | "playbyplay"
+  const [activeTab, setActiveTab] = useState<"boxscore" | "majorevents" | "playbyplay">("boxscore");
 
   // Selected Event Popup Modal State
   const [selectedEvent, setSelectedEvent] = useState<UnifiedPlayEvent | null>(null);
@@ -164,9 +165,9 @@ export default function GameSummaryClient() {
     // Period Duration for cumulative match time calculation (default: 40 mins = 2400s)
     const regPeriodSecs = (game.settings?.periodDuration) || 2400;
 
-    // Helper to process DB game_time (stored as continuous seconds from kickoff)
+    // Helper to process DB game_time / sub_time into normalized cumulative match time & game minute
     const computeEventTime = (period: number, dbGameTime: number) => {
-      const cumSecs = Math.max(0, Number(dbGameTime || 0));
+      const rawSecs = Math.max(0, Number(dbGameTime || 0));
       const p = Math.max(1, period || 1);
 
       let precedingOffset = 0;
@@ -179,21 +180,38 @@ export default function GameSummaryClient() {
         }
       }
 
-      const periodRelativeTime = Math.max(0, cumSecs - precedingOffset);
+      // If rawSecs is period-relative (rawSecs < precedingOffset for p > 1), convert to cumulative time
+      const cumulativeTime = (p > 1 && rawSecs < precedingOffset)
+        ? precedingOffset + rawSecs
+        : rawSecs;
+
+      const periodRelativeTime = Math.max(0, cumulativeTime - precedingOffset);
+      const matchMinute = Math.floor(cumulativeTime / 60);
 
       return {
         gameTime: periodRelativeTime,
-        cumulativeTime: cumSecs,
-        matchMinute: Math.floor(cumSecs / 60),
+        cumulativeTime: cumulativeTime,
+        matchMinute: matchMinute,
       };
     };
 
     // Calculate maximum game_time in each period to ensure Whistle/Full Time markers sit cleanly at the end
     const maxGameTimeByPeriod = new Map<number, number>();
     const trackMaxTime = (p: number, t: number) => {
-      const cumSecs = Number(t || 0);
-      const curr = maxGameTimeByPeriod.get(p) || 0;
-      if (cumSecs > curr) maxGameTimeByPeriod.set(p, cumSecs);
+      const rawSecs = Number(t || 0);
+      const pNum = Math.max(1, p || 1);
+      let precedingOffset = 0;
+      for (let i = 1; i < pNum; i++) {
+        const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
+        if (matchingP && matchingP.endTime && matchingP.startTime) {
+          precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
+        } else {
+          precedingOffset += regPeriodSecs;
+        }
+      }
+      const cumSecs = (pNum > 1 && rawSecs < precedingOffset) ? precedingOffset + rawSecs : rawSecs;
+      const curr = maxGameTimeByPeriod.get(pNum) || 0;
+      if (cumSecs > curr) maxGameTimeByPeriod.set(pNum, cumSecs);
     };
 
     (game.gameEventsMajor || []).forEach((m) => trackMaxTime(Number(m.period || 1), Number(m.game_time || 0)));
@@ -355,7 +373,8 @@ export default function GameSummaryClient() {
             const shooter = p.shooter_player_game_id ? playerMap.get(String(p.shooter_player_game_id)) : null;
             const gk = p.gk_player_game_id ? playerMap.get(String(p.gk_player_game_id)) : null;
             const isOur = String(p.team_season_id) === String(ourTeamSeasonId);
-            const outcomeStr = String(p.outcome || "taken").toUpperCase();
+            const rawOutcome = String(p.outcome || "taken").toLowerCase();
+            const isPkGoal = rawOutcome === "goal" || rawOutcome === "made" || rawOutcome === "scored";
 
             compiled.push({
               id: `penalty_${p.id || m.id}_${idx}`,
@@ -366,19 +385,23 @@ export default function GameSummaryClient() {
               gameTime: timeInfo.gameTime,
               cumulativeTime: timeInfo.cumulativeTime,
               matchMinute: timeInfo.matchMinute,
-              category: "penalty",
+              category: isPkGoal ? "goal" : "penalty",
               team: isOur ? "us" : "opp",
               teamName: isOur ? ourTeamName : oppTeamName,
-              title: `🥅 Penalty Kick (${outcomeStr})`,
+              title: isPkGoal
+                ? (isOur ? "⚽ GOAL! (Penalty Kick)" : `⚽ OPPONENT GOAL (Penalty Kick)`)
+                : `🥅 Penalty Kick (${rawOutcome.toUpperCase()})`,
               primaryPlayer: shooter
                 ? { id: p.shooter_player_game_id, name: shooter.name, jerseyNumber: shooter.jersey }
                 : p.opponent_jersey_number
                 ? { name: `Jersey #${p.opponent_jersey_number}` }
                 : undefined,
               secondaryPlayer: gk ? { id: p.gk_player_game_id, name: `GK: ${gk.name}`, jerseyNumber: gk.jersey } : undefined,
-              details: `Outcome: ${p.outcome || "taken"}`,
-              notes: m.details || `Penalty Kick event (${outcomeStr})`,
-              colorClass: "text-indigo-600 bg-indigo-500/15 border-indigo-500/40",
+              details: isPkGoal ? "Penalty Kick Goal" : `Outcome: ${p.outcome || "taken"}`,
+              notes: m.details || `Penalty Kick event (${rawOutcome.toUpperCase()})`,
+              colorClass: isPkGoal
+                ? (isOur ? "text-emerald-600 bg-emerald-500/15 border-emerald-500/40" : "text-rose-600 bg-rose-500/15 border-rose-500/40")
+                : "text-indigo-600 bg-indigo-500/15 border-indigo-500/40",
               rawRecord: p,
             });
           });
@@ -578,6 +601,44 @@ export default function GameSummaryClient() {
     return compiled;
   }, [game, playerMap, ourTeamSeasonId, ourTeamName, oppTeamName]);
 
+  // MAJOR EVENTS ONLY TIMELINE (Goals, Cards, Penalty Kicks, Period Markers)
+  const majorEventsOnly = useMemo(() => {
+    return playByPlayEvents.filter(
+      (e) => e.category === "goal" || e.category === "card" || e.category === "penalty" || e.category === "period_marker"
+    );
+  }, [playByPlayEvents]);
+
+  // FILTERED & SORTED MAJOR EVENTS
+  const filteredMajorEvents = useMemo(() => {
+    let result = [...majorEventsOnly];
+
+    if (periodFilter !== "all") {
+      result = result.filter((e) => String(e.period) === periodFilter);
+    }
+    if (categoryFilter !== "all") {
+      result = result.filter((e) => e.category === categoryFilter);
+    }
+    if (teamFilter !== "all") {
+      result = result.filter((e) => e.team === teamFilter || e.team === "neutral");
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (e) =>
+          e.title.toLowerCase().includes(q) ||
+          (e.details && e.details.toLowerCase().includes(q)) ||
+          (e.notes && e.notes.toLowerCase().includes(q)) ||
+          (e.primaryPlayer && e.primaryPlayer.name.toLowerCase().includes(q)) ||
+          (e.secondaryPlayer && e.secondaryPlayer.name.toLowerCase().includes(q)) ||
+          e.teamName.toLowerCase().includes(q)
+      );
+    }
+    if (sortOrder === "desc") {
+      result.reverse();
+    }
+    return result;
+  }, [majorEventsOnly, periodFilter, categoryFilter, teamFilter, sortOrder, searchQuery]);
+
   // FILTERED & SORTED PLAY-BY-PLAY EVENTS
   const filteredPlayByPlay = useMemo(() => {
     let result = [...playByPlayEvents];
@@ -663,8 +724,23 @@ export default function GameSummaryClient() {
     if (!editingEvent) return;
 
     try {
-      const totalSeconds = Number(editTimeMin) * 60 + Number(editTimeSec);
+      const rawInputSecs = Number(editTimeMin) * 60 + Number(editTimeSec);
       const periodNum = Number(editPeriod);
+
+      const regPeriodSecs = (game.settings?.periodDuration) || 2400;
+      let precedingOffset = 0;
+      for (let i = 1; i < periodNum; i++) {
+        const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
+        if (matchingP && matchingP.endTime && matchingP.startTime) {
+          precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
+        } else {
+          precedingOffset += regPeriodSecs;
+        }
+      }
+
+      const totalSeconds = (periodNum > 1 && rawInputSecs < precedingOffset)
+        ? precedingOffset + rawInputSecs
+        : rawInputSecs;
 
       if (editingEvent.category === "goal" && editingEvent.rawType === "goal") {
         const goalPayload = {
@@ -1037,7 +1113,7 @@ export default function GameSummaryClient() {
       </div>
 
       {/* TAB NAVIGATION */}
-      <div className="flex items-center justify-between border-b border-border/80 pb-2">
+      <div className="flex items-center justify-between border-b border-border/80 pb-2 overflow-x-auto">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab("boxscore")}
@@ -1052,6 +1128,25 @@ export default function GameSummaryClient() {
           </button>
 
           <button
+            onClick={() => setActiveTab("majorevents")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer ${
+              activeTab === "majorevents"
+                ? "bg-primary text-white shadow-xs"
+                : "bg-surface text-muted hover:text-text hover:bg-background/80"
+            }`}
+          >
+            <Zap size={15} />
+            <span>Key Events Summary</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                activeTab === "majorevents" ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+              }`}
+            >
+              {majorEventsOnly.length}
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab("playbyplay")}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer ${
               activeTab === "playbyplay"
@@ -1061,9 +1156,11 @@ export default function GameSummaryClient() {
           >
             <Clock size={15} />
             <span>Detailed Play-by-Play</span>
-            <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
-              activeTab === "playbyplay" ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
-            }`}>
+            <span
+              className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                activeTab === "playbyplay" ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+              }`}
+            >
               {playByPlayEvents.length}
             </span>
           </button>
@@ -1143,7 +1240,243 @@ export default function GameSummaryClient() {
         </div>
       )}
 
-      {/* TAB 2: DETAILED PLAY-BY-PLAY VIEW */}
+      {/* TAB 2: KEY EVENTS SUMMARY (MAJOR EVENTS ONLY) */}
+      {activeTab === "majorevents" && (
+        <div className="space-y-6 animate-fadeIn">
+          {/* SEARCH & FILTER CONTROLS BAR */}
+          <Card variant="outlined" padding="md" className="bg-surface space-y-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              {/* Search Bar */}
+              <div className="relative w-full md:w-72">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <input
+                  type="text"
+                  placeholder="Search player, event, details..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-background border border-border text-text placeholder:text-muted/60 focus:outline-hidden focus:border-primary"
+                />
+              </div>
+
+              {/* Filters Group */}
+              <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto text-xs font-semibold">
+                {/* Period Filter */}
+                <select
+                  value={periodFilter}
+                  onChange={(e) => setPeriodFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-background border border-border text-text text-xs font-bold focus:outline-hidden focus:border-primary cursor-pointer"
+                >
+                  <option value="all">All Periods</option>
+                  <option value="1">1st Half</option>
+                  <option value="2">2nd Half</option>
+                  <option value="3">OT 1</option>
+                  <option value="4">OT 2</option>
+                </select>
+
+                {/* Major Category Filter */}
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-background border border-border text-text text-xs font-bold focus:outline-hidden focus:border-primary cursor-pointer"
+                >
+                  <option value="all">Major Event Types</option>
+                  <option value="goal">Goals ⚽</option>
+                  <option value="card">Cards 🟨🟥</option>
+                  <option value="penalty">Penalty Kicks 🥅</option>
+                  <option value="period_marker">Kickoff / Whistle 🏁</option>
+                </select>
+
+                {/* Team Filter */}
+                <select
+                  value={teamFilter}
+                  onChange={(e) => setTeamFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-background border border-border text-text text-xs font-bold focus:outline-hidden focus:border-primary cursor-pointer"
+                >
+                  <option value="all">All Teams</option>
+                  <option value="us">{ourTeamName}</option>
+                  <option value="opp">{oppTeamName}</option>
+                </select>
+
+                {/* Sort Order Toggle */}
+                <button
+                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-background border border-border text-text text-xs font-bold hover:bg-surface transition-all cursor-pointer"
+                  title="Toggle Chronological / Reverse order"
+                >
+                  <ArrowUpDown size={13} className="text-primary" />
+                  <span>{sortOrder === "asc" ? "0' → 80'" : "80' → 0'"}</span>
+                </button>
+              </div>
+            </div>
+          </Card>
+
+          {/* MAJOR EVENTS FEED */}
+          {filteredMajorEvents.length === 0 ? (
+            <Card variant="outlined" padding="lg" className="text-center py-12 bg-surface">
+              <Zap className="mx-auto h-8 w-8 text-muted/50 mb-2" />
+              <p className="text-xs font-bold text-muted">No major events recorded matching current filter selection.</p>
+            </Card>
+          ) : (
+            <div className="relative space-y-3">
+              {/* Timeline Connector Line */}
+              <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-border/60 z-0 hidden sm:block" />
+
+              {filteredMajorEvents.map((item) => {
+                const isPeriodMarker = item.category === "period_marker";
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`relative z-10 rounded-2xl border p-4 transition-all bg-surface hover:border-primary/60 shadow-2xs hover:shadow-md ${
+                      item.category === "goal"
+                        ? "border-emerald-500/40 bg-emerald-500/5"
+                        : isPeriodMarker
+                        ? "border-border/80 bg-background/80"
+                        : "border-border/70"
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      {/* Left: Time & Event Details */}
+                      <div
+                        onClick={() => setSelectedEvent(item)}
+                        className="flex items-start sm:items-center gap-3 cursor-pointer flex-1"
+                      >
+                        {/* Time Badge (Cumulative Match Minute) */}
+                        <div className="shrink-0 flex flex-col items-center justify-center h-11 w-11 rounded-xl bg-background border border-border/80 text-center shadow-2xs">
+                          <span className="text-[9px] font-extrabold uppercase text-muted leading-tight">
+                            MIN
+                          </span>
+                          <span className="font-mono font-black text-xs text-text leading-tight">
+                            {item.matchMinute}'
+                          </span>
+                        </div>
+
+                        {/* Title & Player Details */}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2 py-0.5 rounded-lg text-xs font-black tracking-wide border ${item.colorClass}`}>
+                              {item.title}
+                            </span>
+
+                            {item.teamName && !isPeriodMarker && item.category !== "stoppage" && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted px-2 py-0.5 rounded-md bg-background border border-border/60">
+                                {item.teamName}
+                              </span>
+                            )}
+
+                            {item.scoreSnapshot && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-[11px] font-mono font-black tracking-widest shadow-2xs">
+                                SCORE: {item.scoreSnapshot}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* GOALS: Scorer & Assist Badges */}
+                          {item.category === "goal" && (
+                            <div className="flex items-center gap-2 text-xs font-bold text-text pt-0.5 flex-wrap">
+                              {item.primaryPlayer && (
+                                <span className="flex items-center gap-1">
+                                  <span className="text-muted text-[11px] font-extrabold">Scorer:</span>
+                                  {item.primaryPlayer.jerseyNumber && (
+                                    <span className="font-mono text-primary font-black">#{item.primaryPlayer.jerseyNumber}</span>
+                                  )}
+                                  <span>{item.primaryPlayer.name}</span>
+                                </span>
+                              )}
+
+                              {item.secondaryPlayer && (
+                                <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded-md text-[11px] border border-emerald-500/30 font-extrabold">
+                                  <span>Assist:</span>
+                                  {item.secondaryPlayer.jerseyNumber && (
+                                    <span className="font-mono">#{item.secondaryPlayer.jerseyNumber}</span>
+                                  )}
+                                  <span>{item.secondaryPlayer.name}</span>
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* OTHER EVENTS: Primary Player */}
+                          {item.category !== "goal" && item.primaryPlayer && (
+                            <div className="flex items-center gap-2 text-xs font-bold text-text pt-0.5 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                {item.primaryPlayer.jerseyNumber && (
+                                  <span className="font-mono text-primary font-black">#{item.primaryPlayer.jerseyNumber}</span>
+                                )}
+                                <span>{item.primaryPlayer.name}</span>
+                              </span>
+
+                              {item.secondaryPlayer && (
+                                <span className="text-muted text-[11px] font-semibold">
+                                  ({item.secondaryPlayer.name})
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Additional Event Details */}
+                          {item.details && (
+                            <p className="text-[11px] text-muted font-medium pt-0.5">{item.details}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: Actions Bar & Time */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-muted/80 font-bold mr-1">
+                          {formatSecondsToMmss(item.gameTime)} (P{item.period})
+                        </span>
+
+                        {!isPeriodMarker && (
+                          <>
+                            {/* EDIT BUTTON */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditModal(item);
+                              }}
+                              className="px-2.5 py-1 rounded-xl bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-white font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                              title="Edit Event Details"
+                            >
+                              <Pencil size={13} />
+                              <span>Edit</span>
+                            </button>
+
+                            {/* DELETE BUTTON */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeletingEvent(item);
+                              }}
+                              className="px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 hover:bg-rose-600 hover:text-white font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                              title="Delete Event"
+                            >
+                              <Trash2 size={13} />
+                              <span>Delete</span>
+                            </button>
+                          </>
+                        )}
+
+                        {/* DETAILS/INFO BUTTON */}
+                        <button
+                          onClick={() => setSelectedEvent(item)}
+                          className="px-2.5 py-1 rounded-xl bg-slate-500/10 border border-slate-500/30 text-text hover:bg-slate-700 hover:text-white font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                          title="View Full Notes & Info"
+                        >
+                          <Info size={13} />
+                          <span>Details</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: DETAILED PLAY-BY-PLAY VIEW */}
       {activeTab === "playbyplay" && (
         <div className="space-y-6 animate-fadeIn">
           {/* SEARCH & FILTER CONTROLS BAR */}

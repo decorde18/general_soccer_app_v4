@@ -131,9 +131,12 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
 
     const ins = normalizeSubs(player.ins);
     const lastIn = ins[ins.length - 1];
-    if (!lastIn) return 0;
+    const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
 
-    const lastInTime = Number(lastIn.gameTime ?? lastIn.sub_time ?? 0);
+    const lastInTime = lastIn
+      ? Number(lastIn.gameTime ?? lastIn.sub_time ?? 0)
+      : (isStarter ? 0 : 0);
+
     return Math.max(0, Math.round(currentGameTime - lastInTime));
   },
 

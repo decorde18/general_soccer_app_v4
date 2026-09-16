@@ -164,14 +164,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     if (!isOpen) return;
 
     if (stopClock) {
-      // Clock Paused: Freeze at the moment the event button was clicked (minus all previous paused stoppages)
-      const snapSeconds = useGameStore.getState().getPeriodTime(eventOpenMsRef.current);
+      // Clock Paused: Freeze at the moment the event button was clicked
+      const snapSeconds = useGameStore.getState().getGameTime();
       setLiveSeconds(snapSeconds);
     } else {
-      // Clock Running: Display current actual game time minus all previous paused stoppages and tick live every second
-      setLiveSeconds(useGameStore.getState().getPeriodTime());
+      // Clock Running: Display current cumulative game time and tick live every second
+      setLiveSeconds(useGameStore.getState().getGameTime());
       const interval = setInterval(() => {
-        setLiveSeconds(useGameStore.getState().getPeriodTime());
+        setLiveSeconds(useGameStore.getState().getGameTime());
       }, 1000);
       return () => clearInterval(interval);
     }
@@ -455,7 +455,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         teamSeasonVal = teamTarget === "us" ? oppTeamSeasonId : ourTeamSeasonId;
       }
 
-      const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
+      const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
       const goalMethodsArr = Array.from(selectedMethods);
       const goalTypesJson = JSON.stringify(goalMethodsArr.length > 0 ? goalMethodsArr : ["open_play"]);
 
@@ -650,7 +650,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
       const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
       const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
-      const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
+      const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
 
       const tempCardId = `temp_card_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -818,7 +818,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     // 2. SAVE OR MISS OUTCOME: Log immediate player actions and PK event
     startTransition(async () => {
       try {
-        const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
+        const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
         const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
         const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
         const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
@@ -934,8 +934,10 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   const handleStoppageSubmit = () => {
     if (!game) return;
 
-    const gameTimeSeconds = liveSeconds || useGameStore.getState().getPeriodTime();
-    const reasonStr = stoppageDetails || stoppageCategory.toUpperCase() + " Stoppage";
+    const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
+    const reasonStr =
+      stoppageDetails ||
+      (eventType === "hydration" ? "Hydration / Water Break" : stoppageCategory.toUpperCase() + " Stoppage");
     const tempMajorId = `temp_stoppage_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     // 1. Synchronous Optimistic Update
@@ -1476,8 +1478,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           </div>
         )}
 
-        {/* ⏸️ STOPPAGE FORM (Injury, Weather, VAR, Other) */}
-        {(eventType === "injury" || eventType === "weather" || eventType === "var" || eventType === "stoppage") && (
+        {/* ⏸️ STOPPAGE FORM (Injury, Water/Hydration, Weather, VAR, Other) */}
+        {(eventType === "injury" || eventType === "hydration" || eventType === "weather" || eventType === "var" || eventType === "stoppage") && (
           <div className="space-y-4 pt-2 border-t border-border/40">
             <Input
               label="Stoppage Reason / Details (Optional)"
