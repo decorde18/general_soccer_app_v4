@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeGender } from "@/lib/utils/gender";
 
 export const governingBodySchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters"),
@@ -132,10 +133,14 @@ export const teamEnrollmentSchema = z.object({
   isActive: z.string().optional().transform((v) => v === "true"),
 });
 
+
 export const teamSchema = z.object({
   teamName: z.string().min(2, "Team name must be at least 2 characters"),
   clubId: z.coerce.number(),
-  gender: z.enum(["Men", "Women", "Mixed"]).default("Mixed"),
+  gender: z
+    .string()
+    .optional()
+    .transform((val) => normalizeGender(val, "MIXED")),
   isActive: z
     .string()
     .optional()

@@ -105,7 +105,7 @@ export async function getOrCreateTbdTeamSeason(seasonId: number) {
   });
   if (!tbdTeam) {
     tbdTeam = await prisma.teams.create({
-      data: { club_id: tbdClub.id, team_name: "TBD Opponent", gender: "Mixed", is_active: true },
+      data: { club_id: tbdClub.id, team_name: "TBD Opponent", gender: "MIXED", is_active: true },
     });
   }
   let tbdTeamSeason = await prisma.team_seasons.findFirst({

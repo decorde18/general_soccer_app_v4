@@ -58,7 +58,7 @@ function mapLeagueStatus(val: unknown): LeagueStatus {
 
 export type LeagueStatus = "active" | "upcoming" | "inactive";
 export type ClubType = "high_school" | "club";
-export type TeamGender = "Men" | "Women" | "Mixed";
+export type TeamGender = "MALE" | "FEMALE" | "MIXED";
 export type GameStatus =
   | "scheduled"
   | "in_progress"

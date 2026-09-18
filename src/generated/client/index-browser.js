@@ -738,9 +738,9 @@ exports.team_staff_role = exports.$Enums.team_staff_role = {
 };
 
 exports.teams_gender = exports.$Enums.teams_gender = {
-  Men: 'Men',
-  Women: 'Women',
-  Mixed: 'Mixed'
+  MALE: 'MALE',
+  FEMALE: 'FEMALE',
+  MIXED: 'MIXED'
 };
 
 exports.user_team_seasons_role = exports.$Enums.user_team_seasons_role = {

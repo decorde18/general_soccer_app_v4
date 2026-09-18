@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { Trophy, Calendar, Shield, Clock, MapPin, Search, Filter, Plus, Edit3 } from "lucide-react";
+import { normalizeGender } from "@/lib/utils/gender";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
@@ -137,11 +138,12 @@ export default function LeaguePageClient({
         return false;
       }
 
-      if (selectedGender === "girls" && !name.includes("girl") && !name.includes("female")) {
-        return false;
-      }
-      if (selectedGender === "boys" && !name.includes("boy") && !name.includes("male") && !name.includes("coed")) {
-        if (name.includes("girl")) return false;
+      if (selectedGender !== "all") {
+        const targetGender = normalizeGender(selectedGender);
+        const divGender = normalizeGender(d.leagueNodeName || "");
+        if (divGender !== targetGender) {
+          return false;
+        }
       }
 
       if (selectedAge !== "all") {

@@ -6,6 +6,7 @@ import { requireSession } from "@/lib/auth/auth-utils";
 import { teams_gender } from "@/generated/client";
 
 import { deriveClubAbbreviation } from "@/lib/utils/teamName";
+import { normalizeGender } from "@/lib/utils/gender";
 
 /**
  * Create a new Club inline
@@ -37,6 +38,7 @@ export async function createInlineClub(data: {
   return { success: true, club };
 }
 
+
 /**
  * Create a new Team and auto-enroll into a season inline
  */
@@ -61,7 +63,7 @@ export async function createInlineTeam(data: {
     data: {
       club_id: data.clubId,
       team_name: data.teamName.trim(),
-      gender: data.gender || "Mixed",
+      gender: normalizeGender(data.gender, "MIXED"),
       is_active: true,
     },
   });

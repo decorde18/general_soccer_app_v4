@@ -13,6 +13,7 @@ import { createClub, updateClub, deleteClub } from "@/lib/actions/club-actions";
 import { createTeam, updateTeam, deleteTeam } from "@/lib/actions/team-actions";
 import { useSessionContext } from "@/contexts/SessionProvider";
 import { getEffectiveRoles } from "@/lib/roles";
+import { formatGenderDisplay } from "@/lib/utils/gender";
 import type { Role } from "@/components/entities/types";
 import { deriveClubAbbreviation } from "@/lib/utils/teamName";
 
@@ -411,7 +412,7 @@ export default function ClubsDashboardClient({
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-xs text-text block truncate">{team.teamName}</span>
                             <span className="text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-border text-muted">
-                              {team.gender}
+                              {formatGenderDisplay(team.gender)}
                             </span>
                           </div>
                         </div>
@@ -490,7 +491,7 @@ export default function ClubsDashboardClient({
               clubId: String(selectedClubId),
               clubName: selectedClub?.name || "",
               isActive: "true",
-              gender: "Mixed",
+              gender: "MIXED",
             }) as any
           }
           onSubmit={handleTeamSubmit as any}

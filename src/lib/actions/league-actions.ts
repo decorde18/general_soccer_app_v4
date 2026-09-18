@@ -5,6 +5,7 @@ import { verifyAdmin } from "@/lib/auth/auth-utils";
 import prisma from "@/lib/prisma";
 import { getTeamSeasonRecords } from "@/lib/data/queries";
 import { leagueSchema } from "@/lib/validations/schemas";
+import { normalizeGender } from "@/lib/utils/gender";
 
 export async function createLeague(data: Record<string, string>) {
   await verifyAdmin();
@@ -92,11 +93,7 @@ export async function reorganizeLeagueNodeHierarchy(leagueId?: number) {
       const parent = nodes.find((n) => n.id === node.parent_id);
       if (parent && parent.node_type !== "gender") {
         // Find or create gender parent node
-        const genderName = node.name.toLowerCase().includes("girl") || node.name.toLowerCase().includes("female")
-          ? "Girls"
-          : node.name.toLowerCase().includes("boy") || node.name.toLowerCase().includes("male")
-          ? "Boys"
-          : "Coed";
+        const genderName = normalizeGender(node.name);
 
         let genderNode = nodes.find((n) => n.league_id === node.league_id && n.node_type === "gender" && n.name === genderName);
         if (!genderNode) {
@@ -284,12 +281,7 @@ export async function resolveOrCreateDivisionHierarchy(
   if (!trimmed || !leagueId) throw new Error("Raw division string and leagueId required");
 
   // 1. Gender Extraction
-  let genderName = "Coed";
-  if (/\b(girls?|female|g\d+|u\d+g)\b/i.test(trimmed)) {
-    genderName = "Girls";
-  } else if (/\b(boys?|male|b\d+|u\d+b)\b/i.test(trimmed)) {
-    genderName = "Boys";
-  }
+  const genderName = normalizeGender(trimmed);
 
   // 2. Age Group Extraction (e.g. "Under 13", "U13", "13U")
   let ageName = "U13";

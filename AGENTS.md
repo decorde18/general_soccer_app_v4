@@ -55,7 +55,18 @@ This file documents mandatory architectural rules and conventions for developers
 
 ---
 
-## 5. Multi-Table Cascade Event Deletion & Stoppage Integrity
+## 5. Standardized Gender Handling Rule
+
+- **Unified Gender Standard**:
+  - ALWAYS use the unified gender values (`MALE`, `FEMALE`, `MIXED`) for all person and team gender fields.
+- **Normalizer Utility Enforcement**:
+  - ALWAYS use `normalizeGender(input)` from `@/lib/utils/gender` when processing form inputs, CSV imports, external API payloads, or raw search terms (automatically discerning "Boys", "Girls", "Men", "Women", "Coed", "Male", "Female", "Mixed", "M", "F", "B", "G").
+- **Strict DB Storage Constraint**:
+  - NEVER store raw un-normalized strings like `"girls"`, `"boys"`, `"m"`, or `"f"` directly in database records.
+
+---
+
+## 6. Multi-Table Cascade Event Deletion & Stoppage Integrity
 
 - **Cascade Event Deletion**:
   - Deleting or canceling any game event (Goal, Card, Penalty, Sub, Stoppage) MUST delete all parent records (`game_events_major`) AND linked child records (`game_events_goals`, `game_events_discipline`, `game_events_penalties`, `game_subs`) across database tables and Zustand state simultaneously.
@@ -65,7 +76,7 @@ This file documents mandatory architectural rules and conventions for developers
 
 ---
 
-## 6. Substitution & Roster Eligibility Standards
+## 7. Substitution & Roster Eligibility Standards
 
 - **Strict On-Field Scoping for Event Triggers**:
   - Event recording modals (Scorer, Assist, PK Taker, Yellow/Red Card) MUST strictly scope player dropdowns to players active ON THE FIELD at that game timestamp (`isPlayerOnFieldAtTime`).
@@ -77,7 +88,7 @@ This file documents mandatory architectural rules and conventions for developers
 
 ---
 
-## 7. Importer & Entity Deduplication Standards
+## 8. Importer & Entity Deduplication Standards
 
 - **Entity Deduplication**:
   - Importers MUST match existing clubs, venues (`locations`), fields (`sublocations`), and team seasons case-insensitively before creating new database entities.
@@ -88,7 +99,7 @@ This file documents mandatory architectural rules and conventions for developers
 
 ---
 
-## 8. Input Guarding, Type Safety & Aesthetics
+## 9. Input Guarding, Type Safety & Aesthetics
 
 - **NaN & Null Guards**:
   - All route params, numeric IDs, and time calculations MUST include `NaN` guards (`Number(...) || 0`) to prevent database 500 null constraint errors.
@@ -100,7 +111,7 @@ This file documents mandatory architectural rules and conventions for developers
 
 ---
 
-## 9. Design System Primitives & UI Component Enforcement
+## 10. Design System Primitives & UI Component Enforcement
 
 - **No Raw HTML Input Controls**:
   - Never render raw `<select>`, `<input>`, or native `<button>` tags when standard UI primitives exist in `@/components/ui/` (`Select`, `Input`, `Button`, `Checkbox`, `Toggle`, `Modal`, `Dialog`).
@@ -111,7 +122,7 @@ This file documents mandatory architectural rules and conventions for developers
 
 ---
 
-## 10. Cascading Selectors & Interactive Entity Links
+## 11. Cascading Selectors & Interactive Entity Links
 
 - **Cascading Club → Team Selector**:
   - Any UI screen requiring selection of a team MUST use `ClubTeamSelect` from `@/components/ui/ClubTeamSelect` to filter Club first, then Team.
@@ -120,7 +131,7 @@ This file documents mandatory architectural rules and conventions for developers
 
 ---
 
-## 11. Terminal Subnode Hierarchy & Competition Node Selection
+## 12. Terminal Subnode Hierarchy & Competition Node Selection
 
 - **Terminal Leaf Subnode Scoping**:
   - Competition node select dropdowns MUST filter to terminal leaf subnodes (`other_league_nodes.length === 0`). Intermediate parent category nodes MUST NOT be selectable as match or team enrollment targets.

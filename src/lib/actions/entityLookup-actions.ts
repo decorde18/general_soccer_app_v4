@@ -2,6 +2,7 @@
 
 import { verifyAdmin } from "@/lib/auth/auth-utils";
 import prisma from "@/lib/prisma";
+import { normalizeGender } from "@/lib/utils/gender";
 
 export interface EntityLookupResult {
   rawName: string;
@@ -82,10 +83,8 @@ export async function lookupEntityDetails(
   }
 
   // Gender detection
-  if (/\b(girls?|g\d+|u\d+g)\b/i.test(trimmed)) {
-    gender = "Girls";
-  } else if (/\b(boys?|b\d+|u\d+b)\b/i.test(trimmed)) {
-    gender = "Boys";
+  if (/\b(girls?|female|g\d+|u\d+g|boys?|male|b\d+|u\d+b|coed|mixed)\b/i.test(trimmed)) {
+    gender = normalizeGender(trimmed);
   }
 
   // Complex / Location address extraction heuristics

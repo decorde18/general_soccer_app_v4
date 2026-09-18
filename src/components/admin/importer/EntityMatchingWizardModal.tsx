@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { CheckCircle2, ChevronRight, Building2, Shield, MapPin, Layers, Search, Sparkles, Loader2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { lookupEntityDetails, EntityLookupResult } from "@/lib/actions/entityLookup-actions";
+import { formatGenderDisplay } from "@/lib/utils/gender";
 
 export interface UnmatchedItem {
   id: string;
@@ -339,7 +340,7 @@ export default function EntityMatchingWizardModal({
                             <div className="font-bold flex items-center gap-1 text-indigo-300">
                               <Sparkles className="h-3 w-3 text-indigo-400" />
                               Suggested: {lookup.suggestedName}
-                              {lookup.gender && <span className="text-emerald-400">({lookup.gender})</span>}
+                              {lookup.gender && <span className="text-emerald-400">({formatGenderDisplay(lookup.gender)})</span>}
                             </div>
                           </div>
                         )}

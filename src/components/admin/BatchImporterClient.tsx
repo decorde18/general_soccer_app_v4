@@ -38,6 +38,7 @@ import {
 import EntityMatchingWizardModal from "@/components/admin/importer/EntityMatchingWizardModal";
 import { createInlineLeague, createInlineLeagueNode, carryoverLeagueTeamsFromPreviousSeason } from "@/lib/actions/league-actions";
 import { discernVenueAndField } from "@/lib/utils/locationUtils";
+import { normalizeGender, formatGenderDisplay } from "@/lib/utils/gender";
 
 interface BatchImporterClientProps {
   seasons: { id: number; name: string }[];
@@ -141,20 +142,12 @@ function detectScheduleHeaderMapping(headers: string[]) {
   return sMap;
 }
 
-function normalizeGenderInput(genderStr?: string): "boys" | "girls" | "coed" {
-  const g = (genderStr || "").trim().toLowerCase();
-  if (["f", "female", "girls", "girl", "w", "women"].includes(g)) return "girls";
-  if (["coed", "mixed", "co-ed", "m/f"].includes(g)) return "coed";
-  if (["m", "male", "boys", "boy", "men"].includes(g)) return "boys";
-  return "boys";
+function normalizeGenderInput(genderStr?: string): "MALE" | "FEMALE" | "MIXED" {
+  return normalizeGender(genderStr, "MIXED");
 }
 
 function normalizeGenderDisplay(genderStr?: string): string {
-  const g = (genderStr || "").trim().toLowerCase();
-  if (["f", "female", "girls", "girl", "w", "women"].includes(g)) return "Girls";
-  if (["m", "male", "boys", "boy", "men"].includes(g)) return "Boys";
-  if (["coed", "mixed", "co-ed", "m/f"].includes(g)) return "Coed";
-  return genderStr || "-";
+  return formatGenderDisplay(genderStr);
 }
 
 function cleanGrade(gradeStr?: string): string | undefined {
@@ -646,7 +639,7 @@ export default function BatchImporterClient({
 
       const clubName = teamsMapping.clubName >= 0 ? parts[teamsMapping.clubName] || "" : "";
       const teamName = teamsMapping.teamName >= 0 ? parts[teamsMapping.teamName] || "" : "";
-      const gender = teamsMapping.gender >= 0 ? normalizeGenderInput(parts[teamsMapping.gender]) : "boys";
+      const gender = teamsMapping.gender >= 0 ? normalizeGenderInput(parts[teamsMapping.gender]) : "MIXED";
       const city = teamsMapping.city >= 0 ? parts[teamsMapping.city] || "" : "";
       const state = teamsMapping.state >= 0 ? parts[teamsMapping.state] || "" : "";
 
@@ -695,7 +688,7 @@ export default function BatchImporterClient({
       const homeTeamName = activeMapping.homeTeam >= 0 ? parts[activeMapping.homeTeam] || "" : "";
       const awayClubName = activeMapping.awayClub >= 0 ? parts[activeMapping.awayClub] || "" : "";
       const awayTeamName = activeMapping.awayTeam >= 0 ? parts[activeMapping.awayTeam] || homeTeamName : homeTeamName;
-      const gender = activeMapping.gender >= 0 ? normalizeGenderInput(parts[activeMapping.gender]) : "boys";
+      const gender = activeMapping.gender >= 0 ? normalizeGenderInput(parts[activeMapping.gender]) : "MIXED";
       const rawLoc = activeMapping.location >= 0 ? parts[activeMapping.location] || undefined : undefined;
       const rawSub = activeMapping.sublocation >= 0 ? parts[activeMapping.sublocation] || undefined : undefined;
       const discernedLoc = discernVenueAndField(rawLoc, rawSub);

@@ -38,9 +38,9 @@ export const teamConfig: EntityConfig = {
         required: true, 
         gridColumn: "span-6",
         options: [
-          { value: "Men", label: "Men" },
-          { value: "Women", label: "Women" },
-          { value: "Mixed", label: "Mixed" },
+          { value: "MALE", label: "Boys / Men" },
+          { value: "FEMALE", label: "Girls / Women" },
+          { value: "MIXED", label: "Co-Ed / Mixed" },
         ]
       },
       { key: "isActive", label: "Active", type: "toggle", required: false, gridColumn: "span-6" },

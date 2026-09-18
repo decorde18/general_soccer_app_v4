@@ -398,9 +398,9 @@ export type team_staff_role = (typeof team_staff_role)[keyof typeof team_staff_r
 
 
 export const teams_gender: {
-  Men: 'Men',
-  Women: 'Women',
-  Mixed: 'Mixed'
+  MALE: 'MALE',
+  FEMALE: 'FEMALE',
+  MIXED: 'MIXED'
 };
 
 export type teams_gender = (typeof teams_gender)[keyof typeof teams_gender]

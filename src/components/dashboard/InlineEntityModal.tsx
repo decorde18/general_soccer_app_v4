@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Checkbox from "@/components/ui/Checkbox";
 import { Search, Plus, Trophy } from "lucide-react";
+import { GenderValue } from "@/lib/utils/gender";
 import {
   createInlineClub,
   createInlineTeam,
@@ -24,7 +25,7 @@ export type InlineEntityType =
   | "sublocation"
   | "enroll_competition";
 
-interface InlineEntityModalProps {
+export interface InlineEntityModalProps {
   entityType: InlineEntityType;
   contextData?: {
     seasonId?: number;
@@ -57,7 +58,7 @@ export default function InlineEntityModal({
   
   // Team specific
   const [clubId, setClubId] = useState<number>(contextData.clubId || (contextData.clubs?.[0]?.id ?? 0));
-  const [gender, setGender] = useState<"Men" | "Women" | "Mixed">("Mixed");
+  const [gender, setGender] = useState<GenderValue>("MIXED");
   const [ageGroupId, setAgeGroupId] = useState<number | "">("");
 
   // League specific
@@ -302,9 +303,9 @@ export default function InlineEntityModal({
                     value={gender}
                     onChange={(e: any) => setGender(e.target.value as any)}
                     options={[
-                      { value: "Mixed", label: "Co-Ed / Mixed" },
-                      { value: "Men", label: "Boys / Men" },
-                      { value: "Women", label: "Girls / Women" },
+                      { value: "MIXED", label: "Co-Ed / Mixed" },
+                      { value: "MALE", label: "Boys / Men" },
+                      { value: "FEMALE", label: "Girls / Women" },
                     ]}
                     showPlaceholder={false}
                   />

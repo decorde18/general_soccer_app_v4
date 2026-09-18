@@ -7,11 +7,12 @@ import { requireSession, verifyAdmin } from "@/lib/auth/auth-utils";
 import { resolveOrCreateDivisionHierarchy } from "@/lib/actions/league-actions";
 import { deriveClubAbbreviation } from "@/lib/utils/teamName";
 import { discernVenueAndField } from "@/lib/utils/locationUtils";
+import { normalizeGender, GenderValue } from "@/lib/utils/gender";
 
 export interface TeamImportRecord {
   clubName: string;
   teamName: string;
-  gender: "boys" | "girls" | "coed";
+  gender: GenderValue;
   ageGroupName?: string;
   city?: string;
   state?: string;
@@ -24,7 +25,7 @@ export interface ScheduleImportRecord {
   homeTeamName: string;
   awayClubName: string;
   awayTeamName: string;
-  gender?: "boys" | "girls" | "coed";
+  gender?: GenderValue;
   locationName?: string;
   sublocationName?: string;
   gameType?: string;
@@ -62,11 +63,8 @@ function normalizeStr(str?: string | null): string {
   return (str || "").trim().toLowerCase();
 }
 
-function mapGenderToEnum(genderStr?: string): "Men" | "Women" | "Mixed" {
-  const g = (genderStr || "").trim().toLowerCase();
-  if (["girls", "women", "female", "f", "w", "girl"].includes(g)) return "Women";
-  if (["coed", "mixed", "co-ed", "m/f"].includes(g)) return "Mixed";
-  return "Men";
+function mapGenderToEnum(genderStr?: string): GenderValue {
+  return normalizeGender(genderStr);
 }
 
 async function ensureLeagueNodeSeason(rawNodeId: number, seasonId: number): Promise<{ nodeSeasonId: number; leagueNodeId: number } | null> {
@@ -632,9 +630,9 @@ export async function batchImportRoster(
         where: { club_id: club.id, team_name: { equals: rawTeam } },
       });
       if (!team) {
-        const teamGender = rec.gender && mapGenderToEnum(rec.gender) === "Women" ? "Women" : "Men";
+        const teamGender = rec.gender ? normalizeGender(rec.gender) : "MIXED";
         team = await prisma.teams.create({
-          data: { club_id: club.id, team_name: rawTeam, gender: teamGender as any },
+          data: { club_id: club.id, team_name: rawTeam, gender: teamGender },
         });
       }
 
@@ -670,7 +668,7 @@ export async function batchImportRoster(
       });
     }
 
-    const genderCode = rec.gender ? (mapGenderToEnum(rec.gender) === "Women" ? "F" : "M") : null;
+    const normalizedPersonGender = rec.gender ? normalizeGender(rec.gender) : null;
     const parsedBirthDate = rec.birthDate ? new Date(rec.birthDate) : null;
     const sanitizedGrade = cleanGrade(rec.grade);
 
@@ -681,7 +679,7 @@ export async function batchImportRoster(
           last_name: rawLast,
           email: rec.email ? rec.email.trim() : null,
           phone: rec.phone ? rec.phone.trim() : null,
-          gender: genderCode,
+          gender: normalizedPersonGender,
           birth_date: parsedBirthDate && !isNaN(parsedBirthDate.getTime()) ? parsedBirthDate : null,
         },
       });
@@ -693,7 +691,7 @@ export async function batchImportRoster(
         data: {
           first_name: rawFirst,
           last_name: rawLast,
-          gender: genderCode || person.gender,
+          gender: normalizedPersonGender || person.gender,
           birth_date: (parsedBirthDate && !isNaN(parsedBirthDate.getTime())) ? parsedBirthDate : person.birth_date,
           phone: rec.phone ? rec.phone.trim() : person.phone,
           email: rec.email ? rec.email.trim() : person.email,

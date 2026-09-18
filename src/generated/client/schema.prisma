@@ -486,7 +486,7 @@ model people {
   nickname                                                            String?                @db.VarChar(25)
   email                                                               String?                @db.VarChar(100)
   phone                                                               String?                @db.VarChar(20)
-  gender                                                              String?                @db.VarChar(1)
+  gender                                                              String?                @db.VarChar(10)
   title                                                               String?                @db.VarChar(50)
   other_last_name                                                     String?                @db.LongText
   entry_year                                                          Int?                   @db.Year
@@ -762,9 +762,9 @@ enum player_teams_status {
 }
 
 enum teams_gender {
-  Men
-  Women
-  Mixed
+  MALE
+  FEMALE
+  MIXED
 }
 
 enum user_team_seasons_role {
