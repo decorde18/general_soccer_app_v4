@@ -166,11 +166,16 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     if (stopClock) {
       // Clock Paused: Freeze at the moment the event button was clicked
       const snapSeconds = useGameStore.getState().getGameTime();
+      // Clock Paused: Freeze at the moment the event button was clicked
+      const snapSeconds = useGameStore.getState().getGameTime();
       setLiveSeconds(snapSeconds);
     } else {
       // Clock Running: Display current cumulative game time and tick live every second
       setLiveSeconds(useGameStore.getState().getGameTime());
+      // Clock Running: Display current cumulative game time and tick live every second
+      setLiveSeconds(useGameStore.getState().getGameTime());
       const interval = setInterval(() => {
+        setLiveSeconds(useGameStore.getState().getGameTime());
         setLiveSeconds(useGameStore.getState().getGameTime());
       }, 1000);
       return () => clearInterval(interval);
@@ -456,6 +461,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       }
 
       const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
+      const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
       const goalMethodsArr = Array.from(selectedMethods);
       const goalTypesJson = JSON.stringify(goalMethodsArr.length > 0 ? goalMethodsArr : ["open_play"]);
 
@@ -651,6 +657,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
       const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
       const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
+      const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
 
       const tempCardId = `temp_card_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -818,6 +825,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     // 2. SAVE OR MISS OUTCOME: Log immediate player actions and PK event
     startTransition(async () => {
       try {
+        const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
         const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
         const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
         const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
