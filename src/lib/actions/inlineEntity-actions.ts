@@ -158,6 +158,7 @@ export async function createInlineLocation(data: {
   name: string;
   abbreviation?: string;
   addressLine1?: string;
+  addressLine2?: string;
   city?: string;
   state?: string;
   postalCode?: string;
@@ -170,10 +171,11 @@ export async function createInlineLocation(data: {
 
   let addressId: number | null = null;
 
-  if (data.addressLine1 || data.city || data.state || data.postalCode) {
+  if (data.addressLine1 || data.addressLine2 || data.city || data.state || data.postalCode) {
     const address = await prisma.addresses.create({
       data: {
         address_line1: data.addressLine1?.trim() || null,
+        address_line2: data.addressLine2?.trim() || null,
         city: data.city?.trim() || null,
         state: data.state?.trim() || null,
         postal_code: data.postalCode?.trim() || null,

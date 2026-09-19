@@ -26,8 +26,10 @@ import Modal from "@/components/ui/Modal";
 import Dialog from "@/components/ui/Dialog";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
+import Checkbox from "@/components/ui/Checkbox";
 import ClubTeamSelect from "@/components/ui/ClubTeamSelect";
 import { Loader2 } from "lucide-react";
+import { createLeague } from "@/lib/actions/league-actions";
 import {
   createLeagueNode,
   updateLeagueNode,
@@ -114,11 +116,21 @@ export default function LeaguesStructureClient({
     name: string;
   } | null>(null);
 
+  // Brand New League modal states
+  const [isAddLeagueOpen, setIsAddLeagueOpen] = useState(false);
+  const [leagueFormName, setLeagueFormName] = useState("");
+  const [leagueFormAbbrev, setLeagueFormAbbrev] = useState("");
+  const [leagueFormIsTournament, setLeagueFormIsTournament] = useState(false);
+  const [leagueFormDescription, setLeagueFormDescription] = useState("");
+  const [isSavingLeague, setIsSavingLeague] = useState(false);
+
   // Form states
+  const [nodeFormLeagueId, setNodeFormLeagueId] = useState("");
   const [nodeFormName, setNodeFormName] = useState("");
   const [nodeFormType, setNodeFormType] = useState("conference");
   const [nodeFormOrder, setNodeFormOrder] = useState("");
   const [nodeFormParentId, setNodeFormParentId] = useState("");
+  const [isParentNodeCreation, setIsParentNodeCreation] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const [enrollFormTeamSeasonId, setEnrollFormTeamSeasonId] = useState("");
@@ -361,6 +373,34 @@ export default function LeaguesStructureClient({
 
   // ─── Actions Handlers ───────────────────────────────────────────────────────
 
+  // Submit create brand-new league action
+  const handleCreateLeagueSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leagueFormName.trim()) return;
+
+    setIsSavingLeague(true);
+    try {
+      await createLeague({
+        name: leagueFormName.trim(),
+        ...(leagueFormAbbrev.trim() ? { abbreviation: leagueFormAbbrev.trim() } : {}),
+        isTournament: leagueFormIsTournament ? "true" : "false",
+        ...(leagueFormDescription.trim() ? { description: leagueFormDescription.trim() } : {}),
+      });
+
+      toast.success(`League "${leagueFormName}" created successfully!`);
+      setIsAddLeagueOpen(false);
+      setLeagueFormName("");
+      setLeagueFormAbbrev("");
+      setLeagueFormIsTournament(false);
+      setLeagueFormDescription("");
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create league.");
+    } finally {
+      setIsSavingLeague(false);
+    }
+  };
+
   // Helper to format options for parent node select dropdown with breadcrumb trail
   const getParentNodeOptions = (leagueId: number, excludeNodeId?: number) => {
     const league = leaguesData.find((l) => Number(l.value) === leagueId);
@@ -369,7 +409,7 @@ export default function LeaguesStructureClient({
     const options: { value: string; label: string }[] = [
       {
         value: "",
-        label: `${leagueName} (League Root)`,
+        label: `None (Top-Level Parent Node in ${leagueName})`,
       },
     ];
 
@@ -394,7 +434,33 @@ export default function LeaguesStructureClient({
     setNodeFormParentId(newParentId);
   };
 
-  // Open Add Child Node modal
+  // Open Add Top-Level Parent Node modal
+  const handleOpenAddParentNode = (targetLeagueId?: number) => {
+    const effectiveLeagueId =
+      targetLeagueId ||
+      selectedInfo?.leagueId ||
+      (selectedInfo?.type === "league" ? selectedInfo.id : undefined) ||
+      Number(leaguesData[0]?.value || 0);
+
+    const league =
+      leaguesData.find((l) => Number(l.value) === effectiveLeagueId) || leaguesData[0];
+
+    setIsParentNodeCreation(true);
+    setAddParentItem({
+      id: `league-${league?.value}`,
+      name: league?.label || "League",
+      type: "league",
+      leagueId: Number(league?.value || 0),
+    });
+    setNodeFormLeagueId(String(league?.value || ""));
+    setNodeFormName("");
+    setNodeFormType("conference");
+    setNodeFormParentId("");
+    setNodeFormOrder("");
+    setIsAddNodeOpen(true);
+  };
+
+  // Open Add Sub-Node modal
   const handleOpenAddNode = (parent: typeof addParentItem) => {
     let effectiveParent = parent;
     if (!effectiveParent && leaguesData.length > 0) {
@@ -407,10 +473,16 @@ export default function LeaguesStructureClient({
       };
     }
 
+    setIsParentNodeCreation(false);
     setAddParentItem(effectiveParent);
+    setNodeFormLeagueId(
+      String(effectiveParent?.leagueId || leaguesData[0]?.value || ""),
+    );
     setNodeFormName("");
     setNodeFormType("conference");
-    setNodeFormParentId(effectiveParent?.type === "node" ? String(effectiveParent.nodeId) : "");
+    setNodeFormParentId(
+      effectiveParent?.type === "node" ? String(effectiveParent.nodeId) : "",
+    );
     setNodeFormOrder("");
     setIsAddNodeOpen(true);
   };
@@ -418,25 +490,19 @@ export default function LeaguesStructureClient({
   // Submit create node action
   const handleCreateNodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nodeFormName.trim() || !addParentItem) return;
+    if (!nodeFormName.trim()) return;
 
     setIsSaving(true);
     try {
-      const selectedParentNode = leagueNodesRecords.find(
-        (n) => String(n.id) === nodeFormParentId,
-      );
-      const rawLeagueId = selectedParentNode
-        ? selectedParentNode.leagueId
-        : addParentItem.leagueId;
-
       const targetLeagueId =
-        rawLeagueId && !isNaN(Number(rawLeagueId))
-          ? String(rawLeagueId)
-          : leaguesData[0]?.value || "";
+        nodeFormLeagueId ||
+        addParentItem?.leagueId ||
+        leaguesData[0]?.value ||
+        "";
 
       await createLeagueNode({
-        ...(targetLeagueId ? { leagueId: targetLeagueId } : {}),
-        ...(nodeFormParentId ? { parentId: nodeFormParentId } : {}),
+        ...(targetLeagueId ? { leagueId: String(targetLeagueId) } : {}),
+        parentId: nodeFormParentId,
         name: nodeFormName.trim(),
         nodeType: nodeFormType,
         ...(nodeFormOrder.trim() ? { displayOrder: nodeFormOrder.trim() } : {}),
@@ -455,6 +521,7 @@ export default function LeaguesStructureClient({
   // Open Edit Node modal
   const handleOpenEditNode = (node: any) => {
     setEditItem(node);
+    setNodeFormLeagueId(String(node.leagueId));
     setNodeFormName(node.name);
     setNodeFormType(node.nodeType);
     setNodeFormOrder(node.displayOrder ? String(node.displayOrder) : "");
@@ -469,20 +536,11 @@ export default function LeaguesStructureClient({
 
     setIsSaving(true);
     try {
-      const selectedParentNode = leagueNodesRecords.find(
-        (n) => String(n.id) === nodeFormParentId,
-      );
-      const rawLeagueId = selectedParentNode
-        ? selectedParentNode.leagueId
-        : editItem.leagueId;
-
       const targetLeagueId =
-        rawLeagueId && !isNaN(Number(rawLeagueId))
-          ? String(rawLeagueId)
-          : leaguesData[0]?.value || "";
+        nodeFormLeagueId || editItem.leagueId || leaguesData[0]?.value || "";
 
       await updateLeagueNode(editItem.id, {
-        ...(targetLeagueId ? { leagueId: targetLeagueId } : {}),
+        ...(targetLeagueId ? { leagueId: String(targetLeagueId) } : {}),
         parentId: nodeFormParentId,
         name: nodeFormName.trim(),
         nodeType: nodeFormType,
@@ -767,6 +825,16 @@ export default function LeaguesStructureClient({
         </div>
 
         <div className='flex items-center gap-3 flex-wrap sm:flex-nowrap'>
+          <Button
+            variant='primary'
+            size='sm'
+            onClick={() => setIsAddLeagueOpen(true)}
+            className='flex items-center gap-1.5 font-bold shadow-sm'
+          >
+            <Plus size={14} />
+            <span>Create New League</span>
+          </Button>
+
           <Link href='/leagues' target='_blank' rel='noopener noreferrer'>
             <Button
               variant='outline'
@@ -821,27 +889,41 @@ export default function LeaguesStructureClient({
               </span>
             </div>
 
-            <Button
-              variant='outline'
-              size='xs'
-              className='flex items-center gap-1'
-              onClick={() => {
-                if (selectedInfo) {
-                  handleOpenAddNode({
-                    id: selectedItemId!,
-                    name: selectedInfo.name,
-                    type: selectedInfo.type === "enrollment" ? "node" : selectedInfo.type,
-                    leagueId: selectedInfo.leagueId || (selectedInfo.record as any).leagueId,
-                    nodeId: selectedInfo.type === "node" ? selectedInfo.id : undefined,
-                  });
-                } else {
-                  handleOpenAddNode(null);
-                }
-              }}
-            >
-              <Plus size={12} />
-              <span>Add Node</span>
-            </Button>
+            <div className='flex items-center gap-1.5'>
+              <Button
+                variant='primary'
+                size='xs'
+                className='flex items-center gap-1 font-bold'
+                onClick={() => setIsAddLeagueOpen(true)}
+                title='Create a brand-new League competition altogether'
+              >
+                <Plus size={12} />
+                <span>New League</span>
+              </Button>
+
+              <Button
+                variant='outline'
+                size='xs'
+                className='flex items-center gap-1'
+                onClick={() => {
+                  if (selectedInfo) {
+                    handleOpenAddNode({
+                      id: selectedItemId!,
+                      name: selectedInfo.name,
+                      type: selectedInfo.type === "enrollment" ? "node" : selectedInfo.type,
+                      leagueId: selectedInfo.leagueId || (selectedInfo.record as any).leagueId,
+                      nodeId: selectedInfo.type === "node" ? selectedInfo.id : undefined,
+                    });
+                  } else {
+                    handleOpenAddNode(null);
+                  }
+                }}
+                title='Add a division or sub-node under a league'
+              >
+                <Plus size={12} />
+                <span>Add Sub-node</span>
+              </Button>
+            </div>
           </div>
 
           {/* Tree Search Box */}
@@ -925,6 +1007,25 @@ export default function LeaguesStructureClient({
                       </Button>
                     </Link>
                   )}
+
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    className='flex items-center gap-1.5 border-primary/40 text-primary hover:bg-primary/10 font-bold'
+                    onClick={() =>
+                      handleOpenAddParentNode(
+                        selectedInfo.leagueId ||
+                          (selectedInfo.record as any)?.leagueId ||
+                          (selectedInfo.type === "league"
+                            ? selectedInfo.id
+                            : undefined),
+                      )
+                    }
+                    title='Add a top-level parent node under this league'
+                  >
+                    <Plus size={14} />
+                    <span>Parent Node</span>
+                  </Button>
 
                   <Button
                     variant='outline'
@@ -1223,24 +1324,45 @@ export default function LeaguesStructureClient({
         </div>
       </div>
 
-      {/* MODAL: ADD CHILD NODE */}
+      {/* MODAL: ADD NODE */}
       <Modal
         isOpen={isAddNodeOpen}
         onClose={() => setIsAddNodeOpen(false)}
-        title={`Add Sub-node under "${addParentItem?.name}"`}
+        title={
+          isParentNodeCreation || !nodeFormParentId
+            ? `Create Top-Level Parent Node`
+            : `Add Sub-node under "${addParentItem?.name}"`
+        }
         size='md'
       >
         <form onSubmit={handleCreateNodeSubmit} className='space-y-4'>
+          <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>Target League</label>
+            <Select
+              value={nodeFormLeagueId}
+              onChange={(e: any) => {
+                const newLeagueId = e.target.value;
+                setNodeFormLeagueId(newLeagueId);
+                setNodeFormParentId("");
+              }}
+              options={leaguesData}
+              showPlaceholder={false}
+            />
+          </div>
+
           <div className='space-y-1.5'>
             <label className='text-sm font-bold text-text'>Parent Node</label>
             <Select
               value={nodeFormParentId}
               onChange={(e: any) => handleParentIdChange(e.target.value)}
               options={getParentNodeOptions(
-                addParentItem?.leagueId || Number(leaguesData[0]?.value || 0),
+                Number(nodeFormLeagueId || leaguesData[0]?.value || 0),
               )}
               showPlaceholder={false}
             />
+            <p className='text-[11px] text-muted'>
+              Select &quot;None (Top-Level Parent Node)&quot; to create a root hierarchy node for this league.
+            </p>
           </div>
 
           <div className='space-y-1.5'>
@@ -1310,12 +1432,28 @@ export default function LeaguesStructureClient({
       >
         <form onSubmit={handleEditNodeSubmit} className='space-y-4'>
           <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>Target League</label>
+            <Select
+              value={nodeFormLeagueId}
+              onChange={(e: any) => {
+                const newLeagueId = e.target.value;
+                setNodeFormLeagueId(newLeagueId);
+                setNodeFormParentId("");
+              }}
+              options={leaguesData}
+              showPlaceholder={false}
+            />
+          </div>
+
+          <div className='space-y-1.5'>
             <label className='text-sm font-bold text-text'>Parent Node</label>
             <Select
               value={nodeFormParentId}
               onChange={(e: any) => handleParentIdChange(e.target.value)}
               options={getParentNodeOptions(
-                editItem?.leagueId || Number(leaguesData[0]?.value || 0),
+                Number(
+                  nodeFormLeagueId || editItem?.leagueId || leaguesData[0]?.value || 0,
+                ),
                 editItem?.id,
               )}
               showPlaceholder={false}
@@ -1374,6 +1512,69 @@ export default function LeaguesStructureClient({
             </Button>
             <Button type='submit' disabled={isSaving}>
               {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* MODAL: CREATE BRAND-NEW LEAGUE */}
+      <Modal
+        isOpen={isAddLeagueOpen}
+        onClose={() => setIsAddLeagueOpen(false)}
+        title='Create Brand-New League / Competition'
+        size='md'
+      >
+        <form onSubmit={handleCreateLeagueSubmit} className='space-y-4'>
+          <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>League / Competition Name</label>
+            <Input
+              type='text'
+              required
+              placeholder='e.g. MLS NEXT, ECNL Regional League, State Championship'
+              value={leagueFormName}
+              onChange={(e: any) => setLeagueFormName(e.target.value)}
+            />
+          </div>
+
+          <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>Abbreviation (Optional)</label>
+            <Input
+              type='text'
+              placeholder='e.g. ECNL-RL, MLSN'
+              value={leagueFormAbbrev}
+              onChange={(e: any) => setLeagueFormAbbrev(e.target.value)}
+            />
+          </div>
+
+          <div className='pt-1'>
+            <Checkbox
+              label='Is this competition a Tournament / Cup format?'
+              checked={leagueFormIsTournament}
+              onChange={(e: any) => setLeagueFormIsTournament(e.target.checked)}
+            />
+          </div>
+
+          <div className='space-y-1.5'>
+            <label className='text-sm font-bold text-text'>Description / Notes (Optional)</label>
+            <Input
+              type='text'
+              placeholder='e.g. Premier youth competition for U13-U19 divisions'
+              value={leagueFormDescription}
+              onChange={(e: any) => setLeagueFormDescription(e.target.value)}
+            />
+          </div>
+
+          <div className='flex justify-end gap-2 border-t border-border pt-4 mt-6'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => setIsAddLeagueOpen(false)}
+              disabled={isSavingLeague}
+            >
+              Cancel
+            </Button>
+            <Button type='submit' disabled={isSavingLeague}>
+              {isSavingLeague ? "Creating League..." : "Create League"}
             </Button>
           </div>
         </form>

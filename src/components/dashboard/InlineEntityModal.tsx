@@ -56,6 +56,13 @@ export default function InlineEntityModal({
   const [abbreviation, setAbbreviation] = useState("");
   const [locationText, setLocationText] = useState("");
   
+  // Location specific address states
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  
   // Team specific
   const [clubId, setClubId] = useState<number>(contextData.clubId || (contextData.clubs?.[0]?.id ?? 0));
   const [gender, setGender] = useState<GenderValue>("MIXED");
@@ -151,7 +158,14 @@ export default function InlineEntityModal({
 
           onSuccess(res);
         } else if (currentType === "location") {
-          const res = await createInlineLocation({ name });
+          const res = await createInlineLocation({
+            name,
+            addressLine1,
+            addressLine2,
+            city,
+            state,
+            postalCode,
+          });
           onSuccess(res);
         } else if (currentType === "sublocation") {
           if (!locationId) throw new Error("Please select a venue complex.");
@@ -317,6 +331,44 @@ export default function InlineEntityModal({
                     options={contextData.ageGroups?.map((ag) => ({ value: ag.id, label: ag.name })) || []}
                     placeholder="Select Age Group (Optional)"
                     showPlaceholder={true}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Location specific fields */}
+            {currentType === "location" && (
+              <div className="space-y-4">
+                <Input
+                  label="Address Line 1"
+                  value={addressLine1}
+                  onChange={(e: any) => setAddressLine1(e.target.value)}
+                  placeholder="e.g. 123 Sports Complex Way"
+                />
+                <Input
+                  label="Address Line 2 (Optional)"
+                  value={addressLine2}
+                  onChange={(e: any) => setAddressLine2(e.target.value)}
+                  placeholder="e.g. Suite 100, Building B"
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Input
+                    label="City"
+                    value={city}
+                    onChange={(e: any) => setCity(e.target.value)}
+                    placeholder="e.g. Nashville"
+                  />
+                  <Input
+                    label="State"
+                    value={state}
+                    onChange={(e: any) => setState(e.target.value)}
+                    placeholder="e.g. TN"
+                  />
+                  <Input
+                    label="Zip / Postal Code"
+                    value={postalCode}
+                    onChange={(e: any) => setPostalCode(e.target.value)}
+                    placeholder="e.g. 37201"
                   />
                 </div>
               </div>
