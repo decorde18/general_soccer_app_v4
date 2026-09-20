@@ -995,16 +995,14 @@ const useGameStore = create<GameStoreState>((set, get) => {
             (g) => String(g.goal_id) !== String(targetGoalId) && String(g.id) !== String(targetGoalId)
           );
           updates.gameEventsGoals = remainingGoals;
-          const teamSeasonId = game.isHome
+          const teamSeasonId = game.teamSeasonId || (game.isHome
             ? game.home_team_season_id
-            : game.away_team_season_id;
+            : game.away_team_season_id);
           updates.goalsFor = remainingGoals.filter(
-            (g) => g.team_season_id === teamSeasonId && !g.is_own_goal
+            (g) => String(g.team_season_id) === String(teamSeasonId)
           ).length;
           updates.goalsAgainst = remainingGoals.filter(
-            (g) =>
-              (g.team_season_id !== teamSeasonId && !g.is_own_goal) ||
-              (g.team_season_id === teamSeasonId && g.is_own_goal)
+            (g) => String(g.team_season_id) !== String(teamSeasonId)
           ).length;
         }
         if (disciplineIdToDelete || eventType === "discipline") {

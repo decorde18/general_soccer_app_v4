@@ -438,10 +438,6 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       toast.error("Please select the goal scorer from currently on-field players.");
       return;
     }
-    if (teamTarget === "us" && isOwnGoal && !goalScorerId) {
-      toast.error("Please select the player on our team who committed the own goal.");
-      return;
-    }
 
     try {
       const isOpp = teamTarget === "opp";
@@ -450,26 +446,22 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
       const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
       
-      // Goal point belongs to the team receiving the score:
-      // - Standard Goal by Us / Opponent Own Goal -> ourTeamSeasonId
-      // - Standard Goal by Opponent / Our Team Own Goal -> oppTeamSeasonId
-      let teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
-      if (isOwnGoal) {
-        teamSeasonVal = teamTarget === "us" ? oppTeamSeasonId : ourTeamSeasonId;
-      }
+      // Goal point belongs to the team selected in teamTarget ("us" -> ourTeamSeasonId, "opp" -> oppTeamSeasonId)
+      const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
 
       const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
       const goalMethodsArr = Array.from(selectedMethods);
       const goalTypesJson = JSON.stringify(goalMethodsArr.length > 0 ? goalMethodsArr : ["open_play"]);
 
       const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
-      const defendingGkPlayerGameId = (isOpp && !isOwnGoal) || (teamTarget === "us" && isOwnGoal) ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
+      const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
 
       const tempGoalId = `temp_goal_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
-      const scorerPgId = teamTarget === "us" && scorer ? Number(scorer.playerGameId || scorer.id) : null;
-      const assistPgId = teamTarget === "us" && !isOwnGoal && assist ? Number(assist.playerGameId || assist.id) : null;
+      // Own goals do NOT credit individual player goals or assists to avoid skewing stats
+      const scorerPgId = !isOwnGoal && !isOpp && scorer ? Number(scorer.playerGameId || scorer.id) : null;
+      const assistPgId = !isOwnGoal && !isOpp && assist ? Number(assist.playerGameId || assist.id) : null;
 
       const payload = {
         game_id: Number(game.game_id || game.id),
@@ -492,8 +484,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           team_season_id: Number(teamSeasonVal),
           is_own_goal: isOwnGoal,
           goal_types: goalTypesJson,
-          scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
-          assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
+          scorer_player_game_id: scorerPgId,
+          assist_player_game_id: assistPgId,
           defending_gk_player_game_id: defendingGkPlayerGameId,
         } as any,
         {
@@ -509,7 +501,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         } as any
       );
 
-      if (!isOpp && scorer?.playerGameId) {
+      if (!isOwnGoal && !isOpp && scorer?.playerGameId) {
         fetch("/api/game_events_player_actions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -578,8 +570,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
             body: JSON.stringify({
               major_event_id: Number(majorRes.id),
               team_season_id: Number(teamSeasonVal),
-              scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
-              assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
+              scorer_player_game_id: scorerPgId,
+              assist_player_game_id: assistPgId,
               defending_gk_player_game_id: defendingGkPlayerGameId,
               opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
               is_own_goal: isOwnGoal,
@@ -623,8 +615,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
             },
             goalPayload: {
               team_season_id: Number(teamSeasonVal),
-              scorer_player_game_id: !isOpp && scorer?.playerGameId ? Number(scorer.playerGameId) : null,
-              assist_player_game_id: !isOpp && assist?.playerGameId ? Number(assist.playerGameId) : null,
+              scorer_player_game_id: scorerPgId,
+              assist_player_game_id: assistPgId,
               defending_gk_player_game_id: defendingGkPlayerGameId,
               opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
               is_own_goal: isOwnGoal,
@@ -1248,26 +1240,10 @@ export default function MajorEventModal(props: MajorEventModalProps) {
             {/* OWN GOAL SCORE EXPLANATION BANNER */}
             {isOwnGoal && (
               teamTarget === "us" ? (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-xl space-y-1 text-amber-600 dark:text-amber-400">
-                  <div className="flex items-center gap-1.5 text-xs font-black">
-                    <AlertTriangle size={16} className="text-amber-500 shrink-0" />
-                    <span>⚠️ OUR TEAM OWN GOAL</span>
-                  </div>
-                  <p className="text-[11px] font-medium text-text/80">
-                    A player on our team accidentally put the ball into <strong>OUR OWN NET</strong>.
-                  </p>
-                  <div className="pt-0.5 text-xs font-black text-rose-500 flex items-center gap-1">
-                    <span>➡️ Score Effect:</span>
-                    <span className="bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded text-rose-600 dark:text-rose-400">
-                      +1 Goal to {opponentShortName}
-                    </span>
-                  </div>
-                </div>
-              ) : (
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/40 rounded-xl space-y-1 text-emerald-600 dark:text-emerald-400">
                   <div className="flex items-center gap-1.5 text-xs font-black">
                     <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
-                    <span>⚽ OPPONENT OWN GOAL</span>
+                    <span>⚽ OPPONENT OWN GOAL (+1 to Our Team)</span>
                   </div>
                   <p className="text-[11px] font-medium text-text/80">
                     An opponent player accidentally put the ball into <strong>THEIR OWN NET</strong>.
@@ -1278,20 +1254,35 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                       +1 Goal to OUR TEAM
                     </span>
                   </div>
+                  <p className="text-[10px] text-muted pt-1 border-t border-emerald-500/20">
+                    No individual player goal credit will be recorded.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-xl space-y-1 text-amber-600 dark:text-amber-400">
+                  <div className="flex items-center gap-1.5 text-xs font-black">
+                    <AlertTriangle size={16} className="text-amber-500 shrink-0" />
+                    <span>⚠️ OUR TEAM OWN GOAL (+1 to {opponentShortName})</span>
+                  </div>
+                  <p className="text-[11px] font-medium text-text/80">
+                    A player on our team accidentally put the ball into <strong>OUR OWN NET</strong>.
+                  </p>
+                  <div className="pt-0.5 text-xs font-black text-rose-500 flex items-center gap-1">
+                    <span>➡️ Score Effect:</span>
+                    <span className="bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded text-rose-600 dark:text-rose-400">
+                      +1 Goal to {opponentShortName}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted pt-1 border-t border-amber-500/20">
+                    No individual player goal credit will be recorded.
+                  </p>
                 </div>
               )
             )}
 
-            {/* PLAYER SELECTION DROPDOWNS */}
-            {teamTarget === "us" ? (
-              isOwnGoal ? (
-                <Select
-                  label="Select Our Player who committed the Own Goal"
-                  value={goalScorerId}
-                  onChange={(e: any) => setGoalScorerId(e.target.value)}
-                  options={[{ value: "", label: "-- Select Player Responsible --" }, ...scorerOptions]}
-                />
-              ) : (
+            {/* PLAYER SELECTION DROPDOWNS: Rendered ONLY for Standard Goals (isOwnGoal === false) */}
+            {!isOwnGoal && (
+              teamTarget === "us" ? (
                 <>
                   <Select
                     label="Goal Scorer (On-Field Players Only)"
@@ -1306,24 +1297,22 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                     options={[{ value: "", label: "-- None (Optional) --" }, ...assistOptions]}
                   />
                 </>
-              )
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  label="Opponent Scorer # (Optional)"
-                  placeholder="e.g. 9"
-                  value={oppScorerJersey}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppScorerJersey(e.target.value)}
-                />
-                {!isOwnGoal && (
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    label="Opponent Scorer # (Optional)"
+                    placeholder="e.g. 9"
+                    value={oppScorerJersey}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppScorerJersey(e.target.value)}
+                  />
                   <Input
                     label="Opponent Assist # (Optional)"
                     placeholder="e.g. 10"
                     value={oppAssistJersey}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppAssistJersey(e.target.value)}
                   />
-                )}
-              </div>
+                </div>
+              )
             )}
 
             {/* Goal Method Checkboxes */}
