@@ -61,19 +61,59 @@ export default function BenchReservesPanel(props: BenchReservesPanelProps) {
   const gameChangers = props.gameChangers ?? storeGameChangers;
 
   const defaultGetPlayerStats = (player: Player) => {
-    if (!storeGame) return { shots: 0, saves: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, goalsAgainst: 0 };
-    const pId = Number(player.playerGameId);
+    const pgIdStr = String(player.playerGameId || "");
+    const pIdStr = String(player.id || "");
+
+    const matchesPlayer = (idVal: any) => {
+      if (idVal === null || idVal === undefined) return false;
+      const s = String(idVal);
+      return s !== "" && (s === pgIdStr || s === pIdStr);
+    };
+
+    if (!storeGame) {
+      return {
+        shots: player.shots || 0,
+        saves: player.saves || 0,
+        goals: player.goals || 0,
+        assists: player.assists || 0,
+        yellowCards: player.yellowCards || 0,
+        redCards: player.redCards || 0,
+        goalsAgainst: player.goalsAgainst || 0,
+      };
+    }
+
     const playerActions = storeGame.playerActions || [];
     const goalsEvents = storeGame.gameEventsGoals || [];
     const disciplineEvents = storeGame.gameEventsDiscipline || [];
 
-    const shots = playerActions.filter((a) => Number(a.player_game_id) === pId && (a.event_type === "shot" || a.event_type === "shot_on_target")).length;
-    const saves = playerActions.filter((a) => Number(a.player_game_id) === pId && a.event_type === "save").length;
-    const goals = goalsEvents.filter((g) => Number(g.scorer_player_game_id) === pId).length;
-    const assists = goalsEvents.filter((g) => Number(g.assist_player_game_id) === pId).length;
-    const yellowCards = disciplineEvents.filter((d) => Number(d.player_game_id) === pId && (d.card_type === "yellow" || d.card_color === "yellow")).length;
-    const redCards = disciplineEvents.filter((d) => Number(d.player_game_id) === pId && (d.card_type === "red" || d.card_type === "yellow_red" || d.card_color === "red")).length;
-    const goalsAgainst = goalsEvents.filter((g) => Number(g.defending_gk_player_game_id) === pId).length;
+    const shots = Math.max(
+      player.shots || 0,
+      playerActions.filter((a) => matchesPlayer(a.player_game_id) && (a.event_type === "shot" || a.event_type === "shot_on_target")).length
+    );
+    const saves = Math.max(
+      player.saves || 0,
+      playerActions.filter((a) => matchesPlayer(a.player_game_id) && a.event_type === "save").length
+    );
+    const goals = Math.max(
+      player.goals || 0,
+      goalsEvents.filter((g) => matchesPlayer(g.scorer_player_game_id)).length
+    );
+    const assists = Math.max(
+      player.assists || 0,
+      goalsEvents.filter((g) => matchesPlayer(g.assist_player_game_id)).length
+    );
+    const yellowCards = Math.max(
+      player.yellowCards || 0,
+      disciplineEvents.filter((d) => matchesPlayer(d.player_game_id) && (d.card_type === "yellow" || d.card_color === "yellow")).length
+    );
+    const redCards = Math.max(
+      player.redCards || 0,
+      disciplineEvents.filter((d) => matchesPlayer(d.player_game_id) && (d.card_type === "red" || d.card_type === "yellow_red" || d.card_color === "red")).length
+    );
+    const goalsAgainst = Math.max(
+      player.goalsAgainst || 0,
+      goalsEvents.filter((g) => matchesPlayer(g.defending_gk_player_game_id)).length
+    );
 
     return { shots, saves, goals, assists, yellowCards, redCards, goalsAgainst };
   };

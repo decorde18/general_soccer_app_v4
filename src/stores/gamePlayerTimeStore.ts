@@ -76,11 +76,38 @@ function getGamePeriodIntervals(game: any, currentGameTime: number = 0): { start
 }
 
 function getGameStoppageIntervals(game: any): { startTime: number; endTime: number | null }[] {
-  if (!game || !game.stoppages) return [];
-  return (game.stoppages || []).map((s: any) => ({
-    startTime: Number(s.startTime ?? s.game_time ?? 0),
-    endTime: s.endTime !== null && s.endTime !== undefined ? Number(s.endTime) : null,
-  }));
+  if (!game) return [];
+  const intervals: { startTime: number; endTime: number | null }[] = [];
+
+  if (Array.isArray(game.stoppages)) {
+    game.stoppages.forEach((s: any) => {
+      intervals.push({
+        startTime: Number(s.startTime ?? s.game_time ?? 0),
+        endTime: s.endTime !== null && s.endTime !== undefined ? Number(s.endTime) : null,
+      });
+    });
+  }
+
+  if (Array.isArray(game.gameEventsMajor)) {
+    game.gameEventsMajor.forEach((m: any) => {
+      if (m.clock_should_run === 0 || m.event_type === "stoppage") {
+        const startSec = Number(m.game_time ?? 0);
+        let endSec: number | null = null;
+
+        if (m.end_time !== null && m.end_time !== undefined) {
+          if (typeof m.end_time === "number" && m.end_time > 1000000000000 && game.gameStartTime) {
+            endSec = Math.max(startSec, Math.floor((m.end_time - game.gameStartTime) / 1000));
+          } else {
+            endSec = Number(m.end_time);
+          }
+        }
+
+        intervals.push({ startTime: startSec, endTime: endSec });
+      }
+    });
+  }
+
+  return intervals;
 }
 
 /* ==================== STORE ==================== */
@@ -129,15 +156,26 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
 
     if (!isPlayerOnFieldNow(player)) return 0;
 
+    const game = useGameStore.getState().game;
+    if (!game) return 0;
+
+    const periods = getGamePeriodIntervals(game, currentGameTime);
+    const stoppages = getGameStoppageIntervals(game);
+
     const ins = normalizeSubs(player.ins);
     const lastIn = ins[ins.length - 1];
     const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
 
-    const lastInTime = lastIn
-      ? Number(lastIn.gameTime ?? lastIn.sub_time ?? 0)
-      : (isStarter ? 0 : 0);
+    const activeIns = lastIn ? [lastIn] : [];
 
-    return Math.max(0, Math.round(currentGameTime - lastInTime));
+    return calculateActivePlayerTimeOnField(
+      isStarter && !lastIn,
+      activeIns,
+      [],
+      periods,
+      stoppages,
+      currentGameTime
+    );
   },
 
   calculateCurrentTimeOffField: (player, currentGameTime) => {

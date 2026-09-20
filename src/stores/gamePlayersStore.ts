@@ -271,26 +271,33 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
   recalculatePlayerStatsFromEvents: (gameEventsGoals = [], gameEventsDiscipline = []) => {
     set((state) => {
       const updatedPlayers = state.players.map((p) => {
-        const pgId = String(p.playerGameId);
+        const pgId = String(p.playerGameId || "");
+        const pId = String(p.id || "");
+
+        const matchesPlayer = (idVal: any) => {
+          if (idVal === null || idVal === undefined) return false;
+          const s = String(idVal);
+          return s !== "" && (s === pgId || s === pId);
+        };
 
         const goalsCount = (gameEventsGoals || []).filter(
-          (g: any) => g.scorer_player_game_id && String(g.scorer_player_game_id) === pgId
+          (g: any) => matchesPlayer(g.scorer_player_game_id)
         ).length;
 
         const assistsCount = (gameEventsGoals || []).filter(
-          (g: any) => g.assist_player_game_id && String(g.assist_player_game_id) === pgId
+          (g: any) => matchesPlayer(g.assist_player_game_id)
         ).length;
 
         const gaCount = (gameEventsGoals || []).filter(
-          (g: any) => g.defending_gk_player_game_id && String(g.defending_gk_player_game_id) === pgId
+          (g: any) => matchesPlayer(g.defending_gk_player_game_id)
         ).length;
 
         const yellowCount = (gameEventsDiscipline || []).filter(
-          (d: any) => d.player_game_id && String(d.player_game_id) === pgId && (d.card_type === "yellow" || d.card_type === "yellow_red")
+          (d: any) => matchesPlayer(d.player_game_id) && (d.card_type === "yellow" || d.card_type === "yellow_red" || d.card_color === "yellow")
         ).length;
 
         const redCount = (gameEventsDiscipline || []).filter(
-          (d: any) => d.player_game_id && String(d.player_game_id) === pgId && (d.card_type === "red" || d.card_type === "yellow_red")
+          (d: any) => matchesPlayer(d.player_game_id) && (d.card_type === "red" || d.card_type === "yellow_red" || d.card_color === "red")
         ).length;
 
         return {
@@ -672,21 +679,32 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
     const ins = player.ins || [];
     const outs = player.outs || [];
 
-    const completedIns = ins.filter((sub) => sub.gameTime !== null).length;
-    const completedOuts = outs.filter((sub) => sub.gameTime !== null).length;
+    const completedInSubs = ins.filter((sub) => sub.gameTime !== null);
+    const completedOutSubs = outs.filter((sub) => sub.gameTime !== null);
 
     const isStarter = (["starter", "goalkeeper"] as GameStatus[]).includes(
       player.gameStatus,
     );
-    const effectiveIns = isStarter ? completedIns + 1 : completedIns;
+    const effectiveIns = isStarter ? completedInSubs.length + 1 : completedInSubs.length;
 
-    const isCurrentlyOnField = effectiveIns > completedOuts;
+    const isCurrentlyOnField = effectiveIns > completedOutSubs.length;
 
-    if (player.gameStatus === "goalkeeper") {
-      return isCurrentlyOnField ? "onFieldGk" : "onBench";
+    if (!isCurrentlyOnField) return "onBench";
+
+    if (completedInSubs.length > 0) {
+      const lastInSub = [...completedInSubs].sort(
+        (a, b) => (b.gameTime ?? 0) - (a.gameTime ?? 0)
+      )[0];
+      if (lastInSub.gkSub) {
+        return "onFieldGk";
+      }
     }
 
-    return isCurrentlyOnField ? "onField" : "onBench";
+    if (player.gameStatus === "goalkeeper") {
+      return "onFieldGk";
+    }
+
+    return "onField";
   },
 
   // ==================== BASIC UPDATES ====================

@@ -61,7 +61,7 @@ export default function LiveGameTrackerClient() {
             await createPendingSub(
               inPlayer.playerGameId,
               outPlayer.playerGameId,
-              outPlayer.gameStatus === "goalkeeper"
+              outPlayer.gameStatus === "goalkeeper" || outPlayer.fieldStatus === "onFieldGk"
             );
           }
         } catch (err: any) {

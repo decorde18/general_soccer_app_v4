@@ -425,15 +425,38 @@ export function calculatePeriodTime(
   periodEndMs: number,
   stoppages: Stoppage[] = [],
 ): number {
-  if (!periodStartMs || !periodEndMs) return 0;
+  if (!periodStartMs || !periodEndMs || periodEndMs <= periodStartMs) return 0;
 
   const totalPeriodSeconds = Math.floor((periodEndMs - periodStartMs) / 1000);
 
-  const stoppageSeconds = stoppages.reduce((total, s) => {
-    const end = s.endTime !== null && s.endTime !== undefined ? s.endTime : totalPeriodSeconds;
-    const dur = Math.max(0, end - s.startTime);
-    return total + dur;
-  }, 0);
+  let stoppageSeconds = 0;
+  for (const s of stoppages) {
+    if (s.startTime === undefined || s.startTime === null) continue;
+
+    let sStartMs: number;
+    let sEndMs: number;
+
+    const isMs = s.startTime >= periodStartMs || s.startTime > 86400;
+
+    if (isMs) {
+      sStartMs = s.startTime;
+      sEndMs = s.endTime !== null && s.endTime !== undefined && (s.endTime >= periodStartMs || s.endTime > 86400)
+        ? s.endTime
+        : periodEndMs;
+    } else {
+      sStartMs = periodStartMs + s.startTime * 1000;
+      sEndMs = s.endTime !== null && s.endTime !== undefined
+        ? (s.endTime > 86400 ? s.endTime : periodStartMs + s.endTime * 1000)
+        : periodEndMs;
+    }
+
+    const overlapStart = Math.max(periodStartMs, sStartMs);
+    const overlapEnd = Math.min(periodEndMs, sEndMs);
+
+    if (overlapEnd > overlapStart) {
+      stoppageSeconds += Math.floor((overlapEnd - overlapStart) / 1000);
+    }
+  }
 
   return Math.max(0, totalPeriodSeconds - stoppageSeconds);
 }
@@ -474,14 +497,12 @@ export function calculateActivePlayerTimeOnField(
   normOut.forEach((t) => events.push({ type: "OUT", time: t }));
   events.sort((a, b) => a.time - b.time);
 
-  let maxTimeline = currentGameTime;
-  if (periods && periods.length > 0) {
-    periods.forEach((p) => {
-      if (p.end > maxTimeline) maxTimeline = p.end;
-    });
+  let activeTimelineLimit = currentGameTime;
+  if (activeTimelineLimit <= 0 && periods && periods.length > 0) {
+    activeTimelineLimit = periods[periods.length - 1].end;
   }
   events.forEach((ev) => {
-    if (ev.time > maxTimeline) maxTimeline = ev.time;
+    if (ev.time > activeTimelineLimit && currentGameTime === 0) activeTimelineLimit = ev.time;
   });
 
   const onFieldIntervals: { start: number; end: number }[] = [];
@@ -505,14 +526,14 @@ export function calculateActivePlayerTimeOnField(
     }
   });
 
-  if (onField && shiftStart !== null && maxTimeline > shiftStart) {
-    onFieldIntervals.push({ start: shiftStart, end: maxTimeline });
+  if (onField && shiftStart !== null && activeTimelineLimit > shiftStart) {
+    onFieldIntervals.push({ start: shiftStart, end: activeTimelineLimit });
   }
 
   const effectivePeriods =
     periods && periods.length > 0
       ? periods
-      : [{ start: 0, end: maxTimeline }];
+      : [{ start: 0, end: activeTimelineLimit }];
 
   let totalActiveSeconds = 0;
 
@@ -567,14 +588,12 @@ export function getPlayerOnFieldIntervals(
   normOut.forEach((t) => events.push({ type: "OUT", time: t }));
   events.sort((a, b) => a.time - b.time);
 
-  let maxTimeline = currentGameTime;
-  if (periods && periods.length > 0) {
-    periods.forEach((p) => {
-      if (p.end > maxTimeline) maxTimeline = p.end;
-    });
+  let activeTimelineLimit = currentGameTime;
+  if (activeTimelineLimit <= 0 && periods && periods.length > 0) {
+    activeTimelineLimit = periods[periods.length - 1].end;
   }
   events.forEach((ev) => {
-    if (ev.time > maxTimeline) maxTimeline = ev.time;
+    if (ev.time > activeTimelineLimit && currentGameTime === 0) activeTimelineLimit = ev.time;
   });
 
   const onFieldIntervals: { start: number; end: number }[] = [];
@@ -598,8 +617,8 @@ export function getPlayerOnFieldIntervals(
     }
   });
 
-  if (onField && shiftStart !== null && maxTimeline > shiftStart) {
-    onFieldIntervals.push({ start: shiftStart, end: maxTimeline });
+  if (onField && shiftStart !== null && activeTimelineLimit > shiftStart) {
+    onFieldIntervals.push({ start: shiftStart, end: activeTimelineLimit });
   }
 
   return onFieldIntervals;
@@ -631,14 +650,12 @@ export function calculateActivePlayerTimeOffField(
   normOut.forEach((t) => events.push({ type: "OUT", time: t }));
   events.sort((a, b) => a.time - b.time);
 
-  let maxTimeline = currentGameTime;
-  if (periods && periods.length > 0) {
-    periods.forEach((p) => {
-      if (p.end > maxTimeline) maxTimeline = p.end;
-    });
+  let activeTimelineLimit = currentGameTime;
+  if (activeTimelineLimit <= 0 && periods && periods.length > 0) {
+    activeTimelineLimit = periods[periods.length - 1].end;
   }
   events.forEach((ev) => {
-    if (ev.time > maxTimeline) maxTimeline = ev.time;
+    if (ev.time > activeTimelineLimit && currentGameTime === 0) activeTimelineLimit = ev.time;
   });
 
   const offFieldIntervals: { start: number; end: number }[] = [];
@@ -662,14 +679,14 @@ export function calculateActivePlayerTimeOffField(
     }
   });
 
-  if (!onField && maxTimeline > lastStateChange) {
-    offFieldIntervals.push({ start: lastStateChange, end: maxTimeline });
+  if (!onField && activeTimelineLimit > lastStateChange) {
+    offFieldIntervals.push({ start: lastStateChange, end: activeTimelineLimit });
   }
 
   const effectivePeriods =
     periods && periods.length > 0
       ? periods
-      : [{ start: 0, end: maxTimeline }];
+      : [{ start: 0, end: activeTimelineLimit }];
 
   let totalActiveOffSeconds = 0;
 

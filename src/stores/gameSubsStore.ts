@@ -582,8 +582,20 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
         );
 
         if (hasUpdatedIn || hasUpdatedOut) {
+          const matchingInSub = updatedIns.find((s) => String(s.subId) === String(subId));
+          const matchingOutSub = updatedOuts.find((s) => String(s.subId) === String(subId));
+          const isGkSub = Boolean(matchingInSub?.gkSub || matchingOutSub?.gkSub);
+
+          let newGameStatus = player.gameStatus;
+          if (hasUpdatedIn && isGkSub) {
+            newGameStatus = "goalkeeper";
+          } else if (hasUpdatedOut && isGkSub && player.gameStatus === "goalkeeper") {
+            newGameStatus = player.started ? "starter" : "dressed";
+          }
+
           const updatedPlayer: Player = {
             ...player,
+            gameStatus: newGameStatus,
             ins: updatedIns,
             outs: updatedOuts,
           };

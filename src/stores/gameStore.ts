@@ -630,8 +630,8 @@ const useGameStore = create<GameStoreState>((set, get) => {
             s.period === currentPeriod.periodNumber && s.clock_should_run === 0,
         )
         .map((e) => ({
-          startTime: e.game_time,
-          endTime: e.end_time,
+          startTime: e.start_time ? Number(e.start_time) : Number(e.game_time ?? 0),
+          endTime: e.end_time ? Number(e.end_time) : null,
         }));
 
       return calculatePeriodTime(
