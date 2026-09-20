@@ -28,6 +28,7 @@ export interface CreateGameData {
   otDuration?: number; // seconds, default 600
   soIfTied?: boolean;
   notes?: string | null;
+  gameSettings?: Record<string, any>;
   allowConflictOverride?: boolean;
 }
 
@@ -200,6 +201,19 @@ export async function createGame(data: CreateGameData) {
     startTimeObj = startTime;
   }
 
+  let parsedNotes: Record<string, any> = {};
+  if (data.notes) {
+    try {
+      parsedNotes = typeof data.notes === "string" ? JSON.parse(data.notes) : data.notes;
+    } catch {
+      parsedNotes = { rawNotes: data.notes };
+    }
+  }
+  if (data.gameSettings) {
+    parsedNotes = { ...parsedNotes, ...data.gameSettings };
+  }
+  const finalNotesStr = Object.keys(parsedNotes).length > 0 ? JSON.stringify(parsedNotes) : null;
+
   // 1. Create the game row
   const game = await prisma.games.create({
     data: {
@@ -212,12 +226,12 @@ export async function createGame(data: CreateGameData) {
       location_id: data.locationId ?? null,
       sublocation_id: data.sublocationId ?? null,
       game_type: data.gameType ?? "league",
-      default_reg_periods: data.defaultRegPeriods ?? 2,
-      period_duration: data.periodDuration ?? 2400,
-      ot_if_tied: data.otIfTied ?? false,
-      ot_duration: data.otDuration ?? 600,
-      so_if_tied: data.soIfTied ?? true,
-      notes: data.notes ?? null,
+      default_reg_periods: data.gameSettings?.periodCount ?? data.defaultRegPeriods ?? 2,
+      period_duration: data.gameSettings?.periodDuration ?? data.periodDuration ?? 2400,
+      ot_if_tied: data.gameSettings?.hasOvertime ?? data.otIfTied ?? false,
+      ot_duration: data.gameSettings?.overtimeDuration ?? data.otDuration ?? 600,
+      so_if_tied: data.gameSettings?.hasShootout ?? data.soIfTied ?? true,
+      notes: finalNotesStr,
       status: "scheduled",
     },
   });
@@ -584,14 +598,35 @@ export async function getSchedulerOptions() {
       location: c.location,
     })),
     teams: teamsList,
-    leagueNodes: terminalNodes.map((node) => ({
-      id: node.id,
-      leagueId: node.league_id,
-      leagueName: node.leagues?.name || "League",
-      nodeName: node.name,
-      isTournament: node.leagues?.is_tournament || false,
-      displayName: buildHierarchyTitle(node),
-    })),
+    leagueNodes: terminalNodes.map((node) => {
+      let defaultGameSettings: any = null;
+      if (node.leagues?.match_rules) {
+        try {
+          defaultGameSettings = typeof node.leagues.match_rules === "string" 
+            ? JSON.parse(node.leagues.match_rules) 
+            : node.leagues.match_rules;
+        } catch {}
+      }
+      if (!defaultGameSettings && (node.leagues?.reg_periods || node.leagues?.period_duration)) {
+        defaultGameSettings = {
+          periodCount: node.leagues.reg_periods || 2,
+          periodDuration: (node.leagues.period_duration || 40) * 60,
+          hasOvertime: Boolean(node.leagues.ot_if_tied),
+          overtimeDuration: (node.leagues.ot_duration || 10) * 60,
+          hasShootout: node.leagues.so_if_tied !== false,
+        };
+      }
+
+      return {
+        id: node.id,
+        leagueId: node.league_id,
+        leagueName: node.leagues?.name || "League",
+        nodeName: node.name,
+        isTournament: node.leagues?.is_tournament || false,
+        displayName: buildHierarchyTitle(node),
+        defaultGameSettings: defaultGameSettings || undefined,
+      };
+    }),
     enrollments: enrollments.map((e) => ({
       teamSeasonId: e.team_season_id,
       leagueNodeId: e.league_node_seasons.league_node_id,

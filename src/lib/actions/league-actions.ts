@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import { getTeamSeasonRecords } from "@/lib/data/queries";
 import { leagueSchema } from "@/lib/validations/schemas";
 import { normalizeGender } from "@/lib/utils/gender";
+import type { GameSettings } from "@/types/game";
 
 export async function createLeague(data: Record<string, string>) {
   await verifyAdmin();
@@ -56,6 +57,28 @@ export async function updateLeague(id: unknown, data: Record<string, string>) {
   });
 
   revalidatePath("/leagues");
+}
+
+export async function updateLeagueMatchRules(leagueId: number, rules: GameSettings) {
+  await verifyAdmin();
+  const numId = Number(leagueId);
+  if (!numId) throw new Error("ID required");
+
+  await prisma.leagues.update({
+    where: { id: numId },
+    data: {
+      match_rules: JSON.stringify(rules),
+      reg_periods: rules.periodCount,
+      period_duration: rules.periodDuration ? Math.round(rules.periodDuration / 60) : undefined,
+      ot_if_tied: rules.hasOvertime,
+      ot_duration: rules.overtimeDuration ? Math.round(rules.overtimeDuration / 60) : undefined,
+      so_if_tied: rules.hasShootout,
+    },
+  });
+
+  revalidatePath("/leagues");
+  revalidatePath("/dashboard");
+  return { success: true };
 }
 
 export async function deleteLeague(id: unknown) {

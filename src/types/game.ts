@@ -26,6 +26,8 @@ export type ReentryRule =
   | "one_per_game"
   | "no_reentry";
 
+export type TiebreakerMode = "none" | "overtime_then_pk" | "pk_only";
+
 export interface GameSettings {
   playersOnField: number;
   periodCount: number;
@@ -33,9 +35,12 @@ export interface GameSettings {
   hasOvertime: boolean;
   overtimePeriods: number;
   overtimeDuration: number; // seconds
+  goldenGoal?: boolean;
+  tiebreakerMode?: TiebreakerMode;
   hasShootout: boolean;
   clockDirection: string; // e.g. "up" | "down"
   reentryRule: ReentryRule;
+  maxTotalSubsPerTeam?: number;
   maxSubWindowsPerGame?: number;
   maxSubWindowsPerHalf?: number;
   autoStopClockOnMajorEvent?: boolean;

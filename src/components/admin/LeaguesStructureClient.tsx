@@ -17,6 +17,7 @@ import {
   Calendar,
   AlertCircle,
   ExternalLink,
+  Sliders,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -29,7 +30,7 @@ import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import ClubTeamSelect from "@/components/ui/ClubTeamSelect";
 import { Loader2 } from "lucide-react";
-import { createLeague } from "@/lib/actions/league-actions";
+import { createLeague, updateLeagueMatchRules } from "@/lib/actions/league-actions";
 import {
   createLeagueNode,
   updateLeagueNode,
@@ -39,6 +40,8 @@ import {
   createTeamEnrollment,
   deleteTeamEnrollment,
 } from "@/lib/actions/teamEnrollment-actions";
+import MatchSettingsAccordions from "@/components/game/MatchSettingsAccordions";
+import type { GameSettings } from "@/types/game";
 
 interface LeaguesStructureClientProps {
   leaguesData: { label: string; value: string }[];
@@ -54,6 +57,7 @@ interface LeaguesStructureClientProps {
     seasonName?: string;
   }[];
   seasonsData: { label: string; value: string }[];
+  leaguesRecords?: any[];
   leagueNodesRecords: any[];
   teamEnrollmentsRecords: any[];
   defaultSeasonId?: string;
@@ -76,6 +80,7 @@ export default function LeaguesStructureClient({
   leagueNodesOptionsData,
   teamSeasonsData,
   seasonsData,
+  leaguesRecords,
   leagueNodesRecords,
   teamEnrollmentsRecords,
   defaultSeasonId,
@@ -89,6 +94,65 @@ export default function LeaguesStructureClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
+
+  // Default Match Rules Modal states
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+  const [rulesLeagueId, setRulesLeagueId] = useState<number | null>(null);
+  const [rulesLeagueName, setRulesLeagueName] = useState<string>("");
+  const [leagueRules, setLeagueRules] = useState<GameSettings>({
+    playersOnField: 11,
+    periodCount: 2,
+    periodDuration: 2400,
+    hasOvertime: false,
+    overtimePeriods: 2,
+    overtimeDuration: 600,
+    hasShootout: true,
+    clockDirection: "up",
+    reentryRule: "unlimited",
+  });
+  const [isSavingRules, setIsSavingRules] = useState(false);
+
+  const handleOpenDefaultRules = (leagueId: number) => {
+    const lRecord = leaguesRecords?.find((l) => l.id === leagueId);
+    setRulesLeagueId(leagueId);
+    setRulesLeagueName(lRecord?.name || "League");
+
+    let parsedRules: GameSettings = {
+      playersOnField: 11,
+      periodCount: 2,
+      periodDuration: 2400,
+      hasOvertime: false,
+      overtimePeriods: 2,
+      overtimeDuration: 600,
+      hasShootout: true,
+      clockDirection: "up",
+      reentryRule: "unlimited",
+    };
+
+    if (lRecord?.matchRules) {
+      try {
+        const json = typeof lRecord.matchRules === "string" ? JSON.parse(lRecord.matchRules) : lRecord.matchRules;
+        parsedRules = { ...parsedRules, ...json };
+      } catch {}
+    }
+    setLeagueRules(parsedRules);
+    setIsRulesModalOpen(true);
+  };
+
+  const handleSaveDefaultRules = async () => {
+    if (!rulesLeagueId) return;
+    setIsSavingRules(true);
+    try {
+      await updateLeagueMatchRules(rulesLeagueId, leagueRules);
+      toast.success("Default match rules saved for competition!");
+      setIsRulesModalOpen(false);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save match rules.");
+    } finally {
+      setIsSavingRules(false);
+    }
+  };
 
   // Dialog & Modal states
   const [isAddNodeOpen, setIsAddNodeOpen] = useState(false);
@@ -990,22 +1054,35 @@ export default function LeaguesStructureClient({
                 {/* Operations Trigger Buttons */}
                 <div className='flex gap-2 flex-wrap'>
                   {effectiveLeagueId && (
-                    <Link
-                      href={`/leagues/${effectiveLeagueId}`}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                    >
-                      <Button
-                        variant='primary'
-                        size='sm'
-                        className='flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-none shadow-sm'
-                        title='View public standings & schedules'
+                    <>
+                      <Link
+                        href={`/leagues/${effectiveLeagueId}`}
+                        target='_blank'
+                        rel='noopener noreferrer'
                       >
-                        <Trophy size={14} />
-                        <span>View Standings</span>
-                        <ExternalLink size={12} className='opacity-80' />
+                        <Button
+                          variant='primary'
+                          size='sm'
+                          className='flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-none shadow-sm'
+                          title='View public standings & schedules'
+                        >
+                          <Trophy size={14} />
+                          <span>View Standings</span>
+                          <ExternalLink size={12} className='opacity-80' />
+                        </Button>
+                      </Link>
+
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        className='flex items-center gap-1.5 border-primary/40 text-primary hover:bg-primary/10 font-bold'
+                        onClick={() => handleOpenDefaultRules(effectiveLeagueId)}
+                        title='Configure default match settings for all matches in this competition'
+                      >
+                        <Sliders size={14} />
+                        <span>Default Rules</span>
                       </Button>
-                    </Link>
+                    </>
                   )}
 
                   <Button
@@ -1578,6 +1655,41 @@ export default function LeaguesStructureClient({
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* MODAL: DEFAULT LEAGUE MATCH RULES */}
+      <Modal
+        isOpen={isRulesModalOpen}
+        onClose={() => setIsRulesModalOpen(false)}
+        title={`Default Match Rules — ${rulesLeagueName}`}
+      >
+        <div className='space-y-4 max-h-[75vh] overflow-y-auto p-1'>
+          <p className='text-xs text-muted'>
+            Set the default period count, durations, overtime, shootout, and substitution rules for all matches created under this league or tournament.
+          </p>
+          <MatchSettingsAccordions
+            settings={leagueRules}
+            onChange={setLeagueRules}
+            defaultExpandedAll={true}
+          />
+          <div className='flex justify-end gap-2 border-t border-border pt-4 mt-4'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => setIsRulesModalOpen(false)}
+              disabled={isSavingRules}
+            >
+              Cancel
+            </Button>
+            <Button
+              type='button'
+              onClick={handleSaveDefaultRules}
+              disabled={isSavingRules}
+            >
+              {isSavingRules ? "Saving Rules..." : "Save Default Rules"}
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* DIALOG: DELETE NODE CONFIRM */}

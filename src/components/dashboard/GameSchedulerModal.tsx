@@ -34,6 +34,8 @@ import Toggle from "@/components/ui/Toggle";
 import DateSelect from "@/components/ui/DateSelect";
 import TabbedPanel, { TabItem } from "@/components/ui/TabbedPanel";
 import InlineEntityModal, { InlineEntityType } from "@/components/dashboard/InlineEntityModal";
+import MatchSettingsAccordions from "@/components/game/MatchSettingsAccordions";
+import type { GameSettings } from "@/types/game";
 
 interface TeamOption {
   teamSeasonId: number;
@@ -63,6 +65,7 @@ interface LeagueNodeOption {
   nodeName: string;
   isTournament: boolean;
   displayName: string;
+  defaultGameSettings?: Partial<GameSettings>;
 }
 
 interface EnrollmentOption {
@@ -149,12 +152,17 @@ export default function GameSchedulerModal({
   const [sublocationId, setSublocationId] = useState<number | "">("");
 
   // Game Rules Override State
-  const [playersOnField, setPlayersOnField] = useState<number>(11);
-  const [defaultRegPeriods, setDefaultRegPeriods] = useState<number>(2);
-  const [periodDurationMins, setPeriodDurationMins] = useState<number | string>(35);
-  const [otIfTied, setOtIfTied] = useState<boolean>(false);
-  const [otDurationMins, setOtDurationMins] = useState<number>(10);
-  const [soIfTied, setSoIfTied] = useState<boolean>(true);
+  const [gameRules, setGameRules] = useState<GameSettings>({
+    playersOnField: 11,
+    periodCount: 2,
+    periodDuration: 2400,
+    hasOvertime: false,
+    overtimePeriods: 2,
+    overtimeDuration: 600,
+    hasShootout: true,
+    clockDirection: "up",
+    reentryRule: "unlimited",
+  });
 
   // Warnings and UI State
   const [warningMsg, setWarningMsg] = useState<string | null>(null);
@@ -188,11 +196,14 @@ export default function GameSchedulerModal({
     if (myTeamSeasonId) {
       getLatestGameDefaults(Number(myTeamSeasonId)).then((defaults) => {
         if (defaults) {
-          if (defaults.playersOnField) setPlayersOnField(defaults.playersOnField);
-          if (defaults.periodDuration) setPeriodDurationMins(defaults.periodDuration);
           if (defaults.gameType) setGameType(defaults.gameType as any);
           if (defaults.locationId) setLocationId(defaults.locationId);
           if (defaults.sublocationId) setSublocationId(defaults.sublocationId);
+          setGameRules((prev) => ({
+            ...prev,
+            playersOnField: defaults.playersOnField || prev.playersOnField,
+            periodDuration: defaults.periodDuration ? defaults.periodDuration * 60 : prev.periodDuration,
+          }));
         }
       });
     }
@@ -206,6 +217,19 @@ export default function GameSchedulerModal({
       prev.map((slot) => ({ ...slot, countsForStandings: isDefaultOn }))
     );
   }, [gameType]);
+
+  // Auto-populate default match settings when primary competition node changes
+  useEffect(() => {
+    if (primaryLeagueNodeId) {
+      const selectedNode = leagueNodes.find((n) => n.id === Number(primaryLeagueNodeId));
+      if (selectedNode?.defaultGameSettings) {
+        setGameRules((prev) => ({
+          ...prev,
+          ...selectedNode.defaultGameSettings,
+        }));
+      }
+    }
+  }, [primaryLeagueNodeId, leagueNodes]);
 
   // Filter clubs based on search input
   const filteredClubs = useMemo(() => {
@@ -419,12 +443,12 @@ export default function GameSchedulerModal({
           sublocationId: sublocationId ? Number(sublocationId) : null,
           gameType,
           competitionNodes: compNodes,
-          defaultRegPeriods: Number(defaultRegPeriods),
-          periodDuration: Number(periodDurationMins) * 60, // convert to seconds
-          otIfTied,
-          otDuration: Number(otDurationMins) * 60,
-          soIfTied,
-          notes: JSON.stringify({ playersOnField: Number(playersOnField) }),
+          defaultRegPeriods: gameRules.periodCount,
+          periodDuration: gameRules.periodDuration,
+          otIfTied: gameRules.hasOvertime,
+          otDuration: gameRules.overtimeDuration,
+          soIfTied: gameRules.hasShootout,
+          gameSettings: gameRules,
           allowConflictOverride: override,
         });
 
@@ -978,99 +1002,11 @@ export default function GameSchedulerModal({
           {/* TAB 4: GAME RULES & SETTINGS OVERRIDES */}
           {activeTab === "rules" && (
             <div className="space-y-3 pt-1">
-              <div className="p-3 bg-background/50 border border-border/80 rounded-2xl space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
-                  <Sliders size={14} className="text-primary" />
-                  <span>Game Rules & Duration Overrides</span>
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Match Format */}
-                  <div className="space-y-1">
-                    <span className="text-xs font-bold text-muted">Match Format</span>
-                    <Select
-                      value={String(playersOnField)}
-                      onChange={(e: any) => setPlayersOnField(Number(e.target.value))}
-                      options={[
-                        { value: "11", label: "11v11 (Full Field)" },
-                        { value: "9", label: "9v9 (Intermediate)" },
-                        { value: "8", label: "8v8" },
-                        { value: "7", label: "7v7 (Small Sided)" },
-                        { value: "5", label: "5v5 (Futsal / Indoor)" },
-                      ]}
-                      width="full"
-                    />
-                  </div>
-
-                  {/* Number of periods */}
-                  <Input
-                    type="number"
-                    label="Regular Periods"
-                    value={defaultRegPeriods}
-                    min={1}
-                    max={4}
-                    onChange={(e: any) => setDefaultRegPeriods(parseInt(e.target.value) || 2)}
-                  />
-
-                  {/* Period duration in mins */}
-                  <div>
-                    <label className="text-xs font-bold text-text mb-1.5 block">Time Per Half (Mins)</label>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {[25, 30, 35, 40, 45].map((mins) => (
-                        <button
-                          key={mins}
-                          type="button"
-                          onClick={() => setPeriodDurationMins(mins)}
-                          className={`px-2 py-1 rounded text-xs font-semibold border transition-all ${
-                            Number(periodDurationMins) === mins
-                              ? "bg-primary text-white border-primary"
-                              : "bg-background border-border text-muted hover:text-text"
-                          }`}
-                        >
-                          {mins}m
-                        </button>
-                      ))}
-                    </div>
-                    <Input
-                      type="number"
-                      value={periodDurationMins}
-                      min={5}
-                      max={90}
-                      onChange={(e: any) => setPeriodDurationMins(e.target.value)}
-                      onBlur={() => {
-                        const parsed = parseInt(String(periodDurationMins));
-                        if (isNaN(parsed) || parsed < 5) setPeriodDurationMins(35);
-                      }}
-                      placeholder="e.g. 35"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center pt-1">
-                  <Checkbox
-                    label="Overtime if tied at full-time"
-                    checked={otIfTied}
-                    onChange={(e: any) => setOtIfTied(e.target.checked)}
-                  />
-
-                  {otIfTied && (
-                    <Input
-                      type="number"
-                      label="OT Period Duration (Mins)"
-                      value={otDurationMins}
-                      min={1}
-                      max={30}
-                      onChange={(e: any) => setOtDurationMins(parseInt(e.target.value) || 10)}
-                    />
-                  )}
-
-                  <Checkbox
-                    label="Penalty Shootout if tied"
-                    checked={soIfTied}
-                    onChange={(e: any) => setSoIfTied(e.target.checked)}
-                  />
-                </div>
-              </div>
+              <MatchSettingsAccordions
+                settings={gameRules}
+                onChange={setGameRules}
+                defaultExpandedAll={false}
+              />
             </div>
           )}
         </div>

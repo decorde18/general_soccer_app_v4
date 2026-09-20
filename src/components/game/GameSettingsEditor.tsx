@@ -1,38 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
-import { Settings, Clock, RotateCcw, Shield, Zap, CheckCircle, AlertCircle, Users } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { Settings, CheckCircle, AlertCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
-import Toggle from "@/components/ui/Toggle";
 import useGameStore from "@/stores/gameStore";
 import type { GameSettings } from "@/types/game";
 import { updateGameSettings } from "@/lib/actions/gameSettings-actions";
+import MatchSettingsAccordions from "./MatchSettingsAccordions";
 import { toast } from "sonner";
 
 interface GameSettingsEditorProps {
   gameId: number;
   teamSeasonId: number;
 }
-
-const PERIOD_DURATION_OPTIONS = [
-  { value: 1500, label: "25 min" },
-  { value: 1800, label: "30 min" },
-  { value: 2100, label: "35 min" },
-  { value: 2400, label: "40 min" },
-  { value: 2700, label: "45 min" },
-];
-
-const OT_DURATION_OPTIONS = [
-  { value: 300, label: "5 min" },
-  { value: 600, label: "10 min" },
-  { value: 900, label: "15 min" },
-];
-
-const PERIOD_COUNT_OPTIONS = [
-  { value: 1, label: "1 Period" },
-  { value: 2, label: "2 Halves" },
-];
 
 export default function GameSettingsEditor({
   gameId,
@@ -49,7 +29,7 @@ export default function GameSettingsEditor({
     game?.settings ?? {
       playersOnField: 11,
       periodCount: 2,
-      periodDuration: 2100,
+      periodDuration: 2400,
       hasOvertime: false,
       overtimePeriods: 2,
       overtimeDuration: 600,
@@ -59,13 +39,10 @@ export default function GameSettingsEditor({
     }
   );
 
-  const [customMinsText, setCustomMinsText] = useState<string>("");
-
   // Synchronize local settings whenever store's game settings load or change
   useEffect(() => {
     if (game?.settings) {
       setLocalSettings(game.settings);
-      setCustomMinsText(String(Math.round(game.settings.periodDuration / 60)));
     }
   }, [game?.settings]);
 
@@ -79,11 +56,17 @@ export default function GameSettingsEditor({
           periodCount: localSettings.periodCount,
           periodDuration: localSettings.periodDuration,
           hasOvertime: localSettings.hasOvertime,
+          overtimePeriods: localSettings.overtimePeriods,
           overtimeDuration: localSettings.overtimeDuration,
+          goldenGoal: localSettings.goldenGoal,
+          tiebreakerMode: localSettings.tiebreakerMode,
           hasShootout: localSettings.hasShootout,
+          clockDirection: localSettings.clockDirection,
           reentryRule: localSettings.reentryRule,
+          maxTotalSubsPerTeam: localSettings.maxTotalSubsPerTeam,
           maxSubWindowsPerGame: localSettings.maxSubWindowsPerGame,
           maxSubWindowsPerHalf: localSettings.maxSubWindowsPerHalf,
+          autoStopClockOnMajorEvent: localSettings.autoStopClockOnMajorEvent,
         });
 
         // Sync to store
@@ -109,332 +92,58 @@ export default function GameSettingsEditor({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Settings size={20} />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-text">Match Settings</h2>
-          <p className="text-xs text-muted">Configure the rules for this specific game</p>
-        </div>
-      </div>
-
-      {/* Period Format */}
-      <Card variant="default" padding="md">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/60">
-          <Clock size={16} className="text-primary" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted">Period Format</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Period Count */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Settings size={20} />
+          </div>
           <div>
-            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-              Number of Periods
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {PERIOD_COUNT_OPTIONS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => setLocalSettings((s) => ({ ...s, periodCount: value }))}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${
-                    localSettings.periodCount === value
-                      ? "bg-primary text-white border-primary shadow-sm"
-                      : "bg-background border-border text-muted hover:text-text hover:border-primary/50"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            <h2 className="text-lg font-bold text-text">Match Rules & Settings</h2>
+            <p className="text-xs text-muted">Configure period formats, tiebreakers, substitution rules & roster limits</p>
+          </div>
+        </div>
+
+        {/* Global Action Bar */}
+        <div className="flex items-center gap-3">
+          {isDirty && !isPending && (
+            <div className="flex items-center gap-1 text-xs text-warning font-semibold animate-pulse">
+              <AlertCircle size={14} />
+              Unsaved changes
             </div>
-          </div>
+          )}
 
-          {/* Period Duration */}
-          <div>
-            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-              Period Duration
-            </label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {PERIOD_DURATION_OPTIONS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => {
-                    setLocalSettings((s) => ({ ...s, periodDuration: value }));
-                    setCustomMinsText(String(value / 60));
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${
-                    localSettings.periodDuration === value
-                      ? "bg-primary text-white border-primary shadow-sm"
-                      : "bg-background border-border text-muted hover:text-text hover:border-primary/50"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+          {isDirty && (
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => setLocalSettings(game.settings)}
+              disabled={isPending}
+            >
+              Reset
+            </Button>
+          )}
 
-            {/* Manual Entry Input */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted font-medium">Custom Minutes:</span>
-              <input
-                type="number"
-                min={5}
-                max={90}
-                value={customMinsText}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setCustomMinsText(raw);
-                  const parsed = parseInt(raw);
-                  if (!isNaN(parsed) && parsed > 0) {
-                    setLocalSettings((s) => ({ ...s, periodDuration: parsed * 60 }));
-                  }
-                }}
-                onBlur={() => {
-                  const parsed = parseInt(customMinsText);
-                  if (isNaN(parsed) || parsed < 5) {
-                    const fallback = Math.round(localSettings.periodDuration / 60) || 35;
-                    setCustomMinsText(String(fallback));
-                    setLocalSettings((s) => ({ ...s, periodDuration: fallback * 60 }));
-                  }
-                }}
-                className="w-20 px-2.5 py-1 rounded-md text-sm font-semibold bg-background border border-border text-text focus:outline-none focus:ring-2 focus:ring-primary/50"
-                placeholder="35"
-              />
-              <span className="text-xs text-muted font-medium">mins per half</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Summary */}
-        <div className="mt-4 rounded-lg bg-primary/5 border border-primary/20 px-4 py-2.5 text-sm text-primary font-semibold">
-          {localSettings.periodCount} × {localSettings.periodDuration / 60} min ={" "}
-          {(localSettings.periodCount * localSettings.periodDuration) / 60} min total regulation
-        </div>
-      </Card>
-
-      {/* Overtime */}
-      <Card variant="default" padding="md">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/60">
-          <div className="flex items-center gap-2">
-            <RotateCcw size={16} className="text-accent" />
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted">Overtime</h3>
-          </div>
-          <Toggle
-            checked={localSettings.hasOvertime}
-            onChange={(val: boolean) => setLocalSettings((s) => ({ ...s, hasOvertime: val }))}
-          />
-        </div>
-
-        {localSettings.hasOvertime && (
-          <div>
-            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-              OT Period Duration
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {OT_DURATION_OPTIONS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => setLocalSettings((s) => ({ ...s, overtimeDuration: value }))}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${
-                    localSettings.overtimeDuration === value
-                      ? "bg-accent text-white border-accent shadow-sm"
-                      : "bg-background border-border text-muted hover:text-text hover:border-accent/50"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!localSettings.hasOvertime && (
-          <p className="text-sm text-muted/70">Overtime is disabled — the game ends at full time.</p>
-        )}
-      </Card>
-
-      {/* Shootout */}
-      <Card variant="default" padding="md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap size={16} className="text-warning" />
-            <div>
-              <h3 className="text-sm font-bold text-text">Penalty Shootout</h3>
-              <p className="text-xs text-muted mt-0.5">
-                {localSettings.hasOvertime
-                  ? "If still tied after overtime, go to penalties"
-                  : "If tied at full time, go to penalties"}
-              </p>
-            </div>
-          </div>
-          <Toggle
-            checked={localSettings.hasShootout}
-            onChange={(val: boolean) => setLocalSettings((s) => ({ ...s, hasShootout: val }))}
-          />
-        </div>
-      </Card>
-
-      {/* Roster & Match Format Size */}
-      <Card variant="default" padding="md">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/60">
-          <Shield size={16} className="text-success" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted">Match Format & Field Size</h3>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-            Players on Field (Starter Limit)
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {[5, 7, 8, 9, 11].map((n) => (
-              <button
-                key={n}
-                onClick={() => setLocalSettings((s) => ({ ...s, playersOnField: n }))}
-                className={`px-3.5 py-2 rounded-lg text-sm font-bold border transition-all ${
-                  localSettings.playersOnField === n
-                    ? "bg-success text-white border-success shadow-sm scale-105"
-                    : "bg-background border-border text-muted hover:text-text hover:border-success/50"
-                }`}
-              >
-                {n}v{n} ({n} Starters)
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
-
-      {/* Substitution Re-Entry Rules */}
-      <Card variant="default" padding="md">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/60">
-          <Users size={16} className="text-primary" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted">Substitution Re-Entry Rules</h3>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-            Re-Entry Policy
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {[
-              { value: "unlimited", label: "Unlimited Re-Entry", desc: "Youth standard — players can re-enter freely" },
-              { value: "one_per_half", label: "1 Re-Entry Per Half", desc: "NFHS / US Club — max 1 re-entry per half/period" },
-              { value: "ncaa_college", label: "NCAA College Rules", desc: "No 1st half re-entry; 1 2nd half re-entry; no OT re-entry" },
-              { value: "one_per_game", label: "1 Re-Entry Per Game", desc: "Max 1 re-entry for the entire match" },
-              { value: "no_reentry", label: "No Re-Entry", desc: "IFAB / FIFA adult rules — once subbed out, cannot return" },
-            ].map(({ value, label, desc }) => (
-              <button
-                key={value}
-                onClick={() => setLocalSettings((s) => ({ ...s, reentryRule: value as any }))}
-                className={`p-3 rounded-lg text-left border transition-all ${
-                  (localSettings.reentryRule || "unlimited") === value
-                    ? "bg-primary/10 border-primary text-text shadow-xs"
-                    : "bg-background border-border text-muted hover:border-primary/50"
-                }`}
-              >
-                <div className="text-xs font-bold text-text">{label}</div>
-                <div className="text-[10px] text-muted mt-0.5">{desc}</div>
-              </button>
-            ))}
-          </div>
-
-          {/* Sub Windows Limits */}
-          <div className="mt-6 pt-4 border-t border-border/40 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Max Windows Per Game */}
-            <div>
-              <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-                Max Sub Windows Per Game
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: undefined, label: "Unlimited" },
-                  { value: 3, label: "3 (IFAB Standard)" },
-                  { value: 4, label: "4 Windows" },
-                  { value: 5, label: "5 Windows" },
-                ].map(({ value, label }) => (
-                  <button
-                    key={String(value)}
-                    type="button"
-                    onClick={() => setLocalSettings((s) => ({ ...s, maxSubWindowsPerGame: value }))}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                      localSettings.maxSubWindowsPerGame === value
-                        ? "bg-primary text-white border-primary shadow-xs"
-                        : "bg-background border-border text-muted hover:text-text hover:border-primary/50"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] text-muted mt-1">
-                Limits total in-game substitution occasions (halftime subs do not count as a window).
-              </p>
-            </div>
-
-            {/* Max Windows Per Half */}
-            <div>
-              <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-                Max Sub Windows Per Half
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: undefined, label: "Unlimited" },
-                  { value: 1, label: "1 Window / Half" },
-                  { value: 2, label: "2 Windows / Half" },
-                  { value: 3, label: "3 Windows / Half" },
-                ].map(({ value, label }) => (
-                  <button
-                    key={String(value)}
-                    type="button"
-                    onClick={() => setLocalSettings((s) => ({ ...s, maxSubWindowsPerHalf: value }))}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                      localSettings.maxSubWindowsPerHalf === value
-                        ? "bg-primary text-white border-primary shadow-xs"
-                        : "bg-background border-border text-muted hover:text-text hover:border-primary/50"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] text-muted mt-1">
-                Limits substitution occasions within each individual period/half.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Save Controls */}
-      <div className="flex items-center gap-3 pt-2">
-        <Button
-          variant={isDirty ? "primary" : "outline"}
-          onClick={handleSave}
-          disabled={!isDirty || isPending}
-          className="flex items-center gap-2 px-6"
-        >
-          {isPending ? (
-            <span className="animate-spin h-4 w-4 border-2 border-white/40 border-t-white rounded-full" />
-          ) : saved ? (
-            <CheckCircle size={16} />
-          ) : null}
-          {isPending ? "Saving..." : saved ? "Saved!" : "Save Settings"}
-        </Button>
-
-        {isDirty && !isPending && (
-          <div className="flex items-center gap-1 text-xs text-warning font-semibold">
-            <AlertCircle size={14} />
-            Unsaved changes
-          </div>
-        )}
-
-        {isDirty && (
           <Button
-            variant="outline"
-            size="xs"
-            onClick={() => setLocalSettings(game.settings)}
-            disabled={isPending}
+            variant={isDirty ? "primary" : "outline"}
+            onClick={handleSave}
+            disabled={!isDirty || isPending}
+            className="flex items-center gap-2 px-5"
           >
-            Reset
+            {isPending ? (
+              <span className="animate-spin h-4 w-4 border-2 border-white/40 border-t-white rounded-full" />
+            ) : saved ? (
+              <CheckCircle size={16} />
+            ) : null}
+            {isPending ? "Saving..." : saved ? "Saved!" : "Save Rules"}
           </Button>
-        )}
+        </div>
       </div>
+
+      {/* Collapsible Category Accordions Component */}
+      <MatchSettingsAccordions
+        settings={localSettings}
+        onChange={setLocalSettings}
+      />
     </div>
   );
 }

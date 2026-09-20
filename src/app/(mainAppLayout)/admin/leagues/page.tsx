@@ -54,6 +54,7 @@ export default async function AdminLeaguesPage() {
         leagueNodesOptionsData={leagueNodesOptionsData}
         teamSeasonsData={teamSeasonsData}
         seasonsData={seasonsData}
+        leaguesRecords={leagues}
         leagueNodesRecords={leagueNodes}
         teamEnrollmentsRecords={teamEnrollments}
         defaultSeasonId={defaultSeasonId}

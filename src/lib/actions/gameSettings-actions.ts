@@ -9,9 +9,14 @@ interface GameSettingsInput {
   periodCount: number;
   periodDuration: number;
   hasOvertime: boolean;
+  overtimePeriods?: number;
   overtimeDuration: number;
+  goldenGoal?: boolean;
+  tiebreakerMode?: string;
   hasShootout: boolean;
+  clockDirection?: string;
   reentryRule?: string;
+  maxTotalSubsPerTeam?: number;
   maxSubWindowsPerGame?: number;
   maxSubWindowsPerHalf?: number;
   autoStopClockOnMajorEvent?: boolean;
@@ -54,14 +59,29 @@ export async function updateGameSettings(
   if (settings.reentryRule) {
     notesObj.reentryRule = settings.reentryRule;
   }
-  if (typeof settings.maxSubWindowsPerGame === "number") {
+  if (typeof settings.maxTotalSubsPerTeam === "number" || settings.maxTotalSubsPerTeam === undefined) {
+    notesObj.maxTotalSubsPerTeam = settings.maxTotalSubsPerTeam;
+  }
+  if (typeof settings.maxSubWindowsPerGame === "number" || settings.maxSubWindowsPerGame === undefined) {
     notesObj.maxSubWindowsPerGame = settings.maxSubWindowsPerGame;
   }
-  if (typeof settings.maxSubWindowsPerHalf === "number") {
+  if (typeof settings.maxSubWindowsPerHalf === "number" || settings.maxSubWindowsPerHalf === undefined) {
     notesObj.maxSubWindowsPerHalf = settings.maxSubWindowsPerHalf;
   }
   if (typeof settings.autoStopClockOnMajorEvent === "boolean") {
     notesObj.autoStopClockOnMajorEvent = settings.autoStopClockOnMajorEvent;
+  }
+  if (typeof settings.goldenGoal === "boolean") {
+    notesObj.goldenGoal = settings.goldenGoal;
+  }
+  if (settings.tiebreakerMode) {
+    notesObj.tiebreakerMode = settings.tiebreakerMode;
+  }
+  if (typeof settings.overtimePeriods === "number") {
+    notesObj.overtimePeriods = settings.overtimePeriods;
+  }
+  if (settings.clockDirection) {
+    notesObj.clockDirection = settings.clockDirection;
   }
 
   // 3. Update the game columns

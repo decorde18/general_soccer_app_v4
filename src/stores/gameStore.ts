@@ -344,13 +344,72 @@ const useGameStore = create<GameStoreState>((set, get) => {
           periodDuration: dbGame.period_duration !== undefined && dbGame.period_duration !== null
             ? Number(dbGame.period_duration)
             : DEFAULT_GAME_SETTINGS.periodDuration,
-          hasOvertime: dbGame.ot_if_tied ?? (otConfig?.ot_if_tied === 1),
+          overtimePeriods: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && typeof parsed.overtimePeriods === "number") {
+                  return parsed.overtimePeriods;
+                }
+              } catch {}
+            }
+            return otConfig?.max_ot_periods ? parseInt(String(otConfig.max_ot_periods)) : 2;
+          })(),
           overtimeDuration: dbGame.ot_duration !== undefined && dbGame.ot_duration !== null
             ? Number(dbGame.ot_duration)
             : (otConfig?.default_ot_1_minutes
                 ? parseInt(String(otConfig.default_ot_1_minutes)) * 60
                 : DEFAULT_GAME_SETTINGS.overtimeDuration),
+          goldenGoal: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && typeof parsed.goldenGoal === "boolean") {
+                  return parsed.goldenGoal;
+                }
+              } catch {}
+            }
+            return false;
+          })(),
+          tiebreakerMode: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && parsed.tiebreakerMode) {
+                  return parsed.tiebreakerMode;
+                }
+              } catch {}
+            }
+            return (dbGame.ot_if_tied ?? (otConfig?.ot_if_tied === 1))
+              ? "overtime_then_pk"
+              : (dbGame.so_if_tied ?? (otConfig?.so_if_tied === 1))
+              ? "pk_only"
+              : "none";
+          })(),
           hasShootout: dbGame.so_if_tied ?? (otConfig?.so_if_tied === 1),
+          clockDirection: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && parsed.clockDirection) {
+                  return parsed.clockDirection;
+                }
+              } catch {}
+            }
+            return "up";
+          })(),
           reentryRule: (() => {
             if (dbGame.reentry_rule) return dbGame.reentry_rule;
             if (dbGame.notes) {
@@ -370,6 +429,20 @@ const useGameStore = create<GameStoreState>((set, get) => {
               }
             }
             return DEFAULT_GAME_SETTINGS.reentryRule;
+          })(),
+          maxTotalSubsPerTeam: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && typeof parsed.maxTotalSubsPerTeam === "number") {
+                  return parsed.maxTotalSubsPerTeam;
+                }
+              } catch {}
+            }
+            return undefined;
           })(),
           maxSubWindowsPerGame: (() => {
             if (dbGame.notes) {
