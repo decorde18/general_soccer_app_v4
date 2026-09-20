@@ -82,6 +82,8 @@ export default function GameSettingsEditor({
           overtimeDuration: localSettings.overtimeDuration,
           hasShootout: localSettings.hasShootout,
           reentryRule: localSettings.reentryRule,
+          maxSubWindowsPerGame: localSettings.maxSubWindowsPerGame,
+          maxSubWindowsPerHalf: localSettings.maxSubWindowsPerHalf,
         });
 
         // Sync to store
@@ -330,6 +332,71 @@ export default function GameSettingsEditor({
                 <div className="text-[10px] text-muted mt-0.5">{desc}</div>
               </button>
             ))}
+          </div>
+
+          {/* Sub Windows Limits */}
+          <div className="mt-6 pt-4 border-t border-border/40 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Max Windows Per Game */}
+            <div>
+              <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+                Max Sub Windows Per Game
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: undefined, label: "Unlimited" },
+                  { value: 3, label: "3 (IFAB Standard)" },
+                  { value: 4, label: "4 Windows" },
+                  { value: 5, label: "5 Windows" },
+                ].map(({ value, label }) => (
+                  <button
+                    key={String(value)}
+                    type="button"
+                    onClick={() => setLocalSettings((s) => ({ ...s, maxSubWindowsPerGame: value }))}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                      localSettings.maxSubWindowsPerGame === value
+                        ? "bg-primary text-white border-primary shadow-xs"
+                        : "bg-background border-border text-muted hover:text-text hover:border-primary/50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted mt-1">
+                Limits total in-game substitution occasions (halftime subs do not count as a window).
+              </p>
+            </div>
+
+            {/* Max Windows Per Half */}
+            <div>
+              <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+                Max Sub Windows Per Half
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: undefined, label: "Unlimited" },
+                  { value: 1, label: "1 Window / Half" },
+                  { value: 2, label: "2 Windows / Half" },
+                  { value: 3, label: "3 Windows / Half" },
+                ].map(({ value, label }) => (
+                  <button
+                    key={String(value)}
+                    type="button"
+                    onClick={() => setLocalSettings((s) => ({ ...s, maxSubWindowsPerHalf: value }))}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                      localSettings.maxSubWindowsPerHalf === value
+                        ? "bg-primary text-white border-primary shadow-xs"
+                        : "bg-background border-border text-muted hover:text-text hover:border-primary/50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted mt-1">
+                Limits substitution occasions within each individual period/half.
+              </p>
+            </div>
           </div>
         </div>
       </Card>

@@ -98,7 +98,7 @@ export default function LivePlayerTable({
             const isRedCarded = stats.redCards > 0 || stats.yellowCards >= 2;
 
             const eligibility = isBench
-              ? checkPlayerSubEligibility(player, gameSettings, currentPeriod, overridePlayerIds)
+              ? checkPlayerSubEligibility(player, gameSettings, currentPeriod, overridePlayerIds, gameStore.game?.gameSubs || [])
               : { isEligible: true, reason: undefined };
 
             const isExhausted = isBench && !eligibility.isEligible;

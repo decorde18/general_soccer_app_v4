@@ -36,6 +36,8 @@ export interface GameSettings {
   hasShootout: boolean;
   clockDirection: string; // e.g. "up" | "down"
   reentryRule: ReentryRule;
+  maxSubWindowsPerGame?: number;
+  maxSubWindowsPerHalf?: number;
   autoStopClockOnMajorEvent?: boolean;
   clockRuleProfile?: "NFHS" | "USSF";
 }
@@ -121,6 +123,7 @@ export interface GameSub {
   out_player_id: number | string | null;
   sub_time: number | null;
   gk_sub: 0 | 1;
+  period?: number;
   [key: string]: unknown;
 }
 

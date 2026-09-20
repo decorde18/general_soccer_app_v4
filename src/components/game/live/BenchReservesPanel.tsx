@@ -8,6 +8,7 @@ import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
 import useGameStore from "@/stores/gameStore";
 import LivePlayerTable from "./LivePlayerTable";
 import RefOverrideModal from "./RefOverrideModal";
+import { calculateSubWindowsUsed } from "@/lib/utils/subRules";
 import { toast } from "sonner";
 
 interface BenchReservesPanelProps {
@@ -131,6 +132,19 @@ export default function BenchReservesPanel(props: BenchReservesPanelProps) {
     props.setSubInId?.(String(player.id));
   };
 
+  const settings = storeGame?.settings;
+  const gameSubs = storeGame?.gameSubs || [];
+  const currentPeriod = (storeGame?.currentPeriodIndex ?? 0) + 1;
+  const windowsGameUsed = calculateSubWindowsUsed(gameSubs);
+  const windowsHalfUsed = calculateSubWindowsUsed(gameSubs, currentPeriod);
+  const maxGame = settings?.maxSubWindowsPerGame;
+  const maxHalf = settings?.maxSubWindowsPerHalf;
+  const hasSubWindowLimits = Boolean(maxGame || maxHalf);
+  const isMaxedOut = Boolean(
+    (maxGame && windowsGameUsed >= maxGame) ||
+    (maxHalf && windowsHalfUsed >= maxHalf)
+  );
+
   return (
     <Card variant="outlined" padding="sm" className="flex-1 min-h-0 flex flex-col bg-surface shadow-xs rounded-xl overflow-hidden p-2.5">
       <div className="shrink-0 flex items-center justify-between border-b border-border/40 pb-1 px-1">
@@ -138,6 +152,18 @@ export default function BenchReservesPanel(props: BenchReservesPanelProps) {
           <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
           <span>Game Changers (Bench Reserves) ({gameChangers.length})</span>
         </h3>
+        {hasSubWindowLimits && (
+          <span
+            className={`text-[9px] font-bold px-2 py-0.5 rounded border font-mono ${
+              isMaxedOut
+                ? "bg-rose-500/15 text-rose-500 border-rose-500/30 font-black animate-pulse"
+                : "bg-primary/10 text-primary border-primary/20"
+            }`}
+            title="Substitution Windows Used (Game • Half)"
+          >
+            Windows: {windowsGameUsed}{maxGame ? `/${maxGame}` : ""} G • {windowsHalfUsed}{maxHalf ? `/${maxHalf}` : ""} H
+          </span>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto mt-1.5">

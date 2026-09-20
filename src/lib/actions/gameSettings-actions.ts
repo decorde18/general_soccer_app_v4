@@ -12,6 +12,8 @@ interface GameSettingsInput {
   overtimeDuration: number;
   hasShootout: boolean;
   reentryRule?: string;
+  maxSubWindowsPerGame?: number;
+  maxSubWindowsPerHalf?: number;
   autoStopClockOnMajorEvent?: boolean;
 }
 
@@ -51,6 +53,12 @@ export async function updateGameSettings(
   }
   if (settings.reentryRule) {
     notesObj.reentryRule = settings.reentryRule;
+  }
+  if (typeof settings.maxSubWindowsPerGame === "number") {
+    notesObj.maxSubWindowsPerGame = settings.maxSubWindowsPerGame;
+  }
+  if (typeof settings.maxSubWindowsPerHalf === "number") {
+    notesObj.maxSubWindowsPerHalf = settings.maxSubWindowsPerHalf;
   }
   if (typeof settings.autoStopClockOnMajorEvent === "boolean") {
     notesObj.autoStopClockOnMajorEvent = settings.autoStopClockOnMajorEvent;

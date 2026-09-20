@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { checkPlayerSubEligibility } from "../subRules";
+import { checkPlayerSubEligibility, calculateSubWindowsUsed } from "../subRules";
 import { Player } from "@/stores/gamePlayersStore";
 import { GameSettings } from "@/types/game";
 
@@ -103,5 +103,54 @@ describe("checkPlayerSubEligibility", () => {
 
     const res = checkPlayerSubEligibility(player, { ...baseSettings, reentryRule: "no_reentry" }, 1, overrides);
     expect(res.isEligible).toBe(true);
+  });
+
+  it("correctly groups multiple subs at the same stoppage timestamp into 1 sub window", () => {
+    const mockSubs = [
+      { period: 1, sub_time: 600 },
+      { period: 1, sub_time: 600 }, // same window
+      { period: 1, sub_time: 1200 }, // window 2
+      { period: 2, sub_time: 0 }, // halftime (excluded)
+      { period: 2, sub_time: 1800 }, // window 3
+    ];
+
+    expect(calculateSubWindowsUsed(mockSubs)).toBe(3);
+    expect(calculateSubWindowsUsed(mockSubs, 1)).toBe(2);
+    expect(calculateSubWindowsUsed(mockSubs, 2)).toBe(1);
+  });
+
+  it("enforces maxSubWindowsPerGame and maxSubWindowsPerHalf limits", () => {
+    const player = createMockPlayer({ outs: [] });
+    const mockSubsP1 = [
+      { period: 1, sub_time: 300 },
+      { period: 1, sub_time: 600 },
+    ];
+
+    // Max 2 windows per half: 2 used in period 1 -> blocked for a 3rd window in period 1
+    const halfRes = checkPlayerSubEligibility(
+      player,
+      { ...baseSettings, maxSubWindowsPerHalf: 2 },
+      1,
+      new Set(),
+      mockSubsP1
+    );
+    expect(halfRes.isEligible).toBe(false);
+    expect(halfRes.reason).toContain("Max Sub Windows Reached for Half");
+
+    // Max 3 windows per game: 3 total used across P1 and P2 -> blocked in P2
+    const mockSubsTotal = [
+      { period: 1, sub_time: 300 },
+      { period: 1, sub_time: 600 },
+      { period: 2, sub_time: 1500 },
+    ];
+    const gameRes = checkPlayerSubEligibility(
+      player,
+      { ...baseSettings, maxSubWindowsPerGame: 3 },
+      2,
+      new Set(),
+      mockSubsTotal
+    );
+    expect(gameRes.isEligible).toBe(false);
+    expect(gameRes.reason).toContain("Max Sub Windows Reached for Game");
   });
 });

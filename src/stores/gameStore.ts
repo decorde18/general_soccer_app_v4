@@ -371,6 +371,34 @@ const useGameStore = create<GameStoreState>((set, get) => {
             }
             return DEFAULT_GAME_SETTINGS.reentryRule;
           })(),
+          maxSubWindowsPerGame: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && typeof parsed.maxSubWindowsPerGame === "number") {
+                  return parsed.maxSubWindowsPerGame;
+                }
+              } catch {}
+            }
+            return undefined;
+          })(),
+          maxSubWindowsPerHalf: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && typeof parsed.maxSubWindowsPerHalf === "number") {
+                  return parsed.maxSubWindowsPerHalf;
+                }
+              } catch {}
+            }
+            return undefined;
+          })(),
           autoStopClockOnMajorEvent: (() => {
             if (dbGame.notes) {
               try {

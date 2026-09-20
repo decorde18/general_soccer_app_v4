@@ -1,27 +1,75 @@
 import { Player } from "@/stores/gamePlayersStore";
 import { GameSettings } from "@/types/game";
 
+export interface SubWindowMinimal {
+  period?: number;
+  sub_time: number | null;
+  [key: string]: any;
+}
+
 export interface SubEligibilityResult {
   isEligible: boolean;
   reason?: string;
   isInitialEntry: boolean;
   outsCountTotal: number;
   outsCountPeriod: number;
+  subWindowsCountTotal?: number;
+  subWindowsCountPeriod?: number;
+}
+
+/**
+ * Calculates the number of distinct substitution windows (occasions) used.
+ * Multiple substitutions occurring at the exact same stoppage/timestamp (period + sub_time)
+ * count as 1 single window. Halftime/pre-game subs (sub_time === 0) are excluded.
+ */
+export function calculateSubWindowsUsed(
+  teamSubs: SubWindowMinimal[] = [],
+  targetPeriod?: number
+): number {
+  if (!teamSubs || teamSubs.length === 0) return 0;
+
+  const validSubs = teamSubs.filter((s) => {
+    if (s.sub_time === null || s.sub_time === undefined) return false;
+    // Exclude halftime/pre-game subs (sub_time === 0)
+    if (s.sub_time === 0) return false;
+    const subP = s.period ?? 1;
+    if (targetPeriod !== undefined && subP !== targetPeriod) return false;
+    return true;
+  });
+
+  const uniqueWindows = new Set<string>();
+  validSubs.forEach((s) => {
+    const subP = s.period ?? 1;
+    uniqueWindows.add(`${subP}-${s.sub_time}`);
+  });
+
+  return uniqueWindows.size;
 }
 
 export function checkPlayerSubEligibility(
   player: Player,
   settings?: GameSettings,
   currentPeriodNumber: number = 1,
-  overridePlayerIds: Set<string | number> = new Set()
+  overridePlayerIds: Set<string | number> = new Set(),
+  teamSubs?: SubWindowMinimal[]
 ): SubEligibilityResult {
+  const outs = player.outs || [];
+  const outsCountTotal = outs.length;
+  const outsCountPeriod = outs.filter((o) => o.period === currentPeriodNumber).length;
+  const isInitialEntry = outsCountTotal === 0;
+
+  const subWindowsCountTotal = calculateSubWindowsUsed(teamSubs || []);
+  const subWindowsCountPeriod = calculateSubWindowsUsed(teamSubs || [], currentPeriodNumber);
+
   // If player has been granted a referee/injury override, they are eligible
   if (overridePlayerIds.has(player.id) || overridePlayerIds.has(player.playerGameId)) {
     return {
       isEligible: true,
-      isInitialEntry: (player.outs || []).length === 0,
-      outsCountTotal: (player.outs || []).length,
-      outsCountPeriod: (player.outs || []).filter((o) => o.period === currentPeriodNumber).length,
+      isInitialEntry,
+      outsCountTotal,
+      outsCountPeriod,
+      subWindowsCountTotal,
+      subWindowsCountPeriod,
     };
   }
 
@@ -32,23 +80,50 @@ export function checkPlayerSubEligibility(
       isEligible: false,
       reason: "Sent Off (Red Card)",
       isInitialEntry: false,
-      outsCountTotal: (player.outs || []).length,
+      outsCountTotal,
       outsCountPeriod: 0,
+      subWindowsCountTotal,
+      subWindowsCountPeriod,
     };
   }
 
-  const outs = player.outs || [];
-  const outsCountTotal = outs.length;
-  const outsCountPeriod = outs.filter((o) => o.period === currentPeriodNumber).length;
-  const isInitialEntry = outsCountTotal === 0;
+  // SUB WINDOW LIMIT CHECKS (Per Game & Per Half)
+  const maxWindowsHalf = settings?.maxSubWindowsPerHalf;
+  const maxWindowsGame = settings?.maxSubWindowsPerGame;
 
-  // Initial Entry into the game is ALWAYS allowed for dressed bench players (unless red-carded)
+  if (maxWindowsHalf && maxWindowsHalf > 0 && subWindowsCountPeriod >= maxWindowsHalf) {
+    return {
+      isEligible: false,
+      reason: `Max Sub Windows Reached for Half (${subWindowsCountPeriod}/${maxWindowsHalf} Used)`,
+      isInitialEntry,
+      outsCountTotal,
+      outsCountPeriod,
+      subWindowsCountTotal,
+      subWindowsCountPeriod,
+    };
+  }
+
+  if (maxWindowsGame && maxWindowsGame > 0 && subWindowsCountTotal >= maxWindowsGame) {
+    return {
+      isEligible: false,
+      reason: `Max Sub Windows Reached for Game (${subWindowsCountTotal}/${maxWindowsGame} Used)`,
+      isInitialEntry,
+      outsCountTotal,
+      outsCountPeriod,
+      subWindowsCountTotal,
+      subWindowsCountPeriod,
+    };
+  }
+
+  // Initial Entry into the game is allowed for dressed bench players (unless red-carded or windows maxed out)
   if (isInitialEntry) {
     return {
       isEligible: true,
       isInitialEntry: true,
       outsCountTotal: 0,
       outsCountPeriod: 0,
+      subWindowsCountTotal,
+      subWindowsCountPeriod,
     };
   }
 
@@ -63,6 +138,8 @@ export function checkPlayerSubEligibility(
         isInitialEntry: false,
         outsCountTotal,
         outsCountPeriod,
+        subWindowsCountTotal,
+        subWindowsCountPeriod,
       };
 
     case "one_per_half":
@@ -74,6 +151,8 @@ export function checkPlayerSubEligibility(
           isInitialEntry: false,
           outsCountTotal,
           outsCountPeriod,
+          subWindowsCountTotal,
+          subWindowsCountPeriod,
         };
       }
       break;
@@ -87,6 +166,8 @@ export function checkPlayerSubEligibility(
           isInitialEntry: false,
           outsCountTotal,
           outsCountPeriod,
+          subWindowsCountTotal,
+          subWindowsCountPeriod,
         };
       }
       break;
@@ -103,6 +184,8 @@ export function checkPlayerSubEligibility(
           isInitialEntry: false,
           outsCountTotal,
           outsCountPeriod,
+          subWindowsCountTotal,
+          subWindowsCountPeriod,
         };
       }
       if (currentPeriodNumber === 2 && outsCountPeriod >= 2) {
@@ -112,6 +195,8 @@ export function checkPlayerSubEligibility(
           isInitialEntry: false,
           outsCountTotal,
           outsCountPeriod,
+          subWindowsCountTotal,
+          subWindowsCountPeriod,
         };
       }
       if (currentPeriodNumber > 2 && outsCountPeriod > 0) {
@@ -121,6 +206,8 @@ export function checkPlayerSubEligibility(
           isInitialEntry: false,
           outsCountTotal,
           outsCountPeriod,
+          subWindowsCountTotal,
+          subWindowsCountPeriod,
         };
       }
       break;
@@ -135,5 +222,7 @@ export function checkPlayerSubEligibility(
     isInitialEntry: false,
     outsCountTotal,
     outsCountPeriod,
+    subWindowsCountTotal,
+    subWindowsCountPeriod,
   };
 }

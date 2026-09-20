@@ -261,7 +261,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   // Player IN Options with Exhausted Filtering & Rule Override
   const subInOptions = benchPlayers
     .map((p) => {
-      const eligibility = checkPlayerSubEligibility(p, game?.settings, currentPeriodNum);
+      const eligibility = checkPlayerSubEligibility(p, game?.settings, currentPeriodNum, new Set(), game?.gameSubs || []);
       return { player: p, eligibility };
     })
     .filter(({ eligibility }) => allowExhaustedOverride || eligibility.isEligible)
