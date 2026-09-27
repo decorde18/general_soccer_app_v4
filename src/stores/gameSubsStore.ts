@@ -25,13 +25,14 @@ export interface GameSub {
   sub_time: number | null;
   period: number;
   gk_sub: 0 | 1;
+  is_swap: 0 | 1;
 }
 
 /** Partial update payload for updatePendingSub */
 export type GameSubUpdate = Partial<
   Pick<
     GameSub,
-    "in_player_id" | "out_player_id" | "sub_time" | "gk_sub" | "period"
+    "in_player_id" | "out_player_id" | "sub_time" | "gk_sub" | "is_swap" | "period"
   >
 >;
 
@@ -44,6 +45,7 @@ export interface PendingSub {
   inPlayerId: string | number | null;
   outPlayerId: string | number | null;
   gkSub: boolean;
+  isSwap?: boolean;
   period?: number;
   isComplete: boolean;
 }
@@ -76,6 +78,7 @@ export interface GameSubsState {
     inPlayerId?: string | number | null,
     outPlayerId?: string | number | null,
     isGkSub?: boolean,
+    isSwap?: boolean,
   ) => Promise<GameSub | null>;
   updatePendingSub: (
     subId: string | number,

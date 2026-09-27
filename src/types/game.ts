@@ -128,6 +128,7 @@ export interface GameSub {
   out_player_id: number | string | null;
   sub_time: number | null;
   gk_sub: 0 | 1;
+  is_swap?: 0 | 1;
   period?: number;
   [key: string]: unknown;
 }

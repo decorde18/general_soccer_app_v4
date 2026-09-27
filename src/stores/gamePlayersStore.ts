@@ -30,6 +30,7 @@ export interface PlayerSubEntry {
   gameTime: number | null;
   subId: string | number;
   gkSub: boolean;
+  isSwap?: boolean;
   period?: number;
 }
 
@@ -152,6 +153,7 @@ interface GameSubRow {
   out_player_id: string | number | null;
   sub_time: number | null;
   gk_sub: 0 | 1;
+  is_swap?: 0 | 1;
   period?: number;
 }
 
@@ -223,7 +225,7 @@ export interface GamePlayersState {
   ) => Promise<void>;
   swapGoalkeeperRole: (
     newGkPlayerId: string | number
-  ) => void;
+  ) => Promise<void>;
 
   // Sub status management
   updateAllSubStatuses: (gameId: string | number | undefined) => Promise<void>;
@@ -414,6 +416,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             gameTime: sub.sub_time,
             subId: sub.id,
             gkSub: sub.gk_sub === 1,
+            isSwap: sub.is_swap === 1,
             period: sub.period,
           }));
 
@@ -423,6 +426,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             gameTime: sub.sub_time,
             subId: sub.id,
             gkSub: sub.gk_sub === 1,
+            isSwap: sub.is_swap === 1,
             period: sub.period,
           }));
 
@@ -438,6 +442,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             gameTime: null,
             subId: playerPendingIn.id,
             gkSub: playerPendingIn.gk_sub === 1,
+            isSwap: playerPendingIn.is_swap === 1,
             period: playerPendingIn.period,
           });
         }
@@ -446,6 +451,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             gameTime: null,
             subId: playerPendingOut.id,
             gkSub: playerPendingOut.gk_sub === 1,
+            isSwap: playerPendingOut.is_swap === 1,
             period: playerPendingOut.period,
           });
         }
@@ -922,33 +928,86 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
   },
 
   /**
-   * Swap Goalkeeper role to a specified player
+   * Swap Goalkeeper role to a specified player on the field
    */
-  swapGoalkeeperRole: (newGkPlayerId) => {
-    set((state) => {
-      const updatedPlayers = state.players.map((player) => {
-        const isTarget = player.id === newGkPlayerId || player.playerGameId === newGkPlayerId;
-        const isCurrentGk = player.gameStatus === "goalkeeper" || player.fieldStatus === "onFieldGk";
+  swapGoalkeeperRole: async (newGkPlayerId) => {
+    const gameStore = useGameStore.getState();
+    const gameId = gameStore.game?.game_id;
+    const currentTime = typeof gameStore.getGameTime === "function" ? gameStore.getGameTime() : 0;
+    const currentPeriod = gameStore.getCurrentPeriodNumber() || 1;
+    const players = get().players;
 
-        if (isTarget) {
-          return {
-            ...player,
-            gameStatus: "goalkeeper" as GameStatus,
-            fieldStatus: "onFieldGk" as FieldStatus,
-          };
-        }
-        if (isCurrentGk) {
-          return {
-            ...player,
-            gameStatus: "starter" as GameStatus,
-            fieldStatus: "onField" as FieldStatus,
-          };
-        }
-        return player;
+    const targetPlayer = players.find(
+      (p) => String(p.id) === String(newGkPlayerId) || String(p.playerGameId) === String(newGkPlayerId)
+    );
+
+    if (!targetPlayer) return;
+
+    const { default: useGamePlayerTimeStore } = await import("./gamePlayerTimeStore");
+    const gamePlayerTimeStore = useGamePlayerTimeStore.getState();
+
+    const currentGk = players.find((p) =>
+      gamePlayerTimeStore.isPlayerCurrentlyGoalkeeper(p)
+    );
+
+    if (currentGk && String(currentGk.id) === String(targetPlayer.id)) {
+      return;
+    }
+
+    const outPlayerId = currentGk ? (currentGk.playerGameId || currentGk.id) : null;
+    const inPlayerId = targetPlayer.playerGameId || targetPlayer.id;
+
+    try {
+      const subRecord = await apiFetch<GameSubRow>("game_subs", "POST", {
+        game_id: gameId,
+        in_player_id: inPlayerId,
+        out_player_id: outPlayerId,
+        sub_time: currentTime,
+        period: currentPeriod,
+        gk_sub: 1,
+        is_swap: 1,
       });
 
-      return { players: updatedPlayers };
-    });
+      const subId = subRecord?.id || `swap_${Date.now()}`;
+
+      set((state) => {
+        const updatedPlayers = state.players.map((player) => {
+          const isTarget = String(player.id) === String(targetPlayer.id);
+          const isPreviousGk = currentGk && String(player.id) === String(currentGk.id);
+
+          if (isTarget) {
+            const newIns = [
+              ...(player.ins || []),
+              { gameTime: currentTime, subId, gkSub: true, isSwap: true },
+            ];
+            return {
+              ...player,
+              ins: newIns,
+              fieldStatus: "onFieldGk" as FieldStatus,
+            };
+          }
+
+          if (isPreviousGk) {
+            const newOuts = [
+              ...(player.outs || []),
+              { gameTime: currentTime, subId, gkSub: true, isSwap: true },
+            ];
+            return {
+              ...player,
+              outs: newOuts,
+              fieldStatus: "onField" as FieldStatus,
+            };
+          }
+
+          return player;
+        });
+
+        return { players: updatedPlayers };
+      });
+    } catch (err) {
+      console.error("Failed to persist goalkeeper position swap:", err);
+      throw err;
+    }
   },
 
   /**

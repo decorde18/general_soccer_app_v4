@@ -91,4 +91,24 @@ describe("Unified Game Clock & Player Time Calculations", () => {
     );
     expect(benchTimeAtHalftime).toBe(2400);
   });
+
+  it("ignores position swaps (is_swap = true) when calculating on-field playing time", () => {
+    const isStarter = true;
+    const periods = [{ start: 0, end: 2400 }];
+    // Player has a position swap sub event at t=900 (e.g., swapping to GK)
+    const subsIn = [{ gameTime: 900, is_swap: true }];
+    const subsOut = [{ gameTime: 900, is_swap: true }];
+
+    const playingTimeAt2400 = calculateActivePlayerTimeOnField(
+      isStarter,
+      subsIn,
+      subsOut,
+      periods,
+      [],
+      2400
+    );
+
+    // Swap is ignored for field shifts, so total playing time remains continuous (2400s)
+    expect(playingTimeAt2400).toBe(2400);
+  });
 });

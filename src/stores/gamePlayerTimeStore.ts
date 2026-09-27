@@ -281,31 +281,118 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     const periods = getGamePeriodIntervals(game, currentGameTime);
     const stoppages = getGameStoppageIntervals(game);
 
-    const ins = normalizeSubs(player.ins);
-    const outs = normalizeSubs(player.outs);
-    const gkIns = ins.filter((s) => s.gkSub);
-    const gkOuts = outs.filter((s) => s.gkSub);
+    const players = useGamePlayersStore
+      .getState()
+      .players.filter((p) => String(p.teamSeasonId) === String(player.teamSeasonId));
 
-    const startedAsGK = player.gameStatus === "goalkeeper";
+    const startingGk = players.find((p) => p.gameStatus === "goalkeeper");
 
-    return calculateActivePlayerTimeOnField(
-      startedAsGK,
-      gkIns,
-      gkOuts,
-      periods,
-      stoppages,
-      currentGameTime
-    );
+    const gkEvents: { subTime: number; inPlayerId: string | number }[] = [];
+    const seenSubIds = new Set<string | number>();
+
+    players.forEach((p) => {
+      (p.ins || []).forEach((s) => {
+        if (s.gkSub && s.gameTime !== null && s.gameTime !== undefined && !seenSubIds.has(String(s.subId))) {
+          seenSubIds.add(String(s.subId));
+          gkEvents.push({
+            subTime: Number(s.gameTime),
+            inPlayerId: p.playerGameId || p.id,
+          });
+        }
+      });
+    });
+
+    gkEvents.sort((a, b) => a.subTime - b.subTime);
+
+    let activeTimelineLimit = currentGameTime;
+    if (activeTimelineLimit <= 0 && periods && periods.length > 0) {
+      activeTimelineLimit = periods[periods.length - 1].end;
+    }
+
+    const playerGkStints: { start: number; end: number }[] = [];
+    let currentGkId = startingGk ? (startingGk.playerGameId || startingGk.id) : null;
+    let stintStart = 0;
+
+    gkEvents.forEach((ev) => {
+      if (ev.subTime > stintStart) {
+        if (currentGkId && (String(currentGkId) === String(player.playerGameId) || String(currentGkId) === String(player.id))) {
+          playerGkStints.push({ start: stintStart, end: ev.subTime });
+        }
+      }
+      currentGkId = ev.inPlayerId;
+      stintStart = ev.subTime;
+    });
+
+    if (currentGkId && (String(currentGkId) === String(player.playerGameId) || String(currentGkId) === String(player.id))) {
+      if (activeTimelineLimit > stintStart) {
+        playerGkStints.push({ start: stintStart, end: activeTimelineLimit });
+      }
+    }
+
+    const effectivePeriods =
+      periods && periods.length > 0 ? periods : [{ start: 0, end: activeTimelineLimit }];
+
+    let totalGkActiveSeconds = 0;
+
+    for (const inv of playerGkStints) {
+      for (const p of effectivePeriods) {
+        const overlapStart = Math.max(inv.start, p.start);
+        const overlapEnd = Math.min(inv.end, p.end);
+
+        if (overlapEnd > overlapStart) {
+          let activeSecs = overlapEnd - overlapStart;
+
+          for (const s of stoppages) {
+            const sEnd = s.endTime !== null && s.endTime !== undefined ? s.endTime : overlapEnd;
+            const sOverlapStart = Math.max(overlapStart, s.startTime);
+            const sOverlapEnd = Math.min(overlapEnd, sEnd);
+
+            if (sOverlapEnd > sOverlapStart) {
+              activeSecs -= sOverlapEnd - sOverlapStart;
+            }
+          }
+
+          totalGkActiveSeconds += Math.max(0, activeSecs);
+        }
+      }
+    }
+
+    return Math.round(totalGkActiveSeconds);
   },
 
   isPlayerCurrentlyGoalkeeper: (player) => {
     if (!player || !isPlayerOnFieldNow(player)) return false;
 
-    if (player.gameStatus === "goalkeeper") return true;
+    const players = useGamePlayersStore
+      .getState()
+      .players.filter((p) => String(p.teamSeasonId) === String(player.teamSeasonId));
 
-    const ins = normalizeSubs(player.ins);
-    const lastIn = ins[ins.length - 1];
-    return lastIn?.gkSub === true;
+    const allGkSubs: { subTime: number; inPlayerId: string | number }[] = [];
+    const seenSubIds = new Set<string | number>();
+
+    players.forEach((p) => {
+      (p.ins || []).forEach((s) => {
+        if (s.gkSub && s.gameTime !== null && s.gameTime !== undefined && !seenSubIds.has(String(s.subId))) {
+          seenSubIds.add(String(s.subId));
+          allGkSubs.push({
+            subTime: Number(s.gameTime),
+            inPlayerId: p.playerGameId || p.id,
+          });
+        }
+      });
+    });
+
+    allGkSubs.sort((a, b) => b.subTime - a.subTime);
+
+    if (allGkSubs.length > 0) {
+      const latestGkSub = allGkSubs[0];
+      return (
+        String(latestGkSub.inPlayerId) === String(player.playerGameId) ||
+        String(latestGkSub.inPlayerId) === String(player.id)
+      );
+    }
+
+    return player.gameStatus === "goalkeeper";
   },
 
   calculateAllGoalkeeperTime: (gameId, currentGameTime) => {

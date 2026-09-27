@@ -483,11 +483,13 @@ export function calculateActivePlayerTimeOnField(
   currentGameTime: number = 0
 ): number {
   const normIn = (subsIn || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
     .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
     .filter((t) => t >= 0)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
     .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
     .filter((t) => t >= 0)
     .sort((a, b) => a - b);
@@ -574,11 +576,13 @@ export function getPlayerOnFieldIntervals(
   currentGameTime: number = 0
 ): { start: number; end: number }[] {
   const normIn = (subsIn || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
     .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
     .filter((t) => t >= 0)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
     .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
     .filter((t) => t >= 0)
     .sort((a, b) => a - b);
@@ -636,11 +640,13 @@ export function calculateActivePlayerTimeOffField(
   currentGameTime: number = 0
 ): number {
   const normIn = (subsIn || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
     .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
     .filter((t) => t >= 0)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
     .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
     .filter((t) => t >= 0)
     .sort((a, b) => a - b);
@@ -729,11 +735,13 @@ export function calculateRecentPlayerTimeOffField(
   currentGameTime: number = 0
 ): number {
   const normIn = (subsIn || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
     .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
     .filter((t) => t >= 0)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
     .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
     .filter((t) => t >= 0)
     .sort((a, b) => a - b);

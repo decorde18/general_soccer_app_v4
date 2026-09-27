@@ -20285,6 +20285,7 @@ export namespace Prisma {
     sub_time: number | null
     period: number | null
     gk_sub: boolean | null
+    is_swap: boolean | null
     created_at: Date | null
     modified_at: Date | null
   }
@@ -20297,6 +20298,7 @@ export namespace Prisma {
     sub_time: number | null
     period: number | null
     gk_sub: boolean | null
+    is_swap: boolean | null
     created_at: Date | null
     modified_at: Date | null
   }
@@ -20309,6 +20311,7 @@ export namespace Prisma {
     sub_time: number
     period: number
     gk_sub: number
+    is_swap: number
     created_at: number
     modified_at: number
     _all: number
@@ -20341,6 +20344,7 @@ export namespace Prisma {
     sub_time?: true
     period?: true
     gk_sub?: true
+    is_swap?: true
     created_at?: true
     modified_at?: true
   }
@@ -20353,6 +20357,7 @@ export namespace Prisma {
     sub_time?: true
     period?: true
     gk_sub?: true
+    is_swap?: true
     created_at?: true
     modified_at?: true
   }
@@ -20365,6 +20370,7 @@ export namespace Prisma {
     sub_time?: true
     period?: true
     gk_sub?: true
+    is_swap?: true
     created_at?: true
     modified_at?: true
     _all?: true
@@ -20464,6 +20470,7 @@ export namespace Prisma {
     sub_time: number | null
     period: number
     gk_sub: boolean | null
+    is_swap: boolean | null
     created_at: Date | null
     modified_at: Date | null
     _count: Game_subsCountAggregateOutputType | null
@@ -20495,6 +20502,7 @@ export namespace Prisma {
     sub_time?: boolean
     period?: boolean
     gk_sub?: boolean
+    is_swap?: boolean
     created_at?: boolean
     modified_at?: boolean
     player_games_game_subs_in_player_idToplayer_games?: boolean | game_subs$player_games_game_subs_in_player_idToplayer_gamesArgs<ExtArgs>
@@ -20511,6 +20519,7 @@ export namespace Prisma {
     sub_time?: boolean
     period?: boolean
     gk_sub?: boolean
+    is_swap?: boolean
     created_at?: boolean
     modified_at?: boolean
   }
@@ -20536,6 +20545,7 @@ export namespace Prisma {
       sub_time: number | null
       period: number
       gk_sub: boolean | null
+      is_swap: boolean | null
       created_at: Date | null
       modified_at: Date | null
     }, ExtArgs["result"]["game_subs"]>
@@ -20917,6 +20927,7 @@ export namespace Prisma {
     readonly sub_time: FieldRef<"game_subs", 'Int'>
     readonly period: FieldRef<"game_subs", 'Int'>
     readonly gk_sub: FieldRef<"game_subs", 'Boolean'>
+    readonly is_swap: FieldRef<"game_subs", 'Boolean'>
     readonly created_at: FieldRef<"game_subs", 'DateTime'>
     readonly modified_at: FieldRef<"game_subs", 'DateTime'>
   }
@@ -44518,6 +44529,7 @@ export namespace Prisma {
     sub_time: 'sub_time',
     period: 'period',
     gk_sub: 'gk_sub',
+    is_swap: 'is_swap',
     created_at: 'created_at',
     modified_at: 'modified_at'
   };
@@ -46314,6 +46326,7 @@ export namespace Prisma {
     sub_time?: IntNullableFilter<"game_subs"> | number | null
     period?: IntFilter<"game_subs"> | number
     gk_sub?: BoolNullableFilter<"game_subs"> | boolean | null
+    is_swap?: BoolNullableFilter<"game_subs"> | boolean | null
     created_at?: DateTimeNullableFilter<"game_subs"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"game_subs"> | Date | string | null
     player_games_game_subs_in_player_idToplayer_games?: XOR<Player_gamesNullableRelationFilter, player_gamesWhereInput> | null
@@ -46329,6 +46342,7 @@ export namespace Prisma {
     sub_time?: SortOrderInput | SortOrder
     period?: SortOrder
     gk_sub?: SortOrderInput | SortOrder
+    is_swap?: SortOrderInput | SortOrder
     created_at?: SortOrderInput | SortOrder
     modified_at?: SortOrderInput | SortOrder
     player_games_game_subs_in_player_idToplayer_games?: player_gamesOrderByWithRelationInput
@@ -46347,6 +46361,7 @@ export namespace Prisma {
     sub_time?: IntNullableFilter<"game_subs"> | number | null
     period?: IntFilter<"game_subs"> | number
     gk_sub?: BoolNullableFilter<"game_subs"> | boolean | null
+    is_swap?: BoolNullableFilter<"game_subs"> | boolean | null
     created_at?: DateTimeNullableFilter<"game_subs"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"game_subs"> | Date | string | null
     player_games_game_subs_in_player_idToplayer_games?: XOR<Player_gamesNullableRelationFilter, player_gamesWhereInput> | null
@@ -46362,6 +46377,7 @@ export namespace Prisma {
     sub_time?: SortOrderInput | SortOrder
     period?: SortOrder
     gk_sub?: SortOrderInput | SortOrder
+    is_swap?: SortOrderInput | SortOrder
     created_at?: SortOrderInput | SortOrder
     modified_at?: SortOrderInput | SortOrder
     _count?: game_subsCountOrderByAggregateInput
@@ -46382,6 +46398,7 @@ export namespace Prisma {
     sub_time?: IntNullableWithAggregatesFilter<"game_subs"> | number | null
     period?: IntWithAggregatesFilter<"game_subs"> | number
     gk_sub?: BoolNullableWithAggregatesFilter<"game_subs"> | boolean | null
+    is_swap?: BoolNullableWithAggregatesFilter<"game_subs"> | boolean | null
     created_at?: DateTimeNullableWithAggregatesFilter<"game_subs"> | Date | string | null
     modified_at?: DateTimeNullableWithAggregatesFilter<"game_subs"> | Date | string | null
   }
@@ -49607,6 +49624,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     player_games_game_subs_in_player_idToplayer_games?: player_gamesCreateNestedOneWithoutGame_subs_game_subs_in_player_idToplayer_gamesInput
@@ -49622,6 +49640,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -49630,6 +49649,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     player_games_game_subs_in_player_idToplayer_games?: player_gamesUpdateOneWithoutGame_subs_game_subs_in_player_idToplayer_gamesNestedInput
@@ -49645,6 +49665,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -49657,6 +49678,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -49665,6 +49687,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -49677,6 +49700,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -53057,6 +53081,7 @@ export namespace Prisma {
     sub_time?: SortOrder
     period?: SortOrder
     gk_sub?: SortOrder
+    is_swap?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
   }
@@ -53078,6 +53103,7 @@ export namespace Prisma {
     sub_time?: SortOrder
     period?: SortOrder
     gk_sub?: SortOrder
+    is_swap?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
   }
@@ -53090,6 +53116,7 @@ export namespace Prisma {
     sub_time?: SortOrder
     period?: SortOrder
     gk_sub?: SortOrder
+    is_swap?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
   }
@@ -63839,6 +63866,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     player_games_game_subs_in_player_idToplayer_games?: player_gamesCreateNestedOneWithoutGame_subs_game_subs_in_player_idToplayer_gamesInput
@@ -63852,6 +63880,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -64353,6 +64382,7 @@ export namespace Prisma {
     sub_time?: IntNullableFilter<"game_subs"> | number | null
     period?: IntFilter<"game_subs"> | number
     gk_sub?: BoolNullableFilter<"game_subs"> | boolean | null
+    is_swap?: BoolNullableFilter<"game_subs"> | boolean | null
     created_at?: DateTimeNullableFilter<"game_subs"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"game_subs"> | Date | string | null
   }
@@ -66869,6 +66899,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     player_games_game_subs_out_player_idToplayer_games?: player_gamesCreateNestedOneWithoutGame_subs_game_subs_out_player_idToplayer_gamesInput
@@ -66882,6 +66913,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -66900,6 +66932,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
     player_games_game_subs_in_player_idToplayer_games?: player_gamesCreateNestedOneWithoutGame_subs_game_subs_in_player_idToplayer_gamesInput
@@ -66913,6 +66946,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -71305,6 +71339,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -71554,6 +71589,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     player_games_game_subs_in_player_idToplayer_games?: player_gamesUpdateOneWithoutGame_subs_game_subs_in_player_idToplayer_gamesNestedInput
@@ -71567,6 +71603,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -71578,6 +71615,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -72801,6 +72839,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -72812,6 +72851,7 @@ export namespace Prisma {
     sub_time?: number | null
     period: number
     gk_sub?: boolean | null
+    is_swap?: boolean | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -73107,6 +73147,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     player_games_game_subs_out_player_idToplayer_games?: player_gamesUpdateOneWithoutGame_subs_game_subs_out_player_idToplayer_gamesNestedInput
@@ -73120,6 +73161,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -73131,6 +73173,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -73139,6 +73182,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     player_games_game_subs_in_player_idToplayer_games?: player_gamesUpdateOneWithoutGame_subs_game_subs_in_player_idToplayer_gamesNestedInput
@@ -73152,6 +73196,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -73163,6 +73208,7 @@ export namespace Prisma {
     sub_time?: NullableIntFieldUpdateOperationsInput | number | null
     period?: IntFieldUpdateOperationsInput | number
     gk_sub?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_swap?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }

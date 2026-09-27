@@ -1072,7 +1072,7 @@ export default function GameManageClient() {
                         &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-rose-500 font-bold">OUT</span>: {pOut?.fullName || "Unknown"} (#{pOut?.jerseyNumber || "?"})
                       </p>
                       <p className="text-[10px] text-muted mt-1 font-semibold">
-                        Time: {s.sub_time ? formatSecondsToMmss(Number(s.sub_time)) : "--"} {s.period ? `• Period ${s.period}` : ""} {s.gk_sub === 1 && "• Goalkeeper Sub"}
+                        Time: {s.sub_time ? formatSecondsToMmss(Number(s.sub_time)) : "--"} {s.period ? `• Period ${s.period}` : ""} {s.gk_sub === 1 && (s.is_swap === 1 ? "• Goalkeeper Swap 🧤" : "• Goalkeeper Sub 🧤")}
                       </p>
                     </div>
                   </div>

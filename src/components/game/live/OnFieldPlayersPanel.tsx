@@ -175,9 +175,9 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
   const [isGkSwapModalOpen, setIsGkSwapModalOpen] = useState(false);
   const swapGoalkeeperRole = useGamePlayersStore((s) => s.swapGoalkeeperRole);
 
-  const handleSwapGkRole = (player: Player) => {
+  const handleSwapGkRole = async (player: Player) => {
     try {
-      swapGoalkeeperRole(player.id);
+      await swapGoalkeeperRole(player.id);
       if (storeGame) {
         saveGameCache(
           storeGame.game_id || storeGame.id || "",

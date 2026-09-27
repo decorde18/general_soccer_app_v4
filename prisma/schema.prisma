@@ -297,6 +297,7 @@ model game_subs {
   sub_time                                           Int?
   period                                             Int
   gk_sub                                             Boolean?      @default(false)
+  is_swap                                            Boolean?      @default(false)
   created_at                                         DateTime?     @default(now()) @db.Timestamp(0)
   modified_at                                        DateTime?     @default(now()) @db.Timestamp(0)
   player_games_game_subs_in_player_idToplayer_games  player_games? @relation("game_subs_in_player_idToplayer_games", fields: [in_player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_game_subs_in")

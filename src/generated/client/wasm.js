@@ -310,6 +310,7 @@ exports.Prisma.Game_subsScalarFieldEnum = {
   sub_time: 'sub_time',
   period: 'period',
   gk_sub: 'gk_sub',
+  is_swap: 'is_swap',
   created_at: 'created_at',
   modified_at: 'modified_at'
 };
