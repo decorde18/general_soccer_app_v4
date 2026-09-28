@@ -65,8 +65,8 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
   const storeOnFieldPlayers = eligiblePlayers.filter(
     (p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk"
   );
-  const storeOnFieldGks = storeOnFieldPlayers.filter((p) => p.gameStatus === "goalkeeper" || p.fieldStatus === "onFieldGk");
-  const storeOnFieldFlds = storeOnFieldPlayers.filter((p) => p.gameStatus !== "goalkeeper" && p.fieldStatus !== "onFieldGk");
+  const storeOnFieldGks = storeOnFieldPlayers.filter((p) => p.fieldStatus === "onFieldGk");
+  const storeOnFieldFlds = storeOnFieldPlayers.filter((p) => p.fieldStatus === "onField");
 
   const onFieldGks = props.onFieldGks ?? storeOnFieldGks;
   const onFieldFlds = props.onFieldFlds ?? storeOnFieldFlds;
@@ -271,7 +271,7 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted">Eligible Roster Players</span>
             <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1 border border-border/60 rounded-xl p-2 bg-background/50">
               {eligiblePlayers.map((p) => {
-                const isCurrentGk = p.gameStatus === "goalkeeper" || p.fieldStatus === "onFieldGk";
+                const isCurrentGk = p.fieldStatus === "onFieldGk";
                 return (
                   <div
                     key={p.id}

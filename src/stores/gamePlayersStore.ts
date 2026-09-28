@@ -685,8 +685,8 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
     const ins = player.ins || [];
     const outs = player.outs || [];
 
-    const completedInSubs = ins.filter((sub) => sub.gameTime !== null);
-    const completedOutSubs = outs.filter((sub) => sub.gameTime !== null);
+    const completedInSubs = ins.filter((sub) => sub.gameTime !== null && !sub.isSwap);
+    const completedOutSubs = outs.filter((sub) => sub.gameTime !== null && !sub.isSwap);
 
     const isStarter = (["starter", "goalkeeper"] as GameStatus[]).includes(
       player.gameStatus,
@@ -697,12 +697,21 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
 
     if (!isCurrentlyOnField) return "onBench";
 
-    if (completedInSubs.length > 0) {
-      const lastInSub = [...completedInSubs].sort(
-        (a, b) => (b.gameTime ?? 0) - (a.gameTime ?? 0)
-      )[0];
-      if (lastInSub.gkSub) {
+    const allCompletedIns = ins.filter((sub) => sub.gameTime !== null);
+    const allCompletedOuts = outs.filter((sub) => sub.gameTime !== null);
+
+    if (allCompletedIns.length > 0 || allCompletedOuts.length > 0) {
+      const events: { time: number; type: "IN" | "OUT"; gkSub: boolean }[] = [];
+      allCompletedIns.forEach((s) => events.push({ time: Number(s.gameTime), type: "IN", gkSub: Boolean(s.gkSub) }));
+      allCompletedOuts.forEach((s) => events.push({ time: Number(s.gameTime), type: "OUT", gkSub: Boolean(s.gkSub) }));
+      events.sort((a, b) => b.time - a.time);
+
+      const latestEvent = events[0];
+      if (latestEvent.type === "IN" && latestEvent.gkSub) {
         return "onFieldGk";
+      }
+      if (latestEvent.type === "OUT" && latestEvent.gkSub) {
+        return "onField";
       }
     }
 

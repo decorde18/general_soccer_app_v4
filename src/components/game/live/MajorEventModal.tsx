@@ -453,7 +453,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       const goalMethodsArr = Array.from(selectedMethods);
       const goalTypesJson = JSON.stringify(goalMethodsArr.length > 0 ? goalMethodsArr : ["open_play"]);
 
-      const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
+      const activeGk = players.find((p) => p.fieldStatus === "onFieldGk");
       const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
 
       const tempGoalId = `temp_goal_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -818,7 +818,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
         const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
         
-        const activeGk = players.find((p) => (p.fieldStatus === "onFieldGk" || p.gameStatus === "goalkeeper") && p.fieldStatus !== "onBench");
+        const activeGk = players.find((p) => p.fieldStatus === "onFieldGk");
         const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
 
         const takerPgId = !isOpp && taker ? Number(taker.playerGameId || taker.id) : null;
