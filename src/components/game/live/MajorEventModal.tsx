@@ -279,6 +279,16 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         next.delete(methodId);
       } else {
         next.add(methodId);
+        // If clicking a set-piece/specific goal method (like corner kick, free kick, etc.), unclick open_play (Run of Play)
+        if (methodId !== "open_play") {
+          next.delete("open_play");
+        } else {
+          // If clicking open_play, unclick set-piece descriptors
+          next.delete("corner");
+          next.delete("direct_free_kick");
+          next.delete("indirect_free_kick");
+          next.delete("throw_in");
+        }
       }
       return next;
     });
@@ -394,7 +404,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   };
 
   // End stoppage & resume clock
-  const handleEndStoppageAndResume = (confirmPendingSubs = false) => {
+  const handleEndStoppageAndResume = async (confirmPendingSubs = false) => {
     if (!activeStoppage) {
       onClose();
       return;
@@ -402,9 +412,9 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
     try {
       if (confirmPendingSubs && pendingSubs.length > 0) {
-        confirmAllPendingSubs();
+        await confirmAllPendingSubs();
       }
-      endStoppage(activeStoppage.id);
+      await endStoppage(activeStoppage.id);
       setIsPausedLocally(false);
       setStopClock(false);
       setShowPendingSubPrompt(false);
@@ -415,7 +425,11 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           useGamePlayersStore.getState().players
         );
       }
-      toast.success("Stoppage Ended — Clock Resumed!");
+      toast.success(
+        confirmPendingSubs
+          ? "Subs Executed & Stoppage Ended — Clock Resumed!"
+          : "Stoppage Ended — Clock Resumed!"
+      );
       onClose();
     } catch (err: any) {
       toast.error("Failed to end stoppage: " + err.message);
@@ -992,66 +1006,82 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     });
   };
 
+  const [isSubWidgetExpanded, setIsSubWidgetExpanded] = useState(false);
+
   // SHARED IN-EVENT SUBSTITUTIONS WIDGET (RENDERED ON ALL EVENT TABS)
   const renderSubstitutionsWidget = () => (
-    <div className="p-3 bg-background/50 border border-border/60 rounded-xl space-y-3 mt-3">
-      <div className="flex items-center justify-between border-b border-border/40 pb-2">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-text">
-          <ArrowRightLeft size={14} className="text-primary" />
-          <span>Substitutions During Event / Stoppage</span>
+    <div className="p-2 bg-background/50 border border-border/60 rounded-xl mt-2 text-xs">
+      <div
+        className="flex items-center justify-between cursor-pointer select-none py-0.5"
+        onClick={() => setIsSubWidgetExpanded(!isSubWidgetExpanded)}
+      >
+        <div className="flex items-center gap-1.5 font-bold text-text">
+          <ArrowRightLeft size={13} className="text-primary" />
+          <span>Substitutions During Event / Stoppage {pendingSubs.length > 0 ? `(${pendingSubs.length} queued)` : ""}</span>
         </div>
-        <Checkbox
-          label="Include Exhausted Players (Override)"
-          checked={allowExhaustedOverride}
-          onChange={(val: any) => setAllowExhaustedOverride(typeof val === "boolean" ? val : Boolean(val?.target?.checked))}
-        />
+        <span className="text-[10px] font-extrabold text-primary hover:underline">
+          {isSubWidgetExpanded ? "Collapse ▲" : "+ Add Subs ▼"}
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <Select
-          label="Player OUT (On-Field)"
-          value={stoppageSubOutId}
-          onChange={(e: any) => setStoppageSubOutId(e.target.value)}
-          options={[{ value: "", label: "-- Select Player OUT --" }, ...subOutOptions]}
-        />
-        <Select
-          label="Player IN (Bench Reserve)"
-          value={stoppageSubInId}
-          onChange={(e: any) => setStoppageSubInId(e.target.value)}
-          options={[{ value: "", label: "-- Select Player IN --" }, ...subInOptions]}
-        />
-      </div>
+      {isSubWidgetExpanded && (
+        <div className="pt-2 border-t border-border/40 space-y-2.5 mt-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-muted">Select players to substitute:</span>
+            <Checkbox
+              label="Include Exhausted Players (Override)"
+              checked={allowExhaustedOverride}
+              onChange={(val: any) => setAllowExhaustedOverride(typeof val === "boolean" ? val : Boolean(val?.target?.checked))}
+            />
+          </div>
 
-      <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="xs"
-          onClick={handleQueueStoppageSub}
-          disabled={!stoppageSubOutId || !stoppageSubInId}
-          className="font-bold text-[10px]"
-        >
-          <span>Queue for Restart</span>
-        </Button>
-        <Button
-          variant="primary"
-          size="xs"
-          onClick={handleExecuteSubImmediately}
-          disabled={!stoppageSubOutId || !stoppageSubInId}
-          className="font-bold text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white"
-        >
-          <span>Enter Sub Now ⚡</span>
-        </Button>
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Select
+              label="Player OUT (On-Field)"
+              value={stoppageSubOutId}
+              onChange={(e: any) => setStoppageSubOutId(e.target.value)}
+              options={[{ value: "", label: "-- Select Player OUT --" }, ...subOutOptions]}
+            />
+            <Select
+              label="Player IN (Bench Reserve)"
+              value={stoppageSubInId}
+              onChange={(e: any) => setStoppageSubInId(e.target.value)}
+              options={[{ value: "", label: "-- Select Player IN --" }, ...subInOptions]}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={handleQueueStoppageSub}
+              disabled={!stoppageSubOutId || !stoppageSubInId}
+              className="font-bold text-[10px]"
+            >
+              <span>Queue for Restart</span>
+            </Button>
+            <Button
+              variant="primary"
+              size="xs"
+              onClick={handleExecuteSubImmediately}
+              disabled={!stoppageSubOutId || !stoppageSubInId}
+              className="font-bold text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <span>Enter Sub Now ⚡</span>
+            </Button>
+          </div>
+        </div>
+      )}
 
       {pendingSubs.length > 0 && (
-        <div className="pt-2 border-t border-border/40 space-y-1.5">
+        <div className="pt-1.5 border-t border-border/40 space-y-1 mt-1.5">
           <span className="text-[10px] font-bold text-muted block">Queued Pending Subs ({pendingSubs.length}):</span>
           <div className="space-y-1">
             {pendingSubs.map((sub) => {
               const inP = players.find((p) => String(p.playerGameId || p.id) === String(sub.inPlayerId));
               const outP = players.find((p) => String(p.playerGameId || p.id) === String(sub.outPlayerId));
               return (
-                <div key={sub.subId} className="text-[10px] font-semibold bg-surface p-2 rounded-lg border flex justify-between items-center gap-2">
+                <div key={sub.subId} className="text-[10px] font-semibold bg-surface p-1.5 rounded-lg border flex justify-between items-center gap-2">
                   <span className="truncate">Out: #{outP?.jerseyNumber || "?"} {outP?.fullName || "Player"} 🔄 In: #{inP?.jerseyNumber || "?"} {inP?.fullName || "Player"}</span>
                   <div className="flex items-center gap-1 shrink-0">
                     <Button
@@ -1087,438 +1117,442 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       closeOnOverlayClick={false}
       title="Record Major Match Event"
       subtitle="Immediate event logging with clock controls"
+      size="lg"
     >
-      <div className="space-y-4 text-xs">
-        {/* Header Bar: Timed Match Clock & Event Duration Clock & Single Pause Toggle */}
-        <div className="flex flex-wrap items-center justify-between p-3 bg-surface border border-border/80 rounded-xl shadow-2xs gap-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Game Clock:</span>
-              <span className={`font-mono font-black text-xs px-2 py-0.5 rounded-md border ${
-                stopClock
-                  ? "bg-amber-500/10 text-amber-500 border-amber-500/30 font-bold"
-                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-              }`}>
-                {formatSecondsToMmss(liveSeconds)}
-              </span>
-            </div>
+      <div className="flex flex-col max-h-[75vh] sm:max-h-[80vh] text-xs">
+        {/* Scrollable Modal Content Body */}
+        <div className="flex-1 overflow-y-auto pr-1 space-y-3 pb-2 min-h-0">
+          {/* Header Bar: Timed Match Clock & Event Duration Clock & Single Pause Toggle */}
+          <div className="flex flex-wrap items-center justify-between p-3 bg-surface border border-border/80 rounded-xl shadow-2xs gap-2">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Game Clock:</span>
+                <span className={`font-mono font-black text-xs px-2 py-0.5 rounded-md border ${
+                  stopClock
+                    ? "bg-amber-500/10 text-amber-500 border-amber-500/30 font-bold"
+                    : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                }`}>
+                  {formatSecondsToMmss(liveSeconds)}
+                </span>
+              </div>
 
-            <div className="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-0.5 rounded-md text-indigo-400 font-mono font-bold text-xs">
-              <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400/80">Event Duration:</span>
-              <span className="text-xs font-black text-indigo-300 animate-pulse">{formatSecondsToMmss(eventDurationSeconds)}</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setStopClock(!stopClock)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer shadow-2xs ${
-              stopClock
-                ? "bg-amber-500/15 border-amber-500/40 text-amber-500 hover:bg-amber-500/25"
-                : "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
-            }`}
-          >
-            {stopClock ? (
-              <>
-                <PauseCircle size={15} className="text-amber-500 animate-pulse" />
-                <span>Clock Paused ⏸️</span>
-              </>
-            ) : (
-              <>
-                <PlayCircle size={15} className="text-emerald-400" />
-                <span>Clock Running ⏱️</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Quick Action Event Type Button Bar */}
-        <div className="space-y-1">
-          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted">
-            Select Event Type
-          </label>
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
-            {[
-              { type: "goal", label: "Goal", icon: Trophy, color: "text-emerald-500" },
-              { type: "card", label: "Card", icon: ShieldAlert, color: "text-amber-500" },
-              { type: "pk", label: "PK", icon: Target, color: "text-blue-500" },
-              { type: "injury", label: "Injury", icon: Activity, color: "text-rose-500" },
-              { type: "hydration", label: "Water", icon: Droplets, color: "text-cyan-400" },
-              { type: "weather", label: "Delay", icon: Zap, color: "text-yellow-500" },
-              { type: "var", label: "VAR", icon: Tv, color: "text-indigo-500" },
-              { type: "stoppage", label: "Pause", icon: PauseCircle, color: "text-slate-500" },
-            ].map(({ type, label, icon: Icon, color }) => (
-              <button
-                key={type}
-                onClick={() => {
-                  setEventType(type as MajorEventType);
-                  if (type === "injury" || type === "hydration" || type === "weather" || type === "var" || type === "stoppage") {
-                    setStoppageCategory(type === "hydration" ? "stoppage" : type as any);
-                    if (type === "hydration") {
-                      setStoppageDetails("Hydration / Water Break");
-                    }
-                  }
-                }}
-                className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all text-center cursor-pointer ${
-                  eventType === type || (eventType === "stoppage" && stoppageCategory === type)
-                    ? "bg-primary text-white border-primary shadow-sm font-extrabold"
-                    : "bg-surface border-border text-muted hover:border-primary/50 hover:text-text font-bold"
-                }`}
-              >
-                <Icon size={16} className={eventType === type ? "text-white" : color} />
-                <span className="text-[10px] mt-1 tracking-tight">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* TEAM TARGET TOGGLE (Us vs Opponent) */}
-        {(eventType === "goal" || eventType === "card" || eventType === "pk") && (
-          <div className="flex items-center gap-2 pt-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Team:</span>
-            <div className="flex gap-1.5 flex-1">
-              <button
-                onClick={() => setTeamTarget("us")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-black border transition-all cursor-pointer ${
-                  teamTarget === "us"
-                    ? "bg-primary text-white border-primary shadow-xs"
-                    : "bg-surface border-border text-muted hover:border-primary/50"
-                }`}
-              >
-                Our Team
-              </button>
-              <button
-                onClick={() => setTeamTarget("opp")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-black border transition-all cursor-pointer ${
-                  teamTarget === "opp"
-                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                    : "bg-surface border-border text-muted hover:border-amber-600/50"
-                }`}
-              >
-                {opponentShortName}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ⚽ GOAL FORM */}
-        {eventType === "goal" && (
-          <div className="space-y-3.5 pt-2 border-t border-border/40">
-            {/* Goal Type Selector: Standard Goal vs Own Goal */}
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
-                Goal Type
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsOwnGoal(false)}
-                  className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    !isOwnGoal
-                      ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-2xs"
-                      : "bg-surface border-border text-muted hover:border-emerald-500/40"
-                  }`}
-                >
-                  <Trophy size={14} className={!isOwnGoal ? "text-emerald-500" : "text-muted"} />
-                  <span>Standard Goal ⚽</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsOwnGoal(true)}
-                  className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    isOwnGoal
-                      ? "bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400 shadow-2xs"
-                      : "bg-surface border-border text-muted hover:border-rose-500/40"
-                  }`}
-                >
-                  <AlertTriangle size={14} className={isOwnGoal ? "text-rose-500" : "text-muted"} />
-                  <span>Own Goal ⚠️</span>
-                </button>
+              <div className="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-0.5 rounded-md text-indigo-400 font-mono font-bold text-xs">
+                <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400/80">Event Duration:</span>
+                <span className="text-xs font-black text-indigo-300 animate-pulse">{formatSecondsToMmss(eventDurationSeconds)}</span>
               </div>
             </div>
 
-            {/* OWN GOAL SCORE EXPLANATION BANNER */}
-            {isOwnGoal && (
-              teamTarget === "us" ? (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/40 rounded-xl space-y-1 text-emerald-600 dark:text-emerald-400">
-                  <div className="flex items-center gap-1.5 text-xs font-black">
-                    <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
-                    <span>⚽ OPPONENT OWN GOAL (+1 to Our Team)</span>
-                  </div>
-                  <p className="text-[11px] font-medium text-text/80">
-                    An opponent player accidentally put the ball into <strong>THEIR OWN NET</strong>.
-                  </p>
-                  <div className="pt-0.5 text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <span>➡️ Score Effect:</span>
-                    <span className="bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded">
-                      +1 Goal to OUR TEAM
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted pt-1 border-t border-emerald-500/20">
-                    No individual player goal credit will be recorded.
-                  </p>
-                </div>
-              ) : (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-xl space-y-1 text-amber-600 dark:text-amber-400">
-                  <div className="flex items-center gap-1.5 text-xs font-black">
-                    <AlertTriangle size={16} className="text-amber-500 shrink-0" />
-                    <span>⚠️ OUR TEAM OWN GOAL (+1 to {opponentShortName})</span>
-                  </div>
-                  <p className="text-[11px] font-medium text-text/80">
-                    A player on our team accidentally put the ball into <strong>OUR OWN NET</strong>.
-                  </p>
-                  <div className="pt-0.5 text-xs font-black text-rose-500 flex items-center gap-1">
-                    <span>➡️ Score Effect:</span>
-                    <span className="bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded text-rose-600 dark:text-rose-400">
-                      +1 Goal to {opponentShortName}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted pt-1 border-t border-amber-500/20">
-                    No individual player goal credit will be recorded.
-                  </p>
-                </div>
-              )
-            )}
-
-            {/* PLAYER SELECTION DROPDOWNS: Rendered ONLY for Standard Goals (isOwnGoal === false) */}
-            {!isOwnGoal && (
-              teamTarget === "us" ? (
+            <button
+              type="button"
+              onClick={() => setStopClock(!stopClock)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer shadow-2xs ${
+                stopClock
+                  ? "bg-amber-500/15 border-amber-500/40 text-amber-500 hover:bg-amber-500/25"
+                  : "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
+              }`}
+            >
+              {stopClock ? (
                 <>
-                  <Select
-                    label="Goal Scorer (On-Field Players Only)"
-                    value={goalScorerId}
-                    onChange={(e: any) => setGoalScorerId(e.target.value)}
-                    options={[{ value: "", label: "-- Select Scorer --" }, ...scorerOptions]}
-                  />
-                  <Select
-                    label="Assist By (Optional)"
-                    value={goalAssistId}
-                    onChange={(e: any) => setGoalAssistId(e.target.value)}
-                    options={[{ value: "", label: "-- None (Optional) --" }, ...assistOptions]}
-                  />
+                  <PauseCircle size={15} className="text-amber-500 animate-pulse" />
+                  <span>Clock Paused ⏸️</span>
                 </>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    label="Opponent Scorer # (Optional)"
-                    placeholder="e.g. 9"
-                    value={oppScorerJersey}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppScorerJersey(e.target.value)}
-                  />
-                  <Input
-                    label="Opponent Assist # (Optional)"
-                    placeholder="e.g. 10"
-                    value={oppAssistJersey}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppAssistJersey(e.target.value)}
-                  />
-                </div>
-              )
-            )}
+                <>
+                  <PlayCircle size={15} className="text-emerald-400" />
+                  <span>Clock Running ⏱️</span>
+                </>
+              )}
+            </button>
+          </div>
 
-            {/* Goal Method Checkboxes */}
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
-                Goal Method / Type
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                {GOAL_METHOD_OPTIONS.map(({ id, label }) => (
+          {/* Quick Action Event Type Button Bar */}
+          <div className="space-y-1">
+            <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted">
+              Select Event Type
+            </label>
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+              {[
+                { type: "goal", label: "Goal", icon: Trophy, color: "text-emerald-500" },
+                { type: "card", label: "Card", icon: ShieldAlert, color: "text-amber-500" },
+                { type: "pk", label: "PK", icon: Target, color: "text-blue-500" },
+                { type: "injury", label: "Injury", icon: Activity, color: "text-rose-500" },
+                { type: "hydration", label: "Water", icon: Droplets, color: "text-cyan-400" },
+                { type: "weather", label: "Delay", icon: Zap, color: "text-yellow-500" },
+                { type: "var", label: "VAR", icon: Tv, color: "text-indigo-500" },
+                { type: "stoppage", label: "Pause", icon: PauseCircle, color: "text-slate-500" },
+              ].map(({ type, label, icon: Icon, color }) => (
+                <button
+                  key={type}
+                  onClick={() => {
+                    setEventType(type as MajorEventType);
+                    if (type === "injury" || type === "hydration" || type === "weather" || type === "var" || type === "stoppage") {
+                      setStoppageCategory(type === "hydration" ? "stoppage" : type as any);
+                      if (type === "hydration") {
+                        setStoppageDetails("Hydration / Water Break");
+                      }
+                    }
+                  }}
+                  className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all text-center cursor-pointer ${
+                    eventType === type || (eventType === "stoppage" && stoppageCategory === type)
+                      ? "bg-primary text-white border-primary shadow-sm font-extrabold"
+                      : "bg-surface border-border text-muted hover:border-primary/50 hover:text-text font-bold"
+                  }`}
+                >
+                  <Icon size={16} className={eventType === type ? "text-white" : color} />
+                  <span className="text-[10px] mt-1 tracking-tight">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* TEAM TARGET TOGGLE (Us vs Opponent) */}
+          {(eventType === "goal" || eventType === "card" || eventType === "pk") && (
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Team:</span>
+              <div className="flex gap-1.5 flex-1">
+                <button
+                  onClick={() => setTeamTarget("us")}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                    teamTarget === "us"
+                      ? "bg-primary text-white border-primary shadow-xs"
+                      : "bg-surface border-border text-muted hover:border-primary/50"
+                  }`}
+                >
+                  Our Team
+                </button>
+                <button
+                  onClick={() => setTeamTarget("opp")}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-black border transition-all cursor-pointer ${
+                    teamTarget === "opp"
+                      ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                      : "bg-surface border-border text-muted hover:border-amber-600/50"
+                  }`}
+                >
+                  {opponentShortName}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ⚽ GOAL FORM */}
+          {eventType === "goal" && (
+            <div className="space-y-3.5 pt-2 border-t border-border/40">
+              {/* Goal Type Selector: Standard Goal vs Own Goal */}
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
+                  Goal Type
+                </label>
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    key={id}
                     type="button"
-                    onClick={() => toggleMethod(id)}
-                    className={`py-1 px-2 rounded-lg text-[10px] font-bold border transition-all text-left flex items-center justify-between ${
-                      selectedMethods.has(id)
-                        ? "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300"
+                    onClick={() => setIsOwnGoal(false)}
+                    className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      !isOwnGoal
+                        ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-2xs"
                         : "bg-surface border-border text-muted hover:border-emerald-500/40"
                     }`}
                   >
-                    <span>{label}</span>
-                    {selectedMethods.has(id) && <Check size={12} className="text-emerald-500" />}
+                    <Trophy size={14} className={!isOwnGoal ? "text-emerald-500" : "text-muted"} />
+                    <span>Standard Goal ⚽</span>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            <Input
-              label="Stoppage Details / Goal Notes (Optional)"
-              placeholder="e.g. Deflected off defender, Kickoff restart notes"
-              value={goalNotes}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGoalNotes(e.target.value)}
-            />
-
-            {renderSubstitutionsWidget()}
-          </div>
-        )}
-
-        {/* 🟨 DISCIPLINE / CARD FORM */}
-        {eventType === "card" && (
-          <div className="space-y-3.5 pt-2 border-t border-border/40">
-            {teamTarget === "us" ? (
-              <Select
-                label="Select Player"
-                value={cardPlayerId}
-                onChange={(e: any) => setCardPlayerId(e.target.value)}
-                options={[{ value: "", label: "-- Player --" }, ...cardPlayerOptions]}
-              />
-            ) : (
-              <Input
-                label="Opponent Jersey # (Optional)"
-                placeholder="e.g. 4"
-                value={oppCardJersey}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppCardJersey(e.target.value)}
-              />
-            )}
-
-            <Select
-              label="Card Type"
-              value={cardType}
-              onChange={(e: any) => setCardType(e.target.value as any)}
-              options={[
-                { value: "yellow", label: "Yellow Card" },
-                { value: "red", label: "Red Card (Ejection)" },
-                { value: "yellow_red", label: "Second Yellow (Red)" },
-              ]}
-            />
-
-            <Input
-              label="Reason for Card (Optional)"
-              placeholder="e.g. Unsporting Behavior / Tactical Foul"
-              value={cardReason}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardReason(e.target.value)}
-            />
-
-            {renderSubstitutionsWidget()}
-          </div>
-        )}
-
-        {/* 🎯 PENALTY KICK (PK) FORM */}
-        {eventType === "pk" && (
-          <div className="space-y-3.5 pt-2 border-t border-border/40">
-            {teamTarget === "us" ? (
-              <Select
-                label="PK Taker (On-Field Players Only)"
-                value={pkTakerId}
-                onChange={(e: any) => setPkTakerId(e.target.value)}
-                options={[{ value: "", label: "-- Select Taker --" }, ...pkTakerOptions]}
-              />
-            ) : (
-              <Input
-                label="Opponent Taker Jersey # (Optional)"
-                placeholder="e.g. 10"
-                value={oppPkTakerJersey}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppPkTakerJersey(e.target.value)}
-              />
-            )}
-
-            <div>
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
-                Penalty Kick Result
-              </label>
-              <div className="grid grid-cols-4 gap-1.5">
-                {[
-                  { id: "goal", label: "Goal ⚽", class: "hover:border-emerald-500" },
-                  { id: "saved", label: "Saved 🧤", class: "hover:border-blue-500" },
-                  { id: "missed", label: "Missed ❌", class: "hover:border-rose-500" },
-                  { id: "hit_post", label: "Hit Post 🥅", class: "hover:border-amber-500" },
-                ].map((item) => (
                   <button
-                    key={item.id}
                     type="button"
-                    onClick={() => {
-                      setPkOutcome(item.id as any);
-                      if (item.id === "goal") setIsReboundGoal(false);
-                    }}
-                    className={`py-2 px-1 rounded-xl text-xs font-black border transition-all text-center cursor-pointer ${
-                      pkOutcome === item.id
-                        ? "bg-primary text-white border-primary shadow-xs"
-                        : `bg-surface border-border text-muted ${item.class}`
+                    onClick={() => setIsOwnGoal(true)}
+                    className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                      isOwnGoal
+                        ? "bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400 shadow-2xs"
+                        : "bg-surface border-border text-muted hover:border-rose-500/40"
                     }`}
                   >
-                    {item.label}
+                    <AlertTriangle size={14} className={isOwnGoal ? "text-rose-500" : "text-muted"} />
+                    <span>Own Goal ⚠️</span>
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
 
-            {pkOutcome !== "goal" && (
-              <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-2">
-                <Checkbox
-                  label="Rebound / Follow-up Goal Scored?"
-                  checked={isReboundGoal}
-                  onChange={(val: any) => {
-                    const isChecked = typeof val === "boolean" ? val : Boolean(val?.target?.checked);
-                    setIsReboundGoal(isChecked);
-                  }}
+              {/* OWN GOAL SCORE EXPLANATION BANNER */}
+              {isOwnGoal && (
+                teamTarget === "us" ? (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/40 rounded-xl space-y-1 text-emerald-600 dark:text-emerald-400">
+                    <div className="flex items-center gap-1.5 text-xs font-black">
+                      <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                      <span>⚽ OPPONENT OWN GOAL (+1 to Our Team)</span>
+                    </div>
+                    <p className="text-[11px] font-medium text-text/80">
+                      An opponent player accidentally put the ball into <strong>THEIR OWN NET</strong>.
+                    </p>
+                    <div className="pt-0.5 text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span>➡️ Score Effect:</span>
+                      <span className="bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded">
+                        +1 Goal to OUR TEAM
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted pt-1 border-t border-emerald-500/20">
+                      No individual player goal credit will be recorded.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-xl space-y-1 text-amber-600 dark:text-amber-400">
+                    <div className="flex items-center gap-1.5 text-xs font-black">
+                      <AlertTriangle size={16} className="text-amber-500 shrink-0" />
+                      <span>⚠️ OUR TEAM OWN GOAL (+1 to {opponentShortName})</span>
+                    </div>
+                    <p className="text-[11px] font-medium text-text/80">
+                      A player on our team accidentally put the ball into <strong>OUR OWN NET</strong>.
+                    </p>
+                    <div className="pt-0.5 text-xs font-black text-rose-500 flex items-center gap-1">
+                      <span>➡️ Score Effect:</span>
+                      <span className="bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 rounded text-rose-600 dark:text-rose-400">
+                        +1 Goal to {opponentShortName}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted pt-1 border-t border-amber-500/20">
+                      No individual player goal credit will be recorded.
+                    </p>
+                  </div>
+                )
+              )}
+
+              {/* PLAYER SELECTION DROPDOWNS: Rendered ONLY for Standard Goals (isOwnGoal === false) */}
+              {!isOwnGoal && (
+                teamTarget === "us" ? (
+                  <>
+                    <Select
+                      label="Goal Scorer (On-Field Players Only)"
+                      value={goalScorerId}
+                      onChange={(e: any) => setGoalScorerId(e.target.value)}
+                      options={[{ value: "", label: "-- Select Scorer --" }, ...scorerOptions]}
+                    />
+                    <Select
+                      label="Assist By (Optional)"
+                      value={goalAssistId}
+                      onChange={(e: any) => setGoalAssistId(e.target.value)}
+                      options={[{ value: "", label: "-- None (Optional) --" }, ...assistOptions]}
+                    />
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      label="Opponent Scorer # (Optional)"
+                      placeholder="e.g. 9"
+                      value={oppScorerJersey}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppScorerJersey(e.target.value)}
+                    />
+                    <Input
+                      label="Opponent Assist # (Optional)"
+                      placeholder="e.g. 10"
+                      value={oppAssistJersey}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppAssistJersey(e.target.value)}
+                    />
+                  </div>
+                )
+              )}
+
+              {/* Goal Method Checkboxes */}
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
+                  Goal Method / Type
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {GOAL_METHOD_OPTIONS.map(({ id, label }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => toggleMethod(id)}
+                      className={`py-1 px-2 rounded-lg text-[10px] font-bold border transition-all text-left flex items-center justify-between ${
+                        selectedMethods.has(id)
+                          ? "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300"
+                          : "bg-surface border-border text-muted hover:border-emerald-500/40"
+                      }`}
+                    >
+                      <span>{label}</span>
+                      {selectedMethods.has(id) && <Check size={12} className="text-emerald-500" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Input
+                label="Stoppage Details / Goal Notes (Optional)"
+                placeholder="e.g. Deflected off defender, Kickoff restart notes"
+                value={goalNotes}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGoalNotes(e.target.value)}
+              />
+
+              {renderSubstitutionsWidget()}
+            </div>
+          )}
+
+          {/* 🟨 DISCIPLINE / CARD FORM */}
+          {eventType === "card" && (
+            <div className="space-y-3.5 pt-2 border-t border-border/40">
+              {teamTarget === "us" ? (
+                <Select
+                  label="Select Player"
+                  value={cardPlayerId}
+                  onChange={(e: any) => setCardPlayerId(e.target.value)}
+                  options={[{ value: "", label: "-- Player --" }, ...cardPlayerOptions]}
                 />
-                {isReboundGoal && (
-                  <p className="text-[10px] text-muted flex items-center gap-1">
-                    <CornerDownRight size={12} className="text-primary" />
-                    <span>Saves initial PK result and logs follow-up goal event + kickoff stoppage.</span>
-                  </p>
-                )}
+              ) : (
+                <Input
+                  label="Opponent Jersey # (Optional)"
+                  placeholder="e.g. 4"
+                  value={oppCardJersey}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppCardJersey(e.target.value)}
+                />
+              )}
+
+              <Select
+                label="Card Type"
+                value={cardType}
+                onChange={(e: any) => setCardType(e.target.value as any)}
+                options={[
+                  { value: "yellow", label: "Yellow Card" },
+                  { value: "red", label: "Red Card (Ejection)" },
+                  { value: "yellow_red", label: "Second Yellow (Red)" },
+                ]}
+              />
+
+              <Input
+                label="Reason for Card (Optional)"
+                placeholder="e.g. Unsporting Behavior / Tactical Foul"
+                value={cardReason}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardReason(e.target.value)}
+              />
+
+              {renderSubstitutionsWidget()}
+            </div>
+          )}
+
+          {/* 🎯 PENALTY KICK (PK) FORM */}
+          {eventType === "pk" && (
+            <div className="space-y-3.5 pt-2 border-t border-border/40">
+              {teamTarget === "us" ? (
+                <Select
+                  label="PK Taker (On-Field Players Only)"
+                  value={pkTakerId}
+                  onChange={(e: any) => setPkTakerId(e.target.value)}
+                  options={[{ value: "", label: "-- Select Taker --" }, ...pkTakerOptions]}
+                />
+              ) : (
+                <Input
+                  label="Opponent Taker Jersey # (Optional)"
+                  placeholder="e.g. 10"
+                  value={oppPkTakerJersey}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOppPkTakerJersey(e.target.value)}
+                />
+              )}
+
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
+                  Penalty Kick Result
+                </label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { id: "goal", label: "Goal ⚽", class: "hover:border-emerald-500" },
+                    { id: "saved", label: "Saved 🧤", class: "hover:border-blue-500" },
+                    { id: "missed", label: "Missed ❌", class: "hover:border-rose-500" },
+                    { id: "hit_post", label: "Hit Post 🥅", class: "hover:border-amber-500" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setPkOutcome(item.id as any);
+                        if (item.id === "goal") setIsReboundGoal(false);
+                      }}
+                      className={`py-2 px-1 rounded-xl text-xs font-black border transition-all text-center cursor-pointer ${
+                        pkOutcome === item.id
+                          ? "bg-primary text-white border-primary shadow-xs"
+                          : `bg-surface border-border text-muted ${item.class}`
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
 
-            <Input
-              label="Stoppage Details / PK Notes (Optional)"
-              placeholder="e.g. Hand ball in penalty box, Ref stoppage notes"
-              value={pkNotes}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPkNotes(e.target.value)}
-            />
+              {pkOutcome !== "goal" && (
+                <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-2">
+                  <Checkbox
+                    label="Rebound / Follow-up Goal Scored?"
+                    checked={isReboundGoal}
+                    onChange={(val: any) => {
+                      const isChecked = typeof val === "boolean" ? val : Boolean(val?.target?.checked);
+                      setIsReboundGoal(isChecked);
+                    }}
+                  />
+                  {isReboundGoal && (
+                    <p className="text-[10px] text-muted flex items-center gap-1">
+                      <CornerDownRight size={12} className="text-primary" />
+                      <span>Saves initial PK result and logs follow-up goal event + kickoff stoppage.</span>
+                    </p>
+                  )}
+                </div>
+              )}
 
-            {renderSubstitutionsWidget()}
-          </div>
-        )}
+              <Input
+                label="Stoppage Details / PK Notes (Optional)"
+                placeholder="e.g. Hand ball in penalty box, Ref stoppage notes"
+                value={pkNotes}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPkNotes(e.target.value)}
+              />
 
-        {/* ⏸️ STOPPAGE FORM (Injury, Water/Hydration, Weather, VAR, Other) */}
-        {(eventType === "injury" || eventType === "hydration" || eventType === "weather" || eventType === "var" || eventType === "stoppage") && (
-          <div className="space-y-4 pt-2 border-t border-border/40">
-            <Input
-              label="Stoppage Reason / Details (Optional)"
-              placeholder="e.g. Head Injury Evaluation, Ref Timeout, Water Break"
-              value={stoppageDetails}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStoppageDetails(e.target.value)}
-            />
-
-            {renderSubstitutionsWidget()}
-          </div>
-        )}
-
-        {/* PENDING SUB CONFIRMATION PROMPT */}
-        {showPendingSubPrompt && pendingSubs.length > 0 && (
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
-              <ArrowRightLeft size={16} />
-              <span>Execute {pendingSubs.length} Queued Substitutions?</span>
+              {renderSubstitutionsWidget()}
             </div>
-            <p className="text-[11px] text-muted">
-              You have {pendingSubs.length} substitution(s) queued for this restart. Would you like to confirm and execute them before resuming match time?
-            </p>
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => handleEndStoppageAndResume(false)}
-                disabled={isPending}
-                className="text-[10px]"
-              >
-                Resume Without Executing
-              </Button>
-              <Button
-                variant="primary"
-                size="xs"
-                onClick={() => handleEndStoppageAndResume(true)}
-                disabled={isPending}
-                className="text-[10px] font-bold"
-              >
-                Confirm Subs & Resume Play
-              </Button>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* UNIFIED BOTTOM FOOTER ACTION BAR */}
-        <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/60">
+          {/* ⏸️ STOPPAGE FORM (Injury, Water/Hydration, Weather, VAR, Other) */}
+          {(eventType === "injury" || eventType === "hydration" || eventType === "weather" || eventType === "var" || eventType === "stoppage") && (
+            <div className="space-y-4 pt-2 border-t border-border/40">
+              <Input
+                label="Stoppage Reason / Details (Optional)"
+                placeholder="e.g. Head Injury Evaluation, Ref Timeout, Water Break"
+                value={stoppageDetails}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStoppageDetails(e.target.value)}
+              />
+
+              {renderSubstitutionsWidget()}
+            </div>
+          )}
+
+          {/* PENDING SUB CONFIRMATION PROMPT */}
+          {showPendingSubPrompt && pendingSubs.length > 0 && (
+            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
+                <ArrowRightLeft size={16} />
+                <span>Execute {pendingSubs.length} Queued Substitutions?</span>
+              </div>
+              <p className="text-[11px] text-muted">
+                You have {pendingSubs.length} substitution(s) queued for this restart. Would you like to confirm and execute them before resuming match time?
+              </p>
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={() => handleEndStoppageAndResume(false)}
+                  disabled={isPending}
+                  className="text-[10px]"
+                >
+                  Resume Without Executing
+                </Button>
+                <Button
+                  variant="primary"
+                  size="xs"
+                  onClick={() => handleEndStoppageAndResume(true)}
+                  disabled={isPending}
+                  className="text-[10px] font-bold"
+                >
+                  Confirm Subs & Resume Play
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* UNIFIED STICKY BOTTOM FOOTER ACTION BAR */}
+        <div className="shrink-0 flex items-center justify-between gap-2 pt-2.5 mt-1 border-t border-border/60 bg-surface/95 backdrop-blur-xs">
           {activeStoppage ? (
             <Button
               variant="outline"

@@ -23,6 +23,7 @@ export interface LivePlayerTableProps {
     yellowCards: number;
     redCards: number;
     goalsAgainst: number;
+    plusMinus?: number;
   };
   onSelectPlayer?: (id: string | null) => void;
   onQuickAction?: (playerId: string | number, actionType: "shot" | "save") => void;
@@ -129,6 +130,8 @@ export default function LivePlayerTable({
               rowClass = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-l-2 border-l-emerald-500 font-bold text-[11px] h-6.5";
             }
 
+            const pmVal = stats.plusMinus !== undefined ? stats.plusMinus : (player.plusMinus || 0);
+
             return (
               <tr
                 key={player.id}
@@ -182,28 +185,30 @@ export default function LivePlayerTable({
                     {isGk ? (
                       <>
                         <td className="py-0.5 px-1.5 text-right font-mono font-bold text-emerald-600 align-middle">
-                          {stats.saves || "—"}
+                          {stats.saves}
                         </td>
                         <td className="py-0.5 px-1.5 text-right font-mono font-bold text-rose-500 align-middle">
-                          {stats.goalsAgainst || "—"}
+                          {stats.goalsAgainst}
                         </td>
                       </>
                     ) : (
                       <>
                         <td className="py-0.5 px-1.5 text-right font-mono font-bold text-muted align-middle">
-                          {stats.shots || "—"}
+                          {stats.shots}
                         </td>
                         <td className="py-0.5 px-1.5 text-right font-mono font-bold text-primary align-middle">
-                          {stats.goals || "—"}
+                          {stats.goals}
                         </td>
                         <td className="py-0.5 px-1.5 text-right font-mono font-bold text-blue-600 align-middle">
-                          {stats.assists || "—"}
+                          {stats.assists}
                         </td>
                       </>
                     )}
 
-                    <td className="py-0.5 px-1.5 text-center font-mono font-black text-slate-600 align-middle">
-                      {player.plusMinus || 0}
+                    <td className={`py-0.5 px-1.5 text-center font-mono font-black align-middle ${
+                      pmVal > 0 ? "text-emerald-600 dark:text-emerald-400" : pmVal < 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-500"
+                    }`}>
+                      {pmVal > 0 ? `+${pmVal}` : pmVal}
                     </td>
                     <td className="py-0.5 px-1.5 text-right font-mono text-muted align-middle">
                       {formatSecondsToMmss(totalTime)}

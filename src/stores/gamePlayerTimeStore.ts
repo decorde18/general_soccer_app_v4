@@ -235,13 +235,18 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
     if (!player) return 0;
 
     const game = useGameStore.getState().game;
-    if (!game || game.game_id !== gameId) return 0;
+    if (!game) return 0;
+
+    const gId = Number(game.game_id || game.id);
+    const targetGameId = Number(gameId);
+    if (gId !== targetGameId) return 0;
 
     let plusMinus = 0;
 
     (game.gameEventsGoals || []).forEach((goal: any) => {
       if (get().isPlayerOnFieldAtTime(player, Number(goal.game_time ?? 0))) {
-        plusMinus += goal.team_season_id === player.teamSeasonId ? 1 : -1;
+        const isOurTeamGoal = Number(goal.team_season_id) === Number(player.teamSeasonId);
+        plusMinus += isOurTeamGoal ? 1 : -1;
       }
     });
 

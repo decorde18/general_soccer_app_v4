@@ -98,15 +98,31 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
     return list;
   }, [games, statusFilter, venueFilter, teamSeasonId]);
 
-  const firstUpcomingIndex = useMemo(() => {
-    return processedGames.findIndex((g) => !isPastGameDate(g.startDate));
+  const targetGameRef = useRef<HTMLDivElement | null>(null);
+
+  const closestGameIndex = useMemo(() => {
+    if (processedGames.length === 0) return -1;
+
+    // 1. In progress game first
+    const inProgressIdx = processedGames.findIndex((g) => g.status === "in_progress");
+    if (inProgressIdx !== -1) return inProgressIdx;
+
+    // 2. First upcoming game (date >= today)
+    const upcomingIdx = processedGames.findIndex((g) => !isPastGameDate(g.startDate));
+    if (upcomingIdx !== -1) return upcomingIdx;
+
+    // 3. If all games have passed, pick the last game (most recent past match)
+    return processedGames.length - 1;
   }, [processedGames]);
 
   useEffect(() => {
-    if (dividerRef.current) {
-      dividerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (targetGameRef.current) {
+      const timer = setTimeout(() => {
+        targetGameRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+      return () => clearTimeout(timer);
     }
-  }, [processedGames]);
+  }, [closestGameIndex, processedGames]);
 
   return (
     <div className="space-y-6">
@@ -176,21 +192,22 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
             const isHome = game.homeTeamSeasonId === teamSeasonId;
             const isCompleted = game.status === "completed";
             const isPast = isPastGameDate(game.startDate);
-            const isFirstUpcoming = index === firstUpcomingIndex && firstUpcomingIndex > 0;
+            const isTargetClosest = index === closestGameIndex;
             
             const isInProgress = game.status === "in_progress";
             const isScheduled = game.status === "scheduled" || !game.status;
 
+            // Subtle distinction for past games (slight opacity & soft border)
             let cardOutlineClass = isPast
-              ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100"
-              : "border-border/80 bg-surface/50 opacity-100";
+              ? "border-border/60 bg-surface/40 opacity-85 hover:opacity-100"
+              : "border-border/80 bg-surface/90 opacity-100 shadow-2xs";
             let resultTag = null;
 
             let scoreBadgeClass = "bg-background text-muted border border-border";
             let scoreLabel = "Pending";
 
             if (isInProgress) {
-              cardOutlineClass = "border-emerald-500/35 bg-emerald-500/[0.02] border-l-4 border-l-emerald-500 shadow-xs ring-1 ring-emerald-500/10";
+              cardOutlineClass = "border-emerald-500/40 bg-emerald-500/[0.04] border-l-4 border-l-emerald-500 shadow-md ring-2 ring-emerald-500/20 opacity-100";
               scoreBadgeClass = "bg-emerald-500 text-white border-emerald-500/35 animate-pulse font-extrabold";
               scoreLabel = "LIVE";
               resultTag = (
@@ -199,7 +216,11 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 </span>
               );
             } else if (isScheduled) {
-              cardOutlineClass = "border-border/80 bg-surface/50 border-l-4 border-l-amber-500/60";
+              cardOutlineClass = isTargetClosest
+                ? "border-amber-500/50 bg-surface border-l-4 border-l-amber-500 ring-2 ring-amber-500/20 shadow-md opacity-100"
+                : isPast
+                ? "border-border/60 bg-surface/40 border-l-4 border-l-amber-500/40 opacity-85 hover:opacity-100"
+                : "border-border/80 bg-surface/90 border-l-4 border-l-amber-500/60 opacity-100";
               scoreBadgeClass = "bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold";
               scoreLabel = "SCHED";
               resultTag = (
@@ -213,8 +234,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
               if (teamScore > oppScore) {
                 cardOutlineClass = isPast
-                  ? "border-success/25 bg-success/[0.03] opacity-70 grayscale-[20%] hover:grayscale-0 hover:opacity-100 shadow-sm border-l-4 border-l-success"
-                  : "border-success/30 hover:border-success/60 bg-success/5 shadow-sm border-l-4 border-l-success";
+                  ? "border-success/25 bg-success/[0.02] border-l-4 border-l-success/60 opacity-85 hover:opacity-100"
+                  : "border-success/30 hover:border-success/60 bg-success/5 shadow-sm border-l-4 border-l-success opacity-100";
                 scoreBadgeClass = "bg-success text-white border-success/30";
                 scoreLabel = `W (${teamScore}-${oppScore})`;
                 resultTag = (
@@ -224,8 +245,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 );
               } else if (teamScore < oppScore) {
                 cardOutlineClass = isPast
-                  ? "border-danger/20 bg-danger/[0.015] opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100 shadow-sm border-l-4 border-l-danger"
-                  : "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm border-l-4 border-l-danger";
+                  ? "border-danger/20 bg-danger/[0.015] border-l-4 border-l-danger/60 opacity-85 hover:opacity-100"
+                  : "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm border-l-4 border-l-danger opacity-100";
                 scoreBadgeClass = "bg-danger text-white border-danger/30";
                 scoreLabel = `L (${teamScore}-${oppScore})`;
                 resultTag = (
@@ -235,8 +256,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 );
               } else {
                 cardOutlineClass = isPast
-                  ? "border-border/60 bg-surface/30 opacity-65 grayscale-[30%] hover:grayscale-0 hover:opacity-100 border-l-4 border-l-muted/40"
-                  : "border-border/80 hover:border-muted/50 bg-surface/50 border-l-4 border-l-muted/40";
+                  ? "border-border/60 bg-surface/40 border-l-4 border-l-muted/40 opacity-85 hover:opacity-100"
+                  : "border-border/80 hover:border-muted/50 bg-surface/90 border-l-4 border-l-muted/40 opacity-100";
                 scoreBadgeClass = "bg-muted/15 text-muted border-border";
                 scoreLabel = `D (${teamScore}-${oppScore})`;
                 resultTag = (
@@ -249,9 +270,14 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
             return (
               <React.Fragment key={game.id}>
-                {isFirstUpcoming && (
-                  <div ref={dividerRef} className="relative py-4 flex items-center justify-center">
-                    <div className="w-full border-t-2 border-dashed border-primary/35" />
+                {isTargetClosest && (
+                  <div ref={targetGameRef} className="scroll-mt-32">
+                    <div className="flex items-center justify-between py-1.5 px-3 bg-primary/10 border border-primary/30 rounded-xl text-primary font-extrabold text-[11px] mb-2 shadow-2xs">
+                      <span className="flex items-center gap-1.5 uppercase tracking-wider">
+                        🎯 Closest Match ({isPast ? "Most Recent" : "Up Next"})
+                      </span>
+                      <span className="text-[10px] font-normal text-muted">Auto-focused by date</span>
+                    </div>
                   </div>
                 )}
 

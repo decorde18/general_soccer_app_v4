@@ -8,6 +8,7 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
 import useGameSubsStore, { PendingSub } from "@/stores/gameSubsStore";
+import useGameStore from "@/stores/gameStore";
 import { toast } from "sonner";
 
 interface UpcomingSubsPanelProps {
@@ -104,6 +105,12 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
 
   const getValue = (val: any) => (typeof val === "string" ? val : val?.target?.value ?? "");
 
+  const gameStore = useGameStore();
+  const gameStage = gameStore.getGameStage();
+  const isPeriodBreak =
+    gameStage === gameStore.GAME_STAGES.BETWEEN_PERIODS ||
+    gameStage === gameStore.GAME_STAGES.BEFORE_START;
+
   return (
     <Card variant="outlined" padding="sm" className="flex-1 min-h-0 flex flex-col bg-surface shadow-xs rounded-xl overflow-hidden p-2.5">
       <div className="flex items-center justify-between border-b border-border/40 pb-1 px-1 shrink-0">
@@ -112,12 +119,18 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
           <span className="font-extrabold uppercase tracking-wider text-[10px] text-text">Upcoming Subs ({pendingSubsList.length})</span>
         </div>
         {pendingSubsList.length > 0 && (
-          <button
-            onClick={onConfirmAllSubs}
-            className="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[9px] rounded-md transition-colors cursor-pointer"
-          >
-            Enter All
-          </button>
+          isPeriodBreak ? (
+            <span className="text-[8px] font-extrabold uppercase text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+              Auto-enters at Start
+            </span>
+          ) : (
+            <button
+              onClick={onConfirmAllSubs}
+              className="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[9px] rounded-md transition-colors cursor-pointer"
+            >
+              Enter All
+            </button>
+          )
         )}
       </div>
 
@@ -145,14 +158,16 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
                   >
                     <Pencil size={10} /> Edit
                   </button>
-                  <button
-                    aria-label="Confirm Sub"
-                    onClick={() => onConfirmSingleSub(sub.subId)}
-                    className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[9px] font-bold cursor-pointer transition-colors"
-                    title="Confirm Sub"
-                  >
-                    <Check size={10} /> Enter
-                  </button>
+                  {!isPeriodBreak && (
+                    <button
+                      aria-label="Confirm Sub"
+                      onClick={() => onConfirmSingleSub(sub.subId)}
+                      className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[9px] font-bold cursor-pointer transition-colors"
+                      title="Confirm Sub"
+                    >
+                      <Check size={10} /> Enter
+                    </button>
+                  )}
                   <button
                     aria-label="Cancel Sub"
                     onClick={() => onCancelSub(sub.subId)}

@@ -127,7 +127,12 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
       goalsEvents.filter((g) => matchesPlayer(g.defending_gk_player_game_id)).length
     );
 
-    return { shots, saves, goals, assists, yellowCards, redCards, goalsAgainst };
+    const plusMinus = useGamePlayerTimeStore.getState().calculatePlusMinus(
+      player,
+      storeGame.game_id || storeGame.id || ""
+    );
+
+    return { shots, saves, goals, assists, yellowCards, redCards, goalsAgainst, plusMinus };
   };
 
   const getPlayerStats = props.getPlayerStats ?? defaultGetPlayerStats;
