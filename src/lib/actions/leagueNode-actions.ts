@@ -48,6 +48,7 @@ export async function createLeagueNode(data: Record<string, string>) {
       node_type: parsed.nodeType,
       level: level,
       display_order: displayOrder,
+      match_rules: parsed.matchRules || null,
     },
   });
 
@@ -88,10 +89,30 @@ export async function updateLeagueNode(id: unknown, data: Record<string, string>
       node_type: parsed.nodeType,
       ...(level !== undefined ? { level } : {}),
       ...(parsed.displayOrder !== undefined ? { display_order: parsed.displayOrder } : {}),
+      ...(parsed.matchRules !== undefined ? { match_rules: parsed.matchRules } : {}),
     },
   });
 
   revalidatePath("/admin/leagues");
+}
+
+export async function updateLeagueNodeMatchRules(nodeId: number, rules: any | null) {
+  await verifyAdmin();
+  const numId = Number(nodeId);
+  if (!numId) throw new Error("Node ID required");
+
+  const serialized = rules && Object.keys(rules).length > 0 ? JSON.stringify(rules) : null;
+
+  await prisma.league_nodes.update({
+    where: { id: numId },
+    data: {
+      match_rules: serialized,
+    },
+  });
+
+  revalidatePath("/admin/leagues");
+  revalidatePath("/dashboard");
+  return { success: true };
 }
 
 export async function deleteLeagueNode(id: unknown) {

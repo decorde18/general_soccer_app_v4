@@ -124,6 +124,7 @@ export const leagueNodeSchema = z.object({
   ]),
   level: preprocessOptionalNumber,
   displayOrder: preprocessOptionalNumber,
+  matchRules: z.string().optional().nullable(),
 });
 
 export const teamEnrollmentSchema = z.object({

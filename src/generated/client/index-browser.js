@@ -389,7 +389,8 @@ exports.Prisma.League_nodesScalarFieldEnum = {
   start_date: 'start_date',
   end_date: 'end_date',
   created_at: 'created_at',
-  modified_at: 'modified_at'
+  modified_at: 'modified_at',
+  match_rules: 'match_rules'
 };
 
 exports.Prisma.LeaguesScalarFieldEnum = {

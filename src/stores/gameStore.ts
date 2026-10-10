@@ -49,7 +49,9 @@ const DEFAULT_GAME_SETTINGS: GameSettings = {
   hasOvertime: false,
   overtimePeriods: 2,
   overtimeDuration: 600, // 10 minutes in seconds
-  hasShootout: true,
+  goldenGoal: false,
+  tiebreakerMode: "none",
+  hasShootout: false,
   clockDirection: "up",
   reentryRule: "unlimited",
   autoStopClockOnMajorEvent: true,

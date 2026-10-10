@@ -27030,6 +27030,7 @@ export namespace Prisma {
     end_date: Date | null
     created_at: Date | null
     modified_at: Date | null
+    match_rules: string | null
   }
 
   export type League_nodesMaxAggregateOutputType = {
@@ -27044,6 +27045,7 @@ export namespace Prisma {
     end_date: Date | null
     created_at: Date | null
     modified_at: Date | null
+    match_rules: string | null
   }
 
   export type League_nodesCountAggregateOutputType = {
@@ -27058,6 +27060,7 @@ export namespace Prisma {
     end_date: number
     created_at: number
     modified_at: number
+    match_rules: number
     _all: number
   }
 
@@ -27090,6 +27093,7 @@ export namespace Prisma {
     end_date?: true
     created_at?: true
     modified_at?: true
+    match_rules?: true
   }
 
   export type League_nodesMaxAggregateInputType = {
@@ -27104,6 +27108,7 @@ export namespace Prisma {
     end_date?: true
     created_at?: true
     modified_at?: true
+    match_rules?: true
   }
 
   export type League_nodesCountAggregateInputType = {
@@ -27118,6 +27123,7 @@ export namespace Prisma {
     end_date?: true
     created_at?: true
     modified_at?: true
+    match_rules?: true
     _all?: true
   }
 
@@ -27219,6 +27225,7 @@ export namespace Prisma {
     end_date: Date | null
     created_at: Date | null
     modified_at: Date | null
+    match_rules: string | null
     _count: League_nodesCountAggregateOutputType | null
     _avg: League_nodesAvgAggregateOutputType | null
     _sum: League_nodesSumAggregateOutputType | null
@@ -27252,6 +27259,7 @@ export namespace Prisma {
     end_date?: boolean
     created_at?: boolean
     modified_at?: boolean
+    match_rules?: boolean
     game_standings_inclusions?: boolean | league_nodes$game_standings_inclusionsArgs<ExtArgs>
     league_node_seasons?: boolean | league_nodes$league_node_seasonsArgs<ExtArgs>
     leagues?: boolean | leaguesDefaultArgs<ExtArgs>
@@ -27274,6 +27282,7 @@ export namespace Prisma {
     end_date?: boolean
     created_at?: boolean
     modified_at?: boolean
+    match_rules?: boolean
   }
 
   export type league_nodesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -27308,6 +27317,7 @@ export namespace Prisma {
       end_date: Date | null
       created_at: Date | null
       modified_at: Date | null
+      match_rules: string | null
     }, ExtArgs["result"]["league_nodes"]>
     composites: {}
   }
@@ -27694,6 +27704,7 @@ export namespace Prisma {
     readonly end_date: FieldRef<"league_nodes", 'DateTime'>
     readonly created_at: FieldRef<"league_nodes", 'DateTime'>
     readonly modified_at: FieldRef<"league_nodes", 'DateTime'>
+    readonly match_rules: FieldRef<"league_nodes", 'String'>
   }
     
 
@@ -56644,7 +56655,8 @@ export namespace Prisma {
     start_date: 'start_date',
     end_date: 'end_date',
     created_at: 'created_at',
-    modified_at: 'modified_at'
+    modified_at: 'modified_at',
+    match_rules: 'match_rules'
   };
 
   export type League_nodesScalarFieldEnum = (typeof League_nodesScalarFieldEnum)[keyof typeof League_nodesScalarFieldEnum]
@@ -59099,6 +59111,7 @@ export namespace Prisma {
     end_date?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
     created_at?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
+    match_rules?: StringNullableFilter<"league_nodes"> | string | null
     game_standings_inclusions?: Game_standings_inclusionsListRelationFilter
     league_node_seasons?: League_node_seasonsListRelationFilter
     leagues?: XOR<LeaguesRelationFilter, leaguesWhereInput>
@@ -59119,6 +59132,7 @@ export namespace Prisma {
     end_date?: SortOrderInput | SortOrder
     created_at?: SortOrderInput | SortOrder
     modified_at?: SortOrderInput | SortOrder
+    match_rules?: SortOrderInput | SortOrder
     game_standings_inclusions?: game_standings_inclusionsOrderByRelationAggregateInput
     league_node_seasons?: league_node_seasonsOrderByRelationAggregateInput
     leagues?: leaguesOrderByWithRelationInput
@@ -59142,6 +59156,7 @@ export namespace Prisma {
     end_date?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
     created_at?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
+    match_rules?: StringNullableFilter<"league_nodes"> | string | null
     game_standings_inclusions?: Game_standings_inclusionsListRelationFilter
     league_node_seasons?: League_node_seasonsListRelationFilter
     leagues?: XOR<LeaguesRelationFilter, leaguesWhereInput>
@@ -59162,6 +59177,7 @@ export namespace Prisma {
     end_date?: SortOrderInput | SortOrder
     created_at?: SortOrderInput | SortOrder
     modified_at?: SortOrderInput | SortOrder
+    match_rules?: SortOrderInput | SortOrder
     _count?: league_nodesCountOrderByAggregateInput
     _avg?: league_nodesAvgOrderByAggregateInput
     _max?: league_nodesMaxOrderByAggregateInput
@@ -59184,6 +59200,7 @@ export namespace Prisma {
     end_date?: DateTimeNullableWithAggregatesFilter<"league_nodes"> | Date | string | null
     created_at?: DateTimeNullableWithAggregatesFilter<"league_nodes"> | Date | string | null
     modified_at?: DateTimeNullableWithAggregatesFilter<"league_nodes"> | Date | string | null
+    match_rules?: StringNullableWithAggregatesFilter<"league_nodes"> | string | null
   }
 
   export type leaguesWhereInput = {
@@ -63455,6 +63472,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutLeague_nodesInput
     leagues: leaguesCreateNestedOneWithoutLeague_nodesInput
@@ -63475,6 +63493,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutLeague_nodesInput
     other_league_nodes?: league_nodesUncheckedCreateNestedManyWithoutLeague_nodesInput
@@ -63490,6 +63509,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUpdateManyWithoutLeague_nodesNestedInput
     leagues?: leaguesUpdateOneRequiredWithoutLeague_nodesNestedInput
@@ -63510,6 +63530,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     other_league_nodes?: league_nodesUncheckedUpdateManyWithoutLeague_nodesNestedInput
@@ -63528,6 +63549,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
   }
 
   export type league_nodesUpdateManyMutationInput = {
@@ -63539,6 +63561,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type league_nodesUncheckedUpdateManyInput = {
@@ -63553,6 +63576,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type leaguesCreateInput = {
@@ -67960,6 +67984,7 @@ export namespace Prisma {
     end_date?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
+    match_rules?: SortOrder
   }
 
   export type league_nodesAvgOrderByAggregateInput = {
@@ -67982,6 +68007,7 @@ export namespace Prisma {
     end_date?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
+    match_rules?: SortOrder
   }
 
   export type league_nodesMinOrderByAggregateInput = {
@@ -67996,6 +68022,7 @@ export namespace Prisma {
     end_date?: SortOrder
     created_at?: SortOrder
     modified_at?: SortOrder
+    match_rules?: SortOrder
   }
 
   export type league_nodesSumOrderByAggregateInput = {
@@ -80284,6 +80311,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutLeague_nodesInput
     leagues: leaguesCreateNestedOneWithoutLeague_nodesInput
     league_nodes?: league_nodesCreateNestedOneWithoutOther_league_nodesInput
@@ -80303,6 +80331,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutLeague_nodesInput
     other_league_nodes?: league_nodesUncheckedCreateNestedManyWithoutLeague_nodesInput
     awards?: awardsUncheckedCreateNestedManyWithoutLeague_nodesInput
@@ -80413,6 +80442,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     league_node_seasons?: league_node_seasonsUpdateManyWithoutLeague_nodesNestedInput
     leagues?: leaguesUpdateOneRequiredWithoutLeague_nodesNestedInput
     league_nodes?: league_nodesUpdateOneWithoutOther_league_nodesNestedInput
@@ -80432,6 +80462,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     other_league_nodes?: league_nodesUncheckedUpdateManyWithoutLeague_nodesNestedInput
     awards?: awardsUncheckedUpdateManyWithoutLeague_nodesNestedInput
@@ -82221,6 +82252,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsCreateNestedManyWithoutLeague_nodesInput
     leagues: leaguesCreateNestedOneWithoutLeague_nodesInput
     league_nodes?: league_nodesCreateNestedOneWithoutOther_league_nodesInput
@@ -82240,6 +82272,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedCreateNestedManyWithoutLeague_nodesInput
     other_league_nodes?: league_nodesUncheckedCreateNestedManyWithoutLeague_nodesInput
     awards?: awardsUncheckedCreateNestedManyWithoutLeague_nodesInput
@@ -82345,6 +82378,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUpdateManyWithoutLeague_nodesNestedInput
     leagues?: leaguesUpdateOneRequiredWithoutLeague_nodesNestedInput
     league_nodes?: league_nodesUpdateOneWithoutOther_league_nodesNestedInput
@@ -82364,6 +82398,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     other_league_nodes?: league_nodesUncheckedUpdateManyWithoutLeague_nodesNestedInput
     awards?: awardsUncheckedUpdateManyWithoutLeague_nodesNestedInput
@@ -82547,6 +82582,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutLeague_nodesInput
     leagues: leaguesCreateNestedOneWithoutLeague_nodesInput
@@ -82566,6 +82602,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutLeague_nodesInput
     awards?: awardsUncheckedCreateNestedManyWithoutLeague_nodesInput
@@ -82585,6 +82622,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutLeague_nodesInput
     leagues: leaguesCreateNestedOneWithoutLeague_nodesInput
@@ -82603,6 +82641,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutLeague_nodesInput
     other_league_nodes?: league_nodesUncheckedCreateNestedManyWithoutLeague_nodesInput
@@ -82777,6 +82816,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUpdateManyWithoutLeague_nodesNestedInput
     leagues?: leaguesUpdateOneRequiredWithoutLeague_nodesNestedInput
@@ -82796,6 +82836,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     awards?: awardsUncheckedUpdateManyWithoutLeague_nodesNestedInput
@@ -82832,6 +82873,7 @@ export namespace Prisma {
     end_date?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
     created_at?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"league_nodes"> | Date | string | null
+    match_rules?: StringNullableFilter<"league_nodes"> | string | null
   }
 
   export type awardsUpsertWithWhereUniqueWithoutLeague_nodesInput = {
@@ -82859,6 +82901,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutLeague_nodesInput
     league_nodes?: league_nodesCreateNestedOneWithoutOther_league_nodesInput
@@ -82877,6 +82920,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutLeague_nodesInput
     other_league_nodes?: league_nodesUncheckedCreateNestedManyWithoutLeague_nodesInput
@@ -92619,6 +92663,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutLeague_nodesInput
     leagues: leaguesCreateNestedOneWithoutLeague_nodesInput
@@ -92638,6 +92683,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedCreateNestedManyWithoutLeague_nodesInput
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutLeague_nodesInput
     other_league_nodes?: league_nodesUncheckedCreateNestedManyWithoutLeague_nodesInput
@@ -92890,6 +92936,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUpdateManyWithoutLeague_nodesNestedInput
     leagues?: leaguesUpdateOneRequiredWithoutLeague_nodesNestedInput
@@ -92909,6 +92956,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     other_league_nodes?: league_nodesUncheckedUpdateManyWithoutLeague_nodesNestedInput
@@ -94396,6 +94444,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
   }
 
   export type awardsCreateManyLeague_nodesInput = {
@@ -94483,6 +94532,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUpdateManyWithoutLeague_nodesNestedInput
     leagues?: leaguesUpdateOneRequiredWithoutLeague_nodesNestedInput
@@ -94501,6 +94551,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     other_league_nodes?: league_nodesUncheckedUpdateManyWithoutLeague_nodesNestedInput
@@ -94518,6 +94569,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type awardsUpdateWithoutLeague_nodesInput = {
@@ -94581,6 +94633,7 @@ export namespace Prisma {
     end_date?: Date | string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
+    match_rules?: string | null
   }
 
   export type league_nodesUpdateWithoutLeaguesInput = {
@@ -94592,6 +94645,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUpdateManyWithoutLeague_nodesNestedInput
     league_nodes?: league_nodesUpdateOneWithoutOther_league_nodesNestedInput
@@ -94610,6 +94664,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
     game_standings_inclusions?: game_standings_inclusionsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutLeague_nodesNestedInput
     other_league_nodes?: league_nodesUncheckedUpdateManyWithoutLeague_nodesNestedInput
@@ -94627,6 +94682,7 @@ export namespace Prisma {
     end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    match_rules?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type eventsCreateManyLocationsInput = {

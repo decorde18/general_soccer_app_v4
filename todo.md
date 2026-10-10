@@ -591,7 +591,7 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Prisma Client: Regenerated Prisma Client (`npx prisma generate`).
 
 - [ ] **30.2 Player Profile Honor Roll & Badges**
-  - [ ] UI Component: Add **"Honors & Accolades"** section with visual badges (e.g. 🏆 *All-American*, 🥇 *All-District*, ⭐ *Team Most Improved*) on player profile cards and roster details.
+  - [ ] UI Component: Add **"Honors & Accolades"** section with visual badges (e.g. 🏆 _All-American_, 🥇 _All-District_, ⭐ _Team Most Improved_) on player profile cards and roster details.
 
 - [ ] **30.3 Team & Club Trophy Case / Wall of Honor**
   - [ ] UI Component: Add **"Trophy Case & Wall of Honor"** tab on `/teams/[teamSeasonId]` and club hubs listing all-time award winners and season achievements.
@@ -614,6 +614,4 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 
 double check for mobile phone responsive
 team game schedule needs to be responsive
-
-
-
+- [x] all nodes and sub nodes need default settings (ie Collective Cup has set game length to 40 min and tiebreakers, but U12 has 9v9 and 30 min) — implemented hierarchical settings resolver, schema match_rules, node settings editor, and creation modals.

@@ -2,6 +2,52 @@
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
 
+### [2026-10-10 07:54] Hierarchical League & Sub-Node Match Settings Inheritance & Tiebreaker Standard
+- **Type**: Feature / Architecture & Rule Standard
+- **Summary**: Implemented a comprehensive hierarchical match settings and rules structure across Leagues, Sub-Nodes (Divisions, Conferences, Districts, Age Groups), and Game Creation:
+  1. **Tiebreaker Standard (Default Draw / No Shootout)**:
+     - Established universal system default (`SYSTEM_DEFAULT_GAME_SETTINGS`) with `tiebreakerMode: "none"` and `hasShootout: false`. Regular games and league matches end in a tie by default unless explicitly configured otherwise by a tournament or node override.
+     - Removed hardcoded `hasShootout: true` / PK shootout defaults across `game-actions.ts`, `GameSchedulerModal.tsx`, `gameStore.ts`, `GameSettingsEditor.tsx`, and `LeaguesStructureClient.tsx`.
+  2. **Schema & Node Match Rules**:
+     - Added `match_rules String? @db.Text` to `league_nodes` in `prisma/schema.prisma` and synchronized database schema via `prisma db push` and `prisma generate`.
+     - Updated Zod validation schema `leagueNodeSchema` to support optional `matchRules`.
+     - Added `matchRules` to `LeagueNode` in `queries.ts` and mapped it from `league_nodes.match_rules`.
+  3. **Hierarchical Settings Resolver (`src/lib/utils/gameRules.ts`)**:
+     - Built `resolveHierarchyGameSettings` which traverses `System Baseline -> League -> Ancestor Nodes -> Target Node` to compute the fully resolved match settings.
+     - Built `safeParseMatchRules`, `mergeGameSettings`, and `inferRulesFromNodeName` (e.g. automatically discerning 9v9 with 30m halves for U11/U12, 7v7 with 25m halves for U9/U10, 11v11 40m for high school/NFHS).
+  4. **League & Node Creation UI Defaults Display**:
+     - **Create League Modal**: Displays the baseline match settings summary (11v11, 40m halves, tie by default, unlimited subs) and provides an accordion toggle allowing the user to customize competition match rules prior to creation.
+     - **Create Node Modal**: Computes and displays the inherited match rules and source name, offers smart 1-click suggestions when age groups like U11/U12 are typed, and provides an expandable match rules override section to save custom node settings (e.g. 9v9, 30m halves, or knockout shootout rules).
+  5. **League Structure Management (`LeaguesStructureClient.tsx`)**:
+     - Upgraded Match Rules modal to handle both top-level Leagues and Sub-Nodes.
+     - Added visual indicator badges showing whether a node is using custom rules or inheriting from parent.
+     - Added `Reset to Inherited Rules` server action (`updateLeagueNodeMatchRules`) allowing users to easily discard node overrides and revert to parent rules.
+     - Added quick hover action buttons (`Sliders` icon) on every node in the hierarchy explorer tree with amber highlighting for nodes containing custom overrides.
+     - Added active match rules summary card in the selected node details panel.
+  6. **Game Creation & Schedule Import Inheritance**:
+     - In `GameSchedulerModal.tsx`, `gameRules` initializes to system defaults (regular tie), and when a primary competition node is selected, dynamically updates to the node's resolved settings.
+     - In `createGame` (`game-actions.ts`), games created under a competition node automatically inherit the node's hierarchical match settings when custom settings are not explicitly passed.
+     - In `batchImportSchedule` (`import-actions.ts`), imported fixtures automatically resolve the target division/league node rules and populate game period counts, durations, overtime, shootout, and notes settings.
+  7. **Testing & Type Safety**:
+     - Created unit test suite `gameRules.test.ts` covering system defaults, tiebreaker coherence, node name inference, and multi-level inheritance (TSSAA NFHS 11v11 40m regular season vs district tournament shootout; Collective Cup 11v11 35m vs U11/U12 9v9 30m vs playoff shootout).
+     - Passed `npx tsc --noEmit` and all 20 test files (80 tests) in `npx vitest run` with zero errors.
+- **Modified Files**:
+  - `prisma/schema.prisma`
+  - `src/types/game.ts`
+  - `src/lib/utils/gameRules.ts`
+  - `src/lib/utils/__tests__/gameRules.test.ts`
+  - `src/lib/validations/schemas.ts`
+  - `src/lib/data/queries.ts`
+  - `src/lib/actions/league-actions.ts`
+  - `src/lib/actions/leagueNode-actions.ts`
+  - `src/lib/actions/game-actions.ts`
+  - `src/lib/actions/import-actions.ts`
+  - `src/components/admin/LeaguesStructureClient.tsx`
+  - `src/components/dashboard/GameSchedulerModal.tsx`
+  - `src/components/game/GameSettingsEditor.tsx`
+  - `src/stores/gameStore.ts`
+  - `updates.md`
+
 ### [2026-10-10 07:05] Fix Imported Match Schedule Date Parsing & Database Remediation
 - **Type**: Bug Fix / Data Remediation & Importer Reliability
 - **Summary**: Investigated and fixed date parsing issue where imported schedule fixtures defaulted to `1970-01-01` / `2026-01-01`:

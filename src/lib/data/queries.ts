@@ -188,6 +188,7 @@ export interface LeagueNode {
   displayOrder: number;
   startDate: string | null;
   endDate: string | null;
+  matchRules?: string | null;
 }
 
 export interface LeagueNodeSeason {
@@ -241,10 +242,16 @@ export interface Game {
     hasOvertime?: boolean;
     overtimePeriods?: number;
     overtimeDuration?: number;
+    goldenGoal?: boolean;
+    tiebreakerMode?: string;
     hasShootout?: boolean;
     clockDirection?: string;
     reentryRule?: string;
+    maxTotalSubsPerTeam?: number;
+    maxSubWindowsPerGame?: number;
+    maxSubWindowsPerHalf?: number;
     autoStopClockOnMajorEvent?: boolean;
+    clockRuleProfile?: string;
   };
   ourName?: string;
   opponentName?: string;
@@ -487,6 +494,7 @@ export async function getLeagueNodes(leagueId?: number): Promise<LeagueNode[]> {
     displayOrder: r.display_order ?? 0,
     startDate: toDateString(r.start_date),
     endDate: toDateString(r.end_date),
+    matchRules: r.match_rules ?? null,
   }));
 }
 
@@ -1178,12 +1186,18 @@ function mapGameRow(r: any): Game {
       periodCount: r.default_reg_periods ?? 2,
       periodDuration: r.period_duration ?? 2400,
       hasOvertime: Boolean(r.ot_if_tied),
-      overtimePeriods: 2,
+      overtimePeriods: notesObj?.overtimePeriods ?? 2,
       overtimeDuration: r.ot_duration ?? 600,
+      goldenGoal: Boolean(notesObj?.goldenGoal),
+      tiebreakerMode: notesObj?.tiebreakerMode ?? (r.ot_if_tied ? "overtime_then_pk" : r.so_if_tied ? "pk_only" : "none"),
       hasShootout: Boolean(r.so_if_tied),
-      clockDirection: "up",
+      clockDirection: notesObj?.clockDirection ?? "up",
       reentryRule: notesObj?.reentryRule ?? "unlimited",
+      maxTotalSubsPerTeam: notesObj?.maxTotalSubsPerTeam,
+      maxSubWindowsPerGame: notesObj?.maxSubWindowsPerGame,
+      maxSubWindowsPerHalf: notesObj?.maxSubWindowsPerHalf,
       autoStopClockOnMajorEvent: notesObj?.autoStopClockOnMajorEvent ?? false,
+      clockRuleProfile: notesObj?.clockRuleProfile ?? "USSF",
     },
   };
 }

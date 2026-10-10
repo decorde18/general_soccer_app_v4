@@ -8,6 +8,7 @@ import { resolveOrCreateDivisionHierarchy } from "@/lib/actions/league-actions";
 import { deriveClubAbbreviation } from "@/lib/utils/teamName";
 import { discernVenueAndField, discernClubAndTeam, isTbdOrSeedTeam } from "@/lib/utils/locationUtils";
 import { normalizeGender, GenderValue } from "@/lib/utils/gender";
+import { resolveHierarchyGameSettings, SYSTEM_DEFAULT_GAME_SETTINGS } from "@/lib/utils/gameRules";
 
 export interface TeamImportRecord {
   clubName: string;
@@ -554,27 +555,7 @@ export async function batchImportSchedule(
       notes = `Playoff Matchup: ${hLabel} vs ${aLabel}`;
     }
 
-    // 6. Create game
-    const game = await prisma.games.create({
-      data: {
-        season_id: seasonId,
-        home_team_season_id: homeTeamSeason.id,
-        away_team_season_id: awayTeamSeason.id,
-        start_date: startDate,
-        start_time: startTime,
-        end_date: endDate,
-        end_time: endTime,
-        location_id: locationId,
-        sublocation_id: sublocationId,
-        game_type: gameTypeEnum,
-        notes: notes,
-        status: "scheduled",
-      },
-    });
-
-    gamesCreated++;
-
-    // 7. Attach to league node if specified OR auto-deduce hierarchy if leagueId provided
+    // 6. Attach to league node if specified OR auto-deduce hierarchy if leagueId provided
     let targetNodeSeasonId = rec.leagueNodeId;
     if (!targetNodeSeasonId && rec.leagueId && (rec.divisionName || rec.homeTeamName)) {
       try {
@@ -591,56 +572,116 @@ export async function batchImportSchedule(
       }
     }
 
+    let resolvedNodeSeason: { leagueNodeId: number; nodeSeasonId: number } | null = null;
     if (targetNodeSeasonId) {
-      const resolved = await ensureLeagueNodeSeason(targetNodeSeasonId, seasonId);
-      if (resolved) {
-        const existingGln = await prisma.game_league_nodes.findFirst({
-          where: { game_id: game.id, league_node_id: resolved.nodeSeasonId },
-        });
-        if (!existingGln) {
-          await prisma.game_league_nodes.create({
-            data: {
-              game_id: game.id,
-              league_node_id: resolved.nodeSeasonId,
-              is_primary: true,
-            },
-          });
-        }
+      resolvedNodeSeason = await ensureLeagueNodeSeason(targetNodeSeasonId, seasonId);
+    }
 
-        const existingGsi = await prisma.game_standings_inclusions.findFirst({
-          where: { game_id: game.id, league_node_id: resolved.leagueNodeId },
+    // Resolve hierarchical match settings (e.g. 9v9 30m halves for U11/U12 or NFHS for HS)
+    let matchSettings = SYSTEM_DEFAULT_GAME_SETTINGS;
+    try {
+      const allNodes = await prisma.league_nodes.findMany({
+        select: { id: true, name: true, parent_id: true, league_id: true, match_rules: true },
+      });
+      const allLeagues = await prisma.leagues.findMany({
+        select: { id: true, name: true, match_rules: true, reg_periods: true, period_duration: true, ot_if_tied: true, ot_duration: true, so_if_tied: true },
+      });
+      const hierarchyRes = resolveHierarchyGameSettings({
+        nodeId: resolvedNodeSeason?.leagueNodeId || rec.leagueNodeId,
+        allNodes: allNodes.map((n) => ({
+          id: n.id,
+          name: n.name,
+          parentId: n.parent_id,
+          leagueId: n.league_id,
+          matchRules: n.match_rules,
+        })),
+        leagueId: rec.leagueId,
+        allLeagues,
+      });
+      matchSettings = hierarchyRes.resolvedRules;
+    } catch (err) {
+      console.error("Failed to resolve hierarchy match rules for imported game:", err);
+    }
+
+    let parsedNotes: Record<string, any> = {};
+    if (notes) {
+      parsedNotes = { rawNotes: notes };
+    }
+    parsedNotes = { ...parsedNotes, ...matchSettings };
+    const finalNotesStr = JSON.stringify(parsedNotes);
+
+    // 7. Create game with resolved settings
+    const game = await prisma.games.create({
+      data: {
+        season_id: seasonId,
+        home_team_season_id: homeTeamSeason.id,
+        away_team_season_id: awayTeamSeason.id,
+        start_date: startDate,
+        start_time: startTime,
+        end_date: endDate,
+        end_time: endTime,
+        location_id: locationId,
+        sublocation_id: sublocationId,
+        game_type: gameTypeEnum,
+        default_reg_periods: matchSettings.periodCount,
+        period_duration: matchSettings.periodDuration,
+        ot_if_tied: matchSettings.hasOvertime,
+        ot_duration: matchSettings.overtimeDuration,
+        so_if_tied: matchSettings.hasShootout,
+        notes: finalNotesStr,
+        status: "scheduled",
+      },
+    });
+
+    gamesCreated++;
+
+    if (resolvedNodeSeason) {
+      const existingGln = await prisma.game_league_nodes.findFirst({
+        where: { game_id: game.id, league_node_id: resolvedNodeSeason.nodeSeasonId },
+      });
+      if (!existingGln) {
+        await prisma.game_league_nodes.create({
+          data: {
+            game_id: game.id,
+            league_node_id: resolvedNodeSeason.nodeSeasonId,
+            is_primary: true,
+          },
         });
-        if (!existingGsi) {
-          await prisma.game_standings_inclusions.create({
-            data: {
-              game_id: game.id,
-              league_node_id: resolved.leagueNodeId,
-              counts_for_standings: rec.gameType !== "friendly",
-            },
-          });
-        }
+      }
+
+      const existingGsi = await prisma.game_standings_inclusions.findFirst({
+        where: { game_id: game.id, league_node_id: resolvedNodeSeason.leagueNodeId },
+      });
+      if (!existingGsi) {
+        await prisma.game_standings_inclusions.create({
+          data: {
+            game_id: game.id,
+            league_node_id: resolvedNodeSeason.leagueNodeId,
+            counts_for_standings: rec.gameType !== "friendly",
+          },
+        });
+      }
 
         // Auto-enroll Home and Away teams into Team League Enrollments
         const homeEnrollment = await prisma.team_league_enrollments.findFirst({
-          where: { team_season_id: homeTeamSeason.id, league_node_season_id: resolved.nodeSeasonId },
+          where: { team_season_id: homeTeamSeason.id, league_node_season_id: resolvedNodeSeason.nodeSeasonId },
         });
         if (!homeEnrollment) {
           await prisma.team_league_enrollments.create({
-            data: { team_season_id: homeTeamSeason.id, league_node_season_id: resolved.nodeSeasonId, is_active: true },
+            data: { team_season_id: homeTeamSeason.id, league_node_season_id: resolvedNodeSeason.nodeSeasonId, is_active: true },
           });
         }
 
         const awayEnrollment = await prisma.team_league_enrollments.findFirst({
-          where: { team_season_id: awayTeamSeason.id, league_node_season_id: resolved.nodeSeasonId },
+          where: { team_season_id: awayTeamSeason.id, league_node_season_id: resolvedNodeSeason.nodeSeasonId },
         });
         if (!awayEnrollment) {
           await prisma.team_league_enrollments.create({
-            data: { team_season_id: awayTeamSeason.id, league_node_season_id: resolved.nodeSeasonId, is_active: true },
+            data: { team_season_id: awayTeamSeason.id, league_node_season_id: resolvedNodeSeason.nodeSeasonId, is_active: true },
           });
         }
       }
     }
-  }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/scores");

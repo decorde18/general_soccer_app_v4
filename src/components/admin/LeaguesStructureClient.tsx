@@ -35,6 +35,7 @@ import {
   createLeagueNode,
   updateLeagueNode,
   deleteLeagueNode,
+  updateLeagueNodeMatchRules,
 } from "@/lib/actions/leagueNode-actions";
 import {
   createTeamEnrollment,
@@ -42,6 +43,11 @@ import {
 } from "@/lib/actions/teamEnrollment-actions";
 import MatchSettingsAccordions from "@/components/game/MatchSettingsAccordions";
 import type { GameSettings } from "@/types/game";
+import {
+  SYSTEM_DEFAULT_GAME_SETTINGS,
+  resolveHierarchyGameSettings,
+  inferRulesFromNodeName,
+} from "@/lib/utils/gameRules";
 
 interface LeaguesStructureClientProps {
   leaguesData: { label: string; value: string }[];
@@ -95,60 +101,100 @@ export default function LeaguesStructureClient({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
 
-  // Default Match Rules Modal states
+  // Match Rules Modal states (supports both League and Node levels)
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
-  const [rulesLeagueId, setRulesLeagueId] = useState<number | null>(null);
-  const [rulesLeagueName, setRulesLeagueName] = useState<string>("");
-  const [leagueRules, setLeagueRules] = useState<GameSettings>({
-    playersOnField: 11,
-    periodCount: 2,
-    periodDuration: 2400,
-    hasOvertime: false,
-    overtimePeriods: 2,
-    overtimeDuration: 600,
-    hasShootout: true,
-    clockDirection: "up",
-    reentryRule: "unlimited",
-  });
+  const [rulesTarget, setRulesTarget] = useState<{
+    type: "league" | "node";
+    id: number;
+    name: string;
+    leagueId: number;
+    hasCustomOverrides: boolean;
+    inheritedFromName?: string;
+    inheritedFromType?: "league" | "node" | "system";
+  } | null>(null);
+  const [activeRules, setActiveRules] = useState<GameSettings>(SYSTEM_DEFAULT_GAME_SETTINGS);
+  const [inheritedRulesBackup, setInheritedRulesBackup] = useState<GameSettings>(SYSTEM_DEFAULT_GAME_SETTINGS);
   const [isSavingRules, setIsSavingRules] = useState(false);
 
-  const handleOpenDefaultRules = (leagueId: number) => {
+  const handleOpenLeagueRules = (leagueId: number) => {
     const lRecord = leaguesRecords?.find((l) => l.id === leagueId);
-    setRulesLeagueId(leagueId);
-    setRulesLeagueName(lRecord?.name || "League");
-
-    let parsedRules: GameSettings = {
-      playersOnField: 11,
-      periodCount: 2,
-      periodDuration: 2400,
-      hasOvertime: false,
-      overtimePeriods: 2,
-      overtimeDuration: 600,
-      hasShootout: true,
-      clockDirection: "up",
-      reentryRule: "unlimited",
-    };
-
-    if (lRecord?.matchRules) {
-      try {
-        const json = typeof lRecord.matchRules === "string" ? JSON.parse(lRecord.matchRules) : lRecord.matchRules;
-        parsedRules = { ...parsedRules, ...json };
-      } catch {}
-    }
-    setLeagueRules(parsedRules);
+    const { resolvedRules } = resolveHierarchyGameSettings({
+      leagueId,
+      allLeagues: leaguesRecords,
+    });
+    setRulesTarget({
+      type: "league",
+      id: leagueId,
+      name: lRecord?.name || "League",
+      leagueId,
+      hasCustomOverrides: Boolean(lRecord?.matchRules),
+      inheritedFromName: "System Standard",
+      inheritedFromType: "system",
+    });
+    setActiveRules(resolvedRules);
+    setInheritedRulesBackup(SYSTEM_DEFAULT_GAME_SETTINGS);
     setIsRulesModalOpen(true);
   };
 
-  const handleSaveDefaultRules = async () => {
-    if (!rulesLeagueId) return;
+  const handleOpenNodeRules = (nodeRecord: any) => {
+    const { resolvedRules, inheritedFrom, hasCustomOverrides } = resolveHierarchyGameSettings({
+      nodeId: nodeRecord.id,
+      allNodes: leagueNodesRecords,
+      leagueId: nodeRecord.leagueId,
+      allLeagues: leaguesRecords,
+    });
+
+    const parentResolved = resolveHierarchyGameSettings({
+      nodeId: nodeRecord.parentId || undefined,
+      allNodes: leagueNodesRecords,
+      leagueId: nodeRecord.leagueId,
+      allLeagues: leaguesRecords,
+    });
+
+    setRulesTarget({
+      type: "node",
+      id: nodeRecord.id,
+      name: nodeRecord.name,
+      leagueId: nodeRecord.leagueId,
+      hasCustomOverrides,
+      inheritedFromName: inheritedFrom.name,
+      inheritedFromType: inheritedFrom.type,
+    });
+    setActiveRules(resolvedRules);
+    setInheritedRulesBackup(parentResolved.resolvedRules);
+    setIsRulesModalOpen(true);
+  };
+
+  const handleSaveRules = async () => {
+    if (!rulesTarget) return;
     setIsSavingRules(true);
     try {
-      await updateLeagueMatchRules(rulesLeagueId, leagueRules);
-      toast.success("Default match rules saved for competition!");
+      if (rulesTarget.type === "league") {
+        await updateLeagueMatchRules(rulesTarget.id, activeRules);
+        toast.success(`Default match rules saved for ${rulesTarget.name}!`);
+      } else {
+        await updateLeagueNodeMatchRules(rulesTarget.id, activeRules);
+        toast.success(`Match rules updated for ${rulesTarget.name}!`);
+      }
       setIsRulesModalOpen(false);
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || "Failed to save match rules.");
+    } finally {
+      setIsSavingRules(false);
+    }
+  };
+
+  const handleResetNodeRulesToInherited = async () => {
+    if (!rulesTarget || rulesTarget.type !== "node") return;
+    setIsSavingRules(true);
+    try {
+      await updateLeagueNodeMatchRules(rulesTarget.id, null);
+      toast.success(`Reset rules for ${rulesTarget.name} to inherit from parent!`);
+      setIsRulesModalOpen(false);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reset match rules.");
     } finally {
       setIsSavingRules(false);
     }
@@ -186,6 +232,8 @@ export default function LeaguesStructureClient({
   const [leagueFormAbbrev, setLeagueFormAbbrev] = useState("");
   const [leagueFormIsTournament, setLeagueFormIsTournament] = useState(false);
   const [leagueFormDescription, setLeagueFormDescription] = useState("");
+  const [leagueFormRules, setLeagueFormRules] = useState<GameSettings>(SYSTEM_DEFAULT_GAME_SETTINGS);
+  const [isCustomizeLeagueRulesOpen, setIsCustomizeLeagueRulesOpen] = useState(false);
   const [isSavingLeague, setIsSavingLeague] = useState(false);
 
   // Form states
@@ -196,6 +244,12 @@ export default function LeaguesStructureClient({
   const [nodeFormParentId, setNodeFormParentId] = useState("");
   const [isParentNodeCreation, setIsParentNodeCreation] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // New Node Match Rules states
+  const [nodeFormRules, setNodeFormRules] = useState<GameSettings>(SYSTEM_DEFAULT_GAME_SETTINGS);
+  const [nodeInheritedRules, setNodeInheritedRules] = useState<GameSettings>(SYSTEM_DEFAULT_GAME_SETTINGS);
+  const [nodeFormHasCustomRules, setNodeFormHasCustomRules] = useState(false);
+  const [nodeInheritedSourceName, setNodeInheritedSourceName] = useState("Parent League");
 
   const [enrollFormTeamSeasonId, setEnrollFormTeamSeasonId] = useState("");
   const [isEnrolling, setIsEnrolling] = useState(false);
@@ -339,11 +393,12 @@ export default function LeaguesStructureClient({
       const leagueId = Number(selectedItemId.replace("league-", ""));
       const league = leaguesData.find((l) => Number(l.value) === leagueId);
       if (!league) return null;
+      const leagueRecord = leaguesRecords?.find((l) => l.id === leagueId);
       return {
         type: "league" as const,
         id: leagueId,
         name: league.label,
-        record: league,
+        record: leagueRecord || league,
       };
     }
 
@@ -449,6 +504,7 @@ export default function LeaguesStructureClient({
         ...(leagueFormAbbrev.trim() ? { abbreviation: leagueFormAbbrev.trim() } : {}),
         isTournament: leagueFormIsTournament ? "true" : "false",
         ...(leagueFormDescription.trim() ? { description: leagueFormDescription.trim() } : {}),
+        matchRules: JSON.stringify(leagueFormRules),
       });
 
       toast.success(`League "${leagueFormName}" created successfully!`);
@@ -457,6 +513,8 @@ export default function LeaguesStructureClient({
       setLeagueFormAbbrev("");
       setLeagueFormIsTournament(false);
       setLeagueFormDescription("");
+      setLeagueFormRules(SYSTEM_DEFAULT_GAME_SETTINGS);
+      setIsCustomizeLeagueRulesOpen(false);
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || "Failed to create league.");
@@ -496,6 +554,19 @@ export default function LeaguesStructureClient({
   // Helper to handle parent node selection change
   const handleParentIdChange = (newParentId: string) => {
     setNodeFormParentId(newParentId);
+    const pNodeId = newParentId ? Number(newParentId) : undefined;
+    const resolved = resolveHierarchyGameSettings({
+      nodeId: pNodeId,
+      allNodes: leagueNodesRecords,
+      leagueId: Number(nodeFormLeagueId || 0),
+      allLeagues: leaguesRecords,
+    });
+    setNodeInheritedRules(resolved.resolvedRules);
+    if (!nodeFormHasCustomRules) {
+      setNodeFormRules(resolved.resolvedRules);
+    }
+    const parentNodeRecord = leagueNodesRecords.find((n) => n.id === pNodeId);
+    setNodeInheritedSourceName(parentNodeRecord?.name || leaguesData.find((l) => Number(l.value) === Number(nodeFormLeagueId))?.label || "Parent");
   };
 
   // Open Add Top-Level Parent Node modal
@@ -508,6 +579,15 @@ export default function LeaguesStructureClient({
 
     const league =
       leaguesData.find((l) => Number(l.value) === effectiveLeagueId) || leaguesData[0];
+
+    const resolved = resolveHierarchyGameSettings({
+      leagueId: effectiveLeagueId,
+      allLeagues: leaguesRecords,
+    });
+    setNodeInheritedRules(resolved.resolvedRules);
+    setNodeFormRules(resolved.resolvedRules);
+    setNodeFormHasCustomRules(false);
+    setNodeInheritedSourceName(league?.label || "League");
 
     setIsParentNodeCreation(true);
     setAddParentItem({
@@ -536,6 +616,19 @@ export default function LeaguesStructureClient({
         leagueId: Number(firstLeague.value),
       };
     }
+
+    const targetNodeId = effectiveParent?.type === "node" ? effectiveParent.nodeId : undefined;
+    const targetLeagueId = effectiveParent?.leagueId;
+    const resolved = resolveHierarchyGameSettings({
+      nodeId: targetNodeId,
+      allNodes: leagueNodesRecords,
+      leagueId: targetLeagueId,
+      allLeagues: leaguesRecords,
+    });
+    setNodeInheritedRules(resolved.resolvedRules);
+    setNodeFormRules(resolved.resolvedRules);
+    setNodeFormHasCustomRules(false);
+    setNodeInheritedSourceName(effectiveParent?.name || "Parent");
 
     setIsParentNodeCreation(false);
     setAddParentItem(effectiveParent);
@@ -570,6 +663,7 @@ export default function LeaguesStructureClient({
         name: nodeFormName.trim(),
         nodeType: nodeFormType,
         ...(nodeFormOrder.trim() ? { displayOrder: nodeFormOrder.trim() } : {}),
+        ...(nodeFormHasCustomRules ? { matchRules: JSON.stringify(nodeFormRules) } : {}),
       });
 
       toast.success(`Node "${nodeFormName}" created successfully`);
@@ -791,6 +885,22 @@ export default function LeaguesStructureClient({
               className='p-1 hover:bg-border/50 rounded text-muted hover:text-primary'
             >
               <Plus size={12} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (node.type === "league") {
+                  handleOpenLeagueRules(node.leagueId);
+                } else {
+                  handleOpenNodeRules(node.record);
+                }
+              }}
+              title={node.record?.matchRules ? "Match Rules (Custom Override)" : "Match Rules"}
+              className={`p-1 hover:bg-border/50 rounded transition-colors ${
+                node.record?.matchRules ? "text-amber-400 font-bold hover:text-amber-300" : "text-muted hover:text-primary"
+              }`}
+            >
+              <Sliders size={12} />
             </button>
             {node.type === "node" && (
               <>
@@ -1072,16 +1182,22 @@ export default function LeaguesStructureClient({
                         </Button>
                       </Link>
 
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        className='flex items-center gap-1.5 border-primary/40 text-primary hover:bg-primary/10 font-bold'
-                        onClick={() => handleOpenDefaultRules(effectiveLeagueId)}
-                        title='Configure default match settings for all matches in this competition'
-                      >
-                        <Sliders size={14} />
-                        <span>Default Rules</span>
-                      </Button>
+                      {selectedInfo.type === "league" && (
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          className={`flex items-center gap-1.5 font-bold ${
+                            (selectedInfo.record as any)?.matchRules
+                              ? "border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                              : "border-primary/40 text-primary hover:bg-primary/10"
+                          }`}
+                          onClick={() => handleOpenLeagueRules(selectedInfo.id)}
+                          title='Configure default match settings for all matches in this competition'
+                        >
+                          <Sliders size={14} />
+                          <span>League Default Rules</span>
+                        </Button>
+                      )}
                     </>
                   )}
 
@@ -1135,6 +1251,20 @@ export default function LeaguesStructureClient({
                       <Button
                         variant='outline'
                         size='sm'
+                        className={`flex items-center gap-1.5 font-bold ${
+                          selectedInfo.record?.matchRules
+                            ? "border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                            : "border-primary/40 text-primary hover:bg-primary/10"
+                        }`}
+                        onClick={() => handleOpenNodeRules(selectedInfo.record)}
+                        title='Configure match rules for this specific node'
+                      >
+                        <Sliders size={14} />
+                        <span>{selectedInfo.record?.matchRules ? "Node Rules (Custom)" : "Node Rules (Inherited)"}</span>
+                      </Button>
+                      <Button
+                        variant='outline'
+                        size='sm'
                         className='flex items-center gap-1.5'
                         onClick={() => handleOpenEditNode(selectedInfo.record)}
                       >
@@ -1159,23 +1289,94 @@ export default function LeaguesStructureClient({
 
               {/* Sub-node details card section */}
               {selectedInfo.type === "node" && (
-                <div className='grid grid-cols-2 gap-4 bg-surface-hover/40 border border-border/50 rounded-xl p-4 text-sm'>
-                  <div>
-                    <span className='text-muted block text-xs'>
-                      Hierarchy level
-                    </span>
-                    <span className='font-bold text-text'>
-                      {selectedInfo.level ?? 0}
-                    </span>
+                <div className='space-y-4'>
+                  <div className='grid grid-cols-2 gap-4 bg-surface-hover/40 border border-border/50 rounded-xl p-4 text-sm'>
+                    <div>
+                      <span className='text-muted block text-xs'>
+                        Hierarchy level
+                      </span>
+                      <span className='font-bold text-text'>
+                        {selectedInfo.level ?? 0}
+                      </span>
+                    </div>
+                    <div>
+                      <span className='text-muted block text-xs'>
+                        Display order index
+                      </span>
+                      <span className='font-bold text-text'>
+                        {selectedInfo.displayOrder ?? 0}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className='text-muted block text-xs'>
-                      Display order index
-                    </span>
-                    <span className='font-bold text-text'>
-                      {selectedInfo.displayOrder ?? 0}
-                    </span>
-                  </div>
+
+                  {/* Active Match Rules Card */}
+                  {(() => {
+                    const nodeRulesResolved = resolveHierarchyGameSettings({
+                      nodeId: selectedInfo.id,
+                      allNodes: leagueNodesRecords,
+                      leagueId: selectedInfo.leagueId,
+                      allLeagues: leaguesRecords,
+                    });
+                    const r = nodeRulesResolved.resolvedRules;
+                    const isCustom = nodeRulesResolved.hasCustomOverrides;
+
+                    return (
+                      <div className='bg-surface-hover/30 border border-border/70 rounded-xl p-4 space-y-3'>
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center gap-2'>
+                            <Sliders size={15} className='text-primary' />
+                            <span className='text-xs font-bold uppercase tracking-wider text-text'>
+                              Active Match Rules & Settings
+                            </span>
+                          </div>
+                          <div className='flex items-center gap-2'>
+                            <span
+                              className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                                isCustom
+                                  ? "bg-amber-500/15 border-amber-500/30 text-amber-500"
+                                  : "bg-primary/10 border-primary/20 text-primary"
+                              }`}
+                            >
+                              {isCustom ? "⚡ Custom Node Override" : `🔗 Inherited from ${nodeRulesResolved.inheritedFrom.name}`}
+                            </span>
+                            <Button
+                              variant='outline'
+                              size='xs'
+                              onClick={() => handleOpenNodeRules(selectedInfo.record)}
+                              className='text-xs font-bold'
+                            >
+                              {isCustom ? "Edit Override" : "Customize"}
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs'>
+                          <div className='bg-surface/80 p-2.5 rounded-lg border border-border/50'>
+                            <span className='text-[10px] text-muted uppercase font-bold block'>Format</span>
+                            <span className='font-bold text-text'>{r.playersOnField}v{r.playersOnField} ({r.playersOnField} Starters)</span>
+                          </div>
+                          <div className='bg-surface/80 p-2.5 rounded-lg border border-border/50'>
+                            <span className='text-[10px] text-muted uppercase font-bold block'>Periods</span>
+                            <span className='font-bold text-text'>{r.periodCount} x {Math.round(r.periodDuration / 60)} min</span>
+                          </div>
+                          <div className='bg-surface/80 p-2.5 rounded-lg border border-border/50'>
+                            <span className='text-[10px] text-muted uppercase font-bold block'>Tiebreaker</span>
+                            <span className='font-bold text-text'>
+                              {r.tiebreakerMode === "none"
+                                ? "Regular Tie (No Shootout)"
+                                : r.tiebreakerMode === "pk_only"
+                                ? "Direct PK Shootout"
+                                : `OT (${r.overtimePeriods || 2}x${Math.round((r.overtimeDuration || 600) / 60)}m) + PKs`}
+                            </span>
+                          </div>
+                          <div className='bg-surface/80 p-2.5 rounded-lg border border-border/50'>
+                            <span className='text-[10px] text-muted uppercase font-bold block'>Re-entry</span>
+                            <span className='font-bold text-text capitalize'>{r.reentryRule.replace("_", " ")}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -1410,7 +1611,7 @@ export default function LeaguesStructureClient({
             ? `Create Top-Level Parent Node`
             : `Add Sub-node under "${addParentItem?.name}"`
         }
-        size='md'
+        size='lg'
       >
         <form onSubmit={handleCreateNodeSubmit} className='space-y-4'>
           <div className='space-y-1.5'>
@@ -1482,6 +1683,74 @@ export default function LeaguesStructureClient({
               value={nodeFormOrder}
               onChange={(e: any) => setNodeFormOrder(e.target.value)}
             />
+          </div>
+
+          {/* Match Rules Defaults & Overrides */}
+          <div className='rounded-xl border border-border/80 bg-surface/60 p-4 space-y-3 mt-2'>
+            <div className='flex items-center justify-between'>
+              <span className='text-xs font-bold text-text flex items-center gap-1.5'>
+                <Sliders size={14} className='text-primary' />
+                <span>Default Match Settings for this Node</span>
+              </span>
+              <span className='text-[11px] font-semibold text-muted'>
+                Inheriting from: <span className='text-text font-bold'>{nodeInheritedSourceName}</span>
+              </span>
+            </div>
+
+            <div className='text-xs text-muted font-medium flex flex-wrap gap-x-4 gap-y-1.5 py-1 px-2.5 rounded-lg bg-background/50 border border-border/40'>
+              <span>• <strong>{nodeFormRules.playersOnField}v{nodeFormRules.playersOnField}</strong></span>
+              <span>• <strong>{nodeFormRules.periodCount} x {Math.round(nodeFormRules.periodDuration / 60)} min</strong></span>
+              <span>• <strong>{nodeFormRules.tiebreakerMode === "none" ? "Regular Tie (No Shootout)" : nodeFormRules.tiebreakerMode === "pk_only" ? "Direct PK Shootout" : "Overtime then PKs"}</strong></span>
+              <span>• Subs: <strong>{nodeFormRules.reentryRule}</strong></span>
+            </div>
+
+            {/* Smart detection suggestion */}
+            {(() => {
+              const inferred = inferRulesFromNodeName(nodeFormName);
+              const hasSuggestion = Object.keys(inferred).length > 0 && (
+                (inferred.playersOnField && inferred.playersOnField !== nodeInheritedRules.playersOnField) ||
+                (inferred.periodDuration && inferred.periodDuration !== nodeInheritedRules.periodDuration)
+              );
+              if (!hasSuggestion || nodeFormHasCustomRules) return null;
+              return (
+                <div className='flex items-center justify-between p-2 rounded-lg bg-primary/10 border border-primary/20 text-xs'>
+                  <span className='text-primary font-medium'>
+                    💡 Detected format: {inferred.playersOnField ? `${inferred.playersOnField}v${inferred.playersOnField}` : ""} {inferred.periodDuration ? `${Math.round(inferred.periodDuration / 60)}m halves` : ""}:
+                  </span>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setNodeFormHasCustomRules(true);
+                      setNodeFormRules((prev) => ({ ...prev, ...inferred }));
+                    }}
+                    className='font-bold text-primary hover:underline text-xs cursor-pointer'
+                  >
+                    Apply Suggestion
+                  </button>
+                </div>
+              );
+            })()}
+
+            <div className='pt-2 border-t border-border/40'>
+              <Checkbox
+                label='Customize / override match rules specifically for this node'
+                checked={nodeFormHasCustomRules}
+                onChange={(e: any) => setNodeFormHasCustomRules(e.target.checked)}
+              />
+            </div>
+
+            {nodeFormHasCustomRules && (
+              <div className='pt-2 space-y-2 border-t border-border/30 max-h-[45vh] overflow-y-auto pr-1'>
+                <p className='text-[11px] text-muted'>
+                  Matches in this division will use these specific settings (e.g. 9v9, 30 min halves) instead of parent competition rules:
+                </p>
+                <MatchSettingsAccordions
+                  settings={nodeFormRules}
+                  onChange={setNodeFormRules}
+                  defaultExpandedAll={false}
+                />
+              </div>
+            )}
           </div>
 
           <div className='flex justify-end gap-2 border-t border-border pt-4 mt-6'>
@@ -1599,7 +1868,7 @@ export default function LeaguesStructureClient({
         isOpen={isAddLeagueOpen}
         onClose={() => setIsAddLeagueOpen(false)}
         title='Create Brand-New League / Competition'
-        size='md'
+        size='lg'
       >
         <form onSubmit={handleCreateLeagueSubmit} className='space-y-4'>
           <div className='space-y-1.5'>
@@ -1641,6 +1910,45 @@ export default function LeaguesStructureClient({
             />
           </div>
 
+          {/* Default Match Rules section */}
+          <div className='rounded-xl border border-border/80 bg-surface/60 p-4 space-y-3 mt-2'>
+            <div className='flex items-center justify-between'>
+              <span className='text-xs font-bold text-text flex items-center gap-1.5'>
+                <Sliders size={14} className='text-primary' />
+                <span>Default Match Settings</span>
+              </span>
+              <span className='text-[11px] font-semibold text-muted'>Competition Baseline</span>
+            </div>
+
+            <div className='text-xs text-muted font-medium flex flex-wrap gap-x-4 gap-y-1.5 py-1 px-2.5 rounded-lg bg-background/50 border border-border/40'>
+              <span>• <strong>{leagueFormRules.playersOnField}v{leagueFormRules.playersOnField}</strong></span>
+              <span>• <strong>{leagueFormRules.periodCount} x {Math.round(leagueFormRules.periodDuration / 60)} min</strong></span>
+              <span>• <strong>{leagueFormRules.tiebreakerMode === "none" ? "Regular Tie (No Shootout)" : leagueFormRules.tiebreakerMode === "pk_only" ? "Direct PK Shootout" : "Overtime then PKs"}</strong></span>
+              <span>• Subs: <strong>{leagueFormRules.reentryRule}</strong></span>
+            </div>
+
+            <div className='pt-2 border-t border-border/40'>
+              <Checkbox
+                label='Customize default match rules for this competition now'
+                checked={isCustomizeLeagueRulesOpen}
+                onChange={(e: any) => setIsCustomizeLeagueRulesOpen(e.target.checked)}
+              />
+            </div>
+
+            {isCustomizeLeagueRulesOpen && (
+              <div className='pt-2 space-y-2 border-t border-border/30 max-h-[45vh] overflow-y-auto pr-1'>
+                <p className='text-[11px] text-muted'>
+                  Configure periods, duration, tiebreaker policy, and substitutions for all matches under this competition:
+                </p>
+                <MatchSettingsAccordions
+                  settings={leagueFormRules}
+                  onChange={setLeagueFormRules}
+                  defaultExpandedAll={false}
+                />
+              </div>
+            )}
+          </div>
+
           <div className='flex justify-end gap-2 border-t border-border pt-4 mt-6'>
             <Button
               type='button'
@@ -1657,37 +1965,93 @@ export default function LeaguesStructureClient({
         </form>
       </Modal>
 
-      {/* MODAL: DEFAULT LEAGUE MATCH RULES */}
+      {/* MODAL: MATCH RULES CONFIGURATION (LEAGUE OR NODE) */}
       <Modal
         isOpen={isRulesModalOpen}
         onClose={() => setIsRulesModalOpen(false)}
-        title={`Default Match Rules — ${rulesLeagueName}`}
+        title={
+          rulesTarget?.type === "league"
+            ? `Default Match Rules — ${rulesTarget.name}`
+            : `Node Match Rules — ${rulesTarget?.name}`
+        }
+        size='lg'
       >
         <div className='space-y-4 max-h-[75vh] overflow-y-auto p-1'>
-          <p className='text-xs text-muted'>
-            Set the default period count, durations, overtime, shootout, and substitution rules for all matches created under this league or tournament.
-          </p>
+          {rulesTarget?.type === "league" ? (
+            <p className='text-xs text-muted'>
+              Set competition-wide default period count, durations, tiebreaker rules, and substitutions. Sub-divisions (e.g. U11/U12 or knockout stages) will inherit these defaults unless specifically overridden.
+            </p>
+          ) : (
+            <div className={`p-3.5 rounded-xl border text-xs space-y-2 ${
+              rulesTarget?.hasCustomOverrides
+                ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
+                : "bg-surface/80 border-border/80 text-muted"
+            }`}>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <Sliders size={16} className={rulesTarget?.hasCustomOverrides ? "text-amber-500" : "text-primary"} />
+                  <span className='font-bold text-text'>
+                    {rulesTarget?.hasCustomOverrides
+                      ? "Custom Rules Active for this Node"
+                      : `Inheriting from ${rulesTarget?.inheritedFromName || "Competition"}`}
+                  </span>
+                </div>
+                {rulesTarget?.hasCustomOverrides && (
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='xs'
+                    onClick={handleResetNodeRulesToInherited}
+                    disabled={isSavingRules}
+                    className='text-xs font-bold border-amber-500/40 text-amber-500 hover:bg-amber-500/10'
+                  >
+                    Reset to Inherited Rules
+                  </Button>
+                )}
+              </div>
+              <p className='text-[11px] leading-relaxed'>
+                {rulesTarget?.hasCustomOverrides
+                  ? `Matches scheduled under "${rulesTarget?.name}" use the customized settings below rather than the parent rules.`
+                  : `Currently adopting the rules from "${rulesTarget?.inheritedFromName}". Modifying and saving settings below will establish a custom override for matches in this node.`}
+              </p>
+            </div>
+          )}
+
           <MatchSettingsAccordions
-            settings={leagueRules}
-            onChange={setLeagueRules}
+            settings={activeRules}
+            onChange={setActiveRules}
             defaultExpandedAll={true}
           />
-          <div className='flex justify-end gap-2 border-t border-border pt-4 mt-4'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => setIsRulesModalOpen(false)}
-              disabled={isSavingRules}
-            >
-              Cancel
-            </Button>
-            <Button
-              type='button'
-              onClick={handleSaveDefaultRules}
-              disabled={isSavingRules}
-            >
-              {isSavingRules ? "Saving Rules..." : "Save Default Rules"}
-            </Button>
+
+          <div className='flex justify-between items-center border-t border-border pt-4 mt-4'>
+            <div>
+              {rulesTarget?.type === "node" && rulesTarget.hasCustomOverrides && (
+                <button
+                  type='button'
+                  onClick={() => setActiveRules(inheritedRulesBackup)}
+                  className='text-xs text-muted hover:text-text underline cursor-pointer'
+                >
+                  Load Parent Values into Editor
+                </button>
+              )}
+            </div>
+            <div className='flex gap-2'>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setIsRulesModalOpen(false)}
+                disabled={isSavingRules}
+              >
+                Cancel
+              </Button>
+              <Button
+                type='button'
+                onClick={handleSaveRules}
+                disabled={isSavingRules}
+              >
+                {isSavingRules ? "Saving Rules..." : (rulesTarget?.type === "league" ? "Save Default Rules" : "Save Node Rules")}
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>

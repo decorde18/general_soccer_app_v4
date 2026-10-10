@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireSession, verifyTeamAccess } from "@/lib/auth/auth-utils";
 import { parseGameDatesAndTimesUTC } from "@/lib/utils/dateTimeUtils";
+import { resolveHierarchyGameSettings } from "@/lib/utils/gameRules";
 
 export interface CompetitionNodeInput {
   nodeId: number;
@@ -201,6 +202,35 @@ export async function createGame(data: CreateGameData) {
     startTimeObj = startTime;
   }
 
+  let effectiveSettings = data.gameSettings;
+  if (!effectiveSettings && data.competitionNodes && data.competitionNodes.length > 0) {
+    const primaryComp = data.competitionNodes.find((c) => c.isPrimary) || data.competitionNodes[0];
+    if (primaryComp) {
+      try {
+        const allNodes = await prisma.league_nodes.findMany({
+          select: { id: true, name: true, parent_id: true, league_id: true, match_rules: true },
+        });
+        const allLeagues = await prisma.leagues.findMany({
+          select: { id: true, name: true, match_rules: true, reg_periods: true, period_duration: true, ot_if_tied: true, ot_duration: true, so_if_tied: true },
+        });
+        const { resolvedRules } = resolveHierarchyGameSettings({
+          nodeId: primaryComp.nodeId,
+          allNodes: allNodes.map((n) => ({
+            id: n.id,
+            name: n.name,
+            parentId: n.parent_id,
+            leagueId: n.league_id,
+            matchRules: n.match_rules,
+          })),
+          allLeagues,
+        });
+        effectiveSettings = resolvedRules;
+      } catch (err) {
+        console.error("Failed to auto-resolve match settings from competition node:", err);
+      }
+    }
+  }
+
   let parsedNotes: Record<string, any> = {};
   if (data.notes) {
     try {
@@ -209,8 +239,8 @@ export async function createGame(data: CreateGameData) {
       parsedNotes = { rawNotes: data.notes };
     }
   }
-  if (data.gameSettings) {
-    parsedNotes = { ...parsedNotes, ...data.gameSettings };
+  if (effectiveSettings) {
+    parsedNotes = { ...parsedNotes, ...effectiveSettings };
   }
   const finalNotesStr = Object.keys(parsedNotes).length > 0 ? JSON.stringify(parsedNotes) : null;
 
@@ -226,11 +256,11 @@ export async function createGame(data: CreateGameData) {
       location_id: data.locationId ?? null,
       sublocation_id: data.sublocationId ?? null,
       game_type: data.gameType ?? "league",
-      default_reg_periods: data.gameSettings?.periodCount ?? data.defaultRegPeriods ?? 2,
-      period_duration: data.gameSettings?.periodDuration ?? data.periodDuration ?? 2400,
-      ot_if_tied: data.gameSettings?.hasOvertime ?? data.otIfTied ?? false,
-      ot_duration: data.gameSettings?.overtimeDuration ?? data.otDuration ?? 600,
-      so_if_tied: data.gameSettings?.hasShootout ?? data.soIfTied ?? true,
+      default_reg_periods: effectiveSettings?.periodCount ?? data.defaultRegPeriods ?? 2,
+      period_duration: effectiveSettings?.periodDuration ?? data.periodDuration ?? 2400,
+      ot_if_tied: effectiveSettings?.hasOvertime ?? data.otIfTied ?? false,
+      ot_duration: effectiveSettings?.overtimeDuration ?? data.otDuration ?? 600,
+      so_if_tied: effectiveSettings?.hasShootout ?? data.soIfTied ?? false,
       notes: finalNotesStr,
       status: "scheduled",
     },
@@ -598,35 +628,41 @@ export async function getSchedulerOptions() {
       location: c.location,
     })),
     teams: teamsList,
-    leagueNodes: terminalNodes.map((node) => {
-      let defaultGameSettings: any = null;
-      if (node.leagues?.match_rules) {
-        try {
-          defaultGameSettings = typeof node.leagues.match_rules === "string" 
-            ? JSON.parse(node.leagues.match_rules) 
-            : node.leagues.match_rules;
-        } catch {}
-      }
-      if (!defaultGameSettings && (node.leagues?.reg_periods || node.leagues?.period_duration)) {
-        defaultGameSettings = {
-          periodCount: node.leagues.reg_periods || 2,
-          periodDuration: (node.leagues.period_duration || 40) * 60,
-          hasOvertime: Boolean(node.leagues.ot_if_tied),
-          overtimeDuration: (node.leagues.ot_duration || 10) * 60,
-          hasShootout: node.leagues.so_if_tied !== false,
-        };
-      }
+    leagueNodes: (() => {
+      const allNodesLike = leagueNodes.map((n) => ({
+        id: n.id,
+        name: n.name,
+        parentId: n.parent_id,
+        leagueId: n.league_id,
+        matchRules: n.match_rules,
+      }));
+      const allLeaguesMap = new Map<number, any>();
+      leagueNodes.forEach((n) => {
+        if (n.leagues && !allLeaguesMap.has(n.leagues.id)) {
+          allLeaguesMap.set(n.leagues.id, n.leagues);
+        }
+      });
+      const allLeaguesLike = Array.from(allLeaguesMap.values());
 
-      return {
-        id: node.id,
-        leagueId: node.league_id,
-        leagueName: node.leagues?.name || "League",
-        nodeName: node.name,
-        isTournament: node.leagues?.is_tournament || false,
-        displayName: buildHierarchyTitle(node),
-        defaultGameSettings: defaultGameSettings || undefined,
-      };
-    }),
+      return terminalNodes.map((node) => {
+        const { resolvedRules } = resolveHierarchyGameSettings({
+          nodeId: node.id,
+          allNodes: allNodesLike,
+          leagueId: node.league_id,
+          allLeagues: allLeaguesLike,
+        });
+
+        return {
+          id: node.id,
+          leagueId: node.league_id,
+          leagueName: node.leagues?.name || "League",
+          nodeName: node.name,
+          isTournament: node.leagues?.is_tournament || false,
+          displayName: buildHierarchyTitle(node),
+          defaultGameSettings: resolvedRules,
+        };
+      });
+    })(),
     enrollments: enrollments.map((e) => ({
       teamSeasonId: e.team_season_id,
       leagueNodeId: e.league_node_seasons.league_node_id,

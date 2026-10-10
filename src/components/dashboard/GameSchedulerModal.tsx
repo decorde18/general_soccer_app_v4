@@ -36,6 +36,7 @@ import TabbedPanel, { TabItem } from "@/components/ui/TabbedPanel";
 import InlineEntityModal, { InlineEntityType } from "@/components/dashboard/InlineEntityModal";
 import MatchSettingsAccordions from "@/components/game/MatchSettingsAccordions";
 import type { GameSettings } from "@/types/game";
+import { SYSTEM_DEFAULT_GAME_SETTINGS } from "@/lib/utils/gameRules";
 
 interface TeamOption {
   teamSeasonId: number;
@@ -152,17 +153,7 @@ export default function GameSchedulerModal({
   const [sublocationId, setSublocationId] = useState<number | "">("");
 
   // Game Rules Override State
-  const [gameRules, setGameRules] = useState<GameSettings>({
-    playersOnField: 11,
-    periodCount: 2,
-    periodDuration: 2400,
-    hasOvertime: false,
-    overtimePeriods: 2,
-    overtimeDuration: 600,
-    hasShootout: true,
-    clockDirection: "up",
-    reentryRule: "unlimited",
-  });
+  const [gameRules, setGameRules] = useState<GameSettings>(SYSTEM_DEFAULT_GAME_SETTINGS);
 
   // Warnings and UI State
   const [warningMsg, setWarningMsg] = useState<string | null>(null);

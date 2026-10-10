@@ -33,7 +33,9 @@ export default function GameSettingsEditor({
       hasOvertime: false,
       overtimePeriods: 2,
       overtimeDuration: 600,
-      hasShootout: true,
+      goldenGoal: false,
+      tiebreakerMode: "none",
+      hasShootout: false,
       clockDirection: "up",
       reentryRule: "unlimited",
     }

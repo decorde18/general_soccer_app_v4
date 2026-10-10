@@ -7,12 +7,25 @@ import { getTeamSeasonRecords } from "@/lib/data/queries";
 import { leagueSchema } from "@/lib/validations/schemas";
 import { normalizeGender } from "@/lib/utils/gender";
 import type { GameSettings } from "@/types/game";
+import { SYSTEM_DEFAULT_GAME_SETTINGS } from "@/lib/utils/gameRules";
 
 export async function createLeague(data: Record<string, string>) {
   await verifyAdmin();
 
   // Validate server-side with Zod
   const parsedData = leagueSchema.parse(data);
+
+  let parsedRules: Partial<GameSettings> | null = null;
+  if (parsedData.matchRules) {
+    try {
+      parsedRules = JSON.parse(parsedData.matchRules);
+    } catch {}
+  }
+
+  const effectiveRules: GameSettings = {
+    ...SYSTEM_DEFAULT_GAME_SETTINGS,
+    ...(parsedRules || {}),
+  };
 
   try {
     const newLeague = await prisma.leagues.create({
@@ -23,7 +36,12 @@ export async function createLeague(data: Record<string, string>) {
         status: parsedData.status,
         description: parsedData.description,
         is_tournament: parsedData.isTournament,
-        match_rules: parsedData.matchRules,
+        match_rules: JSON.stringify(effectiveRules),
+        reg_periods: effectiveRules.periodCount,
+        period_duration: effectiveRules.periodDuration ? Math.round(effectiveRules.periodDuration / 60) : 40,
+        ot_if_tied: effectiveRules.hasOvertime,
+        ot_duration: effectiveRules.overtimeDuration ? Math.round(effectiveRules.overtimeDuration / 60) : 10,
+        so_if_tied: effectiveRules.hasShootout,
       },
     });
     
