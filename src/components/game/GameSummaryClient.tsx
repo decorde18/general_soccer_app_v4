@@ -18,6 +18,8 @@ import {
   AlertTriangle,
   Save,
   Zap,
+  Check,
+  Trophy,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
@@ -29,6 +31,11 @@ import useGamePlayersStore from "@/stores/gamePlayersStore";
 import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
 import { apiFetch } from "@/app/api/fetcher";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
+import {
+  GOAL_METHOD_OPTIONS,
+  parseGoalTypes,
+  normalizeGoalTypesJson,
+} from "@/lib/utils/goalUtils";
 
 export interface UnifiedPlayEvent {
   id: string; // unique timeline id
@@ -80,12 +87,27 @@ export default function GameSummaryClient() {
   const [editTimeSec, setEditTimeSec] = useState<string>("0");
   const [editPrimaryPlayerId, setEditPrimaryPlayerId] = useState<string>("");
   const [editSecondaryPlayerId, setEditSecondaryPlayerId] = useState<string>("");
+  const [editIsOwnGoal, setEditIsOwnGoal] = useState<boolean>(false);
+  const [editSelectedMethods, setEditSelectedMethods] = useState<Set<string>>(new Set(["open_play"]));
   const [editGoalType, setEditGoalType] = useState<string>("open_play");
   const [editPkOutcome, setEditPkOutcome] = useState<string>("goal");
   const [editCardType, setEditCardType] = useState<string>("yellow");
   const [editCardReason, setEditCardReason] = useState<string>("");
   const [editNotes, setEditNotes] = useState<string>("");
   const [editIsOpponent, setEditIsOpponent] = useState<boolean>(false);
+
+  const toggleEditGoalMethod = (methodId: string) => {
+    const next = new Set(editSelectedMethods);
+    if (next.has(methodId)) {
+      next.delete(methodId);
+    } else {
+      next.add(methodId);
+    }
+    if (next.size === 0) {
+      next.add("open_play");
+    }
+    setEditSelectedMethods(next);
+  };
 
   // Play-by-Play Filter & Search State
   const [periodFilter, setPeriodFilter] = useState<string>("all");
@@ -710,6 +732,10 @@ export default function GameSummaryClient() {
     setEditIsOpponent(event.team === "opp");
 
     if (event.category === "goal" && event.rawRecord) {
+      const isOg = Boolean(event.rawRecord.is_own_goal);
+      setEditIsOwnGoal(isOg);
+      const parsed = parseGoalTypes(event.rawRecord.goal_types);
+      setEditSelectedMethods(new Set(parsed.length > 0 ? parsed : ["open_play"]));
       setEditGoalType(event.rawRecord.goal_types ? String(event.rawRecord.goal_types) : "open_play");
     } else if (event.category === "penalty" && event.rawRecord) {
       setEditPkOutcome(event.rawRecord.outcome || "goal");
@@ -743,11 +769,13 @@ export default function GameSummaryClient() {
         : rawInputSecs;
 
       if (editingEvent.category === "goal" && editingEvent.rawType === "goal") {
+        const methodsArr = editIsOwnGoal ? ["own_goal"] : Array.from(editSelectedMethods);
         const goalPayload = {
           team_season_id: editIsOpponent ? Number(game.opponentId) : Number(teamSeasonId),
-          scorer_player_game_id: editPrimaryPlayerId ? Number(editPrimaryPlayerId) : null,
-          assist_player_game_id: editSecondaryPlayerId ? Number(editSecondaryPlayerId) : null,
-          goal_types: editGoalType,
+          scorer_player_game_id: (!editIsOwnGoal && editPrimaryPlayerId) ? Number(editPrimaryPlayerId) : null,
+          assist_player_game_id: (!editIsOwnGoal && editSecondaryPlayerId) ? Number(editSecondaryPlayerId) : null,
+          is_own_goal: editIsOwnGoal,
+          goal_types: normalizeGoalTypesJson(methodsArr.length > 0 ? methodsArr : ["open_play"]),
         };
         await apiFetch("game_events_goals", "PUT", goalPayload, editingEvent.rawId);
 
@@ -1986,39 +2014,111 @@ export default function GameSummaryClient() {
 
             {/* GOAL SPECIFIC FIELDS */}
             {editingEvent.category === "goal" && (
-              <>
+              <div className="space-y-3">
+                {/* Standard Goal vs Own Goal Toggle */}
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-muted mb-1">Goal Scorer</label>
-                  <select
-                    value={editPrimaryPlayerId}
-                    onChange={(e) => setEditPrimaryPlayerId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-background border border-border text-text font-bold"
-                  >
-                    <option value="">-- Select Goal Scorer --</option>
-                    {playerSelectOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-[10px] font-bold uppercase text-muted mb-1.5">Goal Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditIsOwnGoal(false)}
+                      className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        !editIsOwnGoal
+                          ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-2xs"
+                          : "bg-surface border-border text-muted hover:border-emerald-500/40"
+                      }`}
+                    >
+                      <Trophy size={14} className={!editIsOwnGoal ? "text-emerald-500" : "text-muted"} />
+                      <span>Standard Goal ⚽</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditIsOwnGoal(true);
+                        setEditPrimaryPlayerId("");
+                        setEditSecondaryPlayerId("");
+                      }}
+                      className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        editIsOwnGoal
+                          ? "bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400 shadow-2xs"
+                          : "bg-surface border-border text-muted hover:border-rose-500/40"
+                      }`}
+                    >
+                      <AlertTriangle size={14} className={editIsOwnGoal ? "text-rose-500" : "text-muted"} />
+                      <span>Own Goal ⚠️</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-muted mb-1">Assister (Optional)</label>
-                  <select
-                    value={editSecondaryPlayerId}
-                    onChange={(e) => setEditSecondaryPlayerId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-background border border-border text-text font-bold"
-                  >
-                    <option value="">-- Unassisted / None --</option>
-                    {playerSelectOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
+                {editIsOwnGoal && (
+                  <div className="p-2.5 bg-amber-500/10 border border-amber-500/40 rounded-xl text-amber-600 dark:text-amber-400 text-xs">
+                    <p className="font-bold flex items-center gap-1.5">
+                      <AlertTriangle size={14} />
+                      <span>Own Goal Recorded</span>
+                    </p>
+                    <p className="text-[11px] text-muted mt-0.5">
+                      No player goal or assist credit will be attributed.
+                    </p>
+                  </div>
+                )}
+
+                {!editIsOwnGoal && (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-muted mb-1">Goal Scorer</label>
+                      <select
+                        value={editPrimaryPlayerId}
+                        onChange={(e) => setEditPrimaryPlayerId(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-background border border-border text-text font-bold"
+                      >
+                        <option value="">-- Select Goal Scorer --</option>
+                        {playerSelectOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-muted mb-1">Assister (Optional)</label>
+                      <select
+                        value={editSecondaryPlayerId}
+                        onChange={(e) => setEditSecondaryPlayerId(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-background border border-border text-text font-bold"
+                      >
+                        <option value="">-- Unassisted / None --</option>
+                        {playerSelectOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-muted mb-1.5">Goal Method / Type</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        {GOAL_METHOD_OPTIONS.map(({ id, label }) => (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => toggleEditGoalMethod(id)}
+                            className={`py-1.5 px-2 rounded-lg text-[10px] font-bold border transition-all text-left flex items-center justify-between cursor-pointer ${
+                              editSelectedMethods.has(id)
+                                ? "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300 font-extrabold"
+                                : "bg-surface border-border text-muted hover:border-emerald-500/40"
+                            }`}
+                          >
+                            <span>{label}</span>
+                            {editSelectedMethods.has(id) && <Check size={12} className="text-emerald-500" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             )}
 
             {/* PENALTY KICK SPECIFIC FIELDS */}

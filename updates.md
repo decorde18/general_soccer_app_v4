@@ -2,6 +2,116 @@
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
 
+### [2026-10-10 12:13] Universal Goal Type & Method Synchronization Across All Match Modals
+- **Type**: Feature / UX Alignment / Design System Standardization
+- **Summary**:
+  1. **Synchronized Goal Types & Method Options**:
+     - Exported standardized `GOAL_METHOD_OPTIONS` from [`goalUtils.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/utils/goalUtils.ts) covering the standard 8 methods:
+       - Open Play (`open_play`)
+       - Corner Kick (`corner`)
+       - Direct Free Kick (`direct_free_kick`)
+       - Indirect Free Kick (`indirect_free_kick`)
+       - Penalty Kick (`penalty_kick`)
+       - Throw-In (`throw_in`)
+       - Header (`header`)
+       - Volley (`volley`)
+  2. **Standardized Goal Modals (Live Tracking, Game Manage & Game Summary)**:
+     - **Game Management ([`GameManageClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/GameManageClient.tsx))**:
+       - Replaced ad-hoc 5-option `<Select>` with the exact same UX as [`MajorEventModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/live/MajorEventModal.tsx):
+         - `Standard Goal ⚽` vs `Own Goal ⚠️` toggle buttons
+         - Own Goal explanation banner preventing incorrect player attribution
+         - Interactive `GOAL_METHOD_OPTIONS` checkbox buttons with multi-select support
+       - Replaced ad-hoc string formatting in the goal rows table with [`formatGoalTypesDisplay`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/utils/goalUtils.ts).
+     - **Game Summary ([`GameSummaryClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/GameSummaryClient.tsx))**:
+       - Added the matching `Standard Goal ⚽` vs `Own Goal ⚠️` toggle and `GOAL_METHOD_OPTIONS` buttons to the play-by-play Edit Goal modal.
+     - **Live Tracking ([`MajorEventModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/live/MajorEventModal.tsx))**:
+       - Imported `GOAL_METHOD_OPTIONS` directly from [`goalUtils.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/utils/goalUtils.ts) for single-source-of-truth consistency.
+  3. **Testing & Verification**:
+     - Added unit tests in [`goalUtils.test.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/utils/__tests__/goalUtils.test.ts) covering standard method export, parsing legacy/ad-hoc formats, JSON array string normalization, and UI presentation formatting.
+     - `npx tsc --noEmit` passed with 0 errors.
+     - All 24 Vitest test suites (91 tests) passed with 100% success.
+- **Modified Files**:
+  - `src/lib/utils/goalUtils.ts`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/GameManageClient.tsx`
+  - `src/components/game/GameSummaryClient.tsx`
+  - `src/lib/utils/__tests__/goalUtils.test.ts` (created)
+  - `updates.md`
+
+### [2026-10-10 12:02] MySQL Error 4025 (`json_valid(goal_types)`) Permanent Universal Resolution
+- **Type**: Bug Fix / Database Integrity / API Hardening
+- **Summary**:
+  1. **Root Cause Analysis (MySQL Constraint 4025)**:
+     - The table `game_events_goals` defines `` `goal_types` longtext DEFAULT NULL CHECK (json_valid(`goal_types`)) ``.
+     - MySQL/MariaDB rejects raw strings (e.g., `'foot'`, `'open_play'`, or empty strings `''`) because `json_valid()` requires valid JSON syntax (such as `'["foot"]'` or `'["open_play"]'`). When unquoted or unstringified arrays were inserted, MySQL returned `Code: 4025. Message: CONSTRAINT game_events_goals.goal_types failed`.
+  2. **Universal Normalizer Utility**:
+     - Created [`normalizeGoalTypesJson`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/utils/goalUtils.ts), which converts any string, array, empty string, or undefined value into a valid, canonical JSON array string (e.g. `'["foot"]'`, `'["penalty_kick"]'`, `'["open_play"]'`).
+  3. **Multi-Layer Defensive Implementation**:
+     - **API Route Level**: In [`src/app/api/[tableName]/route.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/app/api/%5BtableName%5D/route.ts), added automatic normalization on both `POST` (unconditional default to valid JSON array) and `PUT` (normalizing `goal_types` if present), completely immunizing the database against invalid payloads from any client.
+     - **Game Management Client**: In [`GameManageClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/GameManageClient.tsx), wrapped `goalPayload.goal_types` with `normalizeGoalTypesJson` and safely parsed stored `g.goal_types` on edit.
+     - **Game Summary Client**: In [`GameSummaryClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/GameSummaryClient.tsx), wrapped `editGoalType` with `normalizeGoalTypesJson`.
+     - **Quick Score Actions**: In [`quickScore-actions.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/actions/quickScore-actions.ts), ensured `goal_types` uses `normalizeGoalTypesJson` instead of raw string `'penalty_kick'`.
+  4. **Validation & Dev Server Refresh**:
+     - Verified with `npx tsc --noEmit` (0 errors) and all 23 Vitest test suites (87 tests) passing.
+     - Dev server cleanly restarted on port 3000.
+- **Modified Files**:
+  - `src/lib/utils/goalUtils.ts` (created)
+  - `src/app/api/[tableName]/route.ts`
+  - `src/components/game/GameManageClient.tsx`
+  - `src/components/game/GameSummaryClient.tsx`
+  - `src/lib/actions/quickScore-actions.ts`
+  - `updates.md`
+
+### [2026-10-10 11:45] Manual Goal & Card Entry API Fix & Smart Match Clock Time Resolution
+- **Type**: Bug Fix / Feature / UX Enhancement
+- **Summary**:
+  1. **Fixed Database Error on Manual Goal & Card Entry**:
+     - In [`GameManageClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/GameManageClient.tsx), creating manual goal or card records failed with a MySQL error (`Unknown column 'game_id' in 'field list'`) because `game_id` was erroneously passed in `goalPayload` and `cardPayload`. `game_id` belongs only on `game_events_major`, while child tables `game_events_goals` and `game_events_discipline` link via `major_event_id`. Removed `game_id` from child payloads.
+  2. **Smart Match Minute Resolution (Period Minute vs Cumulative Match Minute)**:
+     - Implemented `resolveGameTimeSeconds` which seamlessly handles either input format:
+       - If user enters the minute within the period (e.g. 15' into the 2nd half), it computes nominal preceding offset (e.g. 30' or 40' + 15' = 45' or 55').
+       - If user enters the cumulative match minute (e.g. 45'), it detects that the input already exceeds preceding period offset and uses it directly.
+       - Fixed substitution manual entry to also use `resolveGameTimeSeconds`.
+  3. **Live Match Clock Preview Badges**:
+     - Added real-time preview badges in Goal, Card, and Substitution manual modals showing:
+       `Calculated Match Clock: 45' (2nd Half, 15:00)` along with helper text clarifying that both formats are accepted.
+  4. **Testing**:
+     - Added unit tests in [`gameManageTimeResolution.test.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/__tests__/gameManageTimeResolution.test.ts) covering 30-minute halves, 40-minute halves, period minute input, cumulative game minute input, and period 1 inputs.
+     - Passed `npx tsc --noEmit` and all 23 vitest test files (87 tests) with zero errors.
+- **Modified Files**:
+  - `src/components/game/GameManageClient.tsx`
+  - `src/components/game/__tests__/gameManageTimeResolution.test.ts`
+
+### [2026-10-10 11:10] MajorEventModal React Hook Fix, Lineup Reconciliation Tool & Substitution Desync Resolution
+- **Type**: Bug Fix / Feature / Roster Architecture
+- **Summary**: Resolved two critical match tracking issues encountered during live gameplay:
+  1. **MajorEventModal React Hook Violation Fixed**:
+     - Fixed React error (`Rendered more hooks than during the previous render`) that crashed the modal when clicking "Record Major Event": `isSubWidgetExpanded` was defined after an early return (`if (!isOpen) return null`), violating React Rules of Hooks. Moved hook unconditionally to top level.
+     - Fixed `replaceGoalEvent` and `replaceDisciplineEvent` in `MajorEventModal.tsx` to preserve all event fields (`scorer_player_game_id`, `team_season_id`, `is_own_goal`, `goal_types`, `card_type`, etc.) when server returns `{ success: true, id }`.
+     - Verified with reproduction test `reproduce_major_event.test.tsx` passing with zero errors.
+  2. **Lineup Reconciliation & Field/Bench Desync Fix ("⚡ Reconcile Lineup")**:
+     - Built `LineupReconcileModal.tsx` and integrated it into `OnFieldPlayersPanel.tsx` with a quick-access header button.
+     - Allows coaches to resolve roster discrepancies in one click (e.g., if a sub was missed, deleted, or tracking got inverted) by directly swapping on-field and bench players without having to stage inverted fake substitutions.
+  3. **Substitution Queue Feedback & Race Conditions**:
+     - Added interactive toast notifications with an immediate `"Enter Now"` action button when staging substitutions in `LiveGameTrackerClient.tsx`.
+     - Updated `confirmAllPendingSubs` in `gameSubsStore.ts` to execute sequentially rather than concurrently (`Promise.all`), preventing state race conditions on `playersStore.players`.
+     - Added `await` to `confirmAllPendingSubs` in `startNextPeriod` in `gameStore.ts`.
+     - Enhanced Halftime / Intermission banner in `LiveGameTrackerClient.tsx` to display pending halftime subs with a 1-click execution button.
+  4. **Game 923 Data Remediation**:
+     - Fixed Game 923 records: created missing first-half substitution at 855s (Adelyne Wooten IN, Leighton Hurley OUT) and corrected Sub #1365 at 3683s to Leighton Hurley IN, Adelyne Wooten OUT.
+     - Player playing times and on-field/bench shifts for Leighton Hurley and Adelyne Wooten are now 100% accurate and mathematically balanced.
+  5. **Validation**:
+     - All 22 vitest test suites (83 tests) and `npx tsc --noEmit` pass with zero errors.
+- **Modified Files**:
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/live/LineupReconcileModal.tsx`
+  - `src/components/game/live/OnFieldPlayersPanel.tsx`
+  - `src/components/game/LiveGameTrackerClient.tsx`
+  - `src/stores/gameStore.ts`
+  - `src/stores/gameSubsStore.ts`
+  - `src/components/game/live/__tests__/LineupReconcileModal.test.tsx`
+  - `src/components/game/live/__tests__/reproduce_major_event.test.tsx`
+
 ### [2026-10-10 07:54] Hierarchical League & Sub-Node Match Settings Inheritance & Tiebreaker Standard
 - **Type**: Feature / Architecture & Rule Standard
 - **Summary**: Implemented a comprehensive hierarchical match settings and rules structure across Leagues, Sub-Nodes (Divisions, Conferences, Districts, Age Groups), and Game Creation:

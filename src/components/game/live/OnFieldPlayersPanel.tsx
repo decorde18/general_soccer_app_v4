@@ -10,6 +10,7 @@ import useGameStore from "@/stores/gameStore";
 import { toast } from "sonner";
 import { saveGameCache } from "@/lib/offline/offlineSync";
 import LivePlayerTable from "./LivePlayerTable";
+import LineupReconcileModal from "./LineupReconcileModal";
 
 interface OnFieldPlayersPanelProps {
   onFieldGks?: Player[];
@@ -178,6 +179,7 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
   const handleQuickPlayerAction = props.handleQuickPlayerAction ?? defaultQuickPlayerAction;
 
   const [isGkSwapModalOpen, setIsGkSwapModalOpen] = useState(false);
+  const [isLineupReconcileModalOpen, setIsLineupReconcileModalOpen] = useState(false);
   const swapGoalkeeperRole = useGamePlayersStore((s) => s.swapGoalkeeperRole);
 
   const handleSwapGkRole = async (player: Player) => {
@@ -205,6 +207,13 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
           <span>Players On Field ({onFieldCount})</span>
         </h3>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsLineupReconcileModalOpen(true)}
+            className="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500/20 transition-colors cursor-pointer"
+            title="Correct on-field vs bench roster discrepancies"
+          >
+            ⚡ Reconcile Lineup
+          </button>
           <button
             onClick={() => setIsGkSwapModalOpen(true)}
             className="text-[9px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 transition-colors cursor-pointer"
@@ -316,6 +325,12 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
           </div>
         </div>
       </Modal>
+
+      {/* LINEUP RECONCILE / FIELD STATUS FIX MODAL */}
+      <LineupReconcileModal
+        isOpen={isLineupReconcileModalOpen}
+        onClose={() => setIsLineupReconcileModalOpen(false)}
+      />
     </Card>
   );
 }

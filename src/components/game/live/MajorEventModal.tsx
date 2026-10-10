@@ -12,6 +12,7 @@ import useGameSubsStore from "@/stores/gameSubsStore";
 import { checkPlayerSubEligibility } from "@/lib/utils/subRules";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
+import { GOAL_METHOD_OPTIONS } from "@/lib/utils/goalUtils";
 import { toast } from "sonner";
 import { enqueueOfflineAction, saveGameCache } from "@/lib/offline/offlineSync";
 import {
@@ -52,16 +53,6 @@ interface MajorEventModalProps {
   isPending?: boolean;
 }
 
-const GOAL_METHOD_OPTIONS = [
-  { id: "open_play", label: "Open Play" },
-  { id: "corner", label: "Corner Kick" },
-  { id: "direct_free_kick", label: "Direct Free Kick" },
-  { id: "indirect_free_kick", label: "Indirect Free Kick" },
-  { id: "throw_in", label: "Throw-In" },
-  { id: "header", label: "Header" },
-  { id: "volley", label: "Volley" },
-];
-
 export default function MajorEventModal(props: MajorEventModalProps) {
   const { isOpen, onClose } = props;
 
@@ -95,6 +86,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   const [stoppageSubInId, setStoppageSubInId] = useState("");
   const [allowExhaustedOverride, setAllowExhaustedOverride] = useState(false);
   const [showPendingSubPrompt, setShowPendingSubPrompt] = useState(false);
+  const [isSubWidgetExpanded, setIsSubWidgetExpanded] = useState(false);
 
   // Stop Clock toggle state (default: NOT paused / clock running)
   const [stopClock, setStopClock] = useState<boolean>(false);
@@ -578,28 +570,34 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
           if (!majorRes?.id) throw new Error("Failed to create major event record.");
 
+          const goalPayload = {
+            major_event_id: Number(majorRes.id),
+            team_season_id: Number(teamSeasonVal),
+            scorer_player_game_id: scorerPgId,
+            assist_player_game_id: assistPgId,
+            defending_gk_player_game_id: defendingGkPlayerGameId,
+            opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
+            is_own_goal: isOwnGoal,
+            goal_types: goalTypesJson,
+          };
+
           const newGoal = await fetch(`/api/game_events_goals`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              major_event_id: Number(majorRes.id),
-              team_season_id: Number(teamSeasonVal),
-              scorer_player_game_id: scorerPgId,
-              assist_player_game_id: assistPgId,
-              defending_gk_player_game_id: defendingGkPlayerGameId,
-              opponent_jersey_number: isOpp && oppScorerJersey ? Number(oppScorerJersey) : null,
-              is_own_goal: isOwnGoal,
-              goal_types: goalTypesJson,
-            }),
+            body: JSON.stringify(goalPayload),
           }).then((r) => r.json());
 
           if (newGoal?.id) {
             useGameStore.getState().replaceGoalEvent(
               tempGoalId,
-              newGoal,
+              {
+                ...goalPayload,
+                id: Number(newGoal.id),
+                goal_id: Number(newGoal.id),
+              } as any,
               tempMajorId,
               {
-                id: majorRes.id,
+                id: Number(majorRes.id),
                 game_id: Number(game.game_id || game.id),
                 period: game.currentPeriodIndex + 1,
                 event_type: "goal",
@@ -736,26 +734,32 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
           if (!majorRes?.id) throw new Error("Failed to create major event record.");
 
+          const cardPayload = {
+            major_event_id: Number(majorRes.id),
+            team_season_id: Number(teamSeasonVal),
+            player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
+            opponent_jersey_number: isOpp && oppCardJersey ? Number(oppCardJersey) : null,
+            card_type: cardType,
+            card_reason: cardReason || null,
+          };
+
           const newCard = await fetch(`/api/game_events_discipline`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              major_event_id: Number(majorRes.id),
-              team_season_id: Number(teamSeasonVal),
-              player_game_id: !isOpp && player?.playerGameId ? Number(player.playerGameId) : null,
-              opponent_jersey_number: isOpp && oppCardJersey ? Number(oppCardJersey) : null,
-              card_type: cardType,
-              card_reason: cardReason || null,
-            }),
+            body: JSON.stringify(cardPayload),
           }).then((r) => r.json());
 
           if (newCard?.id) {
             useGameStore.getState().replaceDisciplineEvent(
               tempCardId,
-              newCard,
+              {
+                ...cardPayload,
+                id: Number(newCard.id),
+                discipline_id: Number(newCard.id),
+              } as any,
               tempMajorId,
               {
-                id: majorRes.id,
+                id: Number(majorRes.id),
                 game_id: Number(game.game_id || game.id),
                 period: game.currentPeriodIndex + 1,
                 game_time: gameTimeSeconds,
@@ -1005,8 +1009,6 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       }
     });
   };
-
-  const [isSubWidgetExpanded, setIsSubWidgetExpanded] = useState(false);
 
   // SHARED IN-EVENT SUBSTITUTIONS WIDGET (RENDERED ON ALL EVENT TABS)
   const renderSubstitutionsWidget = () => (

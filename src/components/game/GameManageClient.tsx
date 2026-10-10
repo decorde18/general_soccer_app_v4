@@ -18,6 +18,7 @@ import {
   CheckSquare,
   Square,
   Check,
+  Trophy,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -32,6 +33,12 @@ import { apiFetch } from "@/app/api/fetcher";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { formatDateStandard, formatTimeStandard } from "@/components/ui/DateSelect";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
+import {
+  GOAL_METHOD_OPTIONS,
+  parseGoalTypes,
+  normalizeGoalTypesJson,
+  formatGoalTypesDisplay,
+} from "@/lib/utils/goalUtils";
 
 export default function GameManageClient() {
   const router = useRouter();
@@ -73,7 +80,8 @@ export default function GameManageClient() {
   // Goal Form State
   const [goalScorerId, setGoalScorerId] = useState<string>("");
   const [goalAssistId, setGoalAssistId] = useState<string>("");
-  const [goalType, setGoalType] = useState<string>("foot");
+  const [isOwnGoal, setIsOwnGoal] = useState<boolean>(false);
+  const [selectedGoalMethods, setSelectedGoalMethods] = useState<Set<string>>(new Set(["open_play"]));
   const [goalPeriod, setGoalPeriod] = useState<string>("1");
   const [goalTimeMin, setGoalTimeMin] = useState<string>("0");
   const [goalTimeSec, setGoalTimeSec] = useState<string>("0");
@@ -310,13 +318,80 @@ export default function GameManageClient() {
     setEditingGoal(null);
     setGoalScorerId("");
     setGoalAssistId("");
-    setGoalType("foot");
+    setIsOwnGoal(false);
+    setSelectedGoalMethods(new Set(["open_play"]));
     setGoalPeriod("1");
     setGoalTimeMin("0");
     setGoalTimeSec("0");
-    setGoalTimeSec("0");
     setIsOpponentGoal(false);
     setIsGoalModalOpen(true);
+  };
+
+  const toggleGoalMethod = (methodId: string) => {
+    const next = new Set(selectedGoalMethods);
+    if (next.has(methodId)) {
+      next.delete(methodId);
+    } else {
+      next.add(methodId);
+    }
+    if (next.size === 0) {
+      next.add("open_play");
+    }
+    setSelectedGoalMethods(next);
+  };
+
+  // Resolve period minute (e.g. 15' into 2nd half) or game minute (e.g. 45') into continuous game seconds
+  const resolveGameTimeSeconds = (periodStr: string | number, minStr: string, secStr: string) => {
+    const pNum = Number(periodStr) || 1;
+    const rawInputSecs = (Number(minStr) || 0) * 60 + (Number(secStr) || 0);
+    const regPeriodSecs = (game?.settings?.periodDuration) || 2400;
+
+    let precedingOffset = 0;
+    for (let i = 1; i < pNum; i++) {
+      const matchingP = (game?.periods || []).find(
+        (item: any) => (item.periodNumber || item.period_number) === i
+      );
+      if (matchingP && matchingP.endTime && matchingP.startTime) {
+        precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 60000) * 60;
+      } else {
+        precedingOffset += regPeriodSecs;
+      }
+    }
+
+    return (pNum > 1 && rawInputSecs < precedingOffset)
+      ? precedingOffset + rawInputSecs
+      : rawInputSecs;
+  };
+
+  const calculatePreviewTime = (periodStr: string | number, minStr: string, secStr: string) => {
+    const pNum = Number(periodStr) || 1;
+    const regPeriodSecs = (game?.settings?.periodDuration) || 2400;
+
+    let precedingOffset = 0;
+    for (let i = 1; i < pNum; i++) {
+      const matchingP = (game?.periods || []).find(
+        (item: any) => (item.periodNumber || item.period_number) === i
+      );
+      if (matchingP && matchingP.endTime && matchingP.startTime) {
+        precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 60000) * 60;
+      } else {
+        precedingOffset += regPeriodSecs;
+      }
+    }
+
+    const totalSeconds = resolveGameTimeSeconds(periodStr, minStr, secStr);
+    const gameMin = Math.floor(totalSeconds / 60);
+
+    const periodSecs = Math.max(0, totalSeconds - precedingOffset);
+    const periodMin = Math.floor(periodSecs / 60);
+    const periodSecRem = periodSecs % 60;
+
+    const halfLabel = pNum === 1 ? "1st Half" : pNum === 2 ? "2nd Half" : `OT${pNum - 2}`;
+    return {
+      totalSeconds,
+      gameMin,
+      displayLabel: `${gameMin}' (${halfLabel}, ${String(periodMin).padStart(2, "0")}:${String(periodSecRem).padStart(2, "0")})`,
+    };
   };
 
   const openEditGoalModal = (g: any) => {
@@ -324,7 +399,10 @@ export default function GameManageClient() {
     setEditingGoal({ ...g, id: realId });
     setGoalScorerId(g.scorer_player_game_id ? String(g.scorer_player_game_id) : "");
     setGoalAssistId(g.assist_player_game_id ? String(g.assist_player_game_id) : "");
-    setGoalType(g.is_own_goal ? "own_goal" : g.goal_types || "foot");
+    const isOg = Boolean(g.is_own_goal);
+    setIsOwnGoal(isOg);
+    const parsed = parseGoalTypes(g.goal_types);
+    setSelectedGoalMethods(new Set(parsed.length > 0 ? parsed : ["open_play"]));
     setGoalPeriod(g.period ? String(g.period) : "1");
     const totalSec = g.game_time !== undefined && g.game_time !== null ? Number(g.game_time) : 0;
     setGoalTimeMin(String(Math.floor(totalSec / 60)));
@@ -334,30 +412,18 @@ export default function GameManageClient() {
   };
 
   const handleAddOrUpdateGoal = async () => {
-    if (!isOpponentGoal && !goalScorerId) {
+    if (!isOpponentGoal && !isOwnGoal && !goalScorerId) {
       toast.error("Please select a scorer.");
       return;
     }
 
     startTransition(async () => {
       try {
-        const scorer = players.find((p) => String(p.playerGameId) === goalScorerId);
-        const assist = players.find((p) => String(p.playerGameId) === goalAssistId);
-        const rawInputSecs = Number(goalTimeMin) * 60 + Number(goalTimeSec);
-        const pNum = Number(goalPeriod);
-        const regPeriodSecs = (game.settings?.periodDuration) || 2400;
-        let precedingOffset = 0;
-        for (let i = 1; i < pNum; i++) {
-          const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
-          if (matchingP && matchingP.endTime && matchingP.startTime) {
-            precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
-          } else {
-            precedingOffset += regPeriodSecs;
-          }
-        }
-        const totalSeconds = (pNum > 1 && rawInputSecs < precedingOffset)
-          ? precedingOffset + rawInputSecs
-          : rawInputSecs;
+        const scorer = (!isOpponentGoal && !isOwnGoal) ? players.find((p) => String(p.playerGameId) === goalScorerId) : null;
+        const assist = (!isOpponentGoal && !isOwnGoal) ? players.find((p) => String(p.playerGameId) === goalAssistId) : null;
+        const totalSeconds = resolveGameTimeSeconds(goalPeriod, goalTimeMin, goalTimeSec);
+        const methodsArr = isOwnGoal ? ["own_goal"] : Array.from(selectedGoalMethods);
+        const goalTypesJson = normalizeGoalTypesJson(methodsArr.length > 0 ? methodsArr : ["open_play"]);
 
         if (editingGoal) {
           // Edit existing goal
@@ -365,8 +431,8 @@ export default function GameManageClient() {
             team_season_id: isOpponentGoal ? Number(game.opponentId) : Number(teamSeasonId),
             scorer_player_game_id: scorer ? Number(scorer.playerGameId) : null,
             assist_player_game_id: assist ? Number(assist.playerGameId) : null,
-            is_own_goal: goalType === "own_goal",
-            goal_types: goalType,
+            is_own_goal: isOwnGoal,
+            goal_types: goalTypesJson,
           };
           await apiFetch("game_events_goals", "PUT", goalPayload, editingGoal.id);
 
@@ -374,6 +440,7 @@ export default function GameManageClient() {
             await apiFetch("game_events_major", "PUT", {
               period: Number(goalPeriod),
               game_time: totalSeconds,
+              details: isOwnGoal ? "Own Goal" : undefined,
             }, editingGoal.major_event_id);
           }
           toast.success("Goal record updated successfully.");
@@ -385,18 +452,18 @@ export default function GameManageClient() {
             event_type: "goal",
             game_time: totalSeconds,
             clock_should_run: 1,
+            details: isOwnGoal ? "Own Goal" : undefined,
           };
           const resMajor = await apiFetch("game_events_major", "POST", majorPayload);
           if (!resMajor?.id) throw new Error("Failed to record major event");
 
           const goalPayload = {
             major_event_id: Number(resMajor.id),
-            game_id: Number(game.game_id || game.id),
             team_season_id: isOpponentGoal ? Number(game.opponentId) : Number(teamSeasonId),
             scorer_player_game_id: scorer ? Number(scorer.playerGameId) : null,
             assist_player_game_id: assist ? Number(assist.playerGameId) : null,
-            is_own_goal: goalType === "own_goal",
-            goal_types: goalType,
+            is_own_goal: isOwnGoal,
+            goal_types: goalTypesJson,
           };
           await apiFetch("game_events_goals", "POST", goalPayload);
           toast.success("Goal manually recorded.");
@@ -452,7 +519,7 @@ export default function GameManageClient() {
 
     startTransition(async () => {
       try {
-        const totalSeconds = Number(subTimeMin) * 60 + Number(subTimeSec);
+        const totalSeconds = resolveGameTimeSeconds(subPeriod, subTimeMin, subTimeSec);
         const subPayload = {
           game_id: Number(game.game_id || game.id),
           in_player_id: Number(subInId),
@@ -517,21 +584,7 @@ export default function GameManageClient() {
     startTransition(async () => {
       try {
         const player = players.find((p) => String(p.playerGameId) === cardPlayerId);
-        const rawInputSecs = Number(cardTimeMin) * 60 + Number(cardTimeSec);
-        const pNum = Number(cardPeriod);
-        const regPeriodSecs = (game.settings?.periodDuration) || 2400;
-        let precedingOffset = 0;
-        for (let i = 1; i < pNum; i++) {
-          const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
-          if (matchingP && matchingP.endTime && matchingP.startTime) {
-            precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
-          } else {
-            precedingOffset += regPeriodSecs;
-          }
-        }
-        const totalSeconds = (pNum > 1 && rawInputSecs < precedingOffset)
-          ? precedingOffset + rawInputSecs
-          : rawInputSecs;
+        const totalSeconds = resolveGameTimeSeconds(cardPeriod, cardTimeMin, cardTimeSec);
 
         if (editingCard) {
           const cardPayload = {
@@ -561,7 +614,6 @@ export default function GameManageClient() {
 
           const cardPayload = {
             major_event_id: Number(resMajor.id),
-            game_id: Number(game.game_id || game.id),
             team_season_id: Number(teamSeasonId),
             player_game_id: player ? Number(player.playerGameId) : null,
             card_type: cardType,
@@ -939,16 +991,7 @@ export default function GameManageClient() {
                           {isUs ? "FOR US" : "AGAINST"}
                         </span>
                         <span>
-                          Type: {(() => {
-                            if (!g.goal_types) return "Standard";
-                            try {
-                              const parsed = typeof g.goal_types === "string" ? JSON.parse(g.goal_types) : g.goal_types;
-                              if (Array.isArray(parsed)) return parsed.join(", ").replace(/_/g, " ");
-                              return String(parsed).replace(/_/g, " ");
-                            } catch {
-                              return String(g.goal_types).replace(/_/g, " ");
-                            }
-                          })()}
+                          Type: {formatGoalTypesDisplay(g.goal_types, Boolean(g.is_own_goal))}
                         </span>
                         {Boolean(g.period) && <span>Period: {String(g.period)}</span>}
                         {g.game_time !== undefined && g.game_time !== null && (
@@ -1260,36 +1303,102 @@ export default function GameManageClient() {
             }}
           />
 
-          {!isOpponentGoal && (
-            <>
+          {/* Goal Type Selector: Standard Goal vs Own Goal */}
+          <div>
+            <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
+              Goal Type
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setIsOwnGoal(false)}
+                className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  !isOwnGoal
+                    ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-2xs"
+                    : "bg-surface border-border text-muted hover:border-emerald-500/40"
+                }`}
+              >
+                <Trophy size={14} className={!isOwnGoal ? "text-emerald-500" : "text-muted"} />
+                <span>Standard Goal ⚽</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOwnGoal(true);
+                  setGoalScorerId("");
+                  setGoalAssistId("");
+                }}
+                className={`py-2 px-3 rounded-xl border text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  isOwnGoal
+                    ? "bg-rose-500/15 border-rose-500 text-rose-600 dark:text-rose-400 shadow-2xs"
+                    : "bg-surface border-border text-muted hover:border-rose-500/40"
+                }`}
+              >
+                <AlertTriangle size={14} className={isOwnGoal ? "text-rose-500" : "text-muted"} />
+                <span>Own Goal ⚠️</span>
+              </button>
+            </div>
+          </div>
+
+          {/* OWN GOAL SCORE EXPLANATION BANNER */}
+          {isOwnGoal && (
+            <div className="p-3 bg-amber-500/10 border border-amber-500/40 rounded-xl space-y-1 text-amber-600 dark:text-amber-400 text-xs">
+              <div className="flex items-center gap-1.5 font-black">
+                <AlertTriangle size={15} className="text-amber-500 shrink-0" />
+                <span>{isOpponentGoal ? "Opponent Net Own Goal (+1 Our Team)" : "Our Team Own Goal (+1 to Opponent)"}</span>
+              </div>
+              <p className="text-[11px] text-muted font-medium">
+                No individual player goal or assist credit will be attributed to preserve statistical integrity.
+              </p>
+            </div>
+          )}
+
+          {/* PLAYER SELECTION DROPDOWNS: Rendered ONLY for Standard Goals (!isOwnGoal) */}
+          {!isOwnGoal && !isOpponentGoal && (
+            <div className="space-y-3">
               <Select
-                label="Goal Scorer"
+                label="Goal Scorer (On-Field / Eligible Players)"
                 options={[{ value: "", label: "-- Select Scorer --" }, ...playerOptions]}
                 value={goalScorerId}
                 onChange={(e: any) => setGoalScorerId(e.target?.value ?? e)}
               />
               <Select
-                label="Assisted By"
+                label="Assisted By (Optional)"
                 options={[{ value: "", label: "-- None / Select Assist --" }, ...playerOptions]}
                 value={goalAssistId}
                 onChange={(e: any) => setGoalAssistId(e.target?.value ?? e)}
               />
-            </>
+            </div>
           )}
 
-          <div className="grid grid-cols-3 gap-3">
-            <Select
-              label="Goal Type"
-              options={[
-                { value: "foot", label: "Standard Shot" },
-                { value: "header", label: "Header" },
-                { value: "penalty", label: "Penalty Kick" },
-                { value: "free_kick", label: "Free Kick" },
-                { value: "own_goal", label: "Own Goal" },
-              ]}
-              value={goalType}
-              onChange={(e: any) => setGoalType(e.target?.value ?? e)}
-            />
+          {/* GOAL METHOD / TYPE: Rendered for Standard Goals (!isOwnGoal) */}
+          {!isOwnGoal && (
+            <div>
+              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-muted mb-1.5">
+                Goal Method / Type
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                {GOAL_METHOD_OPTIONS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => toggleGoalMethod(id)}
+                    className={`py-1.5 px-2 rounded-lg text-[10px] font-bold border transition-all text-left flex items-center justify-between cursor-pointer ${
+                      selectedGoalMethods.has(id)
+                        ? "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300 font-extrabold"
+                        : "bg-surface border-border text-muted hover:border-emerald-500/40"
+                    }`}
+                  >
+                    <span>{label}</span>
+                    {selectedGoalMethods.has(id) && <Check size={12} className="text-emerald-500" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Match Period and Time Inputs */}
+          <div className="grid grid-cols-2 gap-3">
             <Select
               label="Match Period"
               options={periodOptions}
@@ -1313,6 +1422,18 @@ export default function GameManageClient() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGoalTimeSec(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span className="font-bold text-text">Calculated Match Clock: </span>
+              <span className="font-extrabold text-primary text-sm">
+                {calculatePreviewTime(goalPeriod, goalTimeMin, goalTimeSec).displayLabel}
+              </span>
+            </div>
+            <span className="text-[10px] text-muted font-medium">
+              Accepts period minute (e.g. 15') or game minute (e.g. 45')
+            </span>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -1377,6 +1498,18 @@ export default function GameManageClient() {
               value={subTimeSec}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubTimeSec(e.target.value)}
             />
+          </div>
+
+          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span className="font-bold text-text">Calculated Match Clock: </span>
+              <span className="font-extrabold text-primary text-sm">
+                {calculatePreviewTime(subPeriod, subTimeMin, subTimeSec).displayLabel}
+              </span>
+            </div>
+            <span className="text-[10px] text-muted font-medium">
+              Accepts period minute (e.g. 15') or game minute (e.g. 45')
+            </span>
           </div>
 
           <Checkbox
@@ -1453,6 +1586,18 @@ export default function GameManageClient() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardTimeSec(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span className="font-bold text-text">Calculated Match Clock: </span>
+              <span className="font-extrabold text-primary text-sm">
+                {calculatePreviewTime(cardPeriod, cardTimeMin, cardTimeSec).displayLabel}
+              </span>
+            </div>
+            <span className="text-[10px] text-muted font-medium">
+              Accepts period minute (e.g. 15') or game minute (e.g. 45')
+            </span>
           </div>
 
           <Input

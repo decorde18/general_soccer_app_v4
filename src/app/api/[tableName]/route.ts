@@ -4,6 +4,7 @@
 
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { normalizeGoalTypesJson } from "@/lib/utils/goalUtils";
 
 // Ensure BigInt JSON serialization works seamlessly for all responses
 if (typeof BigInt !== "undefined" && !(BigInt.prototype as any).toJSON) {
@@ -321,6 +322,10 @@ export async function POST(req: Request, context: RouteContext) {
     return badRequest("Invalid JSON body");
   }
 
+  if (table === "game_events_goals") {
+    body.goal_types = normalizeGoalTypesJson(body.goal_types);
+  }
+
   const cols = Object.keys(body);
   if (cols.length === 0) return badRequest("No data provided");
 
@@ -384,6 +389,10 @@ export async function PUT(req: Request, context: RouteContext) {
     body = await req.json();
   } catch {
     return badRequest("Invalid JSON body");
+  }
+
+  if (table === "game_events_goals" && "goal_types" in body) {
+    body.goal_types = normalizeGoalTypesJson(body.goal_types);
   }
 
   const cols = Object.keys(body);

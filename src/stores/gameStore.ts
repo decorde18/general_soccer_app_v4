@@ -806,7 +806,7 @@ const useGameStore = create<GameStoreState>((set, get) => {
         }
 
         // Confirm all pending subs synchronously (0ms delay) on period start
-        useGameSubsStore.getState().confirmAllPendingSubs();
+        await useGameSubsStore.getState().confirmAllPendingSubs();
       } catch (error) {
         console.error("Error starting next period:", error);
       }

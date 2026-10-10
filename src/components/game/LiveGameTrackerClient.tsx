@@ -58,10 +58,31 @@ export default function LiveGameTrackerClient() {
           const outPlayer = players.find((p) => String(p.id) === outId);
 
           if (inPlayer && outPlayer) {
-            await createPendingSub(
+            const newSub = await createPendingSub(
               inPlayer.playerGameId,
               outPlayer.playerGameId,
               outPlayer.fieldStatus === "onFieldGk"
+            );
+            toast.info(
+              `Queued: #${inPlayer.jerseyNumber || "?"} ${inPlayer.fullName} for #${outPlayer.jerseyNumber || "?"} ${outPlayer.fullName}`,
+              {
+                duration: 6000,
+                action: {
+                  label: "Enter Now",
+                  onClick: async () => {
+                    try {
+                      if (newSub?.id) {
+                        await useGameSubsStore.getState().confirmSub(newSub.id);
+                      } else {
+                        await useGameSubsStore.getState().confirmAllPendingSubs();
+                      }
+                      toast.success(`Sub confirmed: ${inPlayer.fullName} is now On Field`);
+                    } catch (err: any) {
+                      toast.error("Failed to confirm sub: " + err.message);
+                    }
+                  },
+                },
+              }
             );
           }
         } catch (err: any) {
@@ -138,14 +159,36 @@ export default function LiveGameTrackerClient() {
 
       {/* BETWEEN PERIODS INTERMISSION BANNER */}
       {currentStage === GAME_STAGES.BETWEEN_PERIODS && (
-        <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-2 text-xs font-bold text-amber-500 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <PauseCircle size={16} className="text-amber-500 animate-pulse" />
-            <span>HALFTIME / BETWEEN PERIODS — Timed match clock is paused. Review lineups, stats & queue substitutions. Event recording is disabled until next period starts.</span>
+        <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 text-xs font-bold text-amber-500 shadow-2xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <PauseCircle size={16} className="text-amber-500 animate-pulse shrink-0" />
+            <span className="truncate">
+              HALFTIME / BETWEEN PERIODS — Timed clock paused.
+              {useGameSubsStore.getState().getPendingSubsSync().length > 0
+                ? ` ${useGameSubsStore.getState().getPendingSubsSync().length} substitution(s) queued for second half.`
+                : " Select field & bench players to queue halftime subs."}
+            </span>
           </div>
-          <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] uppercase font-black tracking-wider shrink-0 border border-amber-500/30">
-            Intermission
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {useGameSubsStore.getState().getPendingSubsSync().length > 0 && (
+              <button
+                onClick={async () => {
+                  try {
+                    await useGameSubsStore.getState().confirmAllPendingSubs();
+                    toast.success("Halftime substitutions applied to lineup!");
+                  } catch (e: any) {
+                    toast.error("Failed to apply subs: " + e.message);
+                  }
+                }}
+                className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-black cursor-pointer shadow-xs transition-colors"
+              >
+                Apply {useGameSubsStore.getState().getPendingSubsSync().length} Halftime Sub{useGameSubsStore.getState().getPendingSubsSync().length > 1 ? "s" : ""}
+              </button>
+            )}
+            <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] uppercase font-black tracking-wider border border-amber-500/30">
+              Intermission
+            </span>
+          </div>
         </div>
       )}
 

@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireSession, verifyScoreReportingAccess } from "@/lib/auth/auth-utils";
+import { normalizeGoalTypesJson } from "@/lib/utils/goalUtils";
 
 export interface QuickScoreInput {
   gameId: number;
@@ -385,7 +386,7 @@ export async function recordDetailedMatchScore({
         assist_player_game_id: assistPgId,
         defending_gk_player_game_id: gaPgId,
         is_own_goal: g.isOwnGoal ?? false,
-        goal_types: g.isPk ? "penalty_kick" : null,
+        goal_types: g.isPk ? normalizeGoalTypesJson(["penalty_kick"]) : normalizeGoalTypesJson(["open_play"]),
       },
     });
 
