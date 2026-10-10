@@ -5,6 +5,11 @@ export interface NavUser {
   originalRoles?: UserRoles;
 }
 
+export interface Season {
+  id: number;
+  season_name: string;
+}
+
 export interface Club {
   id: number;
   name: string;

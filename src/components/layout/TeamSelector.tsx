@@ -1,7 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Select from "@/components/ui/Select";
+import { useTeamLoadingStore } from "@/stores/teamLoadingStore";
 
 interface SeasonOption {
   id: number;
@@ -49,6 +50,9 @@ function TeamSelector({
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>("");
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [selectedTeamSeasonId, setSelectedTeamSeasonId] = useState<string>("");
+
+  const [isNavigating, startTransition] = useTransition();
+  const setGlobalTeamLoading = useTeamLoadingStore((s) => s.setIsTeamLoading);
 
   // Fetch real data on mount
   useEffect(() => {
@@ -102,6 +106,17 @@ function TeamSelector({
     setSelectedClubType(val);
     setSelectedClubId(""); // Reset club when type changes
     setSelectedTeamSeasonId(""); // Reset team when type changes
+    if (val && selectedSeasonId) {
+      const seasonHasTeams = teamSeasons.some(
+        (ts) =>
+          ts.seasonId === Number(selectedSeasonId) &&
+          ((val === "high_school" && ts.clubType === "high_school") ||
+            (val === "club" && (ts.clubType === "club" || !ts.clubType)))
+      );
+      if (!seasonHasTeams) {
+        setSelectedSeasonId("");
+      }
+    }
     if (onContextChange) onContextChange(null);
   };
 
@@ -109,6 +124,14 @@ function TeamSelector({
     const val = e.target.value;
     setSelectedSeasonId(val);
     setSelectedTeamSeasonId(""); // Reset team when season changes
+    if (val && selectedClubId) {
+      const clubHasTeams = teamSeasons.some(
+        (ts) => ts.clubId === Number(selectedClubId) && ts.seasonId === Number(val)
+      );
+      if (!clubHasTeams) {
+        setSelectedClubId("");
+      }
+    }
     if (onContextChange) onContextChange(null);
   };
 
@@ -116,6 +139,14 @@ function TeamSelector({
     const val = e.target.value;
     setSelectedClubId(val);
     setSelectedTeamSeasonId(""); // Reset team when club changes
+    if (val && selectedSeasonId) {
+      const hasTeamInSeason = teamSeasons.some(
+        (ts) => ts.clubId === Number(val) && ts.seasonId === Number(selectedSeasonId)
+      );
+      if (!hasTeamInSeason) {
+        setSelectedSeasonId("");
+      }
+    }
     if (onContextChange) onContextChange(null);
   };
 
@@ -125,21 +156,58 @@ function TeamSelector({
 
     if (val) {
       const tId = Number(val);
+      const targetTeam = teamSeasons.find((t) => t.id === tId);
+      setGlobalTeamLoading(true, targetTeam?.teamName || null);
       if (onContextChange) {
         onContextChange({ teamSeasonId: tId });
       }
       // Redirect to that team's homepage
-      router.push(`/teams/${tId}`);
+      startTransition(() => {
+        router.push(`/teams/${tId}`);
+      });
     } else {
       if (onContextChange) onContextChange(null);
     }
   };
 
-  // Filter clubs based on selected Program Type
+  useEffect(() => {
+    if (!isNavigating) {
+      setGlobalTeamLoading(false, null);
+    }
+  }, [isNavigating, setGlobalTeamLoading]);
+
+  // Filter clubs based on selected Program Type and Season
   const filteredClubs = clubs.filter((c) => {
-    if (!selectedClubType) return true;
-    if (selectedClubType === "high_school") return c.type === "high_school";
-    if (selectedClubType === "club") return c.type === "club" || !c.type;
+    if (selectedClubType === "high_school" && c.type !== "high_school") return false;
+    if (selectedClubType === "club" && c.type && c.type !== "club") return false;
+    if (selectedSeasonId) {
+      const hasTeamInSeason = teamSeasons.some(
+        (ts) => ts.clubId === c.id && ts.seasonId === Number(selectedSeasonId)
+      );
+      if (!hasTeamInSeason) return false;
+    }
+    return true;
+  });
+
+  // Filter seasons based on selected Program Type and Club
+  const filteredSeasons = seasons.filter((s) => {
+    if (selectedClubId) {
+      const hasTeamInClub = teamSeasons.some(
+        (ts) => ts.seasonId === s.id && ts.clubId === Number(selectedClubId)
+      );
+      if (!hasTeamInClub) return false;
+    }
+    if (selectedClubType === "high_school") {
+      const hasTeamOfType = teamSeasons.some(
+        (ts) => ts.seasonId === s.id && ts.clubType === "high_school"
+      );
+      if (!hasTeamOfType) return false;
+    } else if (selectedClubType === "club") {
+      const hasTeamOfType = teamSeasons.some(
+        (ts) => ts.seasonId === s.id && (ts.clubType === "club" || !ts.clubType)
+      );
+      if (!hasTeamOfType) return false;
+    }
     return true;
   });
 
@@ -153,6 +221,9 @@ function TeamSelector({
     const matchClub = selectedClubId ? ts.clubId === Number(selectedClubId) : true;
     return matchType && matchSeason && matchClub;
   });
+
+  const isTeamInFiltered = filteredTeams.some((t) => String(t.id) === String(selectedTeamSeasonId));
+  const activeTeamValue = isTeamInFiltered ? selectedTeamSeasonId : "";
 
   if (loading) {
     return (
@@ -178,37 +249,45 @@ function TeamSelector({
         showPlaceholder={false}
       />
 
-      {/* 2. Club Dropdown (Filtered by Program Type) */}
+      {/* 2. Club Dropdown (Filtered by Program Type and Season) */}
       <Select
         placeholder="All Clubs"
-        options={filteredClubs.map((c) => ({ value: String(c.id), label: c.name }))}
+        options={[
+          { value: "", label: "All Clubs" },
+          ...filteredClubs.map((c) => ({ value: String(c.id), label: c.name })),
+        ]}
         value={selectedClubId}
         onChange={handleClubChange}
         width="auto"
         className="min-w-[120px] sm:min-w-[150px]"
-        showPlaceholder={true}
+        showPlaceholder={false}
       />
 
       {/* 3. Season Dropdown */}
       <Select
         placeholder="All Seasons"
-        options={seasons.map((s) => ({ value: String(s.id), label: s.season_name }))}
+        options={[
+          { value: "", label: "All Seasons" },
+          ...filteredSeasons.map((s) => ({ value: String(s.id), label: s.season_name })),
+        ]}
         value={selectedSeasonId}
         onChange={handleSeasonChange}
         width="auto"
         className="min-w-[110px] sm:min-w-[130px]"
-        showPlaceholder={true}
+        showPlaceholder={false}
       />
 
       {/* 4. Team Dropdown */}
       <Select
-        placeholder={selectedClubId ? "Choose Team..." : "Choose Team..."}
+        placeholder="Choose Team..."
         options={filteredTeams.map((t) => ({
           value: String(t.id),
           label: `${t.teamName} (${t.seasonName})`,
         }))}
-        value={selectedTeamSeasonId}
+        value={activeTeamValue}
         onChange={handleTeamChange}
+        isLoading={isNavigating}
+        disabled={isNavigating}
         width="auto"
         className="min-w-[150px] sm:min-w-[190px]"
         showPlaceholder={true}

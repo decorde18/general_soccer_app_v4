@@ -2,6 +2,56 @@
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
 
+### [2026-10-10 07:05] Fix Imported Match Schedule Date Parsing & Database Remediation
+- **Type**: Bug Fix / Data Remediation & Importer Reliability
+- **Summary**: Investigated and fixed date parsing issue where imported schedule fixtures defaulted to `1970-01-01` / `2026-01-01`:
+  1. **Root Cause**: `parseGameDatesAndTimesUTC` in `dateTimeUtils.ts` only handled raw `YYYY-MM-DD` and `MM/DD/YYYY` numeric formats. When CSVs contained written/named dates (e.g. `"Saturday, October 10, 2026"` or `"Sunday, October 11, 2026"`), the parser failed to match 3-part dashes or slashes and silently fell back to default fallback numbers (`2026-01-01`), corrupting the match dates for all imported fixtures.
+  2. **Enhanced Universal Date Parser**: Expanded `parseGameDatesAndTimesUTC` in `dateTimeUtils.ts` to support named month formats (e.g. `"Saturday, October 10, 2026"`, `"October 10, 2026"`, `"10 Oct 2026"`), cross-validating with standard JavaScript `Date` parsing as a fallback.
+  3. **Batch Importer Client Normalization**: Updated `BatchImporterClient.tsx` in `parseScheduleText` to normalize parsed dates to clean `YYYY-MM-DD` strings during client-side mapping so the schedule preview table and payload to server reflect the true calendar dates immediately.
+  4. **Database Remediation**: Re-parsed and corrected all 12 imported Collective Cup matches (Games `921` to `932`):
+     - Games `921`–`927` updated to `2026-10-10` with their exact start times.
+     - Games `928`–`932` updated to `2026-10-11` with their exact start times.
+  5. **Unit Testing**: Added test coverage in `dualGameTime.test.ts` asserting exact parsing for named weekday/month strings (`Saturday, October 10, 2026` + `8:30 AM`), slash dates, and ISO dates. Passed with zero TypeScript errors and 75 passing unit tests.
+- **Modified Files**:
+  - `src/lib/utils/dateTimeUtils.ts`
+  - `src/components/admin/BatchImporterClient.tsx`
+  - `src/lib/utils/__tests__/dualGameTime.test.ts`
+  - `updates.md`
+
+### [2026-10-10 06:58] Resolve Missing Team Page Games for Imported Collective Cup Matches
+- **Type**: Bug Fix / Data Remediation & Deduplication
+- **Summary**: Investigated and resolved why Collective Cup games were showing in the tournament standings page but not appearing on the team page for `TSC U12 (2014/15) Williamson Girls Elite` (`/teams/121`):
+  1. **Root Cause Identification**: During schedule CSV import, the CSV lacked an explicit gender column and defaulted to `MIXED`. In `batchImportSchedule`, team lookup previously searched with `where: { club_id, team_name, gender: "MIXED" }`. Because the existing team (`Team ID 61`, `TeamSeason ID 121`) had `gender: "FEMALE"`, the lookup failed to match and erroneously created a duplicate team (`Team ID 1735`) and new team season (`TeamSeason ID 3473`). The standings page calculated records using the division's games (displaying the team name), while the team page at `/teams/121` specifically filtered games by `teamSeasonId: 121`, missing the games attached to duplicate ID `3473`.
+  2. **Data Remediation**: Migrated all 3 Collective Cup games (Games `923`, `926`, `929`) from duplicate `team_season_id: 3473` to existing `team_season_id: 121`. Migrated division enrollment (`ID 252`) to `team_season_id: 121`. Deleted orphan duplicate records (`team_seasons: 3473` and `teams: 1735`). All 3 tournament games now appear directly on the team page for `TSC U12 (2014/15) Williamson Girls Elite`.
+  3. **Importer Deduplication Guard**: Updated `batchImportSchedule` and `batchImportTeams` in `import-actions.ts` to first attempt an exact match with gender if provided, and fall back to matching by `club_id` and `team_name` regardless of gender. This guarantees that importing schedules without gender columns will always match existing club teams rather than spawning duplicates. Verified with 0 TypeScript compilation errors and 73 passing unit tests.
+- **Modified Files**:
+  - `src/lib/actions/import-actions.ts`
+  - `updates.md`
+
+### [2026-10-10 06:52] Side Panel Season Select & Header Team Filtering/Navigation
+- **Type**: Feature / UX Refinement
+- **Summary**: Implemented Season Select in the side navigation panel and verified/refined season filtering and team navigation across both side panel and header:
+  1. **Side Panel Season Selector**: Created `SidebarSeasonSelector.tsx` and integrated it into `NavBar.tsx` with a calendar icon and clean dropdown styling.
+  2. **Season-Scoped Team & Club Filtering in Side Panel**: Teams displayed in `SidebarTeamSelector` are now strictly filtered to teams matching `selectedSeasonId`. When `selectedSeasonId` changes, `filteredClubsByType` also scopes available clubs to those with active teams in that season. If a selected club has no teams in a newly selected season, it resets smoothly without stranding the selector.
+  3. **Empty & Single-Team State Handling**: Updated `SidebarTeamSelector.tsx` to display a graceful "No teams found" state instead of disappearing when a season has no teams, and made single-team cards clickable to navigate to that team from other pages.
+  4. **Header Season & Team Filtering (`TeamSelector.tsx`)**:
+     - Updated `filteredClubs` and `filteredSeasons` so selecting a season dynamically filters available clubs to clubs participating in that season, and selecting a club filters seasons.
+     - Added selectable `"All Clubs"` and `"All Seasons"` options with `showPlaceholder={false}`, allowing users to un-filter at will.
+     - Added transition handling (`useTransition`), optimistic loading overlay triggers via `useTeamLoadingStore`, and loading spinners on the Team select dropdown when selecting a team, providing instantaneous feedback while redirecting to `/teams/[teamSeasonId]`.
+     - Safeguarded active team values so switching seasons resets team selection when the previously selected team does not belong to the newly chosen season.
+  5. **Data Layer & Types**: Updated `nav.ts` with `Season` interface, and updated `useNavBarData.ts` to return seasons from `/api/teams-data`.
+  6. **Testing**: Added unit test suite `SidebarSeasonSelector.test.tsx` verifying empty, single-season, and multi-season dropdown behaviors. Passed with zero TypeScript errors and 73 passing unit tests.
+- **Modified Files**:
+  - `src/types/nav.ts`
+  - `src/hooks/useNavBarData.ts`
+  - `src/components/layout/SidebarSeasonSelector.tsx`
+  - `src/components/layout/SidebarTeamSelector.tsx`
+  - `src/components/layout/ClubSelector.tsx`
+  - `src/components/layout/NavBar.tsx`
+  - `src/components/layout/TeamSelector.tsx`
+  - `src/components/layout/__tests__/SidebarSeasonSelector.test.tsx`
+  - `updates.md`
+
 ### [2026-10-10 06:36] Fix False-Positive Playoff Classification & Empty Club Placeholder Bug
 - **Type**: Bug Fix / Batch Importer Accuracy
 - **Summary**: Resolved false-positive playoff categorization where regular group play games were erroneously marked as playoff matches and prevented CSV uploads: (1) Fixed `isTbdOrSeedTeam` in `locationUtils.ts` which was returning `true` for empty or falsy strings (`!teamName`). When schedule CSVs lacked an explicit `Home Club` column, `rawHomeClub` (`""`) caused `isHomeTbd` to evaluate `true` across all rows, turning every regular game into `TBD vs TBD` and forcing `playoff` game types. (2) Removed `isTbdOrSeedTeam` checks on raw club strings in both `BatchImporterClient.tsx` and `import-actions.ts`, ensuring TBD detection strictly evaluates team names. (3) Added top-level `normalizeScheduleGameType` in `BatchImporterClient.tsx`, ensuring explicit CSV round indicators like `"Group Play"` accurately resolve to `"group_stage"` and are never overwritten as playoff games. (4) Enhanced `discernVenueAndField` to recognize Sports Complex / Park facilities (e.g. `"Sansom Sports Complex"`), automatically extracting sublocation fields (`"Hackney A"`, `"Hackney B"`, `"Katherine B 9v9"`, `"Sansom 3A"`, `"Sansom 3B"`). (5) Expanded unit tests in `tbdSeed.test.ts` to assert that empty strings and real team names return `false`. Verified with 0 TypeScript errors and 70 passing unit tests.

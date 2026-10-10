@@ -156,13 +156,24 @@ export async function batchImportTeams(
     }
 
     // 2. Find or create team
-    let team = await prisma.teams.findFirst({
-      where: {
-        club_id: club.id,
-        team_name: { equals: rawTeam },
-        gender: genderEnum,
-      },
-    });
+    let team: any = null;
+    if (rec.gender) {
+      team = await prisma.teams.findFirst({
+        where: {
+          club_id: club.id,
+          team_name: { equals: rawTeam },
+          gender: genderEnum,
+        },
+      });
+    }
+    if (!team) {
+      team = await prisma.teams.findFirst({
+        where: {
+          club_id: club.id,
+          team_name: { equals: rawTeam },
+        },
+      });
+    }
 
     if (!team) {
       team = await prisma.teams.create({
@@ -309,13 +320,23 @@ export async function batchImportSchedule(
       }
 
       if (!homeTeam && homeClub) {
-        homeTeam = await prisma.teams.findFirst({
-          where: {
-            club_id: homeClub.id,
-            team_name: { equals: homeTeamName.trim() },
-            gender: genderEnum,
-          },
-        });
+        if (rec.gender) {
+          homeTeam = await prisma.teams.findFirst({
+            where: {
+              club_id: homeClub.id,
+              team_name: { equals: homeTeamName.trim() },
+              gender: genderEnum,
+            },
+          });
+        }
+        if (!homeTeam) {
+          homeTeam = await prisma.teams.findFirst({
+            where: {
+              club_id: homeClub.id,
+              team_name: { equals: homeTeamName.trim() },
+            },
+          });
+        }
       }
       if (!homeTeam && homeClub) {
         homeTeam = await prisma.teams.create({
@@ -378,13 +399,23 @@ export async function batchImportSchedule(
       }
 
       if (!awayTeam && awayClub) {
-        awayTeam = await prisma.teams.findFirst({
-          where: {
-            club_id: awayClub.id,
-            team_name: { equals: awayTeamName.trim() },
-            gender: genderEnum,
-          },
-        });
+        if (rec.gender) {
+          awayTeam = await prisma.teams.findFirst({
+            where: {
+              club_id: awayClub.id,
+              team_name: { equals: awayTeamName.trim() },
+              gender: genderEnum,
+            },
+          });
+        }
+        if (!awayTeam) {
+          awayTeam = await prisma.teams.findFirst({
+            where: {
+              club_id: awayClub.id,
+              team_name: { equals: awayTeamName.trim() },
+            },
+          });
+        }
       }
       if (!awayTeam && awayClub) {
         awayTeam = await prisma.teams.create({

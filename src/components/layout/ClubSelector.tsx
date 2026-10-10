@@ -31,10 +31,12 @@ export default function ClubSelector({ clubs, selectedClubId, onChange }: ClubSe
         label="Current Club"
         value={selectedClubId}
         onChange={onChange}
-        options={clubs.map((club) => ({ value: String(club.id), label: club.name }))}
+        options={[
+          { value: "", label: "All Clubs" },
+          ...clubs.map((club) => ({ value: String(club.id), label: club.name })),
+        ]}
         width="full"
-        showPlaceholder={true}
-        placeholder="Select Club..."
+        showPlaceholder={false}
       />
     </div>
   );

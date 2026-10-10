@@ -15,16 +15,40 @@ export default function SidebarTeamSelector({
   onChange,
   isLoading = false,
 }: SidebarTeamSelectorProps) {
-  if (teams.length === 0) return null;
+  if (teams.length === 0) {
+    return (
+      <div className="p-4 border-b border-border">
+        <Select
+          label="Current Team"
+          value=""
+          disabled={true}
+          options={[]}
+          width="full"
+          showPlaceholder={true}
+          placeholder="No teams found"
+        />
+      </div>
+    );
+  }
 
   if (teams.length === 1) {
+    const isSelected = String(teams[0].id) === currentTeamId;
     return (
       <div className="p-4 border-b border-border space-y-1.5">
         <span className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center justify-between">
           <span>Current Team</span>
           {isLoading && <Loader2 size={12} className="animate-spin text-primary" />}
         </span>
-        <div className="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-surface/50">
+        <div
+          onClick={() => {
+            if (!isSelected) {
+              onChange({ target: { value: String(teams[0].id) } });
+            }
+          }}
+          className={`flex items-center gap-2.5 p-3 rounded-lg border border-border bg-surface/50 ${
+            !isSelected ? "cursor-pointer hover:border-primary/50 transition-colors" : ""
+          }`}
+        >
           <Users size={16} className="text-primary flex-shrink-0" />
           <span className="text-sm font-semibold text-text truncate">{teams[0].teamName}</span>
         </div>

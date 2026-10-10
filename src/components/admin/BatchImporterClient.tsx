@@ -39,6 +39,7 @@ import EntityMatchingWizardModal from "@/components/admin/importer/EntityMatchin
 import { createInlineLeague, createInlineLeagueNode, carryoverLeagueTeamsFromPreviousSeason } from "@/lib/actions/league-actions";
 import { discernVenueAndField, discernClubAndTeam, isTbdOrSeedTeam } from "@/lib/utils/locationUtils";
 import { normalizeGender, formatGenderDisplay } from "@/lib/utils/gender";
+import { parseGameDatesAndTimesUTC } from "@/lib/utils/dateTimeUtils";
 
 interface BatchImporterClientProps {
   seasons: { id: number; name: string }[];
@@ -744,8 +745,18 @@ export default function BatchImporterClient({
       if (!line.trim()) continue;
       const parts = parseCSVLine(line);
 
-      const startDate = activeMapping.startDate >= 0 ? parts[activeMapping.startDate] || "" : "";
+      const rawStartDate = activeMapping.startDate >= 0 ? parts[activeMapping.startDate] || "" : "";
       const startTime = activeMapping.startTime >= 0 ? parts[activeMapping.startTime] || undefined : undefined;
+      
+      let startDate = rawStartDate.trim();
+      if (startDate) {
+        try {
+          const { startDate: parsedDate } = parseGameDatesAndTimesUTC(startDate, startTime);
+          startDate = parsedDate.toISOString().slice(0, 10);
+        } catch {
+          // fallback to raw string if parsing fails
+        }
+      }
       
       const rawHomeClub = activeMapping.homeClub >= 0 ? parts[activeMapping.homeClub] || "" : "";
       const rawHomeTeam = activeMapping.homeTeam >= 0 ? parts[activeMapping.homeTeam] || "" : "";

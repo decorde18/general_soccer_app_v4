@@ -3,6 +3,7 @@ import {
   calculateAbsoluteGameTime,
   calculateScoreboardTime,
   formatScoreboardMinute,
+  parseGameDatesAndTimesUTC,
 } from "../dateTimeUtils";
 
 describe("Dual Game Time Utilities (dateTimeUtils)", () => {
@@ -69,6 +70,28 @@ describe("Dual Game Time Utilities (dateTimeUtils)", () => {
     it("should format 2nd half minutes accurately", () => {
       // Start of 2nd half (40m nominal 1st half + 5m in 2nd half = 45m -> 46th minute)
       expect(formatScoreboardMinute(2700, 2, 40)).toBe("46'");
+    });
+  });
+
+  describe("parseGameDatesAndTimesUTC", () => {
+    it("should accurately parse named weekday and month dates", () => {
+      const res1 = parseGameDatesAndTimesUTC("Saturday, October 10, 2026", "8:30 AM");
+      expect(res1.startDate.toISOString()).toBe("2026-10-10T00:00:00.000Z");
+      expect(res1.startTime?.toISOString()).toBe("2026-10-10T08:30:00.000Z");
+
+      const res2 = parseGameDatesAndTimesUTC("Sunday, October 11, 2026", "12:00 PM");
+      expect(res2.startDate.toISOString()).toBe("2026-10-11T00:00:00.000Z");
+      expect(res2.startTime?.toISOString()).toBe("2026-10-11T12:00:00.000Z");
+    });
+
+    it("should accurately parse slash and ISO date formats", () => {
+      const slashRes = parseGameDatesAndTimesUTC("10/10/2026", "1:50 PM");
+      expect(slashRes.startDate.toISOString()).toBe("2026-10-10T00:00:00.000Z");
+      expect(slashRes.startTime?.toISOString()).toBe("2026-10-10T13:50:00.000Z");
+
+      const isoRes = parseGameDatesAndTimesUTC("2026-10-10", "4:30 PM");
+      expect(isoRes.startDate.toISOString()).toBe("2026-10-10T00:00:00.000Z");
+      expect(isoRes.startTime?.toISOString()).toBe("2026-10-10T16:30:00.000Z");
     });
   });
 });
