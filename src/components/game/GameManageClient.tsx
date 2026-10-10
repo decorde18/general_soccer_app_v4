@@ -520,7 +520,6 @@ export default function GameManageClient() {
     startTransition(async () => {
       try {
         const totalSeconds = resolveGameTimeSeconds(subPeriod, subTimeMin, subTimeSec);
-        const totalSeconds = resolveGameTimeSeconds(subPeriod, subTimeMin, subTimeSec);
         const subPayload = {
           game_id: Number(game.game_id || game.id),
           in_player_id: Number(subInId),
@@ -585,7 +584,6 @@ export default function GameManageClient() {
     startTransition(async () => {
       try {
         const player = players.find((p) => String(p.playerGameId) === cardPlayerId);
-        const totalSeconds = resolveGameTimeSeconds(cardPeriod, cardTimeMin, cardTimeSec);
         const totalSeconds = resolveGameTimeSeconds(cardPeriod, cardTimeMin, cardTimeSec);
 
         if (editingCard) {
@@ -1438,18 +1436,6 @@ export default function GameManageClient() {
             </span>
           </div>
 
-          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
-            <div>
-              <span className="font-bold text-text">Calculated Match Clock: </span>
-              <span className="font-extrabold text-primary text-sm">
-                {calculatePreviewTime(goalPeriod, goalTimeMin, goalTimeSec).displayLabel}
-              </span>
-            </div>
-            <span className="text-[10px] text-muted font-medium">
-              Accepts period minute (e.g. 15') or game minute (e.g. 45')
-            </span>
-          </div>
-
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
@@ -1512,18 +1498,6 @@ export default function GameManageClient() {
               value={subTimeSec}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubTimeSec(e.target.value)}
             />
-          </div>
-
-          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
-            <div>
-              <span className="font-bold text-text">Calculated Match Clock: </span>
-              <span className="font-extrabold text-primary text-sm">
-                {calculatePreviewTime(subPeriod, subTimeMin, subTimeSec).displayLabel}
-              </span>
-            </div>
-            <span className="text-[10px] text-muted font-medium">
-              Accepts period minute (e.g. 15') or game minute (e.g. 45')
-            </span>
           </div>
 
           <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
@@ -1612,18 +1586,6 @@ export default function GameManageClient() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardTimeSec(e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
-            <div>
-              <span className="font-bold text-text">Calculated Match Clock: </span>
-              <span className="font-extrabold text-primary text-sm">
-                {calculatePreviewTime(cardPeriod, cardTimeMin, cardTimeSec).displayLabel}
-              </span>
-            </div>
-            <span className="text-[10px] text-muted font-medium">
-              Accepts period minute (e.g. 15') or game minute (e.g. 45')
-            </span>
           </div>
 
           <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
