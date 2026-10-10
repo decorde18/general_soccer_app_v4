@@ -1,7 +1,10 @@
 "use client";
 
+import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Trophy, Swords } from "lucide-react";
+import { ArrowRight, Trophy, Swords, Plus } from "lucide-react";
+import Button from "@/components/ui/Button";
+import AddTeamCompetitionModal from "./AddTeamCompetitionModal";
 
 export interface TeamCompetitionSummary {
   leagueId: number;
@@ -21,6 +24,8 @@ export interface TeamCompetitionSummary {
 
 interface TeamCompetitionsProps {
   competitions: TeamCompetitionSummary[];
+  teamSeasonId?: number;
+  seasonId?: number;
 }
 
 function CompetitionCard({
@@ -92,7 +97,11 @@ function CompetitionCard({
 
 export default function TeamCompetitions({
   competitions,
+  teamSeasonId,
+  seasonId,
 }: TeamCompetitionsProps) {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   const leagues = competitions.filter(
     (competition) => !competition.isTournament,
   );
@@ -105,14 +114,10 @@ export default function TeamCompetitions({
     items: TeamCompetitionSummary[],
     emptyMessage: string,
   ) => {
-    if (items.length === 0) {
-      return null;
-    }
-
     return (
       <section className='space-y-3'>
         <div className='flex items-center gap-2'>
-          <h2 className='text-lg font-semibold text-text'>{title}</h2>
+          <h3 className='text-base font-semibold text-text'>{title}</h3>
           <span className='rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted'>
             {items.length}
           </span>
@@ -127,7 +132,9 @@ export default function TeamCompetitions({
             ))}
           </div>
         ) : (
-          <p className='text-sm text-muted'>{emptyMessage}</p>
+          <div className='rounded-2xl border border-dashed border-border/70 bg-surface/30 p-6 text-center text-sm text-muted'>
+            {emptyMessage}
+          </div>
         )}
       </section>
     );
@@ -135,11 +142,44 @@ export default function TeamCompetitions({
 
   return (
     <div className='space-y-8'>
-      {renderSection("Leagues", leagues, "No league competitions yet.")}
+      {/* Top Header */}
+      <div className='flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4'>
+        <div>
+          <h2 className='text-xl font-bold text-text flex items-center gap-2'>
+            <Trophy size={20} className='text-primary' />
+            Competitions
+          </h2>
+          <p className='mt-1 text-xs text-muted'>
+            Enrolled leagues, tournament divisions, and standings for this team.
+          </p>
+        </div>
+        {teamSeasonId && seasonId && (
+          <Button
+            variant='primary'
+            size='sm'
+            onClick={() => setIsAddModalOpen(true)}
+            className='flex items-center gap-1.5'
+          >
+            <Plus size={16} />
+            Add Competition
+          </Button>
+        )}
+      </div>
+
+      {renderSection("Leagues", leagues, "No league competitions assigned yet.")}
       {renderSection(
         "Tournaments",
         tournaments,
-        "No tournament competitions yet.",
+        "No tournament competitions assigned yet.",
+      )}
+
+      {teamSeasonId && seasonId && (
+        <AddTeamCompetitionModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          teamSeasonId={teamSeasonId}
+          seasonId={seasonId}
+        />
       )}
     </div>
   );

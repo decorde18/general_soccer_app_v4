@@ -121,3 +121,166 @@ export async function deleteTeamEnrollment(id: unknown) {
 
   revalidatePath("/admin/leagues");
 }
+
+export async function getTerminalCompetitionNodes() {
+  const allNodes = await prisma.league_nodes.findMany({
+    include: {
+      leagues: true,
+      other_league_nodes: true,
+      league_nodes: true,
+    },
+    orderBy: { display_order: "asc" },
+  });
+
+  const leafNodes = allNodes.filter((n) => n.other_league_nodes.length === 0);
+  const nodeMap = new Map<number, typeof allNodes[0]>();
+  allNodes.forEach((n) => nodeMap.set(n.id, n));
+
+  function buildBreadcrumbs(nodeId: number): string {
+    const parts: string[] = [];
+    let curr = nodeMap.get(nodeId);
+    while (curr) {
+      parts.unshift(curr.name);
+      if (curr.parent_id) {
+        curr = nodeMap.get(curr.parent_id);
+      } else {
+        if (curr.leagues) {
+          parts.unshift(curr.leagues.name);
+        }
+        break;
+      }
+    }
+    const uniqueParts: string[] = [];
+    for (const p of parts) {
+      if (uniqueParts.length === 0 || uniqueParts[uniqueParts.length - 1] !== p) {
+        uniqueParts.push(p);
+      }
+    }
+    return uniqueParts.join(" > ");
+  }
+
+  return leafNodes
+    .map((n) => ({
+      id: n.id,
+      leagueId: n.league_id,
+      name: n.name,
+      breadcrumbs: buildBreadcrumbs(n.id),
+      isTournament: n.leagues?.is_tournament ?? (n.node_type === "tournament"),
+    }))
+    .sort((a, b) => a.breadcrumbs.localeCompare(b.breadcrumbs));
+}
+
+export async function enrollTeamInCompetitionNode(data: {
+  teamSeasonId: number;
+  leagueNodeId: number;
+  seasonId: number;
+}) {
+  const teamSeasonId = Number(data.teamSeasonId);
+  const leagueNodeId = Number(data.leagueNodeId);
+  const seasonId = Number(data.seasonId);
+
+  if (!teamSeasonId || !leagueNodeId || !seasonId) {
+    throw new Error("Missing required enrollment parameters");
+  }
+
+  let nodeSeason = await prisma.league_node_seasons.findFirst({
+    where: {
+      league_node_id: leagueNodeId,
+      season_id: seasonId,
+    },
+  });
+
+  if (!nodeSeason) {
+    nodeSeason = await prisma.league_node_seasons.create({
+      data: {
+        league_node_id: leagueNodeId,
+        season_id: seasonId,
+        is_active: true,
+        status: "active",
+      },
+    });
+  }
+
+  const existing = await prisma.team_league_enrollments.findFirst({
+    where: {
+      team_season_id: teamSeasonId,
+      league_node_season_id: nodeSeason.id,
+    },
+  });
+
+  if (existing) {
+    throw new Error("This team is already enrolled in this competition.");
+  }
+
+  const enrollment = await prisma.team_league_enrollments.create({
+    data: {
+      team_season_id: teamSeasonId,
+      league_node_season_id: nodeSeason.id,
+      is_active: true,
+    },
+  });
+
+  revalidatePath(`/teams/${teamSeasonId}`);
+  revalidatePath("/admin/leagues");
+  revalidatePath("/leagues");
+
+  return { success: true, enrollment };
+}
+
+export async function createAndEnrollCompetition(data: {
+  teamSeasonId: number;
+  seasonId: number;
+  name: string;
+  abbreviation?: string;
+  isTournament?: boolean;
+}) {
+  const teamSeasonId = Number(data.teamSeasonId);
+  const seasonId = Number(data.seasonId);
+
+  if (!teamSeasonId || !seasonId || !data.name || !data.name.trim()) {
+    throw new Error("Missing required competition parameters.");
+  }
+
+  const league = await prisma.leagues.create({
+    data: {
+      name: data.name.trim(),
+      abbreviation: data.abbreviation?.trim() || null,
+      is_tournament: Boolean(data.isTournament),
+      status: "active",
+      is_active: true,
+    },
+  });
+
+  const node = await prisma.league_nodes.create({
+    data: {
+      league_id: league.id,
+      name: `${league.name} (${data.isTournament ? "Tournament" : "Division"})`,
+      node_type: data.isTournament ? "tournament" : "division",
+      level: 0,
+      display_order: 0,
+    },
+  });
+
+  const nodeSeason = await prisma.league_node_seasons.create({
+    data: {
+      league_node_id: node.id,
+      season_id: seasonId,
+      status: "active",
+      is_active: true,
+    },
+  });
+
+  const enrollment = await prisma.team_league_enrollments.create({
+    data: {
+      team_season_id: teamSeasonId,
+      league_node_season_id: nodeSeason.id,
+      is_active: true,
+    },
+  });
+
+  revalidatePath(`/teams/${teamSeasonId}`);
+  revalidatePath("/leagues");
+  revalidatePath("/admin/leagues");
+
+  return { success: true, league, node, enrollment };
+}

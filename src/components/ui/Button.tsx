@@ -56,13 +56,13 @@ export default function Button({
   };
 
   const variants: Record<string, string> = {
-    primary: "bg-primary text-white hover:bg-accent-hover shadow-primary/20",
-    default: "bg-primary text-white hover:bg-accent-hover shadow-primary/20",
+    primary: "bg-primary text-primary-contrast hover:bg-accent-hover shadow-primary/20",
+    default: "bg-primary text-primary-contrast hover:bg-accent-hover shadow-primary/20",
     success: "bg-success text-white hover:opacity-90 shadow-success/20",
     muted: "bg-muted text-white cursor-not-allowed border-none",
     outline: "border-2 border-border text-text hover:bg-background",
     danger: "border border-border bg-danger text-white hover:opacity-90",
-    secondary: "bg-secondary text-white hover:opacity-90",
+    secondary: "bg-secondary text-secondary-contrast hover:opacity-90",
     ghost: "bg-transparent text-text hover:bg-background/80 shadow-none border-none",
   };
 

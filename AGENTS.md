@@ -139,3 +139,22 @@ This file documents mandatory architectural rules and conventions for developers
   - All competition node options MUST display full hierarchy breadcrumbs (`"League Name > Parent Node > Division Subnode"`).
 - **Dual Competition Enrollment & Auto-Sync**:
   - Selecting a primary competition node MUST automatically sync `gameType` (`"tournament"` vs `"league"`), while allowing dual-enrolled secondary competitions to be attached via `+ Add Dual Competition`.
+
+---
+
+## 13. Automated Change Logging in `updates.md`
+
+- **Mandatory Update Entry on Code Changes**:
+  - Whenever the AI agent adds, modifies, or deletes code/files, or completes a feature, bugfix, or refactor in this project, it MUST update [`updates.md`](file:///c:/Users/decor/Development/general_soccer_app_v4/updates.md) before finishing its task.
+- **Log Entry Standard Format**:
+  - Appends a new timestamped log entry at the top of the **Change Log** section in `updates.md`.
+  - Format for entries:
+    ```markdown
+    ### [YYYY-MM-DD HH:MM] Brief Title of Change
+    - **Type**: Feature / Bug Fix / Refactor / Configuration
+    - **Summary**: Concise description of what was changed and why.
+    - **Modified Files**: List of relative paths modified or created.
+    ```
+- **Preserve Historical Entries**:
+  - Never overwrite existing log entries in `updates.md`; always prepend new entries to the log list.
+

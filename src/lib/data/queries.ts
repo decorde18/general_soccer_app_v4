@@ -273,6 +273,9 @@ export interface Player {
   captain: boolean;
   isActive: boolean;
   joinedDate: string | null;
+  photoUrl?: string | null;
+  photoStatus?: string | null;
+  photoRejectionReason?: string | null;
 }
 
 export interface TeamStaffMember {
@@ -815,6 +818,9 @@ function mapPlayerRow(r: any): Player {
     captain: !!r.captain,
     isActive: !!r.is_active,
     joinedDate: toDateString(r.joined_date),
+    photoUrl: person.photo_url ?? null,
+    photoStatus: person.photo_status ?? "not_uploaded",
+    photoRejectionReason: person.photo_rejection_reason ?? null,
   };
 }
 

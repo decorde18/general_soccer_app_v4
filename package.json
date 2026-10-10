@@ -7,6 +7,8 @@
     "build": "prisma generate && next build",
     "prod": "npm run build && npm run start",
     "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run"

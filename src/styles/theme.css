@@ -8,9 +8,11 @@
   /* ==================== Colors (using HSL) ==================== */
   /* Primary: #0f3460 (Deep Navy Blue) -> HSL: 211 75% 22% */
   --color-primary: 211 75% 22%;
+  --color-primary-contrast: 0 0% 100%;
 
   /* Secondary: #16213e (Darker Navy) -> HSL: 218 44% 16% */
   --color-secondary: 218 44% 16%;
+  --color-secondary-contrast: 0 0% 100%;
 
   /* Accent: #e94560 (Vibrant Coral Red) -> HSL: 349 77% 59% */
   --color-accent: 349 77% 59%;
@@ -109,7 +111,9 @@
   --color-text-label: 210 22% 78%;
   --color-muted: 210 15% 75%;
   --color-primary: 211 75% 38%;
+  --color-primary-contrast: 0 0% 100%;
   --color-secondary: 218 35% 18%;
+  --color-secondary-contrast: 0 0% 100%;
   --color-accent: 349 77% 59%;
   --color-accent-hover: 349 67% 52%;
   --dark-background: 218 35% 12%;

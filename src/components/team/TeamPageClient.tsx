@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { Activity, Calendar, Trophy, Users, ShieldAlert } from "lucide-react";
+import {
+  Activity,
+  Calendar,
+  Trophy,
+  Users,
+  ClipboardList,
+  Zap,
+  CalendarOff,
+} from "lucide-react";
 import TeamHeader, { type TeamLeagueLink } from "./TeamHeader";
 import TeamOverview from "./TeamOverview";
 import TeamRoster from "./TeamRoster";
@@ -10,7 +18,14 @@ import TeamStats from "./TeamStats";
 import TeamCompetitions, {
   type TeamCompetitionSummary,
 } from "./TeamCompetitions";
+
+import TeamRequirements from "./TeamRequirements";
+import TeamPerformance from "./TeamPerformance";
+import TeamGroups from "./TeamGroups";
+import TeamAvailability from "./TeamAvailability";
+
 import TabbedPanel, { type TabItem } from "@/components/ui/TabbedPanel";
+import type { PlayerSeasonStats } from "@/lib/data/queries";
 
 interface Game {
   id: number;
@@ -47,8 +62,6 @@ interface Player {
   isActive: boolean;
 }
 
-import type { PlayerSeasonStats } from "@/lib/data/queries";
-
 interface TeamStaffMember {
   id: number;
   firstName: string;
@@ -84,6 +97,13 @@ interface TeamPageClientProps {
     points: number;
   } | null;
   leagueLinks?: TeamLeagueLink[];
+  customDefs?: any[];
+  customVals?: any[];
+  perfTests?: any[];
+  perfLogs?: any[];
+  groups?: any[];
+  pairings?: any[];
+  unavailabilities?: any[];
 }
 
 export default function TeamPageClient({
@@ -94,10 +114,26 @@ export default function TeamPageClient({
   stats,
   record,
   leagueLinks,
+  customDefs = [],
+  customVals = [],
+  perfTests = [],
+  perfLogs = [],
+  groups = [],
+  pairings = [],
+  unavailabilities = [],
 }: TeamPageClientProps) {
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "competitions" | "roster" | "schedule" | "stats"
-  >("overview");
+  type TabType =
+    | "overview"
+    | "competitions"
+    | "roster"
+    | "schedule"
+    | "stats"
+    | "requirements"
+    | "performance"
+    | "groups"
+    | "availability";
+
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   // Determine next match & recent matches
   const nextMatch =
@@ -114,7 +150,7 @@ export default function TeamPageClient({
       (a, b) =>
         new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
     )
-    .slice(0, 3); // Get top 3 latest results
+    .slice(0, 3);
 
   const competitions: TeamCompetitionSummary[] = (leagueLinks ?? []).map(
     (link) => ({
@@ -129,12 +165,14 @@ export default function TeamPageClient({
     }),
   );
 
-  const tabs: readonly TabItem<
-    "overview" | "competitions" | "roster" | "schedule" | "stats"
-  >[] = [
+  const tabs: readonly TabItem<TabType>[] = [
     { id: "overview", label: "Overview", icon: Activity },
     { id: "competitions", label: "Competitions", icon: Trophy },
     { id: "roster", label: "Roster", icon: Users },
+    { id: "requirements", label: "Requirements & Gear", icon: ClipboardList },
+    { id: "performance", label: "Fitness Logs", icon: Zap },
+    { id: "groups", label: "Groups & Sisters", icon: Users },
+    { id: "availability", label: "Conflicts", icon: CalendarOff },
     { id: "schedule", label: "Schedule", icon: Calendar },
     { id: "stats", label: "Stats", icon: Trophy },
   ];
@@ -173,7 +211,11 @@ export default function TeamPageClient({
         )}
 
         {activeTab === "competitions" && (
-          <TeamCompetitions competitions={competitions} />
+          <TeamCompetitions
+            competitions={competitions}
+            teamSeasonId={teamSeason.id}
+            seasonId={teamSeason.seasonId}
+          />
         )}
 
         {activeTab === "roster" && (
@@ -181,6 +223,41 @@ export default function TeamPageClient({
             teamSeasonId={teamSeason.id}
             players={players}
             staff={staff}
+          />
+        )}
+
+        {activeTab === "requirements" && (
+          <TeamRequirements
+            teamSeasonId={teamSeason.id}
+            players={players}
+            definitions={customDefs}
+            initialValues={customVals}
+          />
+        )}
+
+        {activeTab === "performance" && (
+          <TeamPerformance
+            teamSeasonId={teamSeason.id}
+            players={players}
+            tests={perfTests}
+            initialLogs={perfLogs}
+          />
+        )}
+
+        {activeTab === "groups" && (
+          <TeamGroups
+            teamSeasonId={teamSeason.id}
+            players={players}
+            groups={groups}
+            pairings={pairings}
+          />
+        )}
+
+        {activeTab === "availability" && (
+          <TeamAvailability
+            teamSeasonId={teamSeason.id}
+            players={players}
+            records={unavailabilities}
           />
         )}
 

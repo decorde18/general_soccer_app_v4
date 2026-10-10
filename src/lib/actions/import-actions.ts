@@ -6,7 +6,7 @@ import { requireSession, verifyAdmin } from "@/lib/auth/auth-utils";
 
 import { resolveOrCreateDivisionHierarchy } from "@/lib/actions/league-actions";
 import { deriveClubAbbreviation } from "@/lib/utils/teamName";
-import { discernVenueAndField } from "@/lib/utils/locationUtils";
+import { discernVenueAndField, discernClubAndTeam, isTbdOrSeedTeam } from "@/lib/utils/locationUtils";
 import { normalizeGender, GenderValue } from "@/lib/utils/gender";
 
 export interface TeamImportRecord {
@@ -32,6 +32,11 @@ export interface ScheduleImportRecord {
   leagueNodeId?: number;
   leagueId?: number;
   divisionName?: string;
+  notes?: string;
+  isHomeTbd?: boolean;
+  isAwayTbd?: boolean;
+  rawHomePlaceholder?: string;
+  rawAwayPlaceholder?: string;
 }
 
 /**
@@ -223,130 +228,180 @@ export async function batchImportSchedule(
   let gamesSkipped = 0;
 
   for (const rec of records) {
-    if (!rec.startDate || !rec.homeTeamName || !rec.awayTeamName) continue;
+    const isHomeTbd = Boolean(rec.isHomeTbd || isTbdOrSeedTeam(rec.homeTeamName));
+    const isAwayTbd = Boolean(rec.isAwayTbd || isTbdOrSeedTeam(rec.awayTeamName));
+
+    if (!rec.startDate || (!rec.homeTeamName && !isHomeTbd) || (!rec.awayTeamName && !isAwayTbd)) continue;
 
     const genderEnum = mapGenderToEnum(rec.gender);
 
-    // 1. Resolve Home Team & Club
-    let homeClub: any = null;
-    const mappedHomeClub = resolvedMappings?.[rec.homeClubName];
-    if (mappedHomeClub?.matchedId) {
-      homeClub = await prisma.clubs.findUnique({ where: { id: mappedHomeClub.matchedId } });
-    }
-    if (!homeClub && rec.homeClubName) {
-      homeClub = await prisma.clubs.findFirst({
-        where: { name: { equals: rec.homeClubName.trim() } },
+    // Helper to get or create TBD team_seasons record
+    const getTbdTeamSeason = async () => {
+      let tbdClub = await prisma.clubs.findFirst({
+        where: { name: { equals: "TBD" } },
       });
-    }
-    if (!homeClub && rec.homeClubName) {
-      homeClub = await prisma.clubs.create({
-        data: {
-          name: rec.homeClubName.trim(),
-          abbreviation: deriveClubAbbreviation(rec.homeClubName.trim()),
-          type: "club",
-        },
-      });
-    }
-
-    let homeTeam: any = null;
-    const mappedHomeTeam = resolvedMappings?.[rec.homeTeamName];
-    let homeTeamSeason: any = null;
-
-    if (mappedHomeTeam?.matchedId) {
-      homeTeamSeason = await prisma.team_seasons.findUnique({
-        where: { id: mappedHomeTeam.matchedId },
-        include: { teams: true },
-      });
-      if (homeTeamSeason) {
-        homeTeam = homeTeamSeason.teams;
+      if (!tbdClub) {
+        tbdClub = await prisma.clubs.create({
+          data: { name: "TBD", abbreviation: "TBD", type: "club" },
+        });
       }
-    }
 
-    if (!homeTeam && homeClub) {
-      homeTeam = await prisma.teams.findFirst({
-        where: {
-          club_id: homeClub.id,
-          team_name: { equals: rec.homeTeamName.trim() },
-          gender: genderEnum,
-        },
+      let tbdTeam = await prisma.teams.findFirst({
+        where: { club_id: tbdClub.id, team_name: { equals: "TBD" }, gender: genderEnum },
       });
-    }
-    if (!homeTeam && homeClub) {
-      homeTeam = await prisma.teams.create({
-        data: { club_id: homeClub.id, team_name: rec.homeTeamName.trim(), gender: genderEnum },
-      });
-    }
+      if (!tbdTeam) {
+        tbdTeam = await prisma.teams.create({
+          data: { club_id: tbdClub.id, team_name: "TBD", gender: genderEnum },
+        });
+      }
 
-    if (!homeTeamSeason && homeTeam) {
-      homeTeamSeason = await prisma.team_seasons.findFirst({
-        where: { team_id: homeTeam.id, season_id: seasonId },
+      let ts = await prisma.team_seasons.findFirst({
+        where: { team_id: tbdTeam.id, season_id: seasonId },
       });
-    }
-    if (!homeTeamSeason && homeTeam) {
-      homeTeamSeason = await prisma.team_seasons.create({
-        data: { team_id: homeTeam.id, season_id: seasonId },
-      });
+      if (!ts) {
+        ts = await prisma.team_seasons.create({
+          data: { team_id: tbdTeam.id, season_id: seasonId },
+        });
+      }
+      return ts;
+    };
+
+    // 1. Resolve Home Team & Club
+    let homeTeamSeason: any = null;
+    if (isHomeTbd) {
+      homeTeamSeason = await getTbdTeamSeason();
+    } else {
+      const discernedHome = discernClubAndTeam(rec.homeTeamName, rec.homeClubName);
+      const homeClubName = discernedHome.clubName || rec.homeClubName || rec.homeTeamName;
+      const homeTeamName = discernedHome.teamName || rec.homeTeamName;
+
+      let homeClub: any = null;
+      const mappedHomeClub = resolvedMappings?.[homeClubName] || resolvedMappings?.[rec.homeClubName];
+      if (mappedHomeClub?.matchedId) {
+        homeClub = await prisma.clubs.findUnique({ where: { id: mappedHomeClub.matchedId } });
+      }
+      if (!homeClub && homeClubName) {
+        homeClub = await prisma.clubs.findFirst({
+          where: { name: { equals: homeClubName.trim() } },
+        });
+      }
+      if (!homeClub && homeClubName) {
+        homeClub = await prisma.clubs.create({
+          data: {
+            name: homeClubName.trim(),
+            abbreviation: deriveClubAbbreviation(homeClubName.trim()),
+            type: "club",
+          },
+        });
+      }
+
+      let homeTeam: any = null;
+      const mappedHomeTeam = resolvedMappings?.[homeTeamName] || resolvedMappings?.[rec.homeTeamName];
+
+      if (mappedHomeTeam?.matchedId) {
+        homeTeamSeason = await prisma.team_seasons.findUnique({
+          where: { id: mappedHomeTeam.matchedId },
+          include: { teams: true },
+        });
+        if (homeTeamSeason) {
+          homeTeam = homeTeamSeason.teams;
+        }
+      }
+
+      if (!homeTeam && homeClub) {
+        homeTeam = await prisma.teams.findFirst({
+          where: {
+            club_id: homeClub.id,
+            team_name: { equals: homeTeamName.trim() },
+            gender: genderEnum,
+          },
+        });
+      }
+      if (!homeTeam && homeClub) {
+        homeTeam = await prisma.teams.create({
+          data: { club_id: homeClub.id, team_name: homeTeamName.trim(), gender: genderEnum },
+        });
+      }
+
+      if (!homeTeamSeason && homeTeam) {
+        homeTeamSeason = await prisma.team_seasons.findFirst({
+          where: { team_id: homeTeam.id, season_id: seasonId },
+        });
+      }
+      if (!homeTeamSeason && homeTeam) {
+        homeTeamSeason = await prisma.team_seasons.create({
+          data: { team_id: homeTeam.id, season_id: seasonId },
+        });
+      }
     }
 
     // 2. Resolve Away Team & Club
-    let awayClub: any = null;
-    const mappedAwayClub = resolvedMappings?.[rec.awayClubName];
-    if (mappedAwayClub?.matchedId) {
-      awayClub = await prisma.clubs.findUnique({ where: { id: mappedAwayClub.matchedId } });
-    }
-    if (!awayClub && rec.awayClubName) {
-      awayClub = await prisma.clubs.findFirst({
-        where: { name: { equals: rec.awayClubName.trim() } },
-      });
-    }
-    if (!awayClub && rec.awayClubName) {
-      awayClub = await prisma.clubs.create({
-        data: {
-          name: rec.awayClubName.trim(),
-          abbreviation: deriveClubAbbreviation(rec.awayClubName.trim()),
-          type: "club",
-        },
-      });
-    }
-
-    let awayTeam: any = null;
-    const mappedAwayTeam = resolvedMappings?.[rec.awayTeamName];
     let awayTeamSeason: any = null;
+    if (isAwayTbd) {
+      awayTeamSeason = await getTbdTeamSeason();
+    } else {
+      const discernedAway = discernClubAndTeam(rec.awayTeamName, rec.awayClubName);
+      const awayClubName = discernedAway.clubName || rec.awayClubName || rec.awayTeamName;
+      const awayTeamName = discernedAway.teamName || rec.awayTeamName;
 
-    if (mappedAwayTeam?.matchedId) {
-      awayTeamSeason = await prisma.team_seasons.findUnique({
-        where: { id: mappedAwayTeam.matchedId },
-        include: { teams: true },
-      });
-      if (awayTeamSeason) {
-        awayTeam = awayTeamSeason.teams;
+      let awayClub: any = null;
+      const mappedAwayClub = resolvedMappings?.[awayClubName] || resolvedMappings?.[rec.awayClubName];
+      if (mappedAwayClub?.matchedId) {
+        awayClub = await prisma.clubs.findUnique({ where: { id: mappedAwayClub.matchedId } });
       }
-    }
+      if (!awayClub && awayClubName) {
+        awayClub = await prisma.clubs.findFirst({
+          where: { name: { equals: awayClubName.trim() } },
+        });
+      }
+      if (!awayClub && awayClubName) {
+        awayClub = await prisma.clubs.create({
+          data: {
+            name: awayClubName.trim(),
+            abbreviation: deriveClubAbbreviation(awayClubName.trim()),
+            type: "club",
+          },
+        });
+      }
 
-    if (!awayTeam && awayClub) {
-      awayTeam = await prisma.teams.findFirst({
-        where: {
-          club_id: awayClub.id,
-          team_name: { equals: rec.awayTeamName.trim() },
-          gender: genderEnum,
-        },
-      });
-    }
-    if (!awayTeam && awayClub) {
-      awayTeam = await prisma.teams.create({
-        data: { club_id: awayClub.id, team_name: rec.awayTeamName.trim(), gender: genderEnum },
-      });
-    }
+      let awayTeam: any = null;
+      const mappedAwayTeam = resolvedMappings?.[awayTeamName] || resolvedMappings?.[rec.awayTeamName];
 
-    if (!awayTeamSeason && awayTeam) {
-      awayTeamSeason = await prisma.team_seasons.findFirst({
-        where: { team_id: awayTeam.id, season_id: seasonId },
-      });
-    }
-    if (!awayTeamSeason && awayTeam) {
-      awayTeamSeason = await prisma.team_seasons.create({
-        data: { team_id: awayTeam.id, season_id: seasonId },
-      });
+      if (mappedAwayTeam?.matchedId) {
+        awayTeamSeason = await prisma.team_seasons.findUnique({
+          where: { id: mappedAwayTeam.matchedId },
+          include: { teams: true },
+        });
+        if (awayTeamSeason) {
+          awayTeam = awayTeamSeason.teams;
+        }
+      }
+
+      if (!awayTeam && awayClub) {
+        awayTeam = await prisma.teams.findFirst({
+          where: {
+            club_id: awayClub.id,
+            team_name: { equals: awayTeamName.trim() },
+            gender: genderEnum,
+          },
+        });
+      }
+      if (!awayTeam && awayClub) {
+        awayTeam = await prisma.teams.create({
+          data: { club_id: awayClub.id, team_name: awayTeamName.trim(), gender: genderEnum },
+        });
+      }
+
+      if (!awayTeamSeason && awayTeam) {
+        awayTeamSeason = await prisma.team_seasons.findFirst({
+          where: { team_id: awayTeam.id, season_id: seasonId },
+        });
+      }
+      if (!awayTeamSeason && awayTeam) {
+        awayTeamSeason = await prisma.team_seasons.create({
+          data: { team_id: awayTeam.id, season_id: seasonId },
+        });
+      }
     }
 
     // 3. Resolve Location & Sublocation with smart matching and discernment
@@ -444,12 +499,28 @@ export async function batchImportSchedule(
         start_date: startDate,
         home_team_season_id: homeTeamSeason.id,
         away_team_season_id: awayTeamSeason.id,
+        start_time: startTime,
+        location_id: locationId,
+        sublocation_id: sublocationId,
       },
     });
 
     if (existingGame) {
       gamesSkipped++;
       continue;
+    }
+
+    // Determine default game type
+    let gameTypeEnum = await normalizeGameType(rec.gameType, "league");
+    if ((isHomeTbd || isAwayTbd) && (gameTypeEnum === "league" || !rec.gameType)) {
+      gameTypeEnum = "playoff";
+    }
+
+    let notes: string | null = rec.notes || null;
+    if ((isHomeTbd || isAwayTbd) && !notes) {
+      const hLabel = rec.rawHomePlaceholder || rec.homeTeamName || "TBD";
+      const aLabel = rec.rawAwayPlaceholder || rec.awayTeamName || "TBD";
+      notes = `Playoff Matchup: ${hLabel} vs ${aLabel}`;
     }
 
     // 6. Create game
@@ -464,7 +535,8 @@ export async function batchImportSchedule(
         end_time: endTime,
         location_id: locationId,
         sublocation_id: sublocationId,
-        game_type: await normalizeGameType(rec.gameType, "league"),
+        game_type: gameTypeEnum,
+        notes: notes,
         status: "scheduled",
       },
     });

@@ -36,6 +36,15 @@ export function discernVenueAndField(rawLoc?: string, rawSub?: string): Discerne
       return { venueName: wordMatch[1].trim(), sublocationName: wordMatch[2].trim() };
     }
 
+    // 3) Complex / Facility / Park keywords: "Sansom Sports Complex Hackney Hackney B" -> "Sansom Sports Complex", "Hackney B"
+    const complexMatch = loc.match(/^(.+?\s*(?:Sports Complex|Soccer Complex|Complex|Park|Facility|Center|Centre|Stadium))\s+(.+)$/i);
+    if (complexMatch) {
+      const vName = complexMatch[1].trim();
+      let fName = complexMatch[2].trim();
+      fName = fName.replace(/\b(\w+)\s+\1\b/gi, "$1");
+      return { venueName: vName, sublocationName: fName };
+    }
+
     return { venueName: loc, sublocationName: undefined };
   }
 
@@ -45,4 +54,80 @@ export function discernVenueAndField(rawLoc?: string, rawSub?: string): Discerne
   }
 
   return { venueName: "", sublocationName: undefined };
+}
+
+export interface DiscernedClubAndTeam {
+  clubName: string;
+  teamName: string;
+}
+
+/**
+ * Utility to discern club name and team name from combined or separate string inputs.
+ */
+export function discernClubAndTeam(rawTeam?: string, rawClub?: string): DiscernedClubAndTeam {
+  const teamStr = (rawTeam || "").trim();
+  const clubStr = (rawClub || "").trim();
+
+  // 1. If club is provided explicitly
+  if (clubStr) {
+    if (teamStr.toLowerCase().startsWith(clubStr.toLowerCase() + " - ")) {
+      const cleanTeam = teamStr.slice(clubStr.length + 3).trim();
+      return { clubName: clubStr, teamName: cleanTeam || teamStr };
+    }
+    if (teamStr.toLowerCase().startsWith(clubStr.toLowerCase() + " : ")) {
+      const cleanTeam = teamStr.slice(clubStr.length + 3).trim();
+      return { clubName: clubStr, teamName: cleanTeam || teamStr };
+    }
+    if (teamStr.toLowerCase().startsWith(clubStr.toLowerCase() + " ")) {
+      const cleanTeam = teamStr.slice(clubStr.length + 1).trim();
+      return { clubName: clubStr, teamName: cleanTeam || teamStr };
+    }
+    return { clubName: clubStr, teamName: teamStr || clubStr };
+  }
+
+  // 2. If no club provided, check if team string contains a delimiter (e.g. "Club Name - Team Name")
+  if (teamStr) {
+    const match = teamStr.match(/^(.+?)\s*[\-–:|]\s*(.+)$/);
+    if (match) {
+      const maybeClub = match[1].trim();
+      const maybeTeam = match[2].trim();
+      if (maybeClub && maybeTeam) {
+        return { clubName: maybeClub, teamName: maybeTeam };
+      }
+    }
+    return { clubName: teamStr, teamName: teamStr };
+  }
+
+  return { clubName: "", teamName: "" };
+}
+
+/**
+ * Utility to check if a team string represents a TBD placeholder or playoff seed
+ */
+export function isTbdOrSeedTeam(teamName?: string): boolean {
+  if (!teamName || !teamName.trim()) return false;
+  const t = teamName.toLowerCase().trim();
+  if (
+    t === "tbd" ||
+    t === "t.b.d." ||
+    t === "tba" ||
+    t === "-" ||
+    t === "byes" ||
+    t === "bye" ||
+    t.includes("seed") ||
+    t.includes("[") ||
+    t.includes("]") ||
+    t.includes("winner of") ||
+    t.includes("loser of") ||
+    t.includes("winner #") ||
+    t.includes("loser #") ||
+    t.includes("winner game") ||
+    t.includes("loser game") ||
+    /group\s+[a-z]\s*(#\d+|\d+|winner|runner|seed)/i.test(t) ||
+    /pool\s+[a-z]\s*(#\d+|\d+|winner|runner|seed)/i.test(t) ||
+    /bracket\s+[a-z]?\s*(#\d+|\d+|winner|runner|seed)/i.test(t)
+  ) {
+    return true;
+  }
+  return false;
 }

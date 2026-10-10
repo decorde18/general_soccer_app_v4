@@ -78,3 +78,40 @@ export async function deleteClub(id: unknown) {
 
   revalidatePath("/admin/clubs");
 }
+
+export async function getClubModalDetails(clubId: number) {
+  if (!clubId || isNaN(clubId)) return null;
+
+  return await prisma.clubs.findUnique({
+    where: { id: clubId },
+    include: {
+      addresses: true,
+      teams: {
+        where: { is_active: true },
+        include: {
+          team_seasons: {
+            where: { is_active: true },
+            include: {
+              seasons: true,
+            },
+          },
+        },
+      },
+      club_staff: {
+        where: { is_active: true },
+        include: {
+          people: {
+            select: {
+              id: true,
+              first_name: true,
+              last_name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+

@@ -13,6 +13,11 @@ export interface UnmatchedItem {
   parentContext?: string;
 }
 
+export interface UnmatchedTeamItem {
+  teamName: string;
+  clubName: string;
+}
+
 export interface ResolvedMapping {
   rawName: string;
   matchedId: number | null;
@@ -23,15 +28,20 @@ export interface ResolvedMapping {
 interface EntityMatchingWizardModalProps {
   isOpen: boolean;
   unmatchedClubs: string[];
-  unmatchedTeams: string[];
+  unmatchedTeams: (string | UnmatchedTeamItem)[];
   unmatchedLocations: string[];
   unmatchedFields: string[];
-  existingClubs: { id: number; name: string }[];
-  existingTeams: { id: number; name: string; clubName: string }[];
+  existingClubs: { id: number; name: string; abbreviation?: string }[];
+  existingTeams: { id: number; name: string; clubName: string; clubId?: number }[];
   existingLocations: { id: number; name: string }[];
   existingSublocations: { id: number; name: string; locationName?: string }[];
   onComplete: (resolvedMappings: Record<string, { matchedId: number | null; createNew: boolean }>) => void;
   onCancel: () => void;
+}
+
+function getTeamItemInfo(item: string | UnmatchedTeamItem): { teamName: string; clubName: string } {
+  if (typeof item === "string") return { teamName: item, clubName: "" };
+  return item;
 }
 
 export default function EntityMatchingWizardModal({
@@ -74,17 +84,69 @@ export default function EntityMatchingWizardModal({
       }
     });
 
-    // Auto-match Teams
-    unmatchedTeams.forEach((team) => {
-      if (initialMappings[team]) return;
-      const tLower = team.toLowerCase().trim();
-      const match = existingTeams.find((t) => {
-        const full = `${t.clubName} ${t.name}`.toLowerCase().trim();
-        const simple = t.name.toLowerCase().trim();
-        return tLower === full || tLower === simple || tLower.includes(simple) || simple.includes(tLower);
-      });
-      if (match) {
-        initialMappings[team] = { matchedId: match.id, createNew: false };
+    // Auto-match Teams strictly against the picked/resolved club context
+    unmatchedTeams.forEach((item) => {
+      const { teamName, clubName: rawClubName } = getTeamItemInfo(item);
+      if (initialMappings[teamName]) return;
+
+      const clubMapping = rawClubName ? initialMappings[rawClubName] : undefined;
+      let matchedClubId: number | null = null;
+      let matchedClubName = "";
+      let isNewClub = false;
+
+      if (clubMapping) {
+        if (clubMapping.createNew) {
+          isNewClub = true;
+        } else if (clubMapping.matchedId) {
+          matchedClubId = clubMapping.matchedId;
+          const found = existingClubs.find((c) => c.id === clubMapping.matchedId);
+          if (found) matchedClubName = found.name;
+        }
+      } else if (rawClubName) {
+        const cLower = rawClubName.toLowerCase().trim();
+        const found = existingClubs.find(
+          (c) => c.name.toLowerCase().trim() === cLower || (c.abbreviation && c.abbreviation.toLowerCase().trim() === cLower)
+        );
+        if (found) {
+          matchedClubId = found.id;
+          matchedClubName = found.name;
+        }
+      }
+
+      if (isNewClub) {
+        // New club -> New team
+        initialMappings[teamName] = { matchedId: null, createNew: true };
+      } else if (matchedClubName || matchedClubId) {
+        // Filter candidate teams ONLY to existing teams belonging to this club
+        const clubTeams = existingTeams.filter(
+          (t) =>
+            (matchedClubId && (t as any).clubId === matchedClubId) ||
+            (matchedClubName && t.clubName.toLowerCase().trim() === matchedClubName.toLowerCase().trim())
+        );
+
+        const tLower = teamName.toLowerCase().trim();
+        const match = clubTeams.find((t) => {
+          const full = `${t.clubName} ${t.name}`.toLowerCase().trim();
+          const simple = t.name.toLowerCase().trim();
+          return tLower === full || tLower === simple || tLower.includes(simple) || simple.includes(tLower);
+        });
+
+        if (match) {
+          initialMappings[teamName] = { matchedId: match.id, createNew: false };
+        } else {
+          initialMappings[teamName] = { matchedId: null, createNew: true };
+        }
+      } else {
+        // Global fallback if no club context at all
+        const tLower = teamName.toLowerCase().trim();
+        const match = existingTeams.find((t) => {
+          const full = `${t.clubName} ${t.name}`.toLowerCase().trim();
+          const simple = t.name.toLowerCase().trim();
+          return tLower === full || tLower === simple || tLower.includes(simple) || simple.includes(tLower);
+        });
+        if (match) {
+          initialMappings[teamName] = { matchedId: match.id, createNew: false };
+        }
       }
     });
 
@@ -285,24 +347,73 @@ export default function EntityMatchingWizardModal({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {unmatchedTeams.map((team) => {
-                    const currentVal = mappings[team];
+                  {unmatchedTeams.map((item, idx) => {
+                    const { teamName, clubName: rawClubName } = getTeamItemInfo(item);
+                    const currentVal = mappings[teamName];
                     const selectedId = currentVal?.createNew ? "new" : currentVal?.matchedId || "";
-                    const lookup = lookupResults[team];
-                    const isLoading = loadingLookups[team];
+                    const lookup = lookupResults[teamName];
+                    const isLoading = loadingLookups[teamName];
+
+                    // Resolve selected/matched club from Step 1 or DB
+                    const clubMapping = rawClubName ? mappings[rawClubName] : undefined;
+                    let targetClubName = "";
+                    let targetClubId: number | null = null;
+                    let isNewClub = false;
+
+                    if (clubMapping) {
+                      if (clubMapping.createNew) {
+                        isNewClub = true;
+                      } else if (clubMapping.matchedId) {
+                        targetClubId = clubMapping.matchedId;
+                        const foundClub = existingClubs.find((c) => c.id === clubMapping.matchedId);
+                        if (foundClub) targetClubName = foundClub.name;
+                      }
+                    } else if (rawClubName) {
+                      const cLower = rawClubName.toLowerCase().trim();
+                      const foundClub = existingClubs.find(
+                        (c) => c.name.toLowerCase().trim() === cLower || (c.abbreviation && c.abbreviation.toLowerCase().trim() === cLower)
+                      );
+                      if (foundClub) {
+                        targetClubId = foundClub.id;
+                        targetClubName = foundClub.name;
+                      }
+                    }
+
+                    // Filter available teams to ONLY those belonging to the picked club
+                    const availableClubTeams = isNewClub
+                      ? []
+                      : targetClubId || targetClubName
+                      ? existingTeams.filter((t) => {
+                          if (targetClubId && (t as any).clubId === targetClubId) return true;
+                          if (targetClubName && t.clubName.toLowerCase().trim() === targetClubName.toLowerCase().trim()) return true;
+                          return false;
+                        })
+                      : existingTeams;
+
+                    const itemKey = typeof item === "string" ? item : `${item.clubName}-${item.teamName}-${idx}`;
 
                     return (
-                      <div key={team} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-2">
+                      <div key={itemKey} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-2">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="font-semibold text-xs text-white flex items-center gap-2">
-                            <Shield className="h-4 w-4 text-slate-400" />
-                            <span>"{team}"</span>
+                          <div className="font-semibold text-xs text-white flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-indigo-400" />
+                              <span>"{teamName}"</span>
+                            </div>
+                            {rawClubName && (
+                              <span className="text-[10px] font-normal text-slate-400 pl-6">
+                                Club:{" "}
+                                <strong className="text-amber-300 font-semibold">
+                                  {isNewClub ? `${rawClubName} (New Club)` : targetClubName || rawClubName}
+                                </strong>
+                              </span>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => handleWebLookup(team, "team")}
+                              onClick={() => handleWebLookup(teamName, "team")}
                               disabled={isLoading}
                               className="px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
                             >
@@ -318,19 +429,29 @@ export default function EntityMatchingWizardModal({
                               value={selectedId}
                               onChange={(e) => {
                                 const v = e.target.value;
-                                if (v === "new") setMapping(team, null, true);
-                                else if (v) setMapping(team, Number(v), false);
-                                else setMapping(team, null, false);
+                                if (v === "new") setMapping(teamName, null, true);
+                                else if (v) setMapping(teamName, Number(v), false);
+                                else setMapping(teamName, null, false);
                               }}
                               className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-white focus:border-indigo-500 focus:outline-none"
                             >
-                              <option value="">-- Select Existing Team --</option>
-                              {existingTeams.map((t) => (
-                                <option key={t.id} value={t.id}>
-                                  {t.clubName} - {t.name}
-                                </option>
-                              ))}
-                              <option value="new">+ Create New Team "{team}"</option>
+                              {isNewClub ? (
+                                <option value="new">+ Create New Team "{teamName}" (New Club)</option>
+                              ) : (
+                                <>
+                                  <option value="">
+                                    {availableClubTeams.length > 0
+                                      ? `-- Select Existing Team (${targetClubName || rawClubName}) --`
+                                      : `-- No Existing Teams in ${targetClubName || rawClubName || "Club"} --`}
+                                  </option>
+                                  {availableClubTeams.map((t) => (
+                                    <option key={t.id} value={t.id}>
+                                      {t.clubName} - {t.name}
+                                    </option>
+                                  ))}
+                                  <option value="new">+ Create New Team "{teamName}"</option>
+                                </>
+                              )}
                             </select>
                           </div>
                         </div>

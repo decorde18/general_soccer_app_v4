@@ -197,10 +197,10 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
             const isInProgress = game.status === "in_progress";
             const isScheduled = game.status === "scheduled" || !game.status;
 
-            // Subtle distinction for past games (slight opacity & soft border)
+            // Subtle distinction for past games without making them dark or muddy
             let cardOutlineClass = isPast
-              ? "border-border/60 bg-surface/40 opacity-85 hover:opacity-100"
-              : "border-border/80 bg-surface/90 opacity-100 shadow-2xs";
+              ? "border-border/70 bg-surface opacity-100 shadow-2xs"
+              : "border-border/80 bg-surface opacity-100 shadow-2xs";
             let resultTag = null;
 
             let scoreBadgeClass = "bg-background text-muted border border-border";
@@ -219,8 +219,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
               cardOutlineClass = isTargetClosest
                 ? "border-amber-500/50 bg-surface border-l-4 border-l-amber-500 ring-2 ring-amber-500/20 shadow-md opacity-100"
                 : isPast
-                ? "border-border/60 bg-surface/40 border-l-4 border-l-amber-500/40 opacity-85 hover:opacity-100"
-                : "border-border/80 bg-surface/90 border-l-4 border-l-amber-500/60 opacity-100";
+                ? "border-border/60 bg-surface border-l-4 border-l-amber-500/40 opacity-100"
+                : "border-border/80 bg-surface border-l-4 border-l-amber-500/60 opacity-100";
               scoreBadgeClass = "bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold";
               scoreLabel = "SCHED";
               resultTag = (
@@ -234,7 +234,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
               if (teamScore > oppScore) {
                 cardOutlineClass = isPast
-                  ? "border-success/25 bg-success/[0.02] border-l-4 border-l-success/60 opacity-85 hover:opacity-100"
+                  ? "border-success/30 hover:border-success/60 bg-surface border-l-4 border-l-success opacity-100"
                   : "border-success/30 hover:border-success/60 bg-success/5 shadow-sm border-l-4 border-l-success opacity-100";
                 scoreBadgeClass = "bg-success text-white border-success/30";
                 scoreLabel = `W (${teamScore}-${oppScore})`;
@@ -245,7 +245,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 );
               } else if (teamScore < oppScore) {
                 cardOutlineClass = isPast
-                  ? "border-danger/20 bg-danger/[0.015] border-l-4 border-l-danger/60 opacity-85 hover:opacity-100"
+                  ? "border-danger/25 hover:border-danger/50 bg-surface border-l-4 border-l-danger opacity-100"
                   : "border-danger/25 hover:border-danger/50 bg-danger/[0.02] shadow-sm border-l-4 border-l-danger opacity-100";
                 scoreBadgeClass = "bg-danger text-white border-danger/30";
                 scoreLabel = `L (${teamScore}-${oppScore})`;
@@ -256,8 +256,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                 );
               } else {
                 cardOutlineClass = isPast
-                  ? "border-border/60 bg-surface/40 border-l-4 border-l-muted/40 opacity-85 hover:opacity-100"
-                  : "border-border/80 hover:border-muted/50 bg-surface/90 border-l-4 border-l-muted/40 opacity-100";
+                  ? "border-border/60 bg-surface border-l-4 border-l-muted/40 opacity-100"
+                  : "border-border/80 hover:border-muted/50 bg-surface border-l-4 border-l-muted/40 opacity-100";
                 scoreBadgeClass = "bg-muted/15 text-muted border-border";
                 scoreLabel = `D (${teamScore}-${oppScore})`;
                 resultTag = (
@@ -350,36 +350,39 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                     </div>
 
                     {/* Schedule/Venue Panel */}
-                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-border/50 pt-3.5 sm:pt-0 sm:pl-6 gap-2 text-right">
+                    <div className="flex flex-col items-start sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-border/50 pt-3.5 sm:pt-0 sm:pl-6 gap-2.5 text-left sm:text-right min-w-[190px]">
                       
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-text bg-background sm:bg-transparent px-2.5 py-1 sm:p-0 rounded border sm:border-0 border-border">
-                        <Calendar size={14} className="text-primary" />
-                        <span>{formatDate(game.startDate)}</span>
+                      <div className="flex flex-wrap items-center sm:justify-end gap-2 text-xs font-bold text-text">
+                        <div className="flex items-center gap-1.5 bg-background sm:bg-transparent px-2.5 py-1 sm:p-0 rounded border sm:border-0 border-border">
+                          <Calendar size={14} className="text-primary shrink-0" />
+                          <span>{formatDate(game.startDate)}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-accent">
+                          <Clock size={14} className="text-accent shrink-0" />
+                          <span>{formatTimeStandard(game.startTime, (game as any).timezoneLabel) || "Time TBD"}</span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-accent">
-                        <Clock size={14} className="text-accent shrink-0" />
-                        <span>{formatTimeStandard(game.startTime, (game as any).timezoneLabel) || "Time TBD"}</span>
+                      <div className="flex flex-wrap items-center sm:justify-end gap-2">
+                        <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${scoreBadgeClass}`}>
+                          <Trophy size={11} />
+                          <span>{scoreLabel}</span>
+                        </div>
+                        <LocationLink
+                          locationId={game.locationId}
+                          locationName={game.locationName}
+                          sublocationName={game.sublocationName}
+                          showIcon
+                          className="text-xs max-w-[220px]"
+                        />
                       </div>
 
-                      <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${scoreBadgeClass}`}>
-                        <Trophy size={11} />
-                        <span>{scoreLabel}</span>
-                      </div>
-                      <LocationLink
-                        locationId={game.locationId}
-                        locationName={game.locationName}
-                        sublocationName={game.sublocationName}
-                        showIcon
-                        className="text-xs max-w-[200px]"
-                      />
-
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-1 w-full sm:w-auto justify-start sm:justify-end">
                         {canManage && (
                           <>
                             <button
                               onClick={() => setEditingGame(game)}
-                              className="inline-flex items-center gap-1 text-xs font-bold text-text hover:text-primary bg-background border border-border px-2 py-1 rounded-lg transition-colors"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-text hover:text-primary bg-background border border-border px-2.5 py-1 rounded-lg transition-colors"
                               title="Edit Game Details, Cancel, or Delete"
                             >
                               <Edit3 size={13} />
@@ -388,7 +391,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
                             <button
                               onClick={() => setQuickScoreGame(game)}
-                              className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg transition-colors"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg transition-colors"
                               title="Quick Score Entry"
                             >
                               <Edit3 size={13} />
@@ -401,7 +404,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                           href={`/gamestats/${teamSeasonId}/${game.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-accent-hover transition-colors"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-accent-hover bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg transition-colors"
                         >
                           <SquareChevronRight size={13} />
                           <span>{isCompleted ? "Match Center" : isInProgress ? "Join Tracker (Live)" : "Track Game"}</span>

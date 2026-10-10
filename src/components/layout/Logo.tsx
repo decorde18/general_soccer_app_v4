@@ -12,7 +12,9 @@ export default function Logo({ formattedDate }: LogoProps) {
       </div>
       <div>
         <p className="text-sm font-bold text-text">Soccer Stats</p>
-        <p className="text-xs text-muted hidden sm:block">{formattedDate}</p>
+        <p className="text-xs text-muted hidden sm:block" suppressHydrationWarning>
+          {formattedDate}
+        </p>
       </div>
     </div>
   );

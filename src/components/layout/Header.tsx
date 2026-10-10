@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import TeamSelector from "@/components/layout/TeamSelector";
@@ -24,7 +25,11 @@ function Header({ user }: HeaderProps) {
   const name = getDisplayName(currentUser);
   const initials = getUserInitials(currentUser);
   const isAdmin = currentUser?.roles?.isAdmin;
-  const formattedDate = format(new Date(), "EEEE, MMMM d, yyyy");
+  const [formattedDate, setFormattedDate] = useState<string>("");
+
+  useEffect(() => {
+    setFormattedDate(format(new Date(), "EEEE, MMMM d, yyyy"));
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-surface shadow-md items-center">

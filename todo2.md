@@ -20,10 +20,11 @@
   - [x] Created `LocationLink.tsx` component supporting compact/abbreviated names in dense tables and full names in expanded card views.
   - [x] Integrated `LocationLink` across team schedules, tournament schedules, match summary headers, and master score entry tables so clicking a location opens the interactive map modal everywhere.
 
-- [ ] **23.2 Universal Interactive Club & Team Links & Detail Modals**
+- [x] **23.2 Universal Interactive Club & Team Links & Detail Modals**
   - [x] Created `ClubLink.tsx` supporting short (abbreviated) vs long club names and logo badges.
-  - [ ] Build `ClubDetailsModal.tsx` showing club overview, enrolled team seasons, primary venue, and staff contacts.
-  - [ ] Integrate `ClubLink` and `TeamLink` across standings tables, leaderboards, match scoreboards, and roster views.
+  - [x] Built `ClubDetailsModal.tsx` showing club overview, enrolled team seasons, primary venue, and staff contacts.
+  - [x] Integrated `ClubLink` with `EntityModalProvider.tsx` (`openClubModal`) across standings tables, leaderboards, match scoreboards, and roster views.
 
 - [ ] **23.3 System-Wide Component & Style Consistency Audit**
   - [ ] Audit all remaining public and admin pages to ensure 100% usage of shared UI components (`Button`, `Card`, `Select`, `Input`, `Modal`) with zero unstyled native elements or ad-hoc modal triggers.
+

@@ -11,8 +11,10 @@ export async function GET() {
     const clubs = await prisma.clubs.findMany({
       where: { is_active: true },
       orderBy: { name: "asc" },
-      select: { id: true, name: true }
+      select: { id: true, name: true, type: true }
     });
+
+    const clubsMap = new Map(clubs.map((c) => [c.id, c.type]));
 
     const teamSeasons = await prisma.team_seasons.findMany({
       where: { is_active: true },
@@ -34,14 +36,19 @@ export async function GET() {
     return NextResponse.json({
       seasons,
       clubs,
-      teamSeasons: teamSeasons.map((ts) => ({
-        id: ts.id,
-        seasonId: ts.season_id,
-        seasonName: ts.seasons.season_name,
-        teamName: ts.teams.team_name,
-        clubId: ts.teams.club_id,
-        teamId: ts.team_id
-      }))
+      teamSeasons: teamSeasons.map((ts) => {
+        const clubId = ts.teams.club_id;
+        const clubType = clubId ? (clubsMap.get(clubId) || "club") : "club";
+        return {
+          id: ts.id,
+          seasonId: ts.season_id,
+          seasonName: ts.seasons.season_name,
+          teamName: ts.teams.team_name,
+          clubId: clubId,
+          teamId: ts.team_id,
+          clubType: clubType,
+        };
+      })
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -42,10 +42,26 @@ SMTP_PASS=your-smtp-password
 NEXT_PUBLIC_DEV_AUTO_SIGNIN=false
 ```
 
-## Database notes
+## Database Notes & External Schema Sync
 
 - The auth logic expects a `users` table with at least: `id`, `email`, `name`, `password_hash`, `reset_token`, `reset_token_expiry`, `roles` (JSON).
 - Passwords are hashed with `bcryptjs`. The `reset-password` API hashes new passwords into `password_hash`.
+
+### Updating Schema after DB changes made "under the hood" (externally)
+
+If you modify tables, columns, or relations directly in the MySQL database (outside of Prisma / this app):
+
+1. **Pull the latest database schema into Prisma**:
+   ```bash
+   npx prisma db pull
+   ```
+   This introspects your database (using `DATABASE_URL` in `.env`) and updates `prisma/schema.prisma` to mirror your database's current state.
+
+2. **Re-generate the TypeScript Prisma Client**:
+   ```bash
+   npx prisma generate
+   ```
+   This updates the generated Prisma client code (located at `@/generated/client`) so Next.js server actions, API routes, and TypeScript models pick up the new tables, columns, and types with full autocompletion.
 
 ## Scripts
 

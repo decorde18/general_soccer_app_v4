@@ -37,7 +37,7 @@ import {
 } from "@/lib/actions/import-actions";
 import EntityMatchingWizardModal from "@/components/admin/importer/EntityMatchingWizardModal";
 import { createInlineLeague, createInlineLeagueNode, carryoverLeagueTeamsFromPreviousSeason } from "@/lib/actions/league-actions";
-import { discernVenueAndField } from "@/lib/utils/locationUtils";
+import { discernVenueAndField, discernClubAndTeam, isTbdOrSeedTeam } from "@/lib/utils/locationUtils";
 import { normalizeGender, formatGenderDisplay } from "@/lib/utils/gender";
 
 interface BatchImporterClientProps {
@@ -45,6 +45,32 @@ interface BatchImporterClientProps {
   leagues?: { id: number; name: string; isTournament: boolean }[];
   leagueNodes?: { id: number; leagueId?: number; name: string }[];
   teamSeasons?: { id: number; seasonId: number; clubName: string; teamName: string; label: string }[];
+}
+
+// Robust CSV Line Parser respecting quotes and escaped characters
+export function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"' || char === "'") {
+      if (inQuotes && line[i + 1] === char) {
+        current += char;
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if ((char === "," || char === "\t") && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
 }
 
 function detectScheduleHeaderMapping(headers: string[]) {
@@ -65,14 +91,14 @@ function detectScheduleHeaderMapping(headers: string[]) {
   headers.forEach((header, idx) => {
     const h = header.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
 
-    // 1. START DATE: Exact match first, or partial if not set and not 'datesort'/'updated'
+    // 1. START DATE
     if (h === "date" || h === "gamedate" || h === "matchdate" || h === "dt") {
       sMap.startDate = idx;
     } else if (sMap.startDate === -1 && h.includes("date") && !h.includes("sort") && !h.includes("update")) {
       sMap.startDate = idx;
     }
 
-    // 2. START TIME: Exact match first, or partial if not set
+    // 2. START TIME
     if (h === "time" || h === "gametime" || h === "matchtime" || h === "tm") {
       sMap.startTime = idx;
     } else if (sMap.startTime === -1 && h.includes("time") && !h.includes("sort") && !h.includes("update")) {
@@ -88,7 +114,7 @@ function detectScheduleHeaderMapping(headers: string[]) {
 
     if (h === "hometeam" || h === "hometeamname" || h === "home") {
       sMap.homeTeam = idx;
-    } else if (sMap.homeTeam === -1 && (h.includes("hometeam") || h === "h")) {
+    } else if (sMap.homeTeam === -1 && (h.includes("hometeam") || h === "home")) {
       sMap.homeTeam = idx;
     }
 
@@ -101,7 +127,7 @@ function detectScheduleHeaderMapping(headers: string[]) {
 
     if (h === "awayteam" || h === "awayteamname" || h === "away" || h === "visitingteam") {
       sMap.awayTeam = idx;
-    } else if (sMap.awayTeam === -1 && (h.includes("awayteam") || h === "a")) {
+    } else if (sMap.awayTeam === -1 && (h.includes("awayteam") || h === "away" || h === "visitor")) {
       sMap.awayTeam = idx;
     }
 
@@ -110,24 +136,24 @@ function detectScheduleHeaderMapping(headers: string[]) {
       sMap.gender = idx;
     }
 
-    // 6. LOCATION / VENUE / EXPORT SITE
-    if (h === "exportsite" || h === "venue" || h === "location" || h === "complex") {
+    // 6. LOCATION / VENUE / EXPORT SITE / COMPLEX
+    if (h === "exportsite" || h === "venue" || h === "location" || h === "complex" || h === "facility") {
       sMap.location = idx;
     } else if (sMap.location === -1 && (h.includes("location") || h.includes("venue") || h.includes("complex") || h.includes("facility"))) {
       sMap.location = idx;
     }
 
     // 7. SUBLOCATION / FIELD / EXPORT FIELD
-    if (h === "exportfield" || h === "field" || h === "pitch" || h === "sublocation") {
+    if (h === "exportfield" || h === "field" || h === "pitch" || h === "sublocation" || h === "fieldno") {
       sMap.sublocation = idx;
-    } else if (sMap.sublocation === -1 && (h.includes("field") || h.includes("pitch") || h.includes("sublocation") || h === "fieldno")) {
+    } else if (sMap.sublocation === -1 && (h.includes("field") || h.includes("pitch") || h.includes("sublocation"))) {
       sMap.sublocation = idx;
     }
 
-    // 8. GAME TYPE / PLAY TYPE
-    if (h === "type" || h === "gametype") {
+    // 8. GAME TYPE / PLAY TYPE / ROUND
+    if (h === "type" || h === "gametype" || h === "round" || h === "playtype") {
       sMap.gameType = idx;
-    } else if (sMap.gameType === -1 && h.includes("gametype")) {
+    } else if (sMap.gameType === -1 && (h.includes("gametype") || h.includes("round") || h.includes("playtype"))) {
       sMap.gameType = idx;
     }
 
@@ -142,6 +168,27 @@ function detectScheduleHeaderMapping(headers: string[]) {
   return sMap;
 }
 
+function detectTeamsHeaderMapping(headers: string[]) {
+  const tMap = {
+    clubName: -1,
+    teamName: -1,
+    gender: -1,
+    city: -1,
+    state: -1,
+  };
+
+  headers.forEach((header, idx) => {
+    const h = header.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+    if (h.includes("club")) tMap.clubName = idx;
+    else if (h.includes("team")) tMap.teamName = idx;
+    else if (h.includes("gender") || h === "sex") tMap.gender = idx;
+    else if (h.includes("city")) tMap.city = idx;
+    else if (h.includes("state")) tMap.state = idx;
+  });
+
+  return tMap;
+}
+
 function normalizeGenderInput(genderStr?: string): "MALE" | "FEMALE" | "MIXED" {
   return normalizeGender(genderStr, "MIXED");
 }
@@ -154,6 +201,25 @@ function cleanGrade(gradeStr?: string): string | undefined {
   if (!gradeStr) return undefined;
   const cleaned = gradeStr.replace(/[\s\-_]*grade/gi, "").trim();
   return cleaned || gradeStr.trim();
+}
+
+export function normalizeScheduleGameType(rawStr?: string, defaultType: string = "league"): string {
+  if (!rawStr || !rawStr.trim()) return defaultType;
+  const s = rawStr.trim().toLowerCase();
+
+  if (["final", "finals", "championship", "gold final", "silver final"].includes(s)) return "final";
+  if (["semifinal", "semi-final", "semifinals", "semi", "semis"].includes(s)) return "semifinal";
+  if (["quarterfinal", "quarter-final", "quarterfinals", "quarter"].includes(s)) return "quarterfinal";
+  if (["round_of_16", "round of 16", "r16", "sweet 16"].includes(s)) return "round_of_16";
+  if (["group_stage", "group", "group play", "group stage", "pool play", "round robin"].includes(s)) return "group_stage";
+  if (["playoff", "playoffs", "knockout", "postseason"].includes(s)) return "playoff";
+  if (["consolation", "consolation final", "3rd place"].includes(s)) return "consolation";
+  if (["showcase"].includes(s)) return "showcase";
+  if (["friendly", "scrimmage", "exhibition"].includes(s)) return s;
+  if (["tournament"].includes(s)) return "tournament";
+  if (["league"].includes(s)) return "league";
+
+  return defaultType;
 }
 
 // Synchronous Header Auto-Detection
@@ -277,7 +343,7 @@ export default function BatchImporterClient({
   // Interactive Entity Matching Wizard States
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [unmatchedClubs, setUnmatchedClubs] = useState<string[]>([]);
-  const [unmatchedTeams, setUnmatchedTeams] = useState<string[]>([]);
+  const [unmatchedTeams, setUnmatchedTeams] = useState<{ teamName: string; clubName: string }[]>([]);
   const [unmatchedLocations, setUnmatchedLocations] = useState<string[]>([]);
   const [unmatchedFields, setUnmatchedFields] = useState<string[]>([]);
   const [dbClubs, setDbClubs] = useState<{ id: number; name: string; abbreviation?: string }[]>([]);
@@ -439,7 +505,7 @@ export default function BatchImporterClient({
   const availableTeamSeasons = teamSeasons.filter((ts) => ts.seasonId === targetSeasonId);
   const selectedTargetTeam = teamSeasons.find((ts) => ts.id === Number(targetRosterTeamSeasonId));
 
-  // --- HEADER-BASED SMART AUTO-MAPPER FOR PLAYERS & PARENTS ---
+  // --- HEADER-BASED SMART AUTO-MAPPER FOR PLAYERS, TEAMS & SCHEDULES ---
   useEffect(() => {
     if (!rawText.trim()) {
       setCsvHeaders([]);
@@ -449,16 +515,19 @@ export default function BatchImporterClient({
       return;
     }
 
-    const lines = rawText.trim().split("\n");
+    const lines = rawText.trim().split(/\r?\n/);
     if (lines.length === 0) return;
 
-    const firstLineParts = lines[0].split(/,|\t/).map((p) => p.trim());
+    const firstLineParts = parseCSVLine(lines[0]);
     setCsvHeaders(firstLineParts);
 
     if (hasHeaderRow) {
       if (importMode === "roster") {
         const autoMap = detectRosterHeaderMapping(firstLineParts);
         setRosterMapping(autoMap);
+      } else if (importMode === "teams") {
+        const autoMap = detectTeamsHeaderMapping(firstLineParts);
+        setTeamsMapping(autoMap);
       } else if (importMode === "schedule") {
         const autoMap = detectScheduleHeaderMapping(firstLineParts);
         setScheduleMapping(autoMap);
@@ -468,12 +537,27 @@ export default function BatchImporterClient({
 
   // Re-parse when target team or mapping changes dynamically
   useEffect(() => {
-    if (rawText.trim() && importMode === "roster") {
-      parseRosterText(rawText);
-    } else if (rawText.trim() && importMode === "schedule") {
-      parseScheduleText(rawText);
+    if (rawText.trim()) {
+      if (importMode === "roster") {
+        parseRosterText(rawText, rosterMapping);
+      } else if (importMode === "teams") {
+        parseTeamsText(rawText, teamsMapping);
+      } else if (importMode === "schedule") {
+        parseScheduleText(rawText, scheduleMapping);
+      }
     }
-  }, [targetRosterTeamSeasonId, rosterMapping, scheduleMapping, importMode]);
+  }, [
+    targetRosterTeamSeasonId,
+    rosterMapping,
+    teamsMapping,
+    scheduleMapping,
+    importMode,
+    rawText,
+    hasHeaderRow,
+    defaultScheduleGameType,
+    selectedLeagueId,
+    leagueNodeId,
+  ]);
 
   // Handle Native CSV File Upload (.csv, .tsv, .txt)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -490,36 +574,23 @@ export default function BatchImporterClient({
       setRawText(text);
 
       setTimeout(() => {
-        if (importMode === "roster") parseRosterText(text);
-        else if (importMode === "teams") parseTeamsText(text);
-        else if (importMode === "schedule") parseScheduleText(text);
+        if (importMode === "roster") parseRosterText(text, rosterMapping);
+        else if (importMode === "teams") parseTeamsText(text, teamsMapping);
+        else if (importMode === "schedule") parseScheduleText(text, scheduleMapping);
       }, 50);
     };
     reader.readAsText(file);
   };
 
   // --- PARSE ROSTER PLAYERS & PARENTS ---
-  const parseRosterText = (text: string) => {
+  const parseRosterText = (text: string, currentMapping = rosterMapping) => {
     setErrorMsg(null);
     setImportSummary(null);
 
-    const lines = text.trim().split("\n");
+    const lines = text.trim().split(/\r?\n/);
     if (lines.length === 0) return;
 
-    const firstLineParts = lines[0].split(/,|\t/).map((p) => p.trim());
-    const autoMap = hasHeaderRow ? detectRosterHeaderMapping(firstLineParts) : null;
-
-    // Merge manual UI state overrides with autoMap (autoMap takes precedence when header matches)
-    const activeMapping = { ...rosterMapping };
-
-    if (autoMap) {
-      (Object.keys(autoMap) as Array<keyof typeof autoMap>).forEach((key) => {
-        if (autoMap[key] >= 0) {
-          activeMapping[key] = autoMap[key];
-        }
-      });
-    }
-
+    const activeMapping = { ...currentMapping };
     const records: RosterImportRecord[] = [];
     const isSpecificTeamSelected = Boolean(targetRosterTeamSeasonId);
     const startIndex = hasHeaderRow ? 1 : 0;
@@ -527,7 +598,7 @@ export default function BatchImporterClient({
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i];
       if (!line.trim()) continue;
-      const parts = line.split(/,|\t/).map((p) => p.trim());
+      const parts = parseCSVLine(line);
 
       let firstName = activeMapping.firstName >= 0 ? parts[activeMapping.firstName] || "" : "";
       let lastName = activeMapping.lastName >= 0 ? parts[activeMapping.lastName] || "" : "";
@@ -624,24 +695,25 @@ export default function BatchImporterClient({
   };
 
   // --- PARSE TEAMS & CLUBS ---
-  const parseTeamsText = (text: string) => {
+  const parseTeamsText = (text: string, currentMapping = teamsMapping) => {
     setErrorMsg(null);
     setImportSummary(null);
 
-    const lines = text.trim().split("\n");
+    const lines = text.trim().split(/\r?\n/);
+    const activeMapping = { ...currentMapping };
     const records: TeamImportRecord[] = [];
     const startIndex = hasHeaderRow ? 1 : 0;
 
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i];
       if (!line.trim()) continue;
-      const parts = line.split(/,|\t/).map((p) => p.trim());
+      const parts = parseCSVLine(line);
 
-      const clubName = teamsMapping.clubName >= 0 ? parts[teamsMapping.clubName] || "" : "";
-      const teamName = teamsMapping.teamName >= 0 ? parts[teamsMapping.teamName] || "" : "";
-      const gender = teamsMapping.gender >= 0 ? normalizeGenderInput(parts[teamsMapping.gender]) : "MIXED";
-      const city = teamsMapping.city >= 0 ? parts[teamsMapping.city] || "" : "";
-      const state = teamsMapping.state >= 0 ? parts[teamsMapping.state] || "" : "";
+      const clubName = activeMapping.clubName >= 0 ? parts[activeMapping.clubName] || "" : "";
+      const teamName = activeMapping.teamName >= 0 ? parts[activeMapping.teamName] || "" : "";
+      const gender = activeMapping.gender >= 0 ? normalizeGenderInput(parts[activeMapping.gender]) : "MIXED";
+      const city = activeMapping.city >= 0 ? parts[activeMapping.city] || "" : "";
+      const state = activeMapping.state >= 0 ? parts[activeMapping.state] || "" : "";
 
       if (!clubName || !teamName) continue;
       records.push({ clubName, teamName, gender, city, state });
@@ -655,24 +727,14 @@ export default function BatchImporterClient({
   };
 
   // --- PARSE MATCH SCHEDULES ---
-  const parseScheduleText = (text: string) => {
+  const parseScheduleText = (text: string, currentMapping = scheduleMapping) => {
     setErrorMsg(null);
     setImportSummary(null);
 
-    const lines = text.trim().split("\n");
+    const lines = text.trim().split(/\r?\n/);
     if (lines.length === 0) return;
 
-    const firstLineParts = lines[0].split(/,|\t/).map((p) => p.trim());
-    const autoMap = hasHeaderRow ? detectScheduleHeaderMapping(firstLineParts) : null;
-    const activeMapping = { ...scheduleMapping };
-
-    if (autoMap) {
-      (Object.keys(autoMap) as Array<keyof typeof autoMap>).forEach((key) => {
-        if (autoMap[key] >= 0) {
-          activeMapping[key] = autoMap[key];
-        }
-      });
-    }
+    const activeMapping = { ...currentMapping };
 
     const records: ScheduleImportRecord[] = [];
     const startIndex = hasHeaderRow ? 1 : 0;
@@ -680,24 +742,61 @@ export default function BatchImporterClient({
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i];
       if (!line.trim()) continue;
-      const parts = line.split(/,|\t/).map((p) => p.trim());
+      const parts = parseCSVLine(line);
 
       const startDate = activeMapping.startDate >= 0 ? parts[activeMapping.startDate] || "" : "";
       const startTime = activeMapping.startTime >= 0 ? parts[activeMapping.startTime] || undefined : undefined;
-      const homeClubName = activeMapping.homeClub >= 0 ? parts[activeMapping.homeClub] || "" : "";
-      const homeTeamName = activeMapping.homeTeam >= 0 ? parts[activeMapping.homeTeam] || "" : "";
-      const awayClubName = activeMapping.awayClub >= 0 ? parts[activeMapping.awayClub] || "" : "";
-      const awayTeamName = activeMapping.awayTeam >= 0 ? parts[activeMapping.awayTeam] || homeTeamName : homeTeamName;
+      
+      const rawHomeClub = activeMapping.homeClub >= 0 ? parts[activeMapping.homeClub] || "" : "";
+      const rawHomeTeam = activeMapping.homeTeam >= 0 ? parts[activeMapping.homeTeam] || "" : "";
+      const discernedHome = discernClubAndTeam(rawHomeTeam, rawHomeClub);
+
+      const isHomeTbd = isTbdOrSeedTeam(rawHomeTeam) || isTbdOrSeedTeam(discernedHome.teamName);
+      let homeClubName = isHomeTbd ? "TBD" : discernedHome.clubName;
+      let homeTeamName = isHomeTbd ? "TBD" : discernedHome.teamName;
+      const rawHomePlaceholder = isHomeTbd ? rawHomeTeam || discernedHome.teamName || "TBD" : undefined;
+
+      const rawAwayClub = activeMapping.awayClub >= 0 ? parts[activeMapping.awayClub] || "" : "";
+      const rawAwayTeam = activeMapping.awayTeam >= 0 ? parts[activeMapping.awayTeam] || rawHomeTeam : rawHomeTeam;
+      const discernedAway = discernClubAndTeam(rawAwayTeam, rawAwayClub);
+
+      const isAwayTbd = isTbdOrSeedTeam(rawAwayTeam) || isTbdOrSeedTeam(discernedAway.teamName);
+      let awayClubName = isAwayTbd ? "TBD" : discernedAway.clubName;
+      let awayTeamName = isAwayTbd ? "TBD" : discernedAway.teamName;
+      const rawAwayPlaceholder = isAwayTbd ? rawAwayTeam || discernedAway.teamName || "TBD" : undefined;
+
       const gender = activeMapping.gender >= 0 ? normalizeGenderInput(parts[activeMapping.gender]) : "MIXED";
       const rawLoc = activeMapping.location >= 0 ? parts[activeMapping.location] || undefined : undefined;
       const rawSub = activeMapping.sublocation >= 0 ? parts[activeMapping.sublocation] || undefined : undefined;
       const discernedLoc = discernVenueAndField(rawLoc, rawSub);
 
       const rawType = activeMapping.gameType >= 0 ? parts[activeMapping.gameType] : undefined;
-      const gameType = (rawType || defaultScheduleGameType).toLowerCase() as any;
       const divisionName = activeMapping.divisionName >= 0 ? parts[activeMapping.divisionName] || undefined : undefined;
 
-      if (!startDate || !homeTeamName) continue;
+      let gameType = rawType ? normalizeScheduleGameType(rawType, defaultScheduleGameType) : defaultScheduleGameType;
+
+      // Auto-detect playoff/final game type ONLY if no explicit game type was provided in CSV
+      if (!rawType && (isHomeTbd || isAwayTbd)) {
+        const combinedText = `${rawHomeTeam || ""} ${rawAwayTeam || ""} ${divisionName || ""}`.toLowerCase();
+        if (combinedText.includes("final") || combinedText.includes("championship")) {
+          gameType = "final";
+        } else if (combinedText.includes("semi") || combinedText.includes("semifinal")) {
+          gameType = "semifinal";
+        } else if (combinedText.includes("quarter") || combinedText.includes("quarterfinal")) {
+          gameType = "quarterfinal";
+        } else {
+          gameType = "playoff";
+        }
+      }
+
+      let notes: string | undefined = undefined;
+      if (isHomeTbd || isAwayTbd) {
+        const hLabel = rawHomePlaceholder || "TBD";
+        const aLabel = rawAwayPlaceholder || "TBD";
+        notes = `Playoff Matchup: ${hLabel} vs ${aLabel}`;
+      }
+
+      if (!startDate || (!homeTeamName && !isHomeTbd)) continue;
 
       records.push({
         startDate,
@@ -713,6 +812,11 @@ export default function BatchImporterClient({
         leagueId: selectedLeagueId ? Number(selectedLeagueId) : undefined,
         leagueNodeId: leagueNodeId ? Number(leagueNodeId) : undefined,
         divisionName,
+        notes,
+        isHomeTbd,
+        isAwayTbd,
+        rawHomePlaceholder,
+        rawAwayPlaceholder,
       });
     }
 
@@ -765,7 +869,7 @@ export default function BatchImporterClient({
             teamSeasons.map((ts) => ts.teamName.toLowerCase().trim())
           );
 
-          const missingTeams: string[] = [];
+          const missingTeams: { teamName: string; clubName: string }[] = [];
           const missingClubs: string[] = [];
           const missingLocs: string[] = [];
           const missingSublocs: string[] = [];
@@ -781,13 +885,13 @@ export default function BatchImporterClient({
 
           parsedSchedule.forEach((rec) => {
             // Check Club Matching
-            if (rec.homeClubName) {
+            if (rec.homeClubName && rec.homeClubName.toLowerCase().trim() !== "tbd" && !isTbdOrSeedTeam(rec.homeClubName)) {
               const hcLower = rec.homeClubName.toLowerCase().trim();
               if (!existingClubNames.has(hcLower) && !existingClubAbbrs.has(hcLower)) {
                 if (!missingClubs.includes(rec.homeClubName.trim())) missingClubs.push(rec.homeClubName.trim());
               }
             }
-            if (rec.awayClubName) {
+            if (rec.awayClubName && rec.awayClubName.toLowerCase().trim() !== "tbd" && !isTbdOrSeedTeam(rec.awayClubName)) {
               const acLower = rec.awayClubName.toLowerCase().trim();
               if (!existingClubNames.has(acLower) && !existingClubAbbrs.has(acLower)) {
                 if (!missingClubs.includes(rec.awayClubName.trim())) missingClubs.push(rec.awayClubName.trim());
@@ -795,16 +899,28 @@ export default function BatchImporterClient({
             }
 
             // Check Team Matching
-            const hFull = `${rec.homeClubName} ${rec.homeTeamName}`.toLowerCase().trim();
-            const hSimple = rec.homeTeamName.toLowerCase().trim();
-            if (!existingTeamFull.has(hFull) && !existingTeamSimple.has(hSimple)) {
-              if (!missingTeams.includes(rec.homeTeamName.trim())) missingTeams.push(rec.homeTeamName.trim());
+            if (rec.homeTeamName && rec.homeTeamName.toLowerCase().trim() !== "tbd" && !isTbdOrSeedTeam(rec.homeTeamName) && !rec.isHomeTbd) {
+              const hFull = `${rec.homeClubName} ${rec.homeTeamName}`.toLowerCase().trim();
+              const hSimple = rec.homeTeamName.toLowerCase().trim();
+              if (!existingTeamFull.has(hFull) && !existingTeamSimple.has(hSimple)) {
+                const tName = rec.homeTeamName.trim();
+                const cName = rec.homeClubName ? rec.homeClubName.trim() : "";
+                if (!missingTeams.some((t) => t.teamName === tName && t.clubName === cName)) {
+                  missingTeams.push({ teamName: tName, clubName: cName });
+                }
+              }
             }
 
-            const aFull = `${rec.awayClubName} ${rec.awayTeamName}`.toLowerCase().trim();
-            const aSimple = rec.awayTeamName.toLowerCase().trim();
-            if (!existingTeamFull.has(aFull) && !existingTeamSimple.has(aSimple)) {
-              if (!missingTeams.includes(rec.awayTeamName.trim())) missingTeams.push(rec.awayTeamName.trim());
+            if (rec.awayTeamName && rec.awayTeamName.toLowerCase().trim() !== "tbd" && !isTbdOrSeedTeam(rec.awayTeamName) && !rec.isAwayTbd) {
+              const aFull = `${rec.awayClubName} ${rec.awayTeamName}`.toLowerCase().trim();
+              const aSimple = rec.awayTeamName.toLowerCase().trim();
+              if (!existingTeamFull.has(aFull) && !existingTeamSimple.has(aSimple)) {
+                const tName = rec.awayTeamName.trim();
+                const cName = rec.awayClubName ? rec.awayClubName.trim() : "";
+                if (!missingTeams.some((t) => t.teamName === tName && t.clubName === cName)) {
+                  missingTeams.push({ teamName: tName, clubName: cName });
+                }
+              }
             }
 
             // Check location matching
@@ -1466,6 +1582,26 @@ export default function BatchImporterClient({
               </div>
 
               <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Match Time (Optional)</span>
+                  {scheduleMapping.startTime >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  )}
+                </label>
+                <Select
+                  value={String(scheduleMapping.startTime)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setScheduleMapping((prev) => ({ ...prev, startTime: Number(e.target.value) }))
+                  }
+                  options={columnSelectOptions}
+                />
+              </div>
+
+              <div>
                 <label className="block text-[11px] font-bold text-slate-200 mb-1 flex items-center justify-between">
                   <span>Home Team *</span>
                   {scheduleMapping.homeTeam >= 0 ? (
@@ -1511,7 +1647,7 @@ export default function BatchImporterClient({
 
               <div>
                 <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
-                  <span>Location</span>
+                  <span>Venue / Location</span>
                   {scheduleMapping.location >= 0 ? (
                     <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
                       Mapped ✓
@@ -1524,6 +1660,106 @@ export default function BatchImporterClient({
                   value={String(scheduleMapping.location)}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                     setScheduleMapping((prev) => ({ ...prev, location: Number(e.target.value) }))
+                  }
+                  options={columnSelectOptions}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Field / Sublocation</span>
+                  {scheduleMapping.sublocation >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  )}
+                </label>
+                <Select
+                  value={String(scheduleMapping.sublocation)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setScheduleMapping((prev) => ({ ...prev, sublocation: Number(e.target.value) }))
+                  }
+                  options={columnSelectOptions}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Game Type / Round</span>
+                  {scheduleMapping.gameType >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  )}
+                </label>
+                <Select
+                  value={String(scheduleMapping.gameType)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setScheduleMapping((prev) => ({ ...prev, gameType: Number(e.target.value) }))
+                  }
+                  options={columnSelectOptions}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Division / Group Name</span>
+                  {scheduleMapping.divisionName >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  )}
+                </label>
+                <Select
+                  value={String(scheduleMapping.divisionName)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setScheduleMapping((prev) => ({ ...prev, divisionName: Number(e.target.value) }))
+                  }
+                  options={columnSelectOptions}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Home Club (Optional)</span>
+                  {scheduleMapping.homeClub >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  )}
+                </label>
+                <Select
+                  value={String(scheduleMapping.homeClub)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setScheduleMapping((prev) => ({ ...prev, homeClub: Number(e.target.value) }))
+                  }
+                  options={columnSelectOptions}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <span>Away Club (Optional)</span>
+                  {scheduleMapping.awayClub >= 0 ? (
+                    <span className="text-[10px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                      Mapped ✓
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                  )}
+                </label>
+                <Select
+                  value={String(scheduleMapping.awayClub)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setScheduleMapping((prev) => ({ ...prev, awayClub: Number(e.target.value) }))
                   }
                   options={columnSelectOptions}
                 />
@@ -1773,16 +2009,54 @@ export default function BatchImporterClient({
                     <th className="p-2.5">Date & Time</th>
                     <th className="p-2.5">Home Team</th>
                     <th className="p-2.5">Away Team</th>
+                    <th className="p-2.5">Location / Field</th>
                     <th className="p-2.5">Play Type</th>
+                    <th className="p-2.5">Matchup / Notes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
                   {parsedSchedule.map((s, i) => (
                     <tr key={i} className="hover:bg-slate-800/30">
                       <td className="p-2.5 text-slate-300">{s.startDate} {s.startTime || ""}</td>
-                      <td className="p-2.5 font-bold text-emerald-400">{s.homeClubName} {s.homeTeamName}</td>
-                      <td className="p-2.5 font-bold text-blue-400">{s.awayClubName} {s.awayTeamName}</td>
-                      <td className="p-2.5 font-bold text-amber-300 capitalize">{s.gameType || defaultScheduleGameType}</td>
+                      <td className="p-2.5 font-bold text-emerald-400">
+                        {s.isHomeTbd ? (
+                          <span className="inline-flex items-center gap-1 text-amber-300 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-700/50">
+                            TBD <span className="text-[10px] text-amber-200/70">({s.rawHomePlaceholder || "TBD"})</span>
+                          </span>
+                        ) : (
+                          `${s.homeClubName ? `${s.homeClubName} ` : ""}${s.homeTeamName}`
+                        )}
+                      </td>
+                      <td className="p-2.5 font-bold text-blue-400">
+                        {s.isAwayTbd ? (
+                          <span className="inline-flex items-center gap-1 text-amber-300 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-700/50">
+                            TBD <span className="text-[10px] text-amber-200/70">({s.rawAwayPlaceholder || "TBD"})</span>
+                          </span>
+                        ) : (
+                          `${s.awayClubName ? `${s.awayClubName} ` : ""}${s.awayTeamName}`
+                        )}
+                      </td>
+                      <td className="p-2.5 text-slate-300">
+                        {s.locationName || s.sublocationName ? (
+                          <span>
+                            {s.locationName || ""}{s.locationName && s.sublocationName ? " - " : ""}{s.sublocationName || ""}
+                          </span>
+                        ) : (
+                          <span className="text-slate-500">-</span>
+                        )}
+                      </td>
+                      <td className="p-2.5 font-bold capitalize">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+                          ["playoff", "final", "semifinal", "quarterfinal"].includes((s.gameType || "").toLowerCase())
+                            ? "bg-purple-950/80 text-purple-300 border border-purple-700/60"
+                            : "bg-slate-800 text-slate-300"
+                        }`}>
+                          {s.gameType || defaultScheduleGameType}
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-slate-400 italic">
+                        {s.notes || "-"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

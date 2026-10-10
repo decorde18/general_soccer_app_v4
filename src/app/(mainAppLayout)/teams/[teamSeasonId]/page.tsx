@@ -8,6 +8,20 @@ import {
   getTeamSeasonRecords,
   getLeaguesForTeamSeason,
 } from "@/lib/data/queries";
+import {
+  getCustomFieldDefinitions,
+  getCustomFieldValues,
+} from "@/lib/actions/customFields-actions";
+import {
+  getPerformanceTests,
+  getPlayerPerformanceLogs,
+} from "@/lib/actions/performance-actions";
+import {
+  getTeamGroups,
+  getPlayerPairings,
+} from "@/lib/actions/groups-actions";
+import { getPlayerUnavailability } from "@/lib/actions/unavailability-actions";
+
 import TeamPageClient from "@/components/team/TeamPageClient";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -51,19 +65,8 @@ export default async function TeamPage({ params }: PageProps) {
   }
 
   try {
-    // Fetch all necessary data in parallel
-    const [teamSeason, players, staff, games, stats, records, leagueLinks] =
-      await Promise.all([
-        getTeamSeasonById(idNumber),
-        getPlayersByTeamSeason(idNumber),
-        getTeamStaff(idNumber),
-        getGames({ teamSeasonId: idNumber }),
-        getPlayerStatsByTeamSeason(idNumber),
-        getTeamSeasonRecords(undefined, idNumber),
-        getLeaguesForTeamSeason(idNumber),
-      ]);
+    const teamSeason = await getTeamSeasonById(idNumber);
 
-    // Handle case where team season doesn't exist
     if (!teamSeason) {
       return (
         <div className='mx-auto max-w-2xl px-4 py-16'>
@@ -75,8 +78,7 @@ export default async function TeamPage({ params }: PageProps) {
             <ShieldAlert size={48} className='mx-auto text-danger mb-4' />
             <h2 className='text-xl font-bold text-text mb-2'>Team Not Found</h2>
             <p className='text-sm text-muted mb-6'>
-              We couldn't find the team season you were looking for. It may have
-              been removed or the ID is incorrect.
+              We couldn't find the team season you were looking for.
             </p>
             <Link href='/'>
               <Button
@@ -92,6 +94,37 @@ export default async function TeamPage({ params }: PageProps) {
       );
     }
 
+    // Fetch rest of data in parallel
+    const [
+      players,
+      staff,
+      games,
+      stats,
+      records,
+      leagueLinks,
+      customDefs,
+      customVals,
+      perfTests,
+      perfLogs,
+      groups,
+      pairings,
+      unavailabilities,
+    ] = await Promise.all([
+      getPlayersByTeamSeason(idNumber),
+      getTeamStaff(idNumber),
+      getGames({ teamSeasonId: idNumber }),
+      getPlayerStatsByTeamSeason(idNumber),
+      getTeamSeasonRecords(undefined, idNumber),
+      getLeaguesForTeamSeason(idNumber),
+      getCustomFieldDefinitions(idNumber, teamSeason.clubId),
+      getCustomFieldValues(idNumber),
+      getPerformanceTests(idNumber),
+      getPlayerPerformanceLogs(idNumber),
+      getTeamGroups(idNumber),
+      getPlayerPairings(idNumber),
+      getPlayerUnavailability(idNumber),
+    ]);
+
     const safePlayers = players || [];
     const safeStaff = staff || [];
     const safeGames = games || [];
@@ -99,7 +132,6 @@ export default async function TeamPage({ params }: PageProps) {
     const safeRecords = records || [];
     const safeLeagueLinks = leagueLinks || [];
 
-    // Consolidate standings record or calculate as a fallback from games
     let record = { wins: 0, losses: 0, draws: 0, points: 0 };
     if (safeRecords && safeRecords.length > 0) {
       safeRecords
@@ -111,7 +143,6 @@ export default async function TeamPage({ params }: PageProps) {
           record.points += r.points || 0;
         });
     } else {
-      // Fallback: Compute record from scored completed games only.
       const completedGames = safeGames.filter(
         (g) => g.status === "completed" && (g.homeScore ?? 0) + (g.awayScore ?? 0) > 0,
       );
@@ -174,6 +205,13 @@ export default async function TeamPage({ params }: PageProps) {
           stats={safeStats}
           record={record}
           leagueLinks={leagueLinksWithStandings}
+          customDefs={customDefs || []}
+          customVals={customVals || []}
+          perfTests={perfTests || []}
+          perfLogs={perfLogs || []}
+          groups={groups || []}
+          pairings={pairings || []}
+          unavailabilities={unavailabilities || []}
         />
       </main>
     );

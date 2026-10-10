@@ -18,6 +18,7 @@ import MobileMenuButton from "./MobileMenuButton";
 import MobileBackdrop from "./MobileBackdrop";
 import SidebarHeader from "./SidebarHeader";
 import ViewSwitcher from "./ViewSwitcher";
+import ClubTypeSelector from "./ClubTypeSelector";
 import ClubSelector from "./ClubSelector";
 import SidebarTeamSelector from "./SidebarTeamSelector";
 import NavLinks from "./NavLinks";
@@ -40,6 +41,8 @@ export default function NavBar({ user }: NavBarProps) {
   const { clubs, teamSeasons, loading } = useNavBarData();
   const { sidebarOpen, setSidebarOpen } = useSidebarState();
   const { activeView, changeActiveView } = useActiveRoleView();
+
+  const [selectedClubType, setSelectedClubType] = useState<string>("");
   const [selectedClubId, setSelectedClubId] = useSelectedClub(teamSeasons, loading);
 
   const [isNavigating, startTransition] = useTransition();
@@ -51,15 +54,42 @@ export default function NavBar({ user }: NavBarProps) {
     setOptimisticTeamId(null);
   }, [pathname]);
 
+  // Sync selectedClubType when on a team page
+  useEffect(() => {
+    const urlTeamMatch = pathname?.match(/\/teams\/(\d+)/);
+    if (urlTeamMatch && teamSeasons.length > 0) {
+      const currentId = Number(urlTeamMatch[1]);
+      const currentTeam = teamSeasons.find((t) => t.id === currentId);
+      if (currentTeam?.clubType) {
+        setSelectedClubType(currentTeam.clubType);
+      } else if (currentTeam) {
+        const club = clubs.find((c) => c.id === currentTeam.clubId);
+        if (club?.type) setSelectedClubType(club.type);
+      }
+    }
+  }, [pathname, teamSeasons, clubs]);
+
   const showActiveViewSelect = !!(originalRoles?.isAdmin || originalRoles?.clubAdmin);
   const currentActiveViewValue = getCurrentActiveViewValue(activeView, activeRoles);
 
   const accessibleTeams = getAccessibleTeams(activeRoles, teamSeasons);
   const accessibleClubs = getAccessibleClubs(accessibleTeams, clubs);
 
-  const filteredTeamsForSelect = selectedClubId
-    ? accessibleTeams.filter((t) => t.clubId === Number(selectedClubId))
-    : accessibleTeams;
+  const filteredClubsByType = accessibleClubs.filter((c) => {
+    if (!selectedClubType) return true;
+    if (selectedClubType === "high_school") return c.type === "high_school";
+    if (selectedClubType === "club") return c.type === "club" || !c.type;
+    return true;
+  });
+
+  const filteredTeamsForSelect = accessibleTeams.filter((t) => {
+    const matchType =
+      !selectedClubType ||
+      (selectedClubType === "high_school" && t.clubType === "high_school") ||
+      (selectedClubType === "club" && (t.clubType === "club" || !t.clubType));
+    const matchClub = selectedClubId ? t.clubId === Number(selectedClubId) : true;
+    return matchType && matchClub;
+  });
 
   const urlTeamMatch = pathname?.match(/\/teams\/(\d+)/);
   const currentUrlTeamSeasonId = urlTeamMatch ? urlTeamMatch[1] : "";
@@ -101,8 +131,19 @@ export default function NavBar({ user }: NavBarProps) {
           )}
 
           {currentUser && !loading && (
+            <ClubTypeSelector
+              value={selectedClubType}
+              onChange={(e) => {
+                const newType = e.target.value;
+                setSelectedClubType(newType);
+                setSelectedClubId(""); // Reset club selection when type changes
+              }}
+            />
+          )}
+
+          {currentUser && !loading && (
             <ClubSelector
-              clubs={accessibleClubs}
+              clubs={filteredClubsByType}
               selectedClubId={selectedClubId}
               onChange={(e) => setSelectedClubId(e.target.value)}
             />

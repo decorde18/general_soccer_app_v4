@@ -426,10 +426,10 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Created `EntityModalProvider.tsx` mounted at root layout level to handle global entity modal triggers (`openLocationModal`).
   - [x] Created `LocationLink.tsx` component supporting compact/abbreviated names in dense tables and full names in expanded card views.
   - [x] Integrated `LocationLink` across team schedules, tournament schedules, match summary headers, and master score entry tables so clicking a location opens the interactive map modal everywhere.
-- [ ] **23.2 Universal Interactive Club & Team Links & Detail Modals**
+- [x] **23.2 Universal Interactive Club & Team Links & Detail Modals**
   - [x] Created `ClubLink.tsx` supporting short (abbreviated) vs long club names and logo badges.
-  - [ ] Build `ClubDetailsModal.tsx` showing club overview, enrolled team seasons, primary venue, and staff contacts.
-  - [ ] Integrate `ClubLink` and `TeamLink` across standings tables, leaderboards, match scoreboards, and roster views.
+  - [x] Built `ClubDetailsModal.tsx` showing club overview, enrolled team seasons, primary venue, and staff contacts.
+  - [x] Integrated `ClubLink` and `TeamLink` with `EntityModalProvider.tsx` across standings tables, leaderboards, match scoreboards, and roster views.
 - [x] **23.4 League Structure Sub-Node Parent Select & Breadcrumb Enhancement**
   - [x] Updated `LeaguesStructureClient.tsx` so top-level nodes directly under a League explicitly display `[League Name] (League Root)` in the Parent Node select bar instead of empty/disabled `Root Level (No Parent)`.
   - [x] Enhanced parent node select options to render full hierarchical breadcrumb paths (e.g. `Girls > U15 > Premier`).
@@ -476,6 +476,144 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 - Uniforms and numbers assignment tool
 - **Modular Player Stats Aggregation Architecture**: Single-game calculator helper (`calculatePlayerGameMinutes(pg)`) evaluates base stats per match; aggregate views (`getComprehensivePlayerStats`, `getStatsForRoster`, `getPlayerProfileStats`) sum results across games matching active filters (season, competition, club, team).
 
+## Step 25: Dynamic Coaching Requirements, Performance Logs, Groups & Event Roll Call
+
+- [x] **25.1 Dynamic Custom Requirements & Checklist System**
+  - [x] Schema: Created `custom_field_definitions` & `custom_field_values` with support for compound status & dates (physicals completed/submitted dates), fee payment tracking, text, select choices, date, and boolean checklist fields.
+  - [x] Server Actions: Built `customFields-actions.ts` with `getCustomFieldDefinitions`, `upsertCustomFieldDefinition`, `deleteCustomFieldDefinition`, `getCustomFieldValues`, `updatePlayerCustomFieldValue`, and `copyAnnualFieldsToSeason`.
+  - [x] Annual Templates: Added `is_annual_recurring` flag and `Sync Annual Templates` feature to auto-copy recurring yearly requirements (physicals, fees, gear sizes) into new team seasons.
+  - [x] UI Component: Built `TeamRequirements.tsx` interactive matrix component with optimistic updates, category filtering, and modal builders.
+
+- [x] **25.2 Fitness Testing & Performance Logs**
+  - [x] Schema: Created `performance_tests` & `player_performance_logs` with support for numeric scores, display values, practice vs. home workout source tags (`entry_source`), duration, reps, and interval details.
+  - [x] Server Actions: Built `performance-actions.ts` for managing fitness test types, logging player scores, and calculating personal bests.
+  - [x] UI Component: Built `TeamPerformance.tsx` component featuring test leaderboards, personal best badges, recent log feeds, and practice/home logging modals.
+
+- [x] **25.3 Team Groups, Duty Schedules & Sister Pairings**
+  - [x] Schema: Created `team_groups`, `player_group_assignments`, and `player_pairings`.
+  - [x] Server Actions: Built `groups-actions.ts` for group CRUD, week/game duty assignments, member assignments, and Big Sister / Little Sister mentorship pairings.
+  - [x] UI Component: Built `TeamGroups.tsx` component with duty group cards and mentorship pairing cards.
+
+- [x] **25.4 Player Unavailability & Event Roll Call Integration**
+  - [x] Schema: Created `player_unavailability` and `event_attendance`.
+  - [x] Automated Pre-Population: Approved player unavailability windows automatically pre-populate event attendance as "Absent - Excused" with logged reasons attached.
+  - [x] Server Actions: Built `unavailability-actions.ts` for conflict logging, unavailability auto-sync, and event attendance tracking (`present`, `absent_excused`, `absent_unexcused`, `late`, `injured`).
+  - [x] UI Component: Built `TeamAvailability.tsx` component with unavailability conflict table and live event roll call tab with quick-toggle attendance buttons.
+
+- [x] **25.5 Team Page Hub Integration & Verification**
+  - [x] Integrated all 4 dynamic modules into `TeamPageClient.tsx` and `src/app/(mainAppLayout)/teams/[teamSeasonId]/page.tsx` with dedicated tabs (`Requirements & Gear`, `Fitness Logs`, `Groups & Sisters`, `Conflicts`).
+  - [x] Verified `npx tsc --noEmit` (0 errors) and `npx vitest run` (17/17 test files, 68/68 tests passed).
+
+---
+
+## Step 26: Task Directions/Links & Profile Picture Review System
+
+- [x] **26.1 Requirement Instructions & External Action Links**
+  - [x] Schema: Added `instructions` (text/markdown), `action_url` (varchar), and `action_label` (varchar) to `custom_field_definitions`.
+  - [x] Admin Builder: Added instruction text area and action URL/label input controls to requirement creation/edit modal.
+  - [x] UI Component: Added interactive "Directions / Info" modal and direct action link buttons (`"Take Test ↗"`, `"Open Form"`) in `TeamRequirements.tsx` and player checklist views.
+
+- [x] **26.2 Profile Picture Upload & Approval Workflow**
+  - [x] Schema: Added `photo_url`, `photo_status` (`not_uploaded`, `pending_review`, `approved`, `rejected`), and `photo_rejection_reason` to `people`. Added `require_photo_review` setting to `team_seasons`.
+  - [x] Server Actions: Built `photo-actions.ts` for profile photo upload, review approval (`approvePlayerPhoto`), rejection with reason (`rejectPlayerPhoto`), and auto-checklist status sync.
+  - [x] Player Uploader: Built headshot photo cropping/preview uploader component in `TeamRequirements.tsx`.
+  - [x] Admin Photo Hub & Checklist Sync: Built headshot review grid with quick-approve/reject controls, syncing requirement checklist status (Green = Approved, Amber = Pending Review, Red = Needs Revision).
+
+---
+
+## Step 27: Comprehensive Flattened Analytics Engine & Goal/Game Stats Views
+
+- [ ] **27.1 Flattened Goal Log View & Service (`v_all_goals` / `getFlattenedGoalLog`)**
+  - [ ] Data Service: Build `getFlattenedGoalLog(filters)` returning enriched goal-level rows with match metadata (season, competition, game type, venue), timing (period, minute $T$, clock display), team context (home/away, opponent), scorer/assister/GK details, goal type tags (header, PK, free kick, etc.), game situation (equalizer, go-ahead, opening goal), and Game-Winning Goal flag (`is_game_winner` = $(OpponentFinalScore + 1)$-th goal in a win).
+  - [ ] Lineup Context: Calculate list of active `on_field_player_ids` at the timestamp of each goal for +/- analysis.
+
+- [ ] **27.2 Flattened Game Summary View & Service (`v_game_summaries` / `getFlattenedGameSummaries`)**
+  - [ ] Data Service: Build `getFlattenedGameSummaries(filters)` returning match-level rows with final/halftime scores, W/L/D outcome, goal differential, clean sheet, OT/PK indicators, total shots, and cards.
+
+- [ ] **27.3 Ultimate Stats Hub UI & Multi-Dimension Filtering**
+  - [ ] Interactive Filters: Season, Competition Node (League/Tournament), Game Type, Team, Opponent, Venue, Date Range, Goal Type, Clutch Window ($\ge 75'$ or tie-breakers).
+  - [ ] Goal Log Explorer & Player Analytics Cards: Searchable/sortable interactive table of all goals with player headshots, video links, game-winner badges (GWG), and duo assist breakdown.
+
+---
+
+## Step 28: Dynamic League Rules & Competition Defaults on Game Creation
+
+- [ ] **28.1 Dynamic League Rules Engine & Schema Configuration**
+  - [ ] Schema: Verify and enhance `leagues` / `league_nodes` to configure game format (11v11, 9v9, 7v7), default period duration (half times in seconds/minutes), regular period count, `ot_if_tied` (default `false`), and `so_if_tied`.
+  - [ ] League Creation UI: Add game rule input controls (Format, Half Duration, Regular Periods, Overtime default toggle) when creating or editing a league/division node.
+
+- [ ] **28.2 Competition Inheritance on Game Creation**
+  - [ ] Create Game Modal: Selecting a primary competition node (`leagueNodeSeasonId`) automatically inherits and pre-populates match defaults (period duration, regular periods, game format).
+  - [ ] Default Overtime Safeguard: Ensure `ot_if_tied` defaults to `false` for all newly created games unless explicitly enabled by the user for knockout matches.
+
+---
+
+## Step 29: Legacy High School Database Data Migration (`u676616277_hs_original.sql`)
+
+- [ ] **29.1 Migration Plan & Exhaustive 25 Table Audit (`MIGRATION_PLAN.md`)**
+  - [x] Created [`MIGRATION_PLAN.md`](file:///c:/Users/decor/Development/general_soccer_app_v4/MIGRATION_PLAN.md) auditing all 25 tables in `u676616277_hs_original.sql`, mapping columns, and documenting business rules.
+  - [ ] Build script `scripts/migrate_legacy_hs_db.ts` with `--dry-run` and verbose reporting.
+
+- [ ] **29.2 Program Roster Pools & Sub-Teams Schema Extension**
+  - [ ] Schema: Add `squad_level` (`"varsity"`, `"jv"`, `"jv2"`, `"dc"`, `"lm"`) and `secondary_squad_level` to `player_teams` to support season roster pools with sub-squad filtering & call-ups via `player_games.game_status` (`dressed` vs `not_dressed`), reserving `is_guest` strictly for external guests.
+  - [ ] Schema: Add `schedule_leads` and `uniform_kits` models to preserve prospective scheduling notes and uniform inventory from original database.
+
+- [x] **29.3 Core Program, TSSAA Hierarchy & Master Entity Import**
+  - [x] `schools` & `seasons`: Mapped and imported legacy `schools` into `clubs` (`type: high_school`), deduplicating against existing entities and creating default Varsity/JV teams across high school programs (439 schools processed, 405 new clubs created, 1,632 default teams added).
+  - [x] TSSAA Hierarchy: Built `tssaa-league-builder.ts` and seeded **TSSAA** Governing Body, League, Division (I/II), Gender (Girls/Boys), Class (AAA/AA/A), Region, District (11-AAA), Sub-District, and Postseason Tournament nodes.
+  - [x] `locations`, `sublocations`, `addresses`: Built `import_locations_and_schools.ts` importing and deduplicating 435 legacy addresses, 399 locations, and establishing default field sublocations case-insensitively across venues.
+  - [x] **Location & Sublocation Consolidation**: Consolidated redundant locations embedded with field descriptors (e.g. `WCSC Downs East #18`, `WCSC Downs East #7`, `Bethesda #3`, `Kate Campbell Park #1`, `MBLP Watt Rd`) into single parent locations (e.g. `Williamson County Soccer Complex (WCSC Downs)`, `Bethesda Recreation Park`, `Kate Campbell Park`, `Major Bob Leonard Park`), re-pointing all 356 club links and 224 match games to appropriate sublocation IDs (`Downs East #18`, `Field #3`, `Field #4`, etc.).
+  - [x] **Independence High School Seasons & Staff Migration**: Migrated all 22 historical seasons (`2004-2005` to `2025-2026`) for Independence High School, 52 squad `team_seasons` (Varsity, JV, JV Gold, JV Navy), 794 legacy `people` records, 210 `team_staff` assignments (Coaches, Trainers, Managers), and 24 `club_staff` administrative roles (Principals, Athletic Directors, Assistant Principals).
+
+- [ ] **29.4 Roster, Squad Level & Family Relationships Import**
+  - [ ] `players` & `playerSeasons`: Import roster registrations to `player_teams` with `squad_level` (`Varsity`, `JV`, `JV2`), jersey numbers, positions, grades, captain status, and headshots (`photo_url`).
+  - [ ] `parents` & `playerParents`: Import parent-player links to `player_relationships`.
+
+- [ ] **29.5 Match Schedule & Rules Import**
+  - [ ] `games`: Import match schedules to `games`. Convert dates/times to UTC using `parseGameDatesAndTimesUTC()`. Preserve game types, locations, notes, VEO video links, and period durations (converted to seconds). Enforce `ot_if_tied = false` default.
+  - [ ] `periods`: Import period timestamps to `game_periods`.
+
+- [ ] **29.6 Event Logs, Goals, Discipline & Substitutions Import**
+  - [ ] `goalsFor` & `goalsAgainst`: Map goal events to `game_events_major` (`event_type: 'goal'`) and `game_events_goals`. Serialize goal types (`Header`, `Penalty`, `Free Kick`, `Corner Kick`) into JSON arrays.
+  - [ ] `minorEvents`: Map yellow cards, red cards, and fouls to `game_events_discipline`.
+  - [ ] `subs` & `stoppages`: Import substitutions to `game_subs` and clock stoppages to `game_events_major` (`event_type: 'stoppage'`, `clock_should_run: false`).
+
+- [ ] **29.7 Data Audit & Integrity Verification**
+  - [ ] Verify record count matches between legacy and target tables.
+  - [ ] Run `npx tsc --noEmit` and `npx vitest run` to ensure zero regressions.
+
+---
+
+## Step 30: Comprehensive Awards & Honors Tracking System
+
+- [x] **30.1 Database Schema & Enums (`awards`)**
+  - [x] Schema: Added `awards` model, `award_category` enum (`team`, `district`, `region`, `state`, `national`, `academic`, `coaching`, `other`), and `award_scope` enum (`individual_player`, `individual_coach`, `team_achievement`) to `schema.prisma`.
+  - [x] Prisma Client: Regenerated Prisma Client (`npx prisma generate`).
+
+- [ ] **30.2 Player Profile Honor Roll & Badges**
+  - [ ] UI Component: Add **"Honors & Accolades"** section with visual badges (e.g. 🏆 *All-American*, 🥇 *All-District*, ⭐ *Team Most Improved*) on player profile cards and roster details.
+
+- [ ] **30.3 Team & Club Trophy Case / Wall of Honor**
+  - [ ] UI Component: Add **"Trophy Case & Wall of Honor"** tab on `/teams/[teamSeasonId]` and club hubs listing all-time award winners and season achievements.
+
+- [ ] **30.4 Admin Award Granter & Management Hub**
+  - [ ] Admin UI: Build `/admin/awards` and single/batch award granter modal with person, team season, category, and year selection.
+
+---
+
+## Step 31: Granular Organizational Roles & Staff Permission Mapping
+
+- [x] **31.1 Schema Enhancement for High School & Club Staff Roles**
+  - [x] Schema: Added `title` (custom title string) and `access_level` (system permissions group) to `club_staff` and `team_staff` models.
+  - [x] Enums: Expanded `club_staff_role` (`athletic_director`, `ecnl_director`, `age_group_director`, `principal`, `assistant_principal`, `treasurer`) and `team_staff_role` (`athletic_trainer`, `team_treasurer`, `student_manager`, `team_manager`, `stats_keeper`).
+
+- [ ] **31.2 Staff Management UI & Permission Enforcement**
+  - [ ] Admin & Team UI: Update `/admin/club-staff` and team staff management to allow assigning explicit titles, real-world roles, and mapping corresponding system access levels (`club_admin`, `team_admin`, `coach`, `trainer`, `stats_keeper`).
+
+---
+
 double check for mobile phone responsive
 team game schedule needs to be responsive
-on league creation, we need set league rules, 9v9, halve times etc
+
+
+

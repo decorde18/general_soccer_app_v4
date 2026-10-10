@@ -150,6 +150,8 @@ exports.Prisma.Club_staffScalarFieldEnum = {
   person_id: 'person_id',
   club_id: 'club_id',
   role: 'role',
+  title: 'title',
+  access_level: 'access_level',
   is_active: 'is_active',
   joined_date: 'joined_date',
   left_date: 'left_date',
@@ -439,13 +441,17 @@ exports.Prisma.PeopleScalarFieldEnum = {
   last_name: 'last_name',
   nickname: 'nickname',
   email: 'email',
+  alternate_emails: 'alternate_emails',
   phone: 'phone',
   gender: 'gender',
   title: 'title',
   other_last_name: 'other_last_name',
   entry_year: 'entry_year',
   credits_needed: 'credits_needed',
-  is_active: 'is_active'
+  is_active: 'is_active',
+  photo_url: 'photo_url',
+  photo_status: 'photo_status',
+  photo_rejection_reason: 'photo_rejection_reason'
 };
 
 exports.Prisma.Player_gamesScalarFieldEnum = {
@@ -528,7 +534,8 @@ exports.Prisma.Team_seasonsScalarFieldEnum = {
   created_at: 'created_at',
   modified_at: 'modified_at',
   age_group: 'age_group',
-  is_active: 'is_active'
+  is_active: 'is_active',
+  require_photo_review: 'require_photo_review'
 };
 
 exports.Prisma.Team_staffScalarFieldEnum = {
@@ -536,6 +543,8 @@ exports.Prisma.Team_staffScalarFieldEnum = {
   person_id: 'person_id',
   team_season_id: 'team_season_id',
   role: 'role',
+  title: 'title',
+  access_level: 'access_level',
   is_active: 'is_active',
   joined_date: 'joined_date',
   left_date: 'left_date',
@@ -591,19 +600,173 @@ exports.Prisma.UsersScalarFieldEnum = {
   modified_at: 'modified_at'
 };
 
+exports.Prisma.Custom_field_definitionsScalarFieldEnum = {
+  id: 'id',
+  team_season_id: 'team_season_id',
+  club_id: 'club_id',
+  field_key: 'field_key',
+  label: 'label',
+  field_type: 'field_type',
+  category: 'category',
+  options: 'options',
+  permission_role: 'permission_role',
+  is_required: 'is_required',
+  is_annual_recurring: 'is_annual_recurring',
+  display_order: 'display_order',
+  is_active: 'is_active',
+  instructions: 'instructions',
+  action_url: 'action_url',
+  action_label: 'action_label',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Custom_field_valuesScalarFieldEnum = {
+  id: 'id',
+  definition_id: 'definition_id',
+  player_id: 'player_id',
+  team_season_id: 'team_season_id',
+  value: 'value',
+  updated_by_person_id: 'updated_by_person_id',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Performance_testsScalarFieldEnum = {
+  id: 'id',
+  team_season_id: 'team_season_id',
+  name: 'name',
+  unit: 'unit',
+  higher_is_better: 'higher_is_better',
+  description: 'description',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Player_performance_logsScalarFieldEnum = {
+  id: 'id',
+  test_id: 'test_id',
+  player_id: 'player_id',
+  test_date: 'test_date',
+  score_numeric: 'score_numeric',
+  score_display: 'score_display',
+  entry_source: 'entry_source',
+  duration_seconds: 'duration_seconds',
+  frequency_reps: 'frequency_reps',
+  interval_details: 'interval_details',
+  verification_status: 'verification_status',
+  notes: 'notes',
+  recorded_by_person_id: 'recorded_by_person_id',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Team_groupsScalarFieldEnum = {
+  id: 'id',
+  team_season_id: 'team_season_id',
+  name: 'name',
+  group_type: 'group_type',
+  description: 'description',
+  assigned_weeks_or_dates: 'assigned_weeks_or_dates',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Player_group_assignmentsScalarFieldEnum = {
+  id: 'id',
+  group_id: 'group_id',
+  player_id: 'player_id',
+  role: 'role',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Player_pairingsScalarFieldEnum = {
+  id: 'id',
+  team_season_id: 'team_season_id',
+  pairing_type: 'pairing_type',
+  player1_id: 'player1_id',
+  player2_id: 'player2_id',
+  notes: 'notes',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Player_unavailabilityScalarFieldEnum = {
+  id: 'id',
+  player_id: 'player_id',
+  team_season_id: 'team_season_id',
+  event_id: 'event_id',
+  start_date: 'start_date',
+  end_date: 'end_date',
+  reason: 'reason',
+  status: 'status',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Event_attendanceScalarFieldEnum = {
+  id: 'id',
+  event_id: 'event_id',
+  player_id: 'player_id',
+  unavailability_id: 'unavailability_id',
+  status: 'status',
+  check_in_time: 'check_in_time',
+  notes: 'notes',
+  recorded_by_person_id: 'recorded_by_person_id',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.AwardsScalarFieldEnum = {
+  id: 'id',
+  person_id: 'person_id',
+  team_season_id: 'team_season_id',
+  season_id: 'season_id',
+  league_node_id: 'league_node_id',
+  governing_body_id: 'governing_body_id',
+  title: 'title',
+  category: 'category',
+  scope: 'scope',
+  organization: 'organization',
+  year: 'year',
+  notes: 'notes',
+  badge_icon: 'badge_icon',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
 exports.club_staff_role = exports.$Enums.club_staff_role = {
   club_admin: 'club_admin',
+  athletic_director: 'athletic_director',
   director: 'director',
-  registrar: 'registrar'
+  ecnl_director: 'ecnl_director',
+  age_group_director: 'age_group_director',
+  principal: 'principal',
+  assistant_principal: 'assistant_principal',
+  registrar: 'registrar',
+  treasurer: 'treasurer',
+  other: 'other'
 };
 
 exports.clubs_type = exports.$Enums.clubs_type = {
@@ -735,7 +898,12 @@ exports.team_staff_role = exports.$Enums.team_staff_role = {
   head_coach: 'head_coach',
   assistant_coach: 'assistant_coach',
   team_admin: 'team_admin',
-  stats_keeper: 'stats_keeper'
+  team_manager: 'team_manager',
+  athletic_trainer: 'athletic_trainer',
+  team_treasurer: 'team_treasurer',
+  student_manager: 'student_manager',
+  stats_keeper: 'stats_keeper',
+  other: 'other'
 };
 
 exports.teams_gender = exports.$Enums.teams_gender = {
@@ -749,6 +917,23 @@ exports.user_team_seasons_role = exports.$Enums.user_team_seasons_role = {
   team_admin: 'team_admin',
   player: 'player',
   parent: 'parent'
+};
+
+exports.award_category = exports.$Enums.award_category = {
+  team: 'team',
+  district: 'district',
+  region: 'region',
+  state: 'state',
+  national: 'national',
+  academic: 'academic',
+  coaching: 'coaching',
+  other: 'other'
+};
+
+exports.award_scope = exports.$Enums.award_scope = {
+  individual_player: 'individual_player',
+  individual_coach: 'individual_coach',
+  team_achievement: 'team_achievement'
 };
 
 exports.Prisma.ModelName = {
@@ -789,7 +974,17 @@ exports.Prisma.ModelName = {
   user_favorites: 'user_favorites',
   user_preferences: 'user_preferences',
   user_team_seasons: 'user_team_seasons',
-  users: 'users'
+  users: 'users',
+  custom_field_definitions: 'custom_field_definitions',
+  custom_field_values: 'custom_field_values',
+  performance_tests: 'performance_tests',
+  player_performance_logs: 'player_performance_logs',
+  team_groups: 'team_groups',
+  player_group_assignments: 'player_group_assignments',
+  player_pairings: 'player_pairings',
+  player_unavailability: 'player_unavailability',
+  event_attendance: 'event_attendance',
+  awards: 'awards'
 };
 
 /**

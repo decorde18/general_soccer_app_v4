@@ -122,6 +122,17 @@
       background-color 0.2s ease;
   }
 
+  /* Default light text for dark/primary background buttons and containers */
+  button.bg-primary,
+  button.bg-secondary,
+  button.bg-accent,
+  button.bg-danger,
+  button.bg-dark,
+  .bg-primary,
+  .bg-secondary {
+    color: hsl(var(--color-primary-contrast, 0 0% 100%));
+  }
+
   input:focus,
   textarea:focus,
   select:focus {

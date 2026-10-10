@@ -25,7 +25,9 @@ module.exports = {
       colors: {
         // Core palette
         primary: "hsl(var(--color-primary) / <alpha-value>)",
+        "primary-contrast": "hsl(var(--color-primary-contrast) / <alpha-value>)",
         secondary: "hsl(var(--color-secondary) / <alpha-value>)",
+        "secondary-contrast": "hsl(var(--color-secondary-contrast) / <alpha-value>)",
         accent: "hsl(var(--color-accent) / <alpha-value>)",
         "accent-hover": "hsl(var(--color-accent-hover) / <alpha-value>)",
         background: "hsl(var(--color-background) / <alpha-value>)",
