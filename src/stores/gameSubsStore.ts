@@ -660,8 +660,10 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
 
     const subIds = pendingSubs.map((sub) => sub.subId);
 
-    // Confirm all pending subs optimistically
-    await Promise.all(subIds.map((id) => get().confirmSub(id)));
+    // Confirm all pending subs sequentially to prevent state race conditions
+    for (const id of subIds) {
+      await get().confirmSub(id);
+    }
 
     return { confirmed: subIds.length, errors: [] };
   },

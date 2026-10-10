@@ -319,6 +319,60 @@ export default function GameManageClient() {
     setIsGoalModalOpen(true);
   };
 
+  // Resolve period minute (e.g. 15' into 2nd half) or game minute (e.g. 45') into continuous game seconds
+  const resolveGameTimeSeconds = (periodStr: string | number, minStr: string, secStr: string) => {
+    const pNum = Number(periodStr) || 1;
+    const rawInputSecs = (Number(minStr) || 0) * 60 + (Number(secStr) || 0);
+    const regPeriodSecs = (game?.settings?.periodDuration) || 2400;
+
+    let precedingOffset = 0;
+    for (let i = 1; i < pNum; i++) {
+      const matchingP = (game?.periods || []).find(
+        (item: any) => (item.periodNumber || item.period_number) === i
+      );
+      if (matchingP && matchingP.endTime && matchingP.startTime) {
+        precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 60000) * 60;
+      } else {
+        precedingOffset += regPeriodSecs;
+      }
+    }
+
+    return (pNum > 1 && rawInputSecs < precedingOffset)
+      ? precedingOffset + rawInputSecs
+      : rawInputSecs;
+  };
+
+  const calculatePreviewTime = (periodStr: string | number, minStr: string, secStr: string) => {
+    const pNum = Number(periodStr) || 1;
+    const regPeriodSecs = (game?.settings?.periodDuration) || 2400;
+
+    let precedingOffset = 0;
+    for (let i = 1; i < pNum; i++) {
+      const matchingP = (game?.periods || []).find(
+        (item: any) => (item.periodNumber || item.period_number) === i
+      );
+      if (matchingP && matchingP.endTime && matchingP.startTime) {
+        precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 60000) * 60;
+      } else {
+        precedingOffset += regPeriodSecs;
+      }
+    }
+
+    const totalSeconds = resolveGameTimeSeconds(periodStr, minStr, secStr);
+    const gameMin = Math.floor(totalSeconds / 60);
+
+    const periodSecs = Math.max(0, totalSeconds - precedingOffset);
+    const periodMin = Math.floor(periodSecs / 60);
+    const periodSecRem = periodSecs % 60;
+
+    const halfLabel = pNum === 1 ? "1st Half" : pNum === 2 ? "2nd Half" : `OT${pNum - 2}`;
+    return {
+      totalSeconds,
+      gameMin,
+      displayLabel: `${gameMin}' (${halfLabel}, ${String(periodMin).padStart(2, "0")}:${String(periodSecRem).padStart(2, "0")})`,
+    };
+  };
+
   const openEditGoalModal = (g: any) => {
     const realId = getGoalId(g);
     setEditingGoal({ ...g, id: realId });
@@ -343,21 +397,7 @@ export default function GameManageClient() {
       try {
         const scorer = players.find((p) => String(p.playerGameId) === goalScorerId);
         const assist = players.find((p) => String(p.playerGameId) === goalAssistId);
-        const rawInputSecs = Number(goalTimeMin) * 60 + Number(goalTimeSec);
-        const pNum = Number(goalPeriod);
-        const regPeriodSecs = (game.settings?.periodDuration) || 2400;
-        let precedingOffset = 0;
-        for (let i = 1; i < pNum; i++) {
-          const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
-          if (matchingP && matchingP.endTime && matchingP.startTime) {
-            precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
-          } else {
-            precedingOffset += regPeriodSecs;
-          }
-        }
-        const totalSeconds = (pNum > 1 && rawInputSecs < precedingOffset)
-          ? precedingOffset + rawInputSecs
-          : rawInputSecs;
+        const totalSeconds = resolveGameTimeSeconds(goalPeriod, goalTimeMin, goalTimeSec);
 
         if (editingGoal) {
           // Edit existing goal
@@ -391,7 +431,6 @@ export default function GameManageClient() {
 
           const goalPayload = {
             major_event_id: Number(resMajor.id),
-            game_id: Number(game.game_id || game.id),
             team_season_id: isOpponentGoal ? Number(game.opponentId) : Number(teamSeasonId),
             scorer_player_game_id: scorer ? Number(scorer.playerGameId) : null,
             assist_player_game_id: assist ? Number(assist.playerGameId) : null,
@@ -452,7 +491,7 @@ export default function GameManageClient() {
 
     startTransition(async () => {
       try {
-        const totalSeconds = Number(subTimeMin) * 60 + Number(subTimeSec);
+        const totalSeconds = resolveGameTimeSeconds(subPeriod, subTimeMin, subTimeSec);
         const subPayload = {
           game_id: Number(game.game_id || game.id),
           in_player_id: Number(subInId),
@@ -517,21 +556,7 @@ export default function GameManageClient() {
     startTransition(async () => {
       try {
         const player = players.find((p) => String(p.playerGameId) === cardPlayerId);
-        const rawInputSecs = Number(cardTimeMin) * 60 + Number(cardTimeSec);
-        const pNum = Number(cardPeriod);
-        const regPeriodSecs = (game.settings?.periodDuration) || 2400;
-        let precedingOffset = 0;
-        for (let i = 1; i < pNum; i++) {
-          const matchingP = (game.periods || []).find((item: any) => (item.periodNumber || item.period_number) === i);
-          if (matchingP && matchingP.endTime && matchingP.startTime) {
-            precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 1000);
-          } else {
-            precedingOffset += regPeriodSecs;
-          }
-        }
-        const totalSeconds = (pNum > 1 && rawInputSecs < precedingOffset)
-          ? precedingOffset + rawInputSecs
-          : rawInputSecs;
+        const totalSeconds = resolveGameTimeSeconds(cardPeriod, cardTimeMin, cardTimeSec);
 
         if (editingCard) {
           const cardPayload = {
@@ -561,7 +586,6 @@ export default function GameManageClient() {
 
           const cardPayload = {
             major_event_id: Number(resMajor.id),
-            game_id: Number(game.game_id || game.id),
             team_season_id: Number(teamSeasonId),
             player_game_id: player ? Number(player.playerGameId) : null,
             card_type: cardType,
@@ -1315,6 +1339,18 @@ export default function GameManageClient() {
             </div>
           </div>
 
+          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span className="font-bold text-text">Calculated Match Clock: </span>
+              <span className="font-extrabold text-primary text-sm">
+                {calculatePreviewTime(goalPeriod, goalTimeMin, goalTimeSec).displayLabel}
+              </span>
+            </div>
+            <span className="text-[10px] text-muted font-medium">
+              Accepts period minute (e.g. 15') or game minute (e.g. 45')
+            </span>
+          </div>
+
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
@@ -1377,6 +1413,18 @@ export default function GameManageClient() {
               value={subTimeSec}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSubTimeSec(e.target.value)}
             />
+          </div>
+
+          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span className="font-bold text-text">Calculated Match Clock: </span>
+              <span className="font-extrabold text-primary text-sm">
+                {calculatePreviewTime(subPeriod, subTimeMin, subTimeSec).displayLabel}
+              </span>
+            </div>
+            <span className="text-[10px] text-muted font-medium">
+              Accepts period minute (e.g. 15') or game minute (e.g. 45')
+            </span>
           </div>
 
           <Checkbox
@@ -1453,6 +1501,18 @@ export default function GameManageClient() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCardTimeSec(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
+            <div>
+              <span className="font-bold text-text">Calculated Match Clock: </span>
+              <span className="font-extrabold text-primary text-sm">
+                {calculatePreviewTime(cardPeriod, cardTimeMin, cardTimeSec).displayLabel}
+              </span>
+            </div>
+            <span className="text-[10px] text-muted font-medium">
+              Accepts period minute (e.g. 15') or game minute (e.g. 45')
+            </span>
           </div>
 
           <Input

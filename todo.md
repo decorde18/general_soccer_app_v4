@@ -614,4 +614,5 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 
 double check for mobile phone responsive
 team game schedule needs to be responsive
+
 - [x] all nodes and sub nodes need default settings (ie Collective Cup has set game length to 40 min and tiebreakers, but U12 has 9v9 and 30 min) — implemented hierarchical settings resolver, schema match_rules, node settings editor, and creation modals.

@@ -2,6 +2,56 @@
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
 
+### [2026-10-10 11:45] Manual Goal & Card Entry API Fix & Smart Match Clock Time Resolution
+- **Type**: Bug Fix / Feature / UX Enhancement
+- **Summary**:
+  1. **Fixed Database Error on Manual Goal & Card Entry**:
+     - In [`GameManageClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/GameManageClient.tsx), creating manual goal or card records failed with a MySQL error (`Unknown column 'game_id' in 'field list'`) because `game_id` was erroneously passed in `goalPayload` and `cardPayload`. `game_id` belongs only on `game_events_major`, while child tables `game_events_goals` and `game_events_discipline` link via `major_event_id`. Removed `game_id` from child payloads.
+  2. **Smart Match Minute Resolution (Period Minute vs Cumulative Match Minute)**:
+     - Implemented `resolveGameTimeSeconds` which seamlessly handles either input format:
+       - If user enters the minute within the period (e.g. 15' into the 2nd half), it computes nominal preceding offset (e.g. 30' or 40' + 15' = 45' or 55').
+       - If user enters the cumulative match minute (e.g. 45'), it detects that the input already exceeds preceding period offset and uses it directly.
+       - Fixed substitution manual entry to also use `resolveGameTimeSeconds`.
+  3. **Live Match Clock Preview Badges**:
+     - Added real-time preview badges in Goal, Card, and Substitution manual modals showing:
+       `Calculated Match Clock: 45' (2nd Half, 15:00)` along with helper text clarifying that both formats are accepted.
+  4. **Testing**:
+     - Added unit tests in [`gameManageTimeResolution.test.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/__tests__/gameManageTimeResolution.test.ts) covering 30-minute halves, 40-minute halves, period minute input, cumulative game minute input, and period 1 inputs.
+     - Passed `npx tsc --noEmit` and all 23 vitest test files (87 tests) with zero errors.
+- **Modified Files**:
+  - `src/components/game/GameManageClient.tsx`
+  - `src/components/game/__tests__/gameManageTimeResolution.test.ts`
+
+### [2026-10-10 11:10] MajorEventModal React Hook Fix, Lineup Reconciliation Tool & Substitution Desync Resolution
+- **Type**: Bug Fix / Feature / Roster Architecture
+- **Summary**: Resolved two critical match tracking issues encountered during live gameplay:
+  1. **MajorEventModal React Hook Violation Fixed**:
+     - Fixed React error (`Rendered more hooks than during the previous render`) that crashed the modal when clicking "Record Major Event": `isSubWidgetExpanded` was defined after an early return (`if (!isOpen) return null`), violating React Rules of Hooks. Moved hook unconditionally to top level.
+     - Fixed `replaceGoalEvent` and `replaceDisciplineEvent` in `MajorEventModal.tsx` to preserve all event fields (`scorer_player_game_id`, `team_season_id`, `is_own_goal`, `goal_types`, `card_type`, etc.) when server returns `{ success: true, id }`.
+     - Verified with reproduction test `reproduce_major_event.test.tsx` passing with zero errors.
+  2. **Lineup Reconciliation & Field/Bench Desync Fix ("⚡ Reconcile Lineup")**:
+     - Built `LineupReconcileModal.tsx` and integrated it into `OnFieldPlayersPanel.tsx` with a quick-access header button.
+     - Allows coaches to resolve roster discrepancies in one click (e.g., if a sub was missed, deleted, or tracking got inverted) by directly swapping on-field and bench players without having to stage inverted fake substitutions.
+  3. **Substitution Queue Feedback & Race Conditions**:
+     - Added interactive toast notifications with an immediate `"Enter Now"` action button when staging substitutions in `LiveGameTrackerClient.tsx`.
+     - Updated `confirmAllPendingSubs` in `gameSubsStore.ts` to execute sequentially rather than concurrently (`Promise.all`), preventing state race conditions on `playersStore.players`.
+     - Added `await` to `confirmAllPendingSubs` in `startNextPeriod` in `gameStore.ts`.
+     - Enhanced Halftime / Intermission banner in `LiveGameTrackerClient.tsx` to display pending halftime subs with a 1-click execution button.
+  4. **Game 923 Data Remediation**:
+     - Fixed Game 923 records: created missing first-half substitution at 855s (Adelyne Wooten IN, Leighton Hurley OUT) and corrected Sub #1365 at 3683s to Leighton Hurley IN, Adelyne Wooten OUT.
+     - Player playing times and on-field/bench shifts for Leighton Hurley and Adelyne Wooten are now 100% accurate and mathematically balanced.
+  5. **Validation**:
+     - All 22 vitest test suites (83 tests) and `npx tsc --noEmit` pass with zero errors.
+- **Modified Files**:
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/live/LineupReconcileModal.tsx`
+  - `src/components/game/live/OnFieldPlayersPanel.tsx`
+  - `src/components/game/LiveGameTrackerClient.tsx`
+  - `src/stores/gameStore.ts`
+  - `src/stores/gameSubsStore.ts`
+  - `src/components/game/live/__tests__/LineupReconcileModal.test.tsx`
+  - `src/components/game/live/__tests__/reproduce_major_event.test.tsx`
+
 ### [2026-10-10 07:54] Hierarchical League & Sub-Node Match Settings Inheritance & Tiebreaker Standard
 - **Type**: Feature / Architecture & Rule Standard
 - **Summary**: Implemented a comprehensive hierarchical match settings and rules structure across Leagues, Sub-Nodes (Divisions, Conferences, Districts, Age Groups), and Game Creation:
