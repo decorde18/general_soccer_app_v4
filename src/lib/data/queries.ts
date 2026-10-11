@@ -1196,8 +1196,12 @@ function mapGameRow(r: any): Game {
       maxTotalSubsPerTeam: notesObj?.maxTotalSubsPerTeam,
       maxSubWindowsPerGame: notesObj?.maxSubWindowsPerGame,
       maxSubWindowsPerHalf: notesObj?.maxSubWindowsPerHalf,
-      autoStopClockOnMajorEvent: notesObj?.autoStopClockOnMajorEvent ?? false,
-      clockRuleProfile: notesObj?.clockRuleProfile ?? "USSF",
+      autoStopClockOnMajorEvent: notesObj?.autoStopClockOnMajorEvent ?? (
+        Boolean(leagueName?.toLowerCase().match(/nfhs|high school|highschool|varsity|\bjv\b/))
+      ),
+      clockRuleProfile: notesObj?.clockRuleProfile ?? (
+        leagueName?.toLowerCase().match(/nfhs|high school|highschool|varsity|\bjv\b/) ? "NFHS" : "USSF"
+      ),
     },
   };
 }

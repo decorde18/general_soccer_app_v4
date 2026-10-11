@@ -67,9 +67,9 @@ const TABLE_ID_COLUMNS: Record<string, string> = {
   v_players: "player_id",
   v_player_games: "player_game_id",
   v_player_game_stats_enhanced: "player_game_id",
-  v_game_events_goals_complete: "id",
-  v_game_events_discipline_complete: "id",
-  v_game_events_penalties_complete: "id",
+  v_game_events_goals_complete: "goal_id",
+  v_game_events_discipline_complete: "discipline_id",
+  v_game_events_penalties_complete: "penalty_id",
 };
 
 const READ_ONLY_TABLES = new Set([

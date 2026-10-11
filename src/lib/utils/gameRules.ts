@@ -125,6 +125,19 @@ export function inferRulesFromNodeName(name?: string): Partial<GameSettings> {
     inferred.tiebreakerMode = "pk_only";
   }
 
+  // High school / NFHS rules infer automatic clock stoppage and NFHS profile
+  if (
+    lower.includes("nfhs") ||
+    lower.includes("high school") ||
+    lower.includes("highschool") ||
+    lower.includes("varsity") ||
+    lower.includes(" jv") ||
+    lower.startsWith("jv")
+  ) {
+    inferred.clockRuleProfile = "NFHS";
+    inferred.autoStopClockOnMajorEvent = true;
+  }
+
   return inferred;
 }
 

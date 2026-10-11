@@ -2,6 +2,29 @@
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
 
+### [2026-10-11 09:17] Upcoming Sub Toast Removal, In-Game Plus/Minus Recalculation Fix, and NFHS Default Auto Clock Pause
+- **Type**: Bug Fix / Feature / Game Tracking Integrity
+- **Summary**:
+  1. **Removed Upcoming Sub Toast Notification**:
+     - Removed the intrusive `toast.info` prompt when creating an upcoming sub in [`LiveGameTrackerClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/LiveGameTrackerClient.tsx) so subs queue cleanly without popup spam.
+  2. **Fixed In-Game Plus/Minus Calculation**:
+     - **Root Cause**: `game_events_goals` records do not contain a direct `game_time` column in the database (stored on `game_events_major`), which caused `goal.game_time` to evaluate to `undefined` (or 0). As a consequence, `isPlayerOnFieldAtTime` was evaluated at $T=0$, where no subs had taken place, meaning only starters were ever credited/debited and bench players on the field were ignored.
+     - **Resolution**:
+       - Fixed [`gamePlayerTimeStore.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/stores/gamePlayerTimeStore.ts) `calculatePlusMinus` to reliably resolve goal game time via `goal.game_time` or the linked major event `gameEventsMajor.find(m => m.id === goal.major_event_id).game_time`.
+       - Excluded player position swaps (`is_swap`) from field entry/exit events in both `isPlayerOnFieldNow` and `isPlayerOnFieldAtTime`.
+       - Ensured subs occurring at a goal's stoppage timestamp take effect for play following the goal, accurately attributing +/- to the players on the field when the goal was scored.
+       - Enriched optimistic goals in [`MajorEventModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/live/MajorEventModal.tsx) and [`gameStore.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/stores/gameStore.ts) with `game_time` and `period`.
+       - Triggered instant plus/minus recalculation upon sub confirmation in [`gameSubsStore.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/stores/gameSubsStore.ts) and event modifications in [`gamePlayersStore.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/stores/gamePlayersStore.ts).
+       - Fixed `TABLE_ID_COLUMNS` for `v_game_events_goals_complete` (`goal_id`), `v_game_events_discipline_complete` (`discipline_id`), and `v_game_events_penalties_complete` (`penalty_id`) in `src/app/api/[tableName]/route.ts`.
+  3. **Default Auto-Pause Clock on Major Events to False (Except NFHS)**:
+     - Configured `autoStopClockOnMajorEvent` in [`gameStore.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/stores/gameStore.ts) `DEFAULT_GAME_SETTINGS` to `false` and `clockRuleProfile` to `"USSF"`.
+     - In [`gameRules.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/utils/gameRules.ts) `inferRulesFromNodeName`, [`gameStore.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/stores/gameStore.ts), and [`queries.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/data/queries.ts), default `autoStopClockOnMajorEvent` to `false` unless the division/league rules explicitly specify NFHS or High School.
+     - Updated [`MajorEventModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/live/MajorEventModal.tsx) `stopClock` state to initialize dynamically based on `game.settings.autoStopClockOnMajorEvent`.
+  4. **Testing & Verification**:
+     - Created comprehensive test suite in [`gamePlusMinus.test.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/stores/__tests__/gamePlusMinus.test.ts) covering starters subbed out early, non-starters subbed in, full match starters, unused subs, and NFHS rule inference.
+     - `npx tsc --noEmit` passed with 0 errors.
+     - All 25 Vitest test files (95 tests) passed with 100% success.
+
 ### [2026-10-10 12:21] GameManageClient Duplicate Code & Preview Badge Cleanup
 - **Type**: Bug Fix / Code Integrity
 - **Summary**:

@@ -88,8 +88,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   const [showPendingSubPrompt, setShowPendingSubPrompt] = useState(false);
   const [isSubWidgetExpanded, setIsSubWidgetExpanded] = useState(false);
 
-  // Stop Clock toggle state (default: NOT paused / clock running)
-  const [stopClock, setStopClock] = useState<boolean>(false);
+  // Stop Clock toggle state (default: determined by game settings autoStopClockOnMajorEvent)
+  const [stopClock, setStopClock] = useState<boolean>(() => Boolean(game?.settings?.autoStopClockOnMajorEvent));
 
   // Active unended stoppage
   const activeStoppage = game?.gameEventsMajor?.find(
@@ -119,7 +119,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   useEffect(() => {
     if (!isOpen) return;
     eventOpenMsRef.current = Date.now();
-    setStopClock(false);
+    setStopClock(Boolean(game?.settings?.autoStopClockOnMajorEvent));
     setTeamTarget("us");
 
     // Reset Goal Form
@@ -493,6 +493,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           scorer_player_game_id: scorerPgId,
           assist_player_game_id: assistPgId,
           defending_gk_player_game_id: defendingGkPlayerGameId,
+          game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
         } as any,
         {
           id: tempMajorId,
@@ -594,6 +596,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                 ...goalPayload,
                 id: Number(newGoal.id),
                 goal_id: Number(newGoal.id),
+                game_time: gameTimeSeconds,
+                period: game.currentPeriodIndex + 1,
               } as any,
               tempMajorId,
               {

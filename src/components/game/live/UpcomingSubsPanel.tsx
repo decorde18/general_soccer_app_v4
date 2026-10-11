@@ -145,9 +145,9 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
             return (
               <div key={sub.subId} className="flex flex-col gap-1 p-2 border border-border/40 bg-background/60 rounded-lg shadow-2xs animate-in slide-in-from-right duration-200">
                 <div className="flex items-center justify-between gap-1 text-[10px] font-bold text-text">
-                  <span className="truncate">Out: <span className="text-rose-600 dark:text-rose-400 font-extrabold">{outPl?.fullName || "Unknown"}</span></span>
-                  <span className="text-muted font-mono shrink-0">🔄</span>
                   <span className="truncate text-right">In: <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{inPl?.fullName || "Unknown"}</span></span>
+                  <span className="text-muted font-mono shrink-0">🔄</span>
+                  <span className="truncate">Out: <span className="text-rose-600 dark:text-rose-400 font-extrabold">{outPl?.fullName || "Unknown"}</span></span>
                 </div>
                 <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-border/20">
                   <button

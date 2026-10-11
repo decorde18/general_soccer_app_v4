@@ -14,15 +14,15 @@ const normalizeSubs = (subs: any[]): any[] =>
  * Determine if a player is currently on the field
  */
 const isPlayerOnFieldNow = (player: Player) => {
-  const ins = normalizeSubs(player.ins);
-  const outs = normalizeSubs(player.outs);
+  const ins = normalizeSubs(player.ins).filter((s) => !s.isSwap && !s.is_swap && s.is_swap !== 1);
+  const outs = normalizeSubs(player.outs).filter((s) => !s.isSwap && !s.is_swap && s.is_swap !== 1);
 
   const events: { type: "IN" | "OUT"; gameTime: number }[] = [];
   ins.forEach((i) => events.push({ type: "IN", gameTime: Number(i.gameTime ?? i.sub_time ?? 0) }));
   outs.forEach((o) => events.push({ type: "OUT", gameTime: Number(o.gameTime ?? o.sub_time ?? 0) }));
   events.sort((a, b) => a.gameTime - b.gameTime);
 
-  const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
+  const isStarter = Boolean(player.started || ["starter", "goalkeeper"].includes(player.gameStatus));
   let onField = isStarter;
 
   events.forEach((evt) => {
@@ -206,19 +206,31 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
   isPlayerOnFieldAtTime: (player, gameTime) => {
     if (!player) return false;
 
-    const ins = normalizeSubs(player.ins).filter(
-      (sub) => Number(sub.gameTime ?? sub.sub_time ?? 0) <= gameTime
-    );
-    const outs = normalizeSubs(player.outs).filter(
-      (sub) => Number(sub.gameTime ?? sub.sub_time ?? 0) <= gameTime
-    );
+    // Subs that occurred before this timestamp
+    // Exclude position swaps where neither player enters or leaves the field
+    const ins = normalizeSubs(player.ins)
+      .filter((s) => !s.isSwap && !s.is_swap && s.is_swap !== 1)
+      .filter((sub) => {
+        const t = Number(sub.gameTime ?? sub.sub_time ?? 0);
+        // A sub made at the stoppage of a goal (same timestamp) takes effect after the goal
+        return gameTime > 0 ? t < gameTime : t <= gameTime;
+      });
+
+    const outs = normalizeSubs(player.outs)
+      .filter((s) => !s.isSwap && !s.is_swap && s.is_swap !== 1)
+      .filter((sub) => {
+        const t = Number(sub.gameTime ?? sub.sub_time ?? 0);
+        return gameTime > 0 ? t < gameTime : t <= gameTime;
+      });
 
     const events: { type: "IN" | "OUT"; gameTime: number }[] = [];
     ins.forEach((i) => events.push({ type: "IN", gameTime: Number(i.gameTime ?? i.sub_time ?? 0) }));
     outs.forEach((o) => events.push({ type: "OUT", gameTime: Number(o.gameTime ?? o.sub_time ?? 0) }));
     events.sort((a, b) => a.gameTime - b.gameTime);
 
-    const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
+    const isStarter = Boolean(
+      player.started || ["starter", "goalkeeper"].includes(player.gameStatus)
+    );
     let onField = isStarter;
 
     events.forEach((evt) => {
@@ -243,9 +255,32 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
 
     let plusMinus = 0;
 
+    const ourTeamSeasonId = Number(
+      player.teamSeasonId ||
+      game.teamSeasonId ||
+      (game.isHome ? game.home_team_season_id : game.away_team_season_id) ||
+      0
+    );
+
     (game.gameEventsGoals || []).forEach((goal: any) => {
-      if (get().isPlayerOnFieldAtTime(player, Number(goal.game_time ?? 0))) {
-        const isOurTeamGoal = Number(goal.team_season_id) === Number(player.teamSeasonId);
+      // Resolve goal game time from goal itself, or from its associated major event:
+      let goalTime: number | null = null;
+      if (goal.game_time !== null && goal.game_time !== undefined) {
+        goalTime = Number(goal.game_time);
+      } else if (goal.major_event_id) {
+        const major = (game.gameEventsMajor || []).find(
+          (m: any) => Number(m.id) === Number(goal.major_event_id)
+        );
+        if (major && major.game_time !== null && major.game_time !== undefined) {
+          goalTime = Number(major.game_time);
+        }
+      }
+
+      const effectiveGoalTime = goalTime ?? 0;
+
+      if (get().isPlayerOnFieldAtTime(player, effectiveGoalTime)) {
+        const goalTeamSeasonId = Number(goal.team_season_id);
+        const isOurTeamGoal = goalTeamSeasonId === ourTeamSeasonId;
         plusMinus += isOurTeamGoal ? 1 : -1;
       }
     });

@@ -58,31 +58,10 @@ export default function LiveGameTrackerClient() {
           const outPlayer = players.find((p) => String(p.id) === outId);
 
           if (inPlayer && outPlayer) {
-            const newSub = await createPendingSub(
+            await createPendingSub(
               inPlayer.playerGameId,
               outPlayer.playerGameId,
               outPlayer.fieldStatus === "onFieldGk"
-            );
-            toast.info(
-              `Queued: #${inPlayer.jerseyNumber || "?"} ${inPlayer.fullName} for #${outPlayer.jerseyNumber || "?"} ${outPlayer.fullName}`,
-              {
-                duration: 6000,
-                action: {
-                  label: "Enter Now",
-                  onClick: async () => {
-                    try {
-                      if (newSub?.id) {
-                        await useGameSubsStore.getState().confirmSub(newSub.id);
-                      } else {
-                        await useGameSubsStore.getState().confirmAllPendingSubs();
-                      }
-                      toast.success(`Sub confirmed: ${inPlayer.fullName} is now On Field`);
-                    } catch (err: any) {
-                      toast.error("Failed to confirm sub: " + err.message);
-                    }
-                  },
-                },
-              }
             );
           }
         } catch (err: any) {

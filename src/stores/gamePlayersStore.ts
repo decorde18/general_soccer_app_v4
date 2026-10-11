@@ -314,6 +314,12 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
 
       return { players: updatedPlayers };
     });
+
+    const game = useGameStore.getState().game;
+    const gId = game?.game_id || game?.id;
+    if (gId) {
+      get().calculateAndUpdatePlusMinus(gId);
+    }
   },
 
   // ==================== INITIALIZATION ====================
@@ -411,7 +417,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
 
       const players: Player[] = allPlayerGames.map((pg) => {
         const playerIns: PlayerSubEntry[] = confirmedSubs
-          .filter((sub) => sub.in_player_id === pg.player_game_id)
+          .filter((sub) => Number(sub.in_player_id) === Number(pg.player_game_id))
           .map((sub) => ({
             gameTime: sub.sub_time,
             subId: sub.id,
@@ -421,7 +427,7 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
           }));
 
         const playerOuts: PlayerSubEntry[] = confirmedSubs
-          .filter((sub) => sub.out_player_id === pg.player_game_id)
+          .filter((sub) => Number(sub.out_player_id) === Number(pg.player_game_id))
           .map((sub) => ({
             gameTime: sub.sub_time,
             subId: sub.id,
@@ -431,10 +437,10 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
           }));
 
         const playerPendingIn = pendingSubs.find(
-          (sub) => sub.in_player_id === pg.player_game_id,
+          (sub) => Number(sub.in_player_id) === Number(pg.player_game_id),
         );
         const playerPendingOut = pendingSubs.find(
-          (sub) => sub.out_player_id === pg.player_game_id,
+          (sub) => Number(sub.out_player_id) === Number(pg.player_game_id),
         );
 
         if (playerPendingIn) {

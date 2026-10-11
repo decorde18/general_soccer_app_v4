@@ -54,8 +54,8 @@ const DEFAULT_GAME_SETTINGS: GameSettings = {
   hasShootout: false,
   clockDirection: "up",
   reentryRule: "unlimited",
-  autoStopClockOnMajorEvent: true,
-  clockRuleProfile: "NFHS",
+  autoStopClockOnMajorEvent: false,
+  clockRuleProfile: "USSF",
 };
 
 interface CalculateTeamStatTotalsInput {
@@ -486,7 +486,18 @@ const useGameStore = create<GameStoreState>((set, get) => {
                 }
               } catch {}
             }
-            return DEFAULT_GAME_SETTINGS.autoStopClockOnMajorEvent;
+            const nodeName = (dbGame.league_node_names || dbGame.league_name || "").toLowerCase();
+            if (
+              nodeName.includes("nfhs") ||
+              nodeName.includes("high school") ||
+              nodeName.includes("highschool") ||
+              nodeName.includes("varsity") ||
+              nodeName.includes(" jv") ||
+              nodeName.startsWith("jv")
+            ) {
+              return true;
+            }
+            return false;
           })(),
         };
 
@@ -1197,9 +1208,15 @@ const useGameStore = create<GameStoreState>((set, get) => {
       const isOurScore = String(goalEvent.team_season_id) === String(ourTeamSeasonId);
       const isTheirScore = String(goalEvent.team_season_id) !== String(ourTeamSeasonId);
 
+      const enrichedGoalEvent = {
+        ...goalEvent,
+        game_time: goalEvent.game_time ?? majorEvent?.game_time,
+        period: goalEvent.period ?? majorEvent?.period,
+      };
+
       const updatedGame: Game = {
         ...game,
-        gameEventsGoals: [...(game.gameEventsGoals || []), goalEvent],
+        gameEventsGoals: [...(game.gameEventsGoals || []), enrichedGoalEvent],
         gameEventsMajor: [...(game.gameEventsMajor || []), majorEvent],
         goalsFor: (game.goalsFor || 0) + (isOurScore ? 1 : 0),
         goalsAgainst: (game.goalsAgainst || 0) + (isTheirScore ? 1 : 0),
@@ -1221,11 +1238,17 @@ const useGameStore = create<GameStoreState>((set, get) => {
       const game = get().game;
       if (!game) return;
 
+      const enrichedRealGoal = {
+        ...realGoalEvent,
+        game_time: realGoalEvent.game_time ?? realMajorEvent?.game_time,
+        period: realGoalEvent.period ?? realMajorEvent?.period,
+      };
+
       const updatedGame: Game = {
         ...game,
         gameEventsGoals: game.gameEventsGoals.map((g) =>
           g.id === optimisticGoalId || g.goal_id === optimisticGoalId
-            ? realGoalEvent
+            ? enrichedRealGoal
             : g,
         ),
         gameEventsMajor: game.gameEventsMajor.map((m) =>

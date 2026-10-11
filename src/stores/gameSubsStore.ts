@@ -500,7 +500,7 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
           // Add updated sub to appropriate players
           if (
             updatedSub.in_player_id &&
-            player.playerGameId === updatedSub.in_player_id
+            Number(player.playerGameId) === Number(updatedSub.in_player_id)
           ) {
             updatedPlayer.ins = [
               ...updatedPlayer.ins,
@@ -514,7 +514,7 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
 
           if (
             updatedSub.out_player_id &&
-            player.playerGameId === updatedSub.out_player_id
+            Number(player.playerGameId) === Number(updatedSub.out_player_id)
           ) {
             updatedPlayer.outs = [
               ...updatedPlayer.outs,
@@ -621,6 +621,12 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
         return player;
       }),
     );
+
+    // Recalculate plus/minus immediately
+    const targetGameId = gameStore.game?.game_id || gameStore.game?.id;
+    if (targetGameId) {
+      playersStore.calculateAndUpdatePlusMinus(targetGameId);
+    }
 
     // Update pendingSubs in gameStore
     const currentPending = gameStore.game?.pendingSubs || [];
