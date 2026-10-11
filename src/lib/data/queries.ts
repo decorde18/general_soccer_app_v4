@@ -503,10 +503,14 @@ export async function getLeagueNodes(leagueId?: number): Promise<LeagueNode[]> {
 export async function getLeagueNodeSeasons(
   leagueId?: number,
   seasonId?: number,
+  leafOnly = true,
 ): Promise<LeagueNodeSeason[]> {
   const nodeSeasons = await prisma.league_node_seasons.findMany({
     where: {
-      league_nodes: leagueId ? { league_id: leagueId } : undefined,
+      league_nodes: {
+        ...(leagueId ? { league_id: leagueId } : {}),
+        ...(leafOnly ? { other_league_nodes: { none: {} } } : {}),
+      },
       season_id: seasonId ? seasonId : undefined,
     },
     include: {
@@ -2572,19 +2576,28 @@ export async function getLeaguesForTeamSeason(
       league_node_seasons: {
         include: {
           league_nodes: {
-            include: { leagues: true },
+            include: { leagues: true, other_league_nodes: true },
           },
         },
       },
     },
   });
 
+  // Sort enrollments: prioritize terminal leaf subnodes (no children) and deeper levels
+  const sortedEnrollments = [...enrollments].sort((a, b) => {
+    const aIsLeaf = a.league_node_seasons.league_nodes.other_league_nodes.length === 0 ? 1 : 0;
+    const bIsLeaf = b.league_node_seasons.league_nodes.other_league_nodes.length === 0 ? 1 : 0;
+    if (aIsLeaf !== bIsLeaf) return bIsLeaf - aIsLeaf;
+    return (b.league_node_seasons.league_nodes.level ?? 0) - (a.league_node_seasons.league_nodes.level ?? 0);
+  });
+
   const uniqueMap = new Map<number, TeamLeagueLink>();
 
-  enrollments.forEach((e) => {
-    const leagueId = e.league_node_seasons.league_nodes.league_id;
-    const nodeName = e.league_node_seasons.league_nodes.name;
-    const leagueName = e.league_node_seasons.league_nodes.leagues.name;
+  sortedEnrollments.forEach((e) => {
+    const leagueNode = e.league_node_seasons.league_nodes;
+    const leagueId = leagueNode.league_id;
+    const nodeName = leagueNode.name;
+    const leagueName = leagueNode.leagues.name;
 
     if (!uniqueMap.has(leagueId)) {
       uniqueMap.set(leagueId, {
@@ -2594,8 +2607,8 @@ export async function getLeaguesForTeamSeason(
         leagueNodeName: nodeName,
         leagueNodeSeasonId: e.league_node_season_id,
         leagueAbbreviation:
-          e.league_node_seasons.league_nodes.leagues.abbreviation ?? null,
-        isTournament: !!e.league_node_seasons.league_nodes.leagues.is_tournament,
+          leagueNode.leagues.abbreviation ?? null,
+        isTournament: !!leagueNode.leagues.is_tournament,
       });
     }
   });

@@ -257,54 +257,162 @@ export async function carryoverLeagueTeamsFromPreviousSeason(leagueId: number, f
 /**
  * Server Action: Quick create league node (division) inline from importer
  */
-export async function createInlineLeagueNode(leagueId: number, name: string, seasonId?: number) {
+export async function createInlineLeagueNode(
+  leagueId: number,
+  name: string,
+  seasonId?: number,
+  parentId?: number | null
+) {
   await verifyAdmin();
 
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Division node name required");
 
-  let node = await prisma.league_nodes.findFirst({
-    where: {
-      league_id: leagueId,
-      name: { equals: trimmed },
-    },
-  });
-
-  if (!node) {
-    node = await prisma.league_nodes.create({
-      data: {
-        league_id: leagueId,
-        name: trimmed,
-        node_type: "division",
-        level: 2,
-      },
+  // Determine starting parent ID
+  let currentParentId: number | null = null;
+  if (parentId) {
+    const parentNode = await prisma.league_nodes.findUnique({
+      where: { id: parentId },
     });
+    if (parentNode) {
+      currentParentId = parentNode.id;
+    } else {
+      const parentNodeSeason = await prisma.league_node_seasons.findUnique({
+        where: { id: parentId },
+      });
+      if (parentNodeSeason) {
+        currentParentId = parentNodeSeason.league_node_id;
+      }
+    }
   }
 
-  // Create node season record if seasonId provided
-  let nodeSeasonId = node.id;
-  if (seasonId) {
-    let nodeSeason = await prisma.league_node_seasons.findFirst({
+  // If no parent was specified, check if there is a root tournament / root level 0 node in this league
+  if (!currentParentId) {
+    const rootNode = await prisma.league_nodes.findFirst({
       where: {
-        league_node_id: node.id,
-        season_id: seasonId,
+        league_id: leagueId,
+        parent_id: null,
+        level: 0,
       },
     });
-    if (!nodeSeason) {
-      nodeSeason = await prisma.league_node_seasons.create({
+    if (rootNode) {
+      currentParentId = rootNode.id;
+    }
+  }
+
+  // Split hierarchy path if user entered e.g. "Girls > U11/U12 Girls Yellow"
+  // Note: we match > or surrounded slashes " / ", but do not split on raw "/" so "U11/U12" is preserved
+  const segments = trimmed
+    .split(/\s*(?:>|\s\/\s)\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (segments.length === 0) {
+    throw new Error("Invalid division node name");
+  }
+
+  const createdOrFoundNodes: { node: any; nodeSeasonId: number }[] = [];
+  let lastNode: any = null;
+
+  for (let i = 0; i < segments.length; i++) {
+    const segName = segments[i];
+
+    // Find if node exists under currentParentId (or root if null)
+    let node = await prisma.league_nodes.findFirst({
+      where: {
+        league_id: leagueId,
+        parent_id: currentParentId,
+        name: { equals: segName },
+      },
+    });
+
+    if (!node) {
+      // Determine level and node_type
+      let parentLevel = 0;
+      if (currentParentId) {
+        const pNode = await prisma.league_nodes.findUnique({
+          where: { id: currentParentId },
+          select: { level: true },
+        });
+        parentLevel = pNode?.level ?? 0;
+      }
+
+      const nextLevel = currentParentId ? parentLevel + 1 : 0;
+
+      // Infer node_type based on segment name and level
+      let nodeType: "tournament" | "gender" | "age_group" | "division" | "group" = "division";
+      const segLower = segName.toLowerCase();
+      if (/^(girls?|boys?|female|male|coed|men|women)$/i.test(segLower)) {
+        nodeType = "gender";
+      } else if (/\b(under\s*\d+|\d+u|u-?\d+|\d+\/\d+)\b/i.test(segLower) || /^u\d+/i.test(segLower)) {
+        nodeType = "age_group";
+      } else if (/\b(group|bracket)\b/i.test(segLower)) {
+        nodeType = "group";
+      } else if (nextLevel === 0) {
+        nodeType = "tournament";
+      } else if (nextLevel === 1) {
+        nodeType = "gender";
+      } else {
+        nodeType = "division";
+      }
+
+      node = await prisma.league_nodes.create({
         data: {
-          league_node_id: node.id,
-          season_id: seasonId,
-          is_active: true,
+          league_id: leagueId,
+          parent_id: currentParentId,
+          name: segName,
+          node_type: nodeType,
+          level: nextLevel,
         },
       });
     }
-    nodeSeasonId = nodeSeason.id;
+
+    // Ensure league_node_seasons record if seasonId provided
+    let nodeSeasonId = node.id;
+    if (seasonId) {
+      let nodeSeason = await prisma.league_node_seasons.findFirst({
+        where: {
+          league_node_id: node.id,
+          season_id: seasonId,
+        },
+      });
+      if (!nodeSeason) {
+        nodeSeason = await prisma.league_node_seasons.create({
+          data: {
+            league_node_id: node.id,
+            season_id: seasonId,
+            is_active: true,
+          },
+        });
+      }
+      nodeSeasonId = nodeSeason.id;
+    }
+
+    createdOrFoundNodes.push({ node, nodeSeasonId });
+    currentParentId = node.id;
+    lastNode = node;
   }
+
+  const lastEntry = createdOrFoundNodes[createdOrFoundNodes.length - 1];
 
   revalidatePath("/admin/importer");
   revalidatePath("/leagues");
-  return { id: nodeSeasonId, name: `${trimmed}` };
+
+  return {
+    id: lastEntry.nodeSeasonId,
+    leagueNodeId: lastNode.id,
+    parentId: lastNode.parent_id,
+    name: lastNode.name,
+    level: lastNode.level,
+    allNodes: createdOrFoundNodes.map((item) => ({
+      id: item.nodeSeasonId,
+      leagueNodeId: item.node.id,
+      parentId: item.node.parent_id,
+      leagueId: item.node.league_id,
+      name: item.node.name,
+      level: item.node.level,
+    })),
+  };
 }
 
 /**

@@ -12,28 +12,52 @@ export default async function AdminImporterPage() {
     select: { id: true, season_name: true },
   });
 
-  // Load league node seasons (divisions)
-  const nodeSeasonsData = await prisma.league_node_seasons.findMany({
-    include: {
-      league_nodes: {
-        include: {
-          leagues: true,
+  // Load league node seasons (divisions) with full hierarchy breadcrumb paths
+  const [nodeSeasonsData, allLeagueNodes] = await Promise.all([
+    prisma.league_node_seasons.findMany({
+      include: {
+        league_nodes: {
+          include: {
+            leagues: true,
+          },
         },
       },
-    },
-    take: 50,
-  });
+    }),
+    prisma.league_nodes.findMany({
+      include: { leagues: true },
+    }),
+  ]);
+
+  const nodeMap = new Map(allLeagueNodes.map((n) => [n.id, n]));
+
+  function getBreadcrumbPath(node: any): string {
+    const parts = [node.name];
+    let curr = node;
+    while (curr.parent_id && nodeMap.has(curr.parent_id)) {
+      curr = nodeMap.get(curr.parent_id)!;
+      parts.unshift(curr.name);
+    }
+    return parts.join(" > ");
+  }
 
   const seasons = seasonsData.map((s) => ({
     id: s.id,
     name: s.season_name,
   }));
 
-  const leagueNodes = nodeSeasonsData.map((ns) => ({
-    id: ns.id,
-    leagueId: ns.league_nodes.league_id,
-    name: `${ns.league_nodes.leagues.name} - ${ns.league_nodes.name}`,
-  }));
+  const leagueNodes = nodeSeasonsData.map((ns) => {
+    const node = ns.league_nodes;
+    const breadcrumbs = getBreadcrumbPath(node);
+    return {
+      id: ns.id,
+      leagueNodeId: node.id,
+      parentId: node.parent_id,
+      leagueId: node.league_id,
+      name: `${node.leagues.name} > ${breadcrumbs}`,
+      nodeName: node.name,
+      level: node.level,
+    };
+  });
 
   // Load team seasons for target team selection
   const teamSeasonsData = await prisma.team_seasons.findMany({

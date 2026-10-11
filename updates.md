@@ -2,6 +2,59 @@
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
 
+### [2026-10-11 10:00] Team Competition Leaf Node Scoping & Errant Tournament Root Enrollment Cleanup
+- **Type**: Bug Fix / Data Integrity / Query Architecture
+- **Summary**:
+  1. **Root Cause Analysis**:
+     - Team 121 (`U12 (2014/15) Williamson Girls Elite`) had an errant legacy enrollment (ID 247) in Node 107 (`One Knox Collective Cup (Tournament)`, level 0 root node), which was created prior to division subnodes being established.
+     - When schedule games were imported, all 8 teams were enrolled into Node 109 (`U11/U12 Girls Yellow`, level 2 division subnode), with team 121 receiving enrollment ID 252.
+     - `getLeaguesForTeamSeason` in [`queries.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/data/queries.ts) grouped by `leagueId` and processed enrollments in ID order. Because enrollment 247 had a lower ID than 252, it selected Node 107 (where no other teams were enrolled) and discarded Node 109.
+     - Consequently, the team page listed `One Knox Collective Cup` with no other opponents/standings, and `/leagues/10` showed Node 107 as an empty standalone division with only team 121.
+  2. **Database Cleanup**:
+     - Deleted errant root enrollment 247 from `team_league_enrollments`. Team 121 is now enrolled cleanly into Node 109 (`U11/U12 Girls Yellow`) alongside all other 7 teams in the division.
+  3. **Architectural Leaf Node Scoping Enforcement**:
+     - Updated `getLeaguesForTeamSeason` in [`queries.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/data/queries.ts) to sort and prioritize terminal leaf subnodes (`other_league_nodes.length === 0`) and deeper `level` nodes, ensuring playable divisions always take precedence over parent container nodes.
+     - Updated `getLeagueNodeSeasons` in [`queries.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/data/queries.ts) with `leafOnly = true` default (`other_league_nodes: { none: {} }`), preventing parent category nodes (like Tournament roots and Gender nodes) from generating extraneous divisions or false standings tables on league pages.
+  4. **Verification**:
+     - Added unit test in [`leagueNodeHierarchy.test.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/actions/__tests__/leagueNodeHierarchy.test.ts) verifying leaf subnode sorting and precedence.
+     - `npx tsc --noEmit` passed with 0 errors.
+     - All 26 Vitest test suites (100 tests) passed with 100% success.
+- **Modified Files**:
+  - `src/lib/data/queries.ts`
+  - `src/lib/actions/__tests__/leagueNodeHierarchy.test.ts`
+  - `updates.md`
+
+### [2026-10-11 09:47] League Node Hierarchy Chaining & Parent Node Selection in Importer
+- **Type**: Bug Fix / Feature / Admin Importer
+- **Summary**:
+  1. **Fixed Database Records for One Knox Collective Cup (League 10)**:
+     - Relinked Node 108 (`Girls`) to `parent_id = 107` (One Knox Collective Cup Tournament root node) with `level = 1` and `node_type = 'gender'`.
+     - Relinked Node 109 (`U11/U12 Girls Yellow`) to `parent_id = 108` (`Girls`) with `level = 2` and `node_type = 'division'`.
+  2. **Enhanced Server Action `createInlineLeagueNode`**:
+     - Added optional `parentId?: number | null` parameter.
+     - Automatically resolves `parentId` whether passed as `league_nodes.id` or `league_node_seasons.id`.
+     - Automatically infers and defaults to the league's root tournament node (`level = 0, parent_id = null`) when no parent is specified for tournament leagues.
+     - Added support for hierarchy path strings separated by `>` or ` / ` (e.g. `Girls > U11/U12 Girls Yellow`), sequentially building or finding each level and preserving slash-delimited age groups like `U11/U12`.
+     - Automatically infers `node_type` (`gender`, `age_group`, `group`, `division`, `tournament`) and increments `level` from parent node.
+     - Returns leaf node details and `allNodes` array for instant client state synchronization.
+  3. **Batch Importer Client Modal & UI Improvements ([`BatchImporterClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/admin/BatchImporterClient.tsx))**:
+     - Added `Parent Node (Nests Under)` selector inside the Create Node modal, populated with full breadcrumb paths of existing nodes in the selected league.
+     - When opening the modal, preselects the active `leagueNodeId` (or the tournament's root node if none is selected).
+     - Automatically chains subsequent subnode additions by setting `newNodeParentId` to the newly created node upon submission.
+     - Implemented `isCreatingNode` loading state with disabled buttons and `"Creating Node..."` label per Rule 1 & Rule 10.
+     - Replaced raw `<input>` with UI primitive `Input` from `@/components/ui/Input`.
+     - Updated `BatchImporterClientProps` to include complete node metadata (`leagueNodeId`, `parentId`, `nodeName`, `level`).
+  4. **Verification**:
+     - Added unit tests in [`leagueNodeHierarchy.test.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/actions/__tests__/leagueNodeHierarchy.test.ts) validating path splitting and node type inference.
+     - `npx tsc --noEmit` passed with 0 errors.
+     - All 26 Vitest test files (99 tests) passed with 100% success.
+- **Modified Files**:
+  - `src/lib/actions/league-actions.ts`
+  - `src/components/admin/BatchImporterClient.tsx`
+  - `src/app/(mainAppLayout)/admin/importer/page.tsx`
+  - `src/lib/actions/__tests__/leagueNodeHierarchy.test.ts`
+  - `updates.md`
+
 ### [2026-10-11 09:17] Upcoming Sub Toast Removal, In-Game Plus/Minus Recalculation Fix, and NFHS Default Auto Clock Pause
 - **Type**: Bug Fix / Feature / Game Tracking Integrity
 - **Summary**:

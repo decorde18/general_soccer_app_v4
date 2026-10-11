@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
+import Input from "@/components/ui/Input";
 import {
   batchImportTeams,
   batchImportSchedule,
@@ -44,7 +45,15 @@ import { parseGameDatesAndTimesUTC } from "@/lib/utils/dateTimeUtils";
 interface BatchImporterClientProps {
   seasons: { id: number; name: string }[];
   leagues?: { id: number; name: string; isTournament: boolean }[];
-  leagueNodes?: { id: number; leagueId?: number; name: string }[];
+  leagueNodes?: {
+    id: number;
+    leagueNodeId?: number;
+    parentId?: number | null;
+    leagueId?: number;
+    name: string;
+    nodeName?: string;
+    level?: number | null;
+  }[];
   teamSeasons?: { id: number; seasonId: number; clubName: string; teamName: string; label: string }[];
 }
 
@@ -340,6 +349,8 @@ export default function BatchImporterClient({
 
   const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
   const [newNodeName, setNewNodeName] = useState("");
+  const [newNodeParentId, setNewNodeParentId] = useState<number | "">("");
+  const [isCreatingNode, setIsCreatingNode] = useState(false);
 
   // Interactive Entity Matching Wizard States
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
@@ -391,16 +402,61 @@ export default function BatchImporterClient({
 
   const handleCreateNodeInline = async () => {
     if (!newNodeName.trim() || !selectedLeagueId) return;
+    setIsCreatingNode(true);
     try {
       const targetLeague = leaguesList.find((l) => l.id === Number(selectedLeagueId));
-      const created = await createInlineLeagueNode(Number(selectedLeagueId), newNodeName, targetSeasonId);
-      const formattedNode = { id: created.id, name: `${targetLeague?.name || "League"} - ${created.name}` };
-      setNodesList((prev) => [...prev, formattedNode]);
+      const created = await createInlineLeagueNode(
+        Number(selectedLeagueId),
+        newNodeName,
+        targetSeasonId,
+        newNodeParentId ? Number(newNodeParentId) : null
+      );
+
+      const updatedNodes = [...nodesList];
+      const itemsToProcess =
+        created.allNodes && created.allNodes.length > 0 ? created.allNodes : [created];
+
+      for (const item of itemsToProcess) {
+        const parentEntry = updatedNodes.find(
+          (n) =>
+            (n.leagueNodeId && n.leagueNodeId === item.parentId) ||
+            n.id === item.parentId
+        );
+        const displayName = parentEntry
+          ? `${parentEntry.name} > ${item.name}`
+          : `${targetLeague?.name || "League"} > ${item.name}`;
+
+        const formatted = {
+          id: item.id,
+          leagueNodeId: item.leagueNodeId,
+          parentId: item.parentId,
+          leagueId: Number(selectedLeagueId),
+          name: displayName,
+          nodeName: item.name,
+          level: item.level,
+        };
+
+        const existingIdx = updatedNodes.findIndex(
+          (n) =>
+            n.id === formatted.id ||
+            (n.leagueNodeId && n.leagueNodeId === formatted.leagueNodeId)
+        );
+        if (existingIdx >= 0) {
+          updatedNodes[existingIdx] = formatted;
+        } else {
+          updatedNodes.push(formatted);
+        }
+      }
+
+      setNodesList(updatedNodes);
       setLeagueNodeId(created.id);
+      setNewNodeParentId(created.leagueNodeId || created.id);
       setIsNodeModalOpen(false);
       setNewNodeName("");
     } catch (err: any) {
       setErrorMsg(err?.message || "Failed to create division node");
+    } finally {
+      setIsCreatingNode(false);
     }
   };
 
@@ -1098,6 +1154,7 @@ export default function BatchImporterClient({
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                   setSelectedLeagueId(e.target.value ? Number(e.target.value) : "");
                   setLeagueNodeId("");
+                  setNewNodeParentId("");
                 }}
                 options={leaguesList.map((l) => ({
                   value: String(l.id),
@@ -1136,7 +1193,29 @@ export default function BatchImporterClient({
                 {selectedLeagueId && (
                   <button
                     type="button"
-                    onClick={() => setIsNodeModalOpen(true)}
+                    onClick={() => {
+                      if (leagueNodeId) {
+                        const sel = nodesList.find((n) => n.id === Number(leagueNodeId));
+                        if (sel?.leagueNodeId) {
+                          setNewNodeParentId(sel.leagueNodeId);
+                        } else {
+                          setNewNodeParentId(Number(leagueNodeId));
+                        }
+                      } else {
+                        const leagueNodesForLeague = nodesList.filter(
+                          (n) => n.leagueId === Number(selectedLeagueId)
+                        );
+                        const rootNode = leagueNodesForLeague.find(
+                          (n) => n.level === 0 || n.parentId === null
+                        );
+                        if (rootNode) {
+                          setNewNodeParentId(rootNode.leagueNodeId || rootNode.id);
+                        } else {
+                          setNewNodeParentId("");
+                        }
+                      }
+                      setIsNodeModalOpen(true);
+                    }}
                     className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold underline flex items-center gap-1"
                   >
                     + Create Node
@@ -2231,30 +2310,70 @@ export default function BatchImporterClient({
       {/* INLINE DIVISION NODE CREATION MODAL */}
       {isNodeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 space-y-4 shadow-2xl">
+          <div className="w-full max-w-lg rounded-xl border border-slate-700 bg-slate-900 p-6 space-y-4 shadow-2xl">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Layers className="h-5 w-5 text-indigo-400" />
               Create New Division / League Node
             </h3>
-            <div className="space-y-3 text-xs">
+
+            <div className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Division Node Name *</label>
-                <input
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Parent Node (Nests Under)
+                </label>
+                <Select
+                  value={String(newNodeParentId || "")}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setNewNodeParentId(e.target.value ? Number(e.target.value) : "")
+                  }
+                  options={[
+                    { value: "", label: "-- Top Level / League Root Node --" },
+                    ...nodesList
+                      .filter((n) => !selectedLeagueId || !n.leagueId || n.leagueId === Number(selectedLeagueId))
+                      .map((n) => ({
+                        value: String(n.leagueNodeId || n.id),
+                        label: n.name,
+                      })),
+                  ]}
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Select an existing parent node to nest under, or leave as root.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Subnode Name or Path *
+                </label>
+                <Input
                   type="text"
                   value={newNodeName}
-                  onChange={(e) => setNewNodeName(e.target.value)}
-                  placeholder="e.g. Under 13 Girls Navy Division"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 p-2.5 text-white focus:border-indigo-500 focus:outline-none"
+                  onChange={(e: any) => setNewNodeName(e.target.value)}
+                  placeholder="e.g. Girls > U11/U12 Girls Yellow or U13 Boys Navy"
+                  className="w-full text-white"
                 />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Tip: Subnodes automatically nest under the parent selected above. You can also type a full hierarchy path using <code className="text-indigo-300 font-mono">&gt;</code> (e.g. <span className="text-slate-300 font-medium">Girls &gt; U11/U12 Girls Yellow</span>) to create multiple levels at once.
+                </p>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button onClick={() => setIsNodeModalOpen(false)} variant="secondary" className="text-xs">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <Button
+                onClick={() => setIsNodeModalOpen(false)}
+                variant="secondary"
+                disabled={isCreatingNode}
+                className="text-xs"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleCreateNodeInline} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs">
-                Create & Select Node
+              <Button
+                onClick={handleCreateNodeInline}
+                disabled={isCreatingNode || !newNodeName.trim()}
+                isLoading={isCreatingNode}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs"
+              >
+                {isCreatingNode ? "Creating Node..." : "Create & Select Node"}
               </Button>
             </div>
           </div>
