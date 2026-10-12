@@ -32,7 +32,11 @@ import useGamePlayersStore from "@/stores/gamePlayersStore";
 import { apiFetch } from "@/app/api/fetcher";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { formatDateStandard, formatTimeStandard } from "@/components/ui/DateSelect";
-import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
+import {
+  formatSecondsToMmss,
+  convertPeriodClockToAbsoluteSeconds,
+  convertAbsoluteSecondsToPeriodClock,
+} from "@/lib/utils/dateTimeUtils";
 import {
   GOAL_METHOD_OPTIONS,
   parseGoalTypes,
@@ -340,57 +344,35 @@ export default function GameManageClient() {
     setSelectedGoalMethods(next);
   };
 
-  // Resolve period minute (e.g. 15' into 2nd half) or game minute (e.g. 45') into continuous game seconds
+  // Resolve period minute (e.g. 9' 52" into 2nd half) into continuous absolute game seconds
   const resolveGameTimeSeconds = (periodStr: string | number, minStr: string, secStr: string) => {
     const pNum = Number(periodStr) || 1;
     const rawInputSecs = (Number(minStr) || 0) * 60 + (Number(secStr) || 0);
-    const regPeriodSecs = (game?.settings?.periodDuration) || 2400;
-
-    let precedingOffset = 0;
-    for (let i = 1; i < pNum; i++) {
-      const matchingP = (game?.periods || []).find(
-        (item: any) => (item.periodNumber || item.period_number) === i
-      );
-      if (matchingP && matchingP.endTime && matchingP.startTime) {
-        precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 60000) * 60;
-      } else {
-        precedingOffset += regPeriodSecs;
-      }
-    }
-
-    return (pNum > 1 && rawInputSecs < precedingOffset)
-      ? precedingOffset + rawInputSecs
-      : rawInputSecs;
+    return convertPeriodClockToAbsoluteSeconds(
+      pNum,
+      rawInputSecs,
+      game?.periods || [],
+      game?.gameEventsMajor || [],
+      game?.settings?.periodDuration || 2400
+    );
   };
 
   const calculatePreviewTime = (periodStr: string | number, minStr: string, secStr: string) => {
     const pNum = Number(periodStr) || 1;
-    const regPeriodSecs = (game?.settings?.periodDuration) || 2400;
-
-    let precedingOffset = 0;
-    for (let i = 1; i < pNum; i++) {
-      const matchingP = (game?.periods || []).find(
-        (item: any) => (item.periodNumber || item.period_number) === i
-      );
-      if (matchingP && matchingP.endTime && matchingP.startTime) {
-        precedingOffset += Math.round((matchingP.endTime - matchingP.startTime) / 60000) * 60;
-      } else {
-        precedingOffset += regPeriodSecs;
-      }
-    }
-
     const totalSeconds = resolveGameTimeSeconds(periodStr, minStr, secStr);
+    const clock = convertAbsoluteSecondsToPeriodClock(
+      totalSeconds,
+      pNum,
+      game?.periods || [],
+      game?.gameEventsMajor || [],
+      game?.settings?.periodDuration || 2400
+    );
     const gameMin = Math.floor(totalSeconds / 60);
-
-    const periodSecs = Math.max(0, totalSeconds - precedingOffset);
-    const periodMin = Math.floor(periodSecs / 60);
-    const periodSecRem = periodSecs % 60;
-
     const halfLabel = pNum === 1 ? "1st Half" : pNum === 2 ? "2nd Half" : `OT${pNum - 2}`;
     return {
       totalSeconds,
       gameMin,
-      displayLabel: `${gameMin}' (${halfLabel}, ${String(periodMin).padStart(2, "0")}:${String(periodSecRem).padStart(2, "0")})`,
+      displayLabel: `${gameMin}' (${halfLabel}, ${clock.formattedTime})`,
     };
   };
 
@@ -403,10 +385,18 @@ export default function GameManageClient() {
     setIsOwnGoal(isOg);
     const parsed = parseGoalTypes(g.goal_types);
     setSelectedGoalMethods(new Set(parsed.length > 0 ? parsed : ["open_play"]));
-    setGoalPeriod(g.period ? String(g.period) : "1");
+    const pNum = Number(g.period || 1);
+    setGoalPeriod(String(pNum));
     const totalSec = g.game_time !== undefined && g.game_time !== null ? Number(g.game_time) : 0;
-    setGoalTimeMin(String(Math.floor(totalSec / 60)));
-    setGoalTimeSec(String(totalSec % 60));
+    const clock = convertAbsoluteSecondsToPeriodClock(
+      totalSec,
+      pNum,
+      game?.periods || [],
+      game?.gameEventsMajor || [],
+      game?.settings?.periodDuration || 2400
+    );
+    setGoalTimeMin(String(clock.minutes));
+    setGoalTimeSec(String(clock.seconds));
     setIsOpponentGoal(g.team_season_id != teamSeasonId);
     setIsGoalModalOpen(true);
   };
@@ -503,10 +493,18 @@ export default function GameManageClient() {
 
     setSubInId(matchingIn ? String(matchingIn.playerGameId) : s.in_player_id ? String(s.in_player_id) : "");
     setSubOutId(matchingOut ? String(matchingOut.playerGameId) : s.out_player_id ? String(s.out_player_id) : "");
-    setSubPeriod(s.period ? String(s.period) : "1");
+    const pNum = Number(s.period || 1);
+    setSubPeriod(String(pNum));
     const totalSec = s.sub_time !== undefined && s.sub_time !== null ? Number(s.sub_time) : 0;
-    setSubTimeMin(String(Math.floor(totalSec / 60)));
-    setSubTimeSec(String(totalSec % 60));
+    const clock = convertAbsoluteSecondsToPeriodClock(
+      totalSec,
+      pNum,
+      game?.periods || [],
+      game?.gameEventsMajor || [],
+      game?.settings?.periodDuration || 2400
+    );
+    setSubTimeMin(String(clock.minutes));
+    setSubTimeSec(String(clock.seconds));
     setIsGkSub(Boolean(s.gk_sub));
     setIsSubModalOpen(true);
   };
@@ -568,10 +566,18 @@ export default function GameManageClient() {
     setCardPlayerId(c.player_game_id ? String(c.player_game_id) : "");
     setCardType(c.card_type || "yellow");
     setCardReason(c.card_reason || "");
-    setCardPeriod(c.period ? String(c.period) : "1");
+    const pNum = Number(c.period || 1);
+    setCardPeriod(String(pNum));
     const totalSec = c.game_time !== undefined && c.game_time !== null ? Number(c.game_time) : 0;
-    setCardTimeMin(String(Math.floor(totalSec / 60)));
-    setCardTimeSec(String(totalSec % 60));
+    const clock = convertAbsoluteSecondsToPeriodClock(
+      totalSec,
+      pNum,
+      game?.periods || [],
+      game?.gameEventsMajor || [],
+      game?.settings?.periodDuration || 2400
+    );
+    setCardTimeMin(String(clock.minutes));
+    setCardTimeSec(String(clock.seconds));
     setIsCardModalOpen(true);
   };
 
@@ -994,9 +1000,19 @@ export default function GameManageClient() {
                           Type: {formatGoalTypesDisplay(g.goal_types, Boolean(g.is_own_goal))}
                         </span>
                         {Boolean(g.period) && <span>Period: {String(g.period)}</span>}
-                        {g.game_time !== undefined && g.game_time !== null && (
-                          <span>Min: {Math.floor(Number(g.game_time) / 60)}&apos;</span>
-                        )}
+                        {g.game_time !== undefined && g.game_time !== null && (() => {
+                          const pNum = Number(g.period || 1);
+                          const clock = convertAbsoluteSecondsToPeriodClock(
+                            Number(g.game_time),
+                            pNum,
+                            game?.periods || [],
+                            game?.gameEventsMajor || [],
+                            game?.settings?.periodDuration || 2400
+                          );
+                          return (
+                            <span>Clock: {clock.formattedTime} (Match: {Math.floor(Number(g.game_time) / 60)}&apos;)</span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -1115,7 +1131,17 @@ export default function GameManageClient() {
                         &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-rose-500 font-bold">OUT</span>: {pOut?.fullName || "Unknown"} (#{pOut?.jerseyNumber || "?"})
                       </p>
                       <p className="text-[10px] text-muted mt-1 font-semibold">
-                        Time: {s.sub_time ? formatSecondsToMmss(Number(s.sub_time)) : "--"} {s.period ? `• Period ${s.period}` : ""} {s.gk_sub === 1 && (s.is_swap === 1 ? "• Goalkeeper Swap 🧤" : "• Goalkeeper Sub 🧤")}
+                        Time: {s.sub_time !== undefined && s.sub_time !== null ? (() => {
+                          const pNum = Number(s.period || 1);
+                          const clock = convertAbsoluteSecondsToPeriodClock(
+                            Number(s.sub_time),
+                            pNum,
+                            game?.periods || [],
+                            game?.gameEventsMajor || [],
+                            game?.settings?.periodDuration || 2400
+                          );
+                          return `${clock.formattedTime} (Match ${formatSecondsToMmss(Number(s.sub_time))})`;
+                        })() : "--"} {s.period ? `• Period ${s.period}` : ""} {s.gk_sub === 1 && (s.is_swap === 1 ? "• Goalkeeper Swap 🧤" : "• Goalkeeper Sub 🧤")}
                       </p>
                     </div>
                   </div>
@@ -1243,9 +1269,19 @@ export default function GameManageClient() {
                       )}
                       <div className="flex gap-2 text-[10px] text-muted font-semibold items-center">
                         {Boolean(c.period) && <span>Period: {String(c.period)}</span>}
-                        {c.game_time !== undefined && c.game_time !== null && (
-                          <span>Min: {Math.floor(Number(c.game_time) / 60)}&apos;</span>
-                        )}
+                        {c.game_time !== undefined && c.game_time !== null && (() => {
+                          const pNum = Number(c.period || 1);
+                          const clock = convertAbsoluteSecondsToPeriodClock(
+                            Number(c.game_time),
+                            pNum,
+                            game?.periods || [],
+                            game?.gameEventsMajor || [],
+                            game?.settings?.periodDuration || 2400
+                          );
+                          return (
+                            <span>Clock: {clock.formattedTime} (Match: {Math.floor(Number(c.game_time) / 60)}&apos;)</span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

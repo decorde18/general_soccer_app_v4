@@ -2,6 +2,29 @@
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
 
+### [2026-10-12 16:05] Manual Event Clock Resolution with Period Breaks and Clock Stoppages
+- **Type**: Bug Fix / Architecture / Time Utilities
+- **Summary**:
+  1. **Dual-Clock Domain Math & Problem Resolution**:
+     - When entering or editing manual events (goals, substitutions, cards), users specify the event time as active period clock time (e.g. Period 2, 9:52). However, all events are stored in the database in continuous absolute/real-time seconds from match start ($T=0$).
+     - The previous resolution in `GameManageClient.tsx` used a simplistic calculation that omitted inter-period breaks (e.g. halftime intermission) and stopped-clock stoppages (`clock_should_run === 0`).
+     - Implemented `convertPeriodClockToAbsoluteSeconds` and `convertAbsoluteSecondsToPeriodClock` in `dateTimeUtils.ts` to convert bi-directionally between active period clock and absolute match seconds:
+       - Accounts for the full elapsed duration of preceding periods (active time + added/stoppage time).
+       - Accounts for all inter-period breaks (halftime / overtime intermissions).
+       - Accounts for any clock stoppages with clock off (`clock_should_run: 0`) in the target period prior to the event.
+  2. **Event Creation & Edit Integration in `GameManageClient.tsx`**:
+     - Updated `resolveGameTimeSeconds` and `calculatePreviewTime` to call `convertPeriodClockToAbsoluteSeconds`.
+     - Updated `openEditGoalModal`, `openEditSubModal`, and `openEditCardModal` to call `convertAbsoluteSecondsToPeriodClock` so that when editing an existing event, the inputs display the true active period clock time (e.g. Period 2, 9:52) instead of raw cumulative seconds (e.g. 71:52).
+     - Enhanced goals, subs, and cards management tables to display both period clock time (`P2 09:52`) and match minute.
+  3. **Verification**:
+     - Updated `src/components/game/__tests__/gameManageTimeResolution.test.ts` with comprehensive unit tests for Period 1, Period 2 with halftime break and stoppage delays, fallback behavior without timestamps, and roundtrip bidirectional fidelity.
+     - `npx tsc --noEmit` passed with 0 errors.
+- **Modified Files**:
+  - `src/lib/utils/dateTimeUtils.ts`
+  - `src/components/game/GameManageClient.tsx`
+  - `src/components/game/__tests__/gameManageTimeResolution.test.ts`
+  - `updates.md`
+
 ### [2026-10-11 12:45] Fix Goal Recording Flow & Stoppage Modal Auto-Reopen Collision
 - **Type**: Bug Fix / UX / Event Management
 - **Summary**:

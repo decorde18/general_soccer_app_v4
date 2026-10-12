@@ -461,6 +461,295 @@ export function calculatePeriodTime(
   return Math.max(0, totalPeriodSeconds - stoppageSeconds);
 }
 
+export interface PeriodTimeConfig {
+  periodNumber?: number;
+  period_number?: number;
+  startTime?: number | bigint | null;
+  start_time?: number | bigint | null;
+  endTime?: number | bigint | null;
+  end_time?: number | bigint | null;
+  [key: string]: any;
+}
+
+export interface StoppageEventConfig {
+  period?: number;
+  event_type?: string;
+  clock_should_run?: boolean | number;
+  game_time?: number | null;
+  end_time?: number | null;
+  startTime?: number | null;
+  endTime?: number | null;
+  start_time?: number | null;
+  [key: string]: any;
+}
+
+/**
+ * Resolves active period scoreboard clock seconds (e.g. 9:52 of Period 2)
+ * into absolute match seconds from match start (T=0).
+ *
+ * Fully accounts for:
+ * 1. Elapsed duration of all preceding periods (real timestamp duration or nominal period length).
+ * 2. All inter-period breaks (e.g. halftime break between period 1 and period 2).
+ * 3. All clock stoppages (where clock_should_run === 0 / false) occurring in the target period prior to the event.
+ */
+export function convertPeriodClockToAbsoluteSeconds(
+  periodNumber: number | string,
+  periodClockSeconds: number,
+  periods: PeriodTimeConfig[] = [],
+  stoppages: StoppageEventConfig[] = [],
+  nominalPeriodDurationSec: number = 2400,
+): number {
+  const targetPeriodNum = Math.max(1, Number(periodNumber) || 1);
+  const targetClockSec = Math.max(0, Number(periodClockSeconds) || 0);
+
+  // Normalize periods
+  const sortedPeriods = [...(periods || [])]
+    .map((p) => {
+      const pNum = Number(p.periodNumber ?? p.period_number ?? 1);
+      const startMs =
+        p.startTime !== undefined && p.startTime !== null
+          ? Number(p.startTime)
+          : p.start_time !== undefined && p.start_time !== null
+          ? Number(p.start_time)
+          : null;
+      const endMs =
+        p.endTime !== undefined && p.endTime !== null
+          ? Number(p.endTime)
+          : p.end_time !== undefined && p.end_time !== null
+          ? Number(p.end_time)
+          : null;
+      return { pNum, startMs, endMs };
+    })
+    .sort((a, b) => a.pNum - b.pNum);
+
+  const period1 = sortedPeriods.find((p) => p.pNum === 1) || sortedPeriods[0];
+  const matchStartMs = period1?.startMs ?? null;
+
+  // 1. Calculate absolute start of target period (T_periodStart in seconds from match start T=0)
+  let targetPeriodStartSec = 0;
+  const targetPeriod = sortedPeriods.find((p) => p.pNum === targetPeriodNum);
+
+  if (targetPeriodNum > 1) {
+    if (matchStartMs && targetPeriod?.startMs && targetPeriod.startMs >= matchStartMs) {
+      // Both match start and target period start timestamps exist!
+      // This wall-clock difference inherently covers all previous period durations AND inter-period breaks!
+      targetPeriodStartSec = Math.max(0, Math.round((targetPeriod.startMs - matchStartMs) / 1000));
+    } else {
+      // Fallback: Accumulate each preceding period and inter-period breaks
+      let accumulatedSec = 0;
+      for (let i = 1; i < targetPeriodNum; i++) {
+        const pCurrent = sortedPeriods.find((p) => p.pNum === i);
+        const pNext = sortedPeriods.find((p) => p.pNum === i + 1);
+
+        if (pCurrent?.startMs && pCurrent?.endMs && pCurrent.endMs >= pCurrent.startMs) {
+          accumulatedSec += Math.round((pCurrent.endMs - pCurrent.startMs) / 1000);
+        } else {
+          accumulatedSec += nominalPeriodDurationSec;
+        }
+
+        // Inter-period break
+        if (pNext?.startMs && pCurrent?.endMs && pNext.startMs >= pCurrent.endMs) {
+          accumulatedSec += Math.round((pNext.startMs - pCurrent.endMs) / 1000);
+        }
+      }
+      targetPeriodStartSec = accumulatedSec;
+    }
+  }
+
+  // 2. Filter stopped-clock stoppages in target period
+  const periodStoppages = (stoppages || [])
+    .filter((s) => {
+      const sPeriod = Number(s.period || 1);
+      const clockStopped =
+        s.clock_should_run === 0 || s.clock_should_run === false || s.event_type === "stoppage";
+      return sPeriod === targetPeriodNum && clockStopped;
+    })
+    .map((s) => {
+      let sStartSec = 0;
+      if (s.game_time !== undefined && s.game_time !== null) {
+        sStartSec = Number(s.game_time);
+      } else if (s.startTime !== undefined && s.startTime !== null) {
+        sStartSec = Number(s.startTime);
+      } else if (s.start_time !== undefined && s.start_time !== null) {
+        sStartSec = Number(s.start_time);
+      }
+
+      if (sStartSec > 86400 && matchStartMs) {
+        sStartSec = Math.round((sStartSec - matchStartMs) / 1000);
+      }
+
+      let sEndSec: number | null = null;
+      if (s.end_time !== undefined && s.end_time !== null) {
+        sEndSec = Number(s.end_time);
+      } else if (s.endTime !== undefined && s.endTime !== null) {
+        sEndSec = Number(s.endTime);
+      }
+
+      if (sEndSec !== null && sEndSec > 86400 && matchStartMs) {
+        sEndSec = Math.round((sEndSec - matchStartMs) / 1000);
+      }
+
+      return { sStartSec, sEndSec };
+    })
+    .sort((a, b) => a.sStartSec - b.sStartSec);
+
+  // 3. Accumulate clock stoppages in target period that started at or before the target active clock
+  let stoppageDelaySec = 0;
+  for (const stop of periodStoppages) {
+    // Active scoreboard clock when this stoppage began:
+    const activeClockAtStoppage = Math.max(0, stop.sStartSec - targetPeriodStartSec - stoppageDelaySec);
+
+    if (targetClockSec < activeClockAtStoppage) {
+      // The event occurred before this stoppage began
+      break;
+    }
+
+    const duration =
+      stop.sEndSec !== null && stop.sEndSec > stop.sStartSec ? stop.sEndSec - stop.sStartSec : 0;
+
+    stoppageDelaySec += duration;
+  }
+
+  return Math.max(0, targetPeriodStartSec + targetClockSec + stoppageDelaySec);
+}
+
+/**
+ * Converts an absolute match time (seconds from match start T=0) into
+ * active period scoreboard clock time (minutes and seconds within that period).
+ *
+ * Example:
+ * An event at absolute second 4312 in Period 2:
+ * With Period 2 start at 3600s and a 120s clock stoppage in Period 2,
+ * returns { period: 2, minutes: 9, seconds: 52, totalPeriodSeconds: 592, formattedTime: "09:52" }
+ */
+export function convertAbsoluteSecondsToPeriodClock(
+  absoluteSeconds: number,
+  periodNumber: number | string = 1,
+  periods: PeriodTimeConfig[] = [],
+  stoppages: StoppageEventConfig[] = [],
+  nominalPeriodDurationSec: number = 2400,
+): {
+  period: number;
+  minutes: number;
+  seconds: number;
+  totalPeriodSeconds: number;
+  formattedTime: string;
+} {
+  const targetPeriodNum = Math.max(1, Number(periodNumber) || 1);
+  const targetAbsSec = Math.max(0, Number(absoluteSeconds) || 0);
+
+  // Normalize periods
+  const sortedPeriods = [...(periods || [])]
+    .map((p) => {
+      const pNum = Number(p.periodNumber ?? p.period_number ?? 1);
+      const startMs =
+        p.startTime !== undefined && p.startTime !== null
+          ? Number(p.startTime)
+          : p.start_time !== undefined && p.start_time !== null
+          ? Number(p.start_time)
+          : null;
+      const endMs =
+        p.endTime !== undefined && p.endTime !== null
+          ? Number(p.endTime)
+          : p.end_time !== undefined && p.end_time !== null
+          ? Number(p.end_time)
+          : null;
+      return { pNum, startMs, endMs };
+    })
+    .sort((a, b) => a.pNum - b.pNum);
+
+  const period1 = sortedPeriods.find((p) => p.pNum === 1) || sortedPeriods[0];
+  const matchStartMs = period1?.startMs ?? null;
+
+  // 1. Calculate absolute start of target period
+  let targetPeriodStartSec = 0;
+  const targetPeriod = sortedPeriods.find((p) => p.pNum === targetPeriodNum);
+
+  if (targetPeriodNum > 1) {
+    if (matchStartMs && targetPeriod?.startMs && targetPeriod.startMs >= matchStartMs) {
+      targetPeriodStartSec = Math.max(0, Math.round((targetPeriod.startMs - matchStartMs) / 1000));
+    } else {
+      let accumulatedSec = 0;
+      for (let i = 1; i < targetPeriodNum; i++) {
+        const pCurrent = sortedPeriods.find((p) => p.pNum === i);
+        const pNext = sortedPeriods.find((p) => p.pNum === i + 1);
+
+        if (pCurrent?.startMs && pCurrent?.endMs && pCurrent.endMs >= pCurrent.startMs) {
+          accumulatedSec += Math.round((pCurrent.endMs - pCurrent.startMs) / 1000);
+        } else {
+          accumulatedSec += nominalPeriodDurationSec;
+        }
+
+        if (pNext?.startMs && pCurrent?.endMs && pNext.startMs >= pCurrent.endMs) {
+          accumulatedSec += Math.round((pNext.startMs - pCurrent.endMs) / 1000);
+        }
+      }
+      targetPeriodStartSec = accumulatedSec;
+    }
+  }
+
+  // 2. Elapsed absolute seconds in period
+  const elapsedInPeriod = Math.max(0, targetAbsSec - targetPeriodStartSec);
+
+  // 3. Stoppages in target period
+  const periodStoppages = (stoppages || [])
+    .filter((s) => {
+      const sPeriod = Number(s.period || 1);
+      const clockStopped =
+        s.clock_should_run === 0 || s.clock_should_run === false || s.event_type === "stoppage";
+      return sPeriod === targetPeriodNum && clockStopped;
+    })
+    .map((s) => {
+      let sStartSec = 0;
+      if (s.game_time !== undefined && s.game_time !== null) {
+        sStartSec = Number(s.game_time);
+      } else if (s.startTime !== undefined && s.startTime !== null) {
+        sStartSec = Number(s.startTime);
+      } else if (s.start_time !== undefined && s.start_time !== null) {
+        sStartSec = Number(s.start_time);
+      }
+
+      if (sStartSec > 86400 && matchStartMs) {
+        sStartSec = Math.round((sStartSec - matchStartMs) / 1000);
+      }
+
+      let sEndSec: number | null = null;
+      if (s.end_time !== undefined && s.end_time !== null) {
+        sEndSec = Number(s.end_time);
+      } else if (s.endTime !== undefined && s.endTime !== null) {
+        sEndSec = Number(s.endTime);
+      }
+
+      if (sEndSec !== null && sEndSec > 86400 && matchStartMs) {
+        sEndSec = Math.round((sEndSec - matchStartMs) / 1000);
+      }
+
+      return { sStartSec, sEndSec };
+    });
+
+  let totalStoppageOverlap = 0;
+  for (const stop of periodStoppages) {
+    const stopEnd = stop.sEndSec !== null ? stop.sEndSec : targetAbsSec;
+    const overlapStart = Math.max(targetPeriodStartSec, stop.sStartSec);
+    const overlapEnd = Math.min(targetAbsSec, stopEnd);
+    if (overlapEnd > overlapStart) {
+      totalStoppageOverlap += overlapEnd - overlapStart;
+    }
+  }
+
+  const activeSeconds = Math.max(0, elapsedInPeriod - totalStoppageOverlap);
+  const minutes = Math.floor(activeSeconds / 60);
+  const seconds = activeSeconds % 60;
+
+  return {
+    period: targetPeriodNum,
+    minutes,
+    seconds,
+    totalPeriodSeconds: activeSeconds,
+    formattedTime: `${pad(minutes)}:${pad(seconds)}`,
+  };
+}
+
 export interface PeriodInterval {
   start: number; // absolute seconds from match start
   end: number;   // absolute seconds from match start
