@@ -966,7 +966,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\decor\\Development\\general_soccer_app_v4\\src\\generated\\client",
+      "value": "D:\\Development\\general_soccer_app_v4\\src\\generated\\client",
       "fromEnvVar": null
     },
     "config": {
@@ -980,7 +980,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\decor\\Development\\general_soccer_app_v4\\prisma\\schema.prisma",
+    "sourceFilePath": "D:\\Development\\general_soccer_app_v4\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
