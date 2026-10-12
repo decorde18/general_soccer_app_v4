@@ -91,9 +91,9 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   // Stop Clock toggle state (default: determined by game settings autoStopClockOnMajorEvent)
   const [stopClock, setStopClock] = useState<boolean>(() => Boolean(game?.settings?.autoStopClockOnMajorEvent));
 
-  // Active unended stoppage
+  // Active unended stoppage (strictly of type "stoppage")
   const activeStoppage = game?.gameEventsMajor?.find(
-    (s) => s.end_time === null && s.period === (game?.currentPeriodIndex || 0) + 1 && s.clock_should_run === 0
+    (s) => s.event_type === "stoppage" && s.end_time === null && s.period === (game?.currentPeriodIndex || 0) + 1 && s.clock_should_run === 0
   );
 
   const eventOpenMsRef = useRef<number>(Date.now());
@@ -371,9 +371,9 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     }
   };
 
-  // Cancel active stoppage
+  // Cancel active stoppage (only if actually a stoppage event)
   const handleCancelStoppage = () => {
-    if (!activeStoppage) {
+    if (!activeStoppage || activeStoppage.event_type !== "stoppage") {
       onClose();
       return;
     }
@@ -397,16 +397,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
   // End stoppage & resume clock
   const handleEndStoppageAndResume = async (confirmPendingSubs = false) => {
-    if (!activeStoppage) {
-      onClose();
-      return;
-    }
-
     try {
       if (confirmPendingSubs && pendingSubs.length > 0) {
         await confirmAllPendingSubs();
       }
-      await endStoppage(activeStoppage.id);
+      if (activeStoppage) {
+        await endStoppage(activeStoppage.id);
+      }
       setIsPausedLocally(false);
       setStopClock(false);
       setShowPendingSubPrompt(false);
@@ -419,7 +416,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       }
       toast.success(
         confirmPendingSubs
-          ? "Subs Executed & Stoppage Ended — Clock Resumed!"
+          ? "Subs Executed & Play Resumed!"
           : "Stoppage Ended — Clock Resumed!"
       );
       onClose();
@@ -553,6 +550,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       } else {
         onClose();
       }
+      toast.success(isOwnGoal ? "Own Goal recorded!" : "Goal recorded! ⚽");
 
       // 2. Background Persistence (Non-blocking)
       (async () => {
@@ -719,6 +717,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       } else {
         onClose();
       }
+      toast.success(`${cardType.toUpperCase()} Card recorded! 🟨🟥`);
 
       // 2. Background Persistence
       (async () => {

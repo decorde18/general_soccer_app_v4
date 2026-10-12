@@ -2,6 +2,30 @@
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
 
+### [2026-10-11 12:45] Fix Goal Recording Flow & Stoppage Modal Auto-Reopen Collision
+- **Type**: Bug Fix / UX / Event Management
+- **Summary**:
+  1. **Root Cause Analysis**:
+     - When recording a goal (or card) with the clock stopped or `autoStopClockOnMajorEvent` active, `handleGoalSubmit` created an optimistic major event record with `clock_should_run: 0` and `end_time: null`.
+     - In [`LiveGameTrackerClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/LiveGameTrackerClient.tsx), an effect auto-reopening the stoppage modal on reload did not check `event_type === "stoppage"` and listened directly to mutations in `game.gameEventsMajor`. Consequently, right after `handleGoalSubmit` called `onClose()`, the effect detected the newly added goal, interpreted it as an active stoppage, and immediately reopened `MajorEventModal`.
+     - Reopening the modal triggered its form reset effect, clearing all selected dropdown inputs in front of the user.
+     - Furthermore, `activeStoppage` in [`MajorEventModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/live/MajorEventModal.tsx) also lacked an `event_type === "stoppage"` check, causing the modal to render a "Cancel Stoppage" button. When the user clicked "Cancel Stoppage", it executed `deleteEvent(activeStoppage.id, "major")`, which cascadingly wiped out the goal.
+  2. **Stoppage Scoping & Re-Open Guards**:
+     - In [`LiveGameTrackerClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/LiveGameTrackerClient.tsx), scoped the stoppage check strictly to `s.event_type === "stoppage"` and guarded it with `hasCheckedActiveStoppageRef` to run only once on initial mount/page reload rather than on every event mutation.
+     - In [`MajorEventModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/live/MajorEventModal.tsx), strictly scoped `activeStoppage` and `handleCancelStoppage` to `s.event_type === "stoppage"`, ensuring goals, cards, and penalties can never be misidentified or deleted as stoppages.
+     - Updated `handleEndStoppageAndResume` in [`MajorEventModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/live/MajorEventModal.tsx) to execute and confirm queued pending subs safely even if no active stoppage entity is present.
+     - Added immediate feedback toasts on goal and card submissions (`toast.success`).
+  3. **Clock Stoppage Integrity in Scoreboard**:
+     - In [`BroadcastScoreboard.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/game/live/BroadcastScoreboard.tsx), updated `handleDefaultToggleClock` to end all unended stoppage windows for the active period when resuming the clock.
+  4. **Verification**:
+     - `npx tsc --noEmit` passed with 0 errors.
+     - All 26 Vitest test suites (100 tests) passed with 100% success.
+- **Modified Files**:
+  - `src/components/game/LiveGameTrackerClient.tsx`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/live/BroadcastScoreboard.tsx`
+  - `updates.md`
+
 ### [2026-10-11 10:00] Team Competition Leaf Node Scoping & Errant Tournament Root Enrollment Cleanup
 - **Type**: Bug Fix / Data Integrity / Query Architecture
 - **Summary**:

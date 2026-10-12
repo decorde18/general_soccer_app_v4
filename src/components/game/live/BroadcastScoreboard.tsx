@@ -111,11 +111,11 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
     if (!game) return;
     try {
       if (currentStage === GAME_STAGES.IN_STOPPAGE) {
-        const activeStoppage = game.gameEventsMajor?.find(
+        const activeStoppages = game.gameEventsMajor?.filter(
           (s) => s.end_time === null && s.period === game.currentPeriodIndex + 1 && s.clock_should_run === 0
-        );
-        if (activeStoppage) {
-          await endStoppage(activeStoppage.id);
+        ) || [];
+        for (const st of activeStoppages) {
+          await endStoppage(st.id);
         }
       } else if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
         if (!isLineupConfigured) {
