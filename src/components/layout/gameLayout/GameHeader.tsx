@@ -6,6 +6,7 @@ import useGameStore from "@/stores/gameStore";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { formatDateStandard, formatTimeStandard } from "@/components/ui/DateSelect";
 import LocationDetailsModal from "@/components/location/LocationDetailsModal";
+import FullscreenManager from "@/components/game/FullscreenManager";
 
 interface GameHeaderProps {
   backUrl?: string;
@@ -66,8 +67,11 @@ export default function GameHeader({ backUrl, className }: GameHeaderProps) {
             )}
           </div>
         </div>
-        <div className="bg-primary/5 text-primary text-xs font-bold px-2.5 py-1 rounded-full border border-primary/10 uppercase">
-          {game.gameType}
+        <div className="flex items-center gap-2">
+          <div className="bg-primary/5 text-primary text-xs font-bold px-2.5 py-1 rounded-full border border-primary/10 uppercase">
+            {game.gameType}
+          </div>
+          <FullscreenManager />
         </div>
       </div>
 

@@ -1,3 +1,19 @@
+### [2026-10-13 14:20] Persistent Fullscreen Mode & First-Time Onboarding in GameStats (v4 & v5)
+- **Type**: Feature & UX Enhancement
+- **Summary**:
+  1. Created `FullscreenManager` component in both `v4` and `v5`:
+     - **First-Time Modal**: Displays an onboarding modal the first time a user visits any GameStats page, offering to enter distraction-free fullscreen mode with a "Remember this preference" checkbox.
+     - **Persistent Setting**: Stores the user's choice in `localStorage` (`gamestats_fullscreen_pref`).
+     - **Universal Toggle Button**: Renders a sleek icon button (`Maximize2` / `Minimize2`) in the top utility header next to the theme switcher, supporting real-time toggling and Esc-key exits via browser `fullscreenchange` events.
+     - **One-Tap Resumption Pill**: If the user previously selected fullscreen, a floating 1-tap pill allows immediate activation (satisfying browser user-gesture security requirements).
+  2. Integrated into `src/components/layout/gameLayout/GameHeader.tsx` in `v4` and `src/app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/layout.tsx` in `v5`.
+- **Modified Files**:
+  - `general_soccer_app_v4/src/components/game/FullscreenManager.tsx`
+  - `general_soccer_app_v4/src/components/layout/gameLayout/GameHeader.tsx`
+  - `general_soccer_app_v5/src/components/game/FullscreenManager.tsx`
+  - `general_soccer_app_v5/src/app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/layout.tsx`
+
+
 # Application Update Log (`updates.md`)
 
 This log tracks code updates, features, bug fixes, and architectural adjustments made to `general_soccer_app_v4` (including automated entries recorded by AI coding sessions).
