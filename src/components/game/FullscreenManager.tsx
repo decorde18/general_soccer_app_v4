@@ -7,6 +7,9 @@ interface FullscreenManagerProps {
   className?: string;
 }
 
+// Module-level guard to ensure preference is checked strictly once per browser session
+let hasCheckedGlobalFsPref = false;
+
 export default function FullscreenManager({ className = "" }: FullscreenManagerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false);
@@ -33,23 +36,27 @@ export default function FullscreenManager({ className = "" }: FullscreenManagerP
     document.addEventListener("mozfullscreenchange", handleFullscreenChange);
     document.addEventListener("MSFullscreenChange", handleFullscreenChange);
 
-    // Initial preference check from localStorage
-    const pref = typeof window !== "undefined" ? localStorage.getItem("gamestats_fullscreen_pref") : null;
-    const isCurrentlyFs = Boolean(
-      typeof document !== "undefined" &&
-      (document.fullscreenElement ||
-       (document as any).webkitFullscreenElement ||
-       (document as any).mozFullScreenElement)
-    );
+    // Initial preference check - strictly run once per browser session across all component mounts
+    if (!hasCheckedGlobalFsPref) {
+      hasCheckedGlobalFsPref = true;
 
-    setIsFullscreen(isCurrentlyFs);
+      const pref = typeof window !== "undefined" ? localStorage.getItem("gamestats_fullscreen_pref") : null;
+      const isCurrentlyFs = Boolean(
+        typeof document !== "undefined" &&
+        (document.fullscreenElement ||
+         (document as any).webkitFullscreenElement ||
+         (document as any).mozFullScreenElement)
+      );
 
-    if (pref === null) {
-      // First time visiting gamestats -> show onboarding modal
-      setShowFirstTimeModal(true);
-    } else if (pref === "true" && !isCurrentlyFs) {
-      // User previously preferred fullscreen -> show one-tap resume banner
-      setShowResumeBanner(true);
+      setIsFullscreen(isCurrentlyFs);
+
+      if (pref === null) {
+        // First time visiting gamestats -> show onboarding modal
+        setShowFirstTimeModal(true);
+      } else if (pref === "true" && !isCurrentlyFs) {
+        // User previously preferred fullscreen -> show one-tap resume banner
+        setShowResumeBanner(true);
+      }
     }
 
     return () => {

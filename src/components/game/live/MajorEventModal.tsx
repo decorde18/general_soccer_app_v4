@@ -209,14 +209,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   }, "short") : "Opponent");
 
   // FILTERED PLAYERS FOR DROPDOWNS:
-  const onFieldPlayers = players.filter(
-    (p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk"
-  );
-  const benchPlayers = players.filter(
-    (p) => p.fieldStatus === "onBench"
-  );
   const allEligiblePlayers = players.filter(
     (p) => p.gameStatus === "starter" || p.gameStatus === "goalkeeper" || p.gameStatus === "dressed"
+  );
+  const onFieldPlayers = allEligiblePlayers.filter(
+    (p) => p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk"
+  );
+  const benchPlayers = allEligiblePlayers.filter(
+    (p) => p.fieldStatus === "onBench"
   );
 
   const currentPeriodNum = (game?.currentPeriodIndex || 0) + 1;

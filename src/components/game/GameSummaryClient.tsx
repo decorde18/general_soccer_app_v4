@@ -20,6 +20,9 @@ import {
   Zap,
   Check,
   Trophy,
+  UserX,
+  Ban,
+  Bandage,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
@@ -158,14 +161,36 @@ export default function GameSummaryClient() {
   const yellowCardsCount = game.gameEventsDiscipline?.filter((d) => (d as any).card_type === "yellow").length || 0;
   const redCardsCount = game.gameEventsDiscipline?.filter((d) => (d as any).card_type === "red" || (d as any).card_type === "yellow_red").length || 0;
 
-  // Separate Goalkeepers vs Field Players
-  const goalkeepers = players.filter(
-    (p) => p.gameStatus === "goalkeeper" || p.saves > 0 || (gkTimesMap[p.id] || 0) > 0 || p.goalkeeperTime > 0
-  );
+  // Eligible playing players (starters, goalkeepers, dressed)
+  const eligiblePlayingPlayers = useMemo(() => {
+    return players.filter(
+      (p) => p.gameStatus === "starter" || p.gameStatus === "goalkeeper" || p.gameStatus === "dressed"
+    );
+  }, [players]);
 
-  const fieldPlayers = players.filter(
-    (p) => calculateTotalTimeOnField(p, gameTimeSeconds) > 0 || p.gameStatus === "starter" || p.gameStatus === "dressed" || p.gameStatus === "goalkeeper"
-  );
+  // Separate Goalkeepers vs Field Players (strictly from eligiblePlayingPlayers)
+  const goalkeepers = useMemo(() => {
+    return eligiblePlayingPlayers.filter(
+      (p) => p.gameStatus === "goalkeeper" || p.saves > 0 || (gkTimesMap[p.id] || 0) > 0 || p.goalkeeperTime > 0
+    );
+  }, [eligiblePlayingPlayers, gkTimesMap]);
+
+  const fieldPlayers = useMemo(() => {
+    return eligiblePlayingPlayers.filter(
+      (p) => calculateTotalTimeOnField(p, gameTimeSeconds) > 0 || p.gameStatus === "starter" || p.gameStatus === "dressed" || p.gameStatus === "goalkeeper"
+    );
+  }, [eligiblePlayingPlayers, calculateTotalTimeOnField, gameTimeSeconds]);
+
+  // Non-playing roster: strictly injured, suspended, and unavailable players (not_dressed is excluded)
+  const inactivePlayers = useMemo(() => {
+    return players.filter(
+      (p) => p.gameStatus === "injured" || p.gameStatus === "suspended" || p.gameStatus === "unavailable"
+    );
+  }, [players]);
+
+  const injuredCount = useMemo(() => inactivePlayers.filter((p) => p.gameStatus === "injured").length, [inactivePlayers]);
+  const suspendedCount = useMemo(() => inactivePlayers.filter((p) => p.gameStatus === "suspended").length, [inactivePlayers]);
+  const unavailableCount = useMemo(() => inactivePlayers.filter((p) => p.gameStatus === "unavailable").length, [inactivePlayers]);
 
   // Build Player Map (Map player_game_id AND player_id to player data)
   const playerMap = useMemo(() => {
@@ -851,7 +876,7 @@ export default function GameSummaryClient() {
     }
   };
 
-  const playerSelectOptions = players.map((p) => ({
+  const playerSelectOptions = eligiblePlayingPlayers.map((p) => ({
     value: String(p.playerGameId || p.id),
     label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
   }));
@@ -1265,6 +1290,83 @@ export default function GameSummaryClient() {
               />
             </Card>
           )}
+
+          {/* INACTIVE PLAYERS CARD (INJURED, SUSPENDED, UNAVAILABLE) */}
+          <Card variant="outlined" padding="lg" className="space-y-4 bg-surface shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/70 pb-3">
+              <div className="flex items-center gap-2">
+                <UserX size={16} className="text-amber-500" />
+                <h3 className="font-extrabold text-sm text-text uppercase tracking-wider">
+                  Inactive Players ({inactivePlayers.length})
+                </h3>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] font-bold">
+                <span className="px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                  Injured: {injuredCount}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-md bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                  Suspended: {suspendedCount}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-md bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                  Unavailable: {unavailableCount}
+                </span>
+              </div>
+            </div>
+
+            {inactivePlayers.length === 0 ? (
+              <div className="py-6 text-center text-xs font-semibold text-muted bg-background/30 rounded-xl border border-dashed border-border/60">
+                No players were reported as injured, suspended, or unavailable for this match.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {inactivePlayers.map((player) => {
+                  let badgeColor = "bg-slate-500/15 text-slate-400 border-slate-500/30";
+                  let statusLabel = "Unavailable";
+                  let StatusIcon = Clock;
+
+                  if (player.gameStatus === "injured") {
+                    badgeColor = "bg-amber-500/15 text-amber-500 border-amber-500/30";
+                    statusLabel = "Injured";
+                    StatusIcon = Bandage;
+                  } else if (player.gameStatus === "suspended") {
+                    badgeColor = "bg-rose-500/15 text-rose-500 border-rose-500/30";
+                    statusLabel = "Suspended";
+                    StatusIcon = Ban;
+                  }
+
+                  return (
+                    <div
+                      key={player.id}
+                      className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-background/40 hover:bg-background/70 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="font-mono font-black text-xs text-muted w-7 text-center shrink-0">
+                          {player.jerseyNumber ? `#${player.jerseyNumber}` : "--"}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-text truncate">
+                            {player.fullName}
+                          </div>
+                          {player.position && (
+                            <div className="text-[10px] text-muted font-medium uppercase">
+                              {player.position}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shrink-0 ${badgeColor}`}
+                      >
+                        <StatusIcon size={11} />
+                        <span>{statusLabel}</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
         </div>
       )}
 

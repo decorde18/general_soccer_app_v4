@@ -32,3 +32,11 @@
 ## 7. Type Safety & Verification
 - All server actions and route handlers MUST include `NaN` guards on numeric IDs.
 - All code changes MUST pass `npx tsc --noEmit` and `npx vitest run` with zero errors.
+
+## 8. Autonomous Decision-Making & Minimal User Interruptions
+- Do NOT use `ask_question` or pause for user confirmations on routine decisions, styling/feature options, or standard implementation choices.
+- Do NOT run repeated individual terminal commands that spam user approval prompts; consolidate into single operations.
+- Bias towards action: make sensible engineering decisions autonomously using existing patterns, execute the solution, and summarize choices in the final response.
+- Only prompt the user if an action is destructive or completely blocked with zero reasonable defaults.
+
+

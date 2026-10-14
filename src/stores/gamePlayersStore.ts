@@ -124,6 +124,7 @@ interface RosterPlayerRow {
   position?: string | null;
   is_guest?: 0 | 1 | boolean;
   player_is_active?: 0 | 1;
+  player_status?: string | null;
 }
 
 /** Row shape from the `v_player_game_stats_enhanced` view */
@@ -328,18 +329,18 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const existingPlayerGames = await apiFetch<PlayerGameRow[]>(
+      const existingAllInGame = (await apiFetch<PlayerGameRow[]>(
         "v_player_games",
         "GET",
         null,
         null,
-        { filters: { game_id: gameId, team_id: teamSeasonId } },
-      );
+        { filters: { game_id: Number(gameId) } },
+      )) || [];
 
       const teamPlayers =
         (await apiFetch<RosterPlayerRow[]>("v_players", "GET", null, null, {
           filters: {
-            team_season_id: teamSeasonId,
+            team_season_id: Number(teamSeasonId),
             player_is_active: 1,
           },
         })) || [];
@@ -348,12 +349,42 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
         teamPlayers.map((player) => [player.player_id, player]),
       );
 
+      // Deduplicate and filter to rows belonging to our team season, or roster players in this match
+      const seenPlayerGameIds = new Set<number>();
+      const seenPlayerIds = new Set<number>();
+      const existingPlayerGames = existingAllInGame.filter((pg) => {
+        const pgId = Number(pg.player_game_id);
+        const pId = Number(pg.player_id);
+        if (seenPlayerGameIds.has(pgId) || seenPlayerIds.has(pId)) return false;
+
+        const matchesTeam =
+          Number(pg.team_id) === Number(teamSeasonId) ||
+          Number(pg.team_season_id) === Number(teamSeasonId) ||
+          teamPlayers.some((tp) => Number(tp.player_id) === pId);
+
+        if (matchesTeam) {
+          seenPlayerGameIds.add(pgId);
+          seenPlayerIds.add(pId);
+          return true;
+        }
+        return false;
+      });
+
       const missingPlayers = teamPlayers.filter(
-        (p) => !existingPlayerGames.some((pg) => pg.player_id === p.player_id),
+        (p) =>
+          (!p.player_status || p.player_status === "rostered") &&
+          !existingAllInGame.some((pg) => Number(pg.player_id) === Number(p.player_id)),
       );
 
+      // Only auto-create missing player_games for uncompleted / active matches
+      const currentGame = useGameStore.getState().game;
+      const isCompletedMatch =
+        currentGame?.status === "completed" ||
+        currentGame?.game_status === "completed" ||
+        currentGame?.isCompleted === true;
+
       let createdPlayers: Player[] = [];
-      if (missingPlayers.length > 0) {
+      if (missingPlayers.length > 0 && !isCompletedMatch) {
         console.log(
           `Creating ${missingPlayers.length} missing player_games for game ${gameId}...`,
         );
@@ -414,6 +445,10 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
       );
       const pendingSubs = allSubs.filter((sub) => sub.sub_time === null);
       const confirmedSubs = allSubs.filter((sub) => sub.sub_time !== null);
+
+      const hasStarters = allPlayerGames.some(
+        (pg) => pg.game_status === "starter" || pg.game_status === "goalkeeper"
+      );
 
       const players: Player[] = allPlayerGames.map((pg) => {
         const playerIns: PlayerSubEntry[] = confirmedSubs
@@ -498,7 +533,10 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
           homeAway: pg.home_away,
 
           // Game Status
-          gameStatus: pg.game_status || "dressed",
+          gameStatus:
+            isCompletedMatch && !hasStarters && pg.game_status === "dressed"
+              ? "not_dressed"
+              : (pg.game_status || (isCompletedMatch ? "not_dressed" : "dressed")),
           started: pg.started === 1,
           isGuest: pg.is_guest === 1,
 
@@ -582,11 +620,13 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
       const upsertPlayerGame = async (
         p: RosterPlayerRow,
       ): Promise<PlayerGameDbRow> => {
+        const playerId = Number(p.player_id ?? (p as any).id);
+        const pTeamSeasonId = Number(p.team_season_id ?? teamSeasonId);
         try {
           return await apiFetch<PlayerGameDbRow>("player_games", "POST", {
-            game_id: gameId,
-            player_id: p.player_id,
-            team_season_id: p.team_season_id,
+            game_id: Number(gameId),
+            player_id: playerId,
+            team_season_id: pTeamSeasonId,
             position_id: null,
             started: 0,
             game_status: "dressed",
@@ -596,17 +636,41 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
           const msg = err instanceof Error ? err.message : String(err);
           const isDuplicate =
             msg.includes("409") ||
+            msg.includes("1062") ||
             msg.toLowerCase().includes("duplicate");
           if (isDuplicate) {
-            // Row already exists — fetch it
-            const existing = await apiFetch<PlayerGameDbRow[]>(
-              "player_games",
-              "GET",
-              null,
-              null,
-              { filters: { game_id: gameId, player_id: p.player_id } },
-            );
-            if (existing && existing.length > 0) return existing[0];
+            // Row already exists — fetch it safely
+            try {
+              const existing = await apiFetch<PlayerGameDbRow[]>(
+                "player_games",
+                "GET",
+                null,
+                null,
+                { filters: { game_id: Number(gameId), player_id: playerId } },
+              );
+              if (existing && existing.length > 0) {
+                const row = existing[0];
+                return {
+                  ...row,
+                  team_id: row.team_id ?? row.team_season_id ?? pTeamSeasonId,
+                };
+              }
+            } catch (fetchErr) {
+              console.warn(`Could not fetch existing player_game row for ${playerId}:`, fetchErr);
+            }
+
+            // Fallback synthetic row so we NEVER crash the game view on duplicate
+            return {
+              id: Number(`${gameId}${playerId}`),
+              game_id: Number(gameId),
+              player_id: playerId,
+              team_id: pTeamSeasonId,
+              team_season_id: pTeamSeasonId,
+              position_id: null,
+              started: 0,
+              game_status: "dressed",
+              is_guest: p.is_guest === 1 || p.is_guest === true ? 1 : 0,
+            };
           }
           throw err;
         }
@@ -630,10 +694,10 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
           position: p.position ?? null,
 
           // Team Context
-          teamId: pg.team_id,
-          teamSeasonId: p.team_season_id,
+          teamId: pg.team_id ?? p.team_season_id ?? teamSeasonId,
+          teamSeasonId: p.team_season_id ?? teamSeasonId,
           homeAway:
-            p.team_season_id === game.home_team_season_id ? "home" : "away",
+            Number(p.team_season_id ?? teamSeasonId) === Number(game.home_team_season_id) ? "home" : "away",
 
           // Game Status
           gameStatus: "dressed",

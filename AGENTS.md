@@ -158,3 +158,20 @@ This file documents mandatory architectural rules and conventions for developers
 - **Preserve Historical Entries**:
   - Never overwrite existing log entries in `updates.md`; always prepend new entries to the log list.
 
+---
+
+## 14. Autonomous Decision-Making & Minimal User Interruptions
+
+- **Strict Ban on Unnecessary Questions & Modals**:
+  - Do NOT use the `ask_question` tool or interrupt the user with interactive modal questions, multiple-choice prompts, or confirmation checks for routine tasks, styling choices, implementation details, or minor ambiguities.
+- **Batching & Minimizing Command Approval Spam**:
+  - Do NOT run long chains of individual exploratory terminal commands (e.g. repeated `Get-Content`, `Get-ChildItem`, `Test-Path`) that trigger repetitive user approval prompts. Consolidate operations into a single script or use direct workspace tools whenever possible.
+- **Bias Towards Action & Sensible Defaults**:
+  - Always make reasonable, production-grade architectural and implementation decisions autonomously based on existing codebase conventions and the rules in this document.
+  - Plan internally and proceed immediately with execution rather than asking the user for permission or presenting menus of choices.
+- **Transparent Summary Over Upfront Interrogation**:
+  - When multiple viable paths exist, select the most robust and idiomatic approach, implement it completely, and concisely explain the rationale and any assumptions made in the final response.
+- **Strict Exception for Irrecoverable Blockers**:
+  - Only prompt the user with questions if a requested action is destructive, completely irrecoverable, or fundamentally blocked with zero reasonable defaults.
+
+

@@ -27,6 +27,8 @@ interface Player {
   status: string;
   captain: boolean;
   isActive: boolean;
+  squadLevel?: string | null;
+  squadLevels?: string[];
 }
 
 interface TeamStaffMember {
@@ -44,10 +46,45 @@ interface TeamRosterProps {
   staff?: TeamStaffMember[];
 }
 
+const normalizeStatus = (s?: string | null) =>
+  (s || "rostered").toLowerCase().replace(/_/g, " ").trim();
+
+const ROSTER_STATUS_CONFIG: Record<
+  string,
+  { label: string; badgeClass: string }
+> = {
+  rostered: {
+    label: "Rostered",
+    badgeClass: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+  },
+  "trying out": {
+    label: "Trying Out",
+    badgeClass: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30",
+  },
+  interested: {
+    label: "Interested",
+    badgeClass: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/30",
+  },
+  "not playing": {
+    label: "Not Playing",
+    badgeClass: "bg-zinc-500/15 text-zinc-700 dark:text-zinc-400 border-zinc-500/30",
+  },
+  quit: {
+    label: "Quit",
+    badgeClass: "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30",
+  },
+  cut: {
+    label: "Cut",
+    badgeClass: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30",
+  },
+};
+
 export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRosterProps) {
   const { data: session } = useSession();
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSquad, setActiveSquad] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("rostered");
   const [isPending, startTransition] = useTransition();
 
   // Dialog state for removals
@@ -60,6 +97,7 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
   const [editPosition, setEditPosition] = useState<string>("");
   const [editGrade, setEditGrade] = useState<string>("");
   const [editCaptain, setEditCaptain] = useState<boolean>(false);
+  const [editStatus, setEditStatus] = useState<string>("rostered");
 
   // Add player modal state
   const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
@@ -78,17 +116,67 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
 
   const canManage = Boolean(session?.user);
 
-  // Filter roster based on search input
+  // Extract all distinct squad levels present in the program pool
+  const availableSquads = useMemo(() => {
+    const set = new Set<string>();
+    players.forEach((p) => {
+      if (p.squadLevels && p.squadLevels.length > 0) {
+        p.squadLevels.forEach((l) => set.add(l));
+      } else if (p.squadLevel) {
+        set.add(p.squadLevel);
+      }
+    });
+    return Array.from(set).sort();
+  }, [players]);
+
+  // Count players per status across the entire roster
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      rostered: 0,
+      "trying out": 0,
+      interested: 0,
+      "not playing": 0,
+      quit: 0,
+      cut: 0,
+    };
+    players.forEach((p) => {
+      const st = normalizeStatus(p.status);
+      if (counts[st] !== undefined) {
+        counts[st]++;
+      } else {
+        counts[st] = (counts[st] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [players]);
+
+  // Filter roster based on active status filter, active squad tab, and search input
   const filteredPlayers = useMemo(() => {
     return players.filter((player) => {
+      // 1. Status Filter (default: "rostered")
+      if (statusFilter !== "all") {
+        const pStatus = normalizeStatus(player.status);
+        if (pStatus !== statusFilter) return false;
+      }
+
+      // 2. Squad Filter (Varsity, JV, etc.)
+      if (activeSquad !== "all") {
+        const hasSquad =
+          player.squadLevels?.includes(activeSquad) ||
+          player.squadLevel?.includes(activeSquad);
+        if (!hasSquad) return false;
+      }
+
+      // 3. Search Query
       const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
       const nickname = (player.nickname || "").toLowerCase();
       const pos = (player.position || "").toLowerCase();
       const query = searchQuery.toLowerCase();
-      
+
       return fullName.includes(query) || nickname.includes(query) || pos.includes(query);
     });
-  }, [players, searchQuery]);
+  }, [players, statusFilter, activeSquad, searchQuery]);
+
 
   const handleSearchPeople = async (q: string) => {
     setPersonSearch(q);
@@ -108,6 +196,7 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
         position: editPosition || null,
         grade: editGrade || null,
         captain: editCaptain,
+        status: editStatus,
       });
       setEditingPlayer(null);
     });
@@ -169,7 +258,98 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
 
   return (
     <div className="space-y-6">
-      
+      {/* 1. STATUS FILTER PILLS (DEFAULT: ROSTERED) */}
+      <div className="flex flex-wrap items-center gap-1.5 p-2 bg-surface border border-border/80 rounded-2xl shadow-sm">
+        <span className="text-xs font-bold text-muted uppercase tracking-wider px-2 hidden sm:inline">Status</span>
+        {[
+          { key: "rostered", label: "Rostered", count: statusCounts.rostered },
+          { key: "trying out", label: "Trying Out", count: statusCounts["trying out"] },
+          { key: "interested", label: "Interested", count: statusCounts.interested },
+          { key: "not playing", label: "Not Playing", count: statusCounts["not playing"] },
+          { key: "quit", label: "Quit", count: statusCounts.quit },
+          { key: "cut", label: "Cut", count: statusCounts.cut },
+          { key: "all", label: "All Statuses", count: players.length },
+        ].map(({ key, label, count }) => {
+          const isSelected = statusFilter === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setStatusFilter(key)}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                isSelected
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-muted hover:text-text hover:bg-background"
+              }`}
+            >
+              <span>{label}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                  isSelected
+                    ? "bg-white/20 text-white"
+                    : "bg-border text-muted"
+                }`}
+              >
+                {count || 0}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 2. SQUAD LEVEL FILTER TABS (PROGRAM POOL: ALL, VARSITY, JV, ETC.) */}
+      {availableSquads.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-surface border border-border/80 rounded-2xl shadow-sm">
+          <button
+            onClick={() => setActiveSquad("all")}
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              activeSquad === "all"
+                ? "bg-primary text-white shadow-sm"
+                : "text-muted hover:text-text hover:bg-background"
+            }`}
+          >
+            <span>All Program Players</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                activeSquad === "all"
+                  ? "bg-white/20 text-white"
+                  : "bg-border text-muted"
+              }`}
+            >
+              {players.length}
+            </span>
+          </button>
+
+          {availableSquads.map((squad) => {
+            const count = players.filter(
+              (p) => p.squadLevels?.includes(squad) || p.squadLevel?.includes(squad)
+            ).length;
+            const isSelected = activeSquad === squad;
+            return (
+              <button
+                key={squad}
+                onClick={() => setActiveSquad(squad)}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  isSelected
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted hover:text-text hover:bg-background"
+                }`}
+              >
+                <span>{squad}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                    isSelected
+                      ? "bg-white/20 text-white"
+                      : "bg-border text-muted"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* FILTER & TOGGLE & ADD CONTROLS */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-surface border border-border/80 p-4 rounded-2xl shadow-sm">
         
@@ -294,6 +474,7 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                         setEditPosition(player.position || "");
                         setEditGrade(player.grade || "");
                         setEditCaptain(player.captain);
+                        setEditStatus(normalizeStatus(player.status));
                       }}
                       className="p-1.5 rounded-lg bg-background/80 hover:bg-primary hover:text-white text-text border border-border shadow-sm transition-all"
                       title="Edit Player"
@@ -305,6 +486,13 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                     <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full shadow-sm">
                       <Star size={10} className="fill-amber-500 text-amber-500" />
                       <span>Captain</span>
+                    </span>
+                  )}
+                  {(normalizeStatus(player.status) !== "rostered" || statusFilter === "all") && (
+                    <span className={`inline-flex items-center text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border shadow-sm ${
+                      ROSTER_STATUS_CONFIG[normalizeStatus(player.status)]?.badgeClass || "bg-zinc-500/10 text-muted border-border"
+                    }`}>
+                      {ROSTER_STATUS_CONFIG[normalizeStatus(player.status)]?.label || player.status}
                     </span>
                   )}
                 </div>
@@ -328,6 +516,11 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                   </h3>
                   
                   <div className="flex flex-wrap gap-1.5 mt-2">
+                    {player.squadLevel && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">
+                        {player.squadLevel}
+                      </span>
+                    )}
                     {player.position && (
                       <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded">
                         {player.position}
@@ -353,6 +546,8 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
               <tr className="border-b border-border bg-background/50 text-[10px] font-bold uppercase tracking-wider text-muted leading-tight">
                 <th className="py-2 px-3 w-14 text-center">Jersey</th>
                 <th className="py-2 px-3">Name</th>
+                <th className="py-2 px-3">Squad</th>
+                <th className="py-2 px-3">Status</th>
                 <th className="py-2 px-3">Position</th>
                 <th className="py-2 px-3">Class/Grade</th>
                 <th className="py-2 px-3 w-28 text-center">Roles / Action</th>
@@ -382,6 +577,18 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                       )}
                     </div>
                   </td>
+                  <td className="py-2 px-3">
+                    <span className="inline-block text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">
+                      {player.squadLevel || "--"}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3">
+                    <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                      ROSTER_STATUS_CONFIG[normalizeStatus(player.status)]?.badgeClass || "bg-zinc-500/10 text-muted border-border"
+                    }`}>
+                      {ROSTER_STATUS_CONFIG[normalizeStatus(player.status)]?.label || player.status || "Rostered"}
+                    </span>
+                  </td>
                   <td className="py-2 px-3 text-xs text-text/80 font-medium">
                     {player.position || "--"}
                   </td>
@@ -404,6 +611,7 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                             setEditPosition(player.position || "");
                             setEditGrade(player.grade || "");
                             setEditCaptain(player.captain);
+                            setEditStatus(normalizeStatus(player.status));
                           }}
                           className="p-1 text-muted hover:text-primary rounded-lg transition-colors"
                           title="Edit Roster Entry"
@@ -429,6 +637,22 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
             </h3>
 
             <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-muted uppercase">Player Status</label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 text-sm bg-background border border-border rounded-xl focus:outline-none focus:border-primary text-text font-medium"
+                >
+                  <option value="rostered">Rostered (Active on team)</option>
+                  <option value="trying out">Trying Out</option>
+                  <option value="interested">Interested</option>
+                  <option value="not playing">Not Playing</option>
+                  <option value="quit">Quit</option>
+                  <option value="cut">Cut</option>
+                </select>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-muted uppercase">Jersey Number</label>
                 <input

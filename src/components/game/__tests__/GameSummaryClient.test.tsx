@@ -1,0 +1,286 @@
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import GameSummaryClient from "../GameSummaryClient";
+import useGameStore from "@/stores/gameStore";
+import useGamePlayersStore from "@/stores/gamePlayersStore";
+
+// Mock next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
+describe("GameSummaryClient", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      game: {
+        id: 1,
+        game_id: 1,
+        homeTeamName: "Our Club",
+        awayTeamName: "Opponent FC",
+        isHome: true,
+        status: "completed",
+        currentPeriodIndex: 1,
+        score: { us: 2, opp: 1 },
+        gameEventsGoals: [],
+        gameEventsDiscipline: [],
+        periods: [
+          { periodNumber: 1, period_number: 1, startTime: 0, endTime: 2400000 },
+          { periodNumber: 2, period_number: 2, startTime: 2400000, endTime: 4800000 },
+        ],
+        settings: {
+          periodDuration: 2400,
+        },
+      } as any,
+    });
+  });
+
+  it("excludes not_dressed players from box score and renders injured, suspended, and unavailable players in the dedicated Inactive Players card", () => {
+    useGamePlayersStore.setState({
+      players: [
+        {
+          id: 101,
+          playerGameId: 1001,
+          firstName: "Active",
+          lastName: "Starter",
+          fullName: "Active Starter",
+          nickname: null,
+          jerseyNumber: "10",
+          position: "FWD",
+          gameStatus: "starter",
+          fieldStatus: "onField",
+          started: true,
+          isGuest: false,
+          ins: [],
+          outs: [],
+          subStatus: null,
+          goals: 1,
+          penaltyGoals: 0,
+          assists: 0,
+          shots: 3,
+          shotsOnTarget: 2,
+          saves: 0,
+          goalsAgainst: 0,
+          penaltiesFaced: 0,
+          penaltySaves: 0,
+          cleanSheet: 0,
+          yellowCards: 0,
+          redCards: 0,
+          foulsCommitted: 0,
+          foulsDrawn: 0,
+          goalkeeperTime: 0,
+          plusMinus: 1,
+          teamId: 1,
+          teamSeasonId: 1,
+          homeAway: "home",
+        },
+        {
+          id: 102,
+          playerGameId: 1002,
+          firstName: "Dressed",
+          lastName: "Bench",
+          fullName: "Dressed Bench",
+          nickname: null,
+          jerseyNumber: "14",
+          position: "MID",
+          gameStatus: "dressed",
+          fieldStatus: "onBench",
+          started: false,
+          isGuest: false,
+          ins: [],
+          outs: [],
+          subStatus: null,
+          goals: 0,
+          penaltyGoals: 0,
+          assists: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          saves: 0,
+          goalsAgainst: 0,
+          penaltiesFaced: 0,
+          penaltySaves: 0,
+          cleanSheet: 0,
+          yellowCards: 0,
+          redCards: 0,
+          foulsCommitted: 0,
+          foulsDrawn: 0,
+          goalkeeperTime: 0,
+          plusMinus: 0,
+          teamId: 1,
+          teamSeasonId: 1,
+          homeAway: "home",
+        },
+        {
+          id: 103,
+          playerGameId: 1003,
+          firstName: "NotDressed",
+          lastName: "Player",
+          fullName: "NotDressed Player",
+          nickname: null,
+          jerseyNumber: "22",
+          position: "DEF",
+          gameStatus: "not_dressed",
+          fieldStatus: "onBench",
+          started: false,
+          isGuest: false,
+          ins: [],
+          outs: [],
+          subStatus: null,
+          goals: 0,
+          penaltyGoals: 0,
+          assists: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          saves: 0,
+          goalsAgainst: 0,
+          penaltiesFaced: 0,
+          penaltySaves: 0,
+          cleanSheet: 0,
+          yellowCards: 0,
+          redCards: 0,
+          foulsCommitted: 0,
+          foulsDrawn: 0,
+          goalkeeperTime: 0,
+          plusMinus: 0,
+          teamId: 1,
+          teamSeasonId: 1,
+          homeAway: "home",
+        },
+        {
+          id: 104,
+          playerGameId: 1004,
+          firstName: "Injured",
+          lastName: "Star",
+          fullName: "Injured Star",
+          nickname: null,
+          jerseyNumber: "7",
+          position: "FWD",
+          gameStatus: "injured",
+          fieldStatus: "onBench",
+          started: false,
+          isGuest: false,
+          ins: [],
+          outs: [],
+          subStatus: null,
+          goals: 0,
+          penaltyGoals: 0,
+          assists: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          saves: 0,
+          goalsAgainst: 0,
+          penaltiesFaced: 0,
+          penaltySaves: 0,
+          cleanSheet: 0,
+          yellowCards: 0,
+          redCards: 0,
+          foulsCommitted: 0,
+          foulsDrawn: 0,
+          goalkeeperTime: 0,
+          plusMinus: 0,
+          teamId: 1,
+          teamSeasonId: 1,
+          homeAway: "home",
+        },
+        {
+          id: 105,
+          playerGameId: 1005,
+          firstName: "Suspended",
+          lastName: "Defender",
+          fullName: "Suspended Defender",
+          nickname: null,
+          jerseyNumber: "4",
+          position: "DEF",
+          gameStatus: "suspended",
+          fieldStatus: "onBench",
+          started: false,
+          isGuest: false,
+          ins: [],
+          outs: [],
+          subStatus: null,
+          goals: 0,
+          penaltyGoals: 0,
+          assists: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          saves: 0,
+          goalsAgainst: 0,
+          penaltiesFaced: 0,
+          penaltySaves: 0,
+          cleanSheet: 0,
+          yellowCards: 0,
+          redCards: 0,
+          foulsCommitted: 0,
+          foulsDrawn: 0,
+          goalkeeperTime: 0,
+          plusMinus: 0,
+          teamId: 1,
+          teamSeasonId: 1,
+          homeAway: "home",
+        },
+        {
+          id: 106,
+          playerGameId: 1006,
+          firstName: "Unavailable",
+          lastName: "Midfielder",
+          fullName: "Unavailable Midfielder",
+          nickname: null,
+          jerseyNumber: "8",
+          position: "MID",
+          gameStatus: "unavailable",
+          fieldStatus: "onBench",
+          started: false,
+          isGuest: false,
+          ins: [],
+          outs: [],
+          subStatus: null,
+          goals: 0,
+          penaltyGoals: 0,
+          assists: 0,
+          shots: 0,
+          shotsOnTarget: 0,
+          saves: 0,
+          goalsAgainst: 0,
+          penaltiesFaced: 0,
+          penaltySaves: 0,
+          cleanSheet: 0,
+          yellowCards: 0,
+          redCards: 0,
+          foulsCommitted: 0,
+          foulsDrawn: 0,
+          goalkeeperTime: 0,
+          plusMinus: 0,
+          teamId: 1,
+          teamSeasonId: 1,
+          homeAway: "home",
+        },
+      ] as any,
+    });
+
+    render(<GameSummaryClient />);
+
+    // Active & Dressed players appear in field box score
+    expect(screen.getByText("Active Starter")).toBeInTheDocument();
+    expect(screen.getByText("Dressed Bench")).toBeInTheDocument();
+
+    // not_dressed player should NEVER show up anywhere on the summary
+    expect(screen.queryByText("NotDressed Player")).toBeNull();
+
+    // Inactive Players box header
+    expect(screen.getByText(/Inactive Players/i)).toBeInTheDocument();
+    expect(screen.getByText("Injured: 1")).toBeInTheDocument();
+    expect(screen.getByText("Suspended: 1")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable: 1")).toBeInTheDocument();
+
+    // Inactive players listed with status badges
+    expect(screen.getByText("Injured Star")).toBeInTheDocument();
+    expect(screen.getByText("Suspended Defender")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable Midfielder")).toBeInTheDocument();
+    expect(screen.getByText("Injured")).toBeInTheDocument();
+    expect(screen.getByText("Suspended")).toBeInTheDocument();
+    expect(screen.getByText("Unavailable")).toBeInTheDocument();
+  });
+});

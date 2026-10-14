@@ -885,7 +885,9 @@ exports.player_teams_status = exports.$Enums.player_teams_status = {
   interested: 'interested',
   rostered: 'rostered',
   trying_out: 'trying_out',
-  not_playing: 'not_playing'
+  not_playing: 'not_playing',
+  quit: 'quit',
+  cut: 'cut'
 };
 
 exports.seasons_status = exports.$Enums.seasons_status = {

@@ -59,7 +59,9 @@ export default function BenchReservesPanel(props: BenchReservesPanelProps) {
   );
   const storeGameChangers = eligiblePlayers.filter((p) => p.fieldStatus === "onBench");
 
-  const gameChangers = props.gameChangers ?? storeGameChangers;
+  const gameChangers = (props.gameChangers ?? storeGameChangers).filter(
+    (p) => p.gameStatus === "starter" || p.gameStatus === "goalkeeper" || p.gameStatus === "dressed"
+  );
 
   const defaultGetPlayerStats = (player: Player) => {
     const pgIdStr = String(player.playerGameId || "");

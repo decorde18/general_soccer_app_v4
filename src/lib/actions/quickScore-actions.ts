@@ -214,12 +214,12 @@ export async function getGameRostersForQuickScore(gameId: number): Promise<GameR
 
   const [homePlayers, awayPlayers] = await Promise.all([
     prisma.player_teams.findMany({
-      where: { team_season_id: game.home_team_season_id, is_active: true },
+      where: { team_season_id: game.home_team_season_id, is_active: true, status: "rostered" },
       include: { people: true },
       orderBy: [{ jersey_number: "asc" }, { people: { last_name: "asc" } }],
     }),
     prisma.player_teams.findMany({
-      where: { team_season_id: game.away_team_season_id, is_active: true },
+      where: { team_season_id: game.away_team_season_id, is_active: true, status: "rostered" },
       include: { people: true },
       orderBy: [{ jersey_number: "asc" }, { people: { last_name: "asc" } }],
     }),

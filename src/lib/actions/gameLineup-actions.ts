@@ -13,66 +13,168 @@ export interface LineupPlayer {
   jerseyNumber: number | null;
   gameStatus: "goalkeeper" | "starter" | "dressed" | "not_dressed" | "injured" | "suspended" | "unavailable";
   isGuest: boolean;
+  squadLevel?: string | null;
 }
 
 export async function loadGameLineup(gameId: number, teamSeasonId: number): Promise<LineupPlayer[]> {
-  // 1. Fetch team season roster (active player_teams records with people)
-  const roster = await prisma.player_teams.findMany({
-    where: {
-      team_season_id: teamSeasonId,
-      is_active: true,
-    },
+  // 1. Fetch current team season to identify program pool (club, season, gender)
+  const currentTs = await prisma.team_seasons.findUnique({
+    where: { id: teamSeasonId },
     include: {
-      people: true,
+      teams: true,
     },
   });
 
-  // 2. Fetch existing player_games records for this match and team season
-  const playerGames = await prisma.player_games.findMany({
+  let siblingTeamSeasonIds = [teamSeasonId];
+  if (currentTs?.teams?.club_id && currentTs?.season_id) {
+    const siblings = await prisma.team_seasons.findMany({
+      where: {
+        season_id: currentTs.season_id,
+        is_active: true,
+        teams: {
+          club_id: currentTs.teams.club_id,
+          gender: currentTs.teams.gender,
+        },
+      },
+      select: { id: true },
+    });
+    siblingTeamSeasonIds = siblings.map((s) => s.id);
+  }
+
+  // 2. Fetch all active player_teams records across the program pool
+  const rosterRecords = await prisma.player_teams.findMany({
     where: {
-      game_id: gameId,
-      team_season_id: teamSeasonId,
+      team_season_id: { in: siblingTeamSeasonIds },
+      is_active: true,
+      status: "rostered",
+    },
+    include: {
+      people: true,
+      team_seasons: {
+        include: {
+          teams: true,
+        },
+      },
     },
   });
+
+  // Group by person ID
+  const personRosterMap = new Map<number, {
+    primaryRecord?: typeof rosterRecords[0];
+    fallbackRecord: typeof rosterRecords[0];
+    squadLevels: string[];
+  }>();
+
+function extractSquadLevel(teamName: string): string {
+  const t = teamName.toLowerCase();
+  if (t.includes("freshman") || t.includes("frosh")) return "Freshman";
+  if (t.includes("blue")) return "JV Blue";
+  if (t.includes("gold")) return "JV Gold";
+  if (t.includes("varsity")) return "Varsity";
+  if (t.includes("jv")) return "JV";
+  if (t.includes("dc")) return "DC";
+  if (t.includes("lm")) return "LM";
+  if (t.includes("premier")) return "Premier";
+  if (t.includes("elite")) return "Elite";
+  return teamName;
+}
+
+  for (const pt of rosterRecords) {
+    const existing = personRosterMap.get(pt.player_id);
+    const teamName = pt.team_seasons?.teams?.team_name || "Team";
+    const squadName = extractSquadLevel(teamName);
+    if (!existing) {
+      personRosterMap.set(pt.player_id, {
+        primaryRecord: pt.team_season_id === teamSeasonId ? pt : undefined,
+        fallbackRecord: pt,
+        squadLevels: [squadName],
+      });
+    } else {
+      if (pt.team_season_id === teamSeasonId) {
+        existing.primaryRecord = pt;
+      }
+      if (!existing.squadLevels.includes(squadName)) {
+        existing.squadLevels.push(squadName);
+      }
+    }
+  }
+
+  // 3. Fetch existing player_games records for this match across the program pool
+  const [playerGames, gameRecord] = await Promise.all([
+    prisma.player_games.findMany({
+      where: {
+        game_id: gameId,
+        team_season_id: { in: siblingTeamSeasonIds },
+      },
+    }),
+    prisma.games.findUnique({
+      where: { id: gameId },
+      select: { status: true },
+    }),
+  ]);
+
+  const isCompletedGame = gameRecord?.status === "completed";
 
   // Create a map of existing player status by player_id
   const playerGamesMap = new Map(
     playerGames.map((pg) => [pg.player_id, { gameStatus: pg.game_status, isGuest: !!pg.is_guest }])
   );
 
-  // 3. Merge roster and player_games
-  const mergedPlayers: LineupPlayer[] = roster.map((pt) => {
-    const existing = playerGamesMap.get(pt.player_id);
-    return {
-      id: pt.player_id,
-      playerTeamId: pt.id,
-      fullName: `${pt.people.first_name} ${pt.people.last_name}`,
-      firstName: pt.people.first_name,
-      lastName: pt.people.last_name,
-      jerseyNumber: pt.jersey_number,
-      gameStatus: (existing?.gameStatus as any) || "dressed", // default to dressed (bench)
-      isGuest: existing?.isGuest ?? false,
-    };
-  });
+  // Check if this match had confirmed starters recorded historically
+  const hasRecordedStarters = playerGames.some(
+    (pg) => pg.game_status === "starter" || pg.game_status === "goalkeeper"
+  );
 
-  // If there are guests in player_games that are NOT in the regular roster, include them!
-  const rosterPlayerIds = new Set(roster.map((pt) => pt.player_id));
-  const guestPlayerGames = playerGames.filter((pg) => !rosterPlayerIds.has(pg.player_id));
+  // 4. Merge program roster and player_games
+  const mergedPlayers: LineupPlayer[] = [];
+
+  for (const [personId, entry] of personRosterMap.entries()) {
+    const isPrimary = Boolean(entry.primaryRecord);
+    const chosenRecord = entry.primaryRecord || entry.fallbackRecord;
+    const existing = playerGamesMap.get(personId);
+
+    let status: string;
+    if (isCompletedGame) {
+      if (!hasRecordedStarters) {
+        // Completed match with NO starters recorded -> unconfirmed historical match.
+        // Do not falsely dress entire rosters. Only honor explicitly non-playing statuses,
+        // otherwise default to not_dressed.
+        if (existing?.gameStatus === "injured" || existing?.gameStatus === "unavailable" || existing?.gameStatus === "suspended") {
+          status = existing.gameStatus;
+        } else {
+          status = "not_dressed";
+        }
+      } else {
+        // Completed match with confirmed starters -> trust existing status, or default to not_dressed
+        status = existing?.gameStatus || "not_dressed";
+      }
+    } else {
+      // Upcoming or live game: primary squad defaults to dressed, secondary squad to not_dressed
+      const defaultStatus = isPrimary ? "dressed" : "not_dressed";
+      status = existing?.gameStatus || defaultStatus;
+    }
+
+    mergedPlayers.push({
+      id: personId,
+      playerTeamId: chosenRecord.id,
+      fullName: `${chosenRecord.people.first_name} ${chosenRecord.people.last_name}`,
+      firstName: chosenRecord.people.first_name,
+      lastName: chosenRecord.people.last_name,
+      jerseyNumber: chosenRecord.jersey_number,
+      gameStatus: status as any,
+      isGuest: existing?.isGuest ?? false,
+      squadLevel: entry.squadLevels.join(" & "),
+    });
+  }
+
+  // 5. If there are guests in player_games that are NOT in the program pool, include them!
+  const poolPersonIds = new Set(personRosterMap.keys());
+  const guestPlayerGames = playerGames.filter((pg) => !poolPersonIds.has(pg.player_id) && pg.is_guest);
 
   if (guestPlayerGames.length > 0) {
     const guestPeople = await prisma.people.findMany({
       where: {
         id: { in: guestPlayerGames.map((pg) => pg.player_id) },
-      },
-      include: {
-        player_teams: {
-          where: {
-            team_season_id: teamSeasonId,
-          },
-          select: {
-            jersey_number: true,
-          },
-        },
       },
     });
 
@@ -81,16 +183,16 @@ export async function loadGameLineup(gameId: number, teamSeasonId: number): Prom
     guestPlayerGames.forEach((pg) => {
       const person = guestPeopleMap.get(pg.player_id);
       if (person) {
-        const jerseyNum = person.player_teams?.[0]?.jersey_number ?? null;
         mergedPlayers.push({
           id: pg.player_id,
           playerTeamId: 0,
           fullName: `${person.first_name} ${person.last_name}`,
           firstName: person.first_name,
           lastName: person.last_name,
-          jerseyNumber: jerseyNum,
+          jerseyNumber: null,
           gameStatus: pg.game_status as any,
           isGuest: true,
+          squadLevel: "Guest",
         });
       }
     });

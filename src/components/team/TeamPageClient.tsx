@@ -60,6 +60,8 @@ interface Player {
   status: string;
   captain: boolean;
   isActive: boolean;
+  squadLevel?: string | null;
+  squadLevels?: string[];
 }
 
 interface TeamStaffMember {
@@ -82,6 +84,7 @@ interface TeamSeason {
   ageGroup: string | number | null;
   ageGroupName?: string | null;
   isActive: boolean;
+  gender?: string | null;
 }
 
 interface TeamPageClientProps {
@@ -104,6 +107,7 @@ interface TeamPageClientProps {
   groups?: any[];
   pairings?: any[];
   unavailabilities?: any[];
+  programTeamSeasonIds?: number[];
 }
 
 export default function TeamPageClient({
@@ -121,6 +125,7 @@ export default function TeamPageClient({
   groups = [],
   pairings = [],
   unavailabilities = [],
+  programTeamSeasonIds = [],
 }: TeamPageClientProps) {
   type TabType =
     | "overview"
@@ -262,7 +267,11 @@ export default function TeamPageClient({
         )}
 
         {activeTab === "schedule" && (
-          <TeamSchedule teamSeasonId={teamSeason.id} games={games} />
+          <TeamSchedule
+            teamSeasonId={teamSeason.id}
+            games={games}
+            programTeamSeasonIds={programTeamSeasonIds}
+          />
         )}
 
         {activeTab === "stats" && (

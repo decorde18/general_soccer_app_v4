@@ -175,6 +175,7 @@ export interface TeamSeason {
   ageGroupName: string | null;
   isActive: boolean;
   clubType?: string | null;
+  gender?: string | null;
 }
 
 export interface LeagueNode {
@@ -283,6 +284,8 @@ export interface Player {
   photoUrl?: string | null;
   photoStatus?: string | null;
   photoRejectionReason?: string | null;
+  squadLevel?: string | null;
+  squadLevels?: string[];
 }
 
 export interface TeamStaffMember {
@@ -757,16 +760,65 @@ export async function getTeamSeasonById(
     ageGroupName: teamSeason.age_groups?.name ?? null,
     isActive: !!teamSeason.is_active,
     clubType: teamSeason.teams.clubs.type,
+    gender: teamSeason.teams.gender,
   };
 }
 
 // ─── Players (roster) ─────────────────────────────────────────────────────────
 
+export function extractSquadLevel(teamName: string): string {
+  const t = (teamName || "").toLowerCase();
+  if (t.includes("navy")) return "JV Navy";
+  if (t.includes("gold")) return "JV Gold";
+  if (t.includes("varsity")) return "Varsity";
+  if (t.includes("jv")) return "JV";
+  if (t.includes("dc")) return "DC";
+  if (t.includes("lm")) return "LM";
+  if (t.includes("premier")) return "Premier";
+  if (t.includes("elite")) return "Elite";
+  return teamName;
+}
+
 export async function getPlayersByTeamSeason(
   teamSeasonId: number,
+  options?: { includeProgramPool?: boolean }
 ): Promise<Player[]> {
+  const includePool = options?.includeProgramPool !== false;
+  let targetTsIds = [teamSeasonId];
+
+  if (includePool) {
+    try {
+      const currentTs = await prisma.team_seasons.findUnique({
+        where: { id: teamSeasonId },
+        include: {
+          teams: true,
+        },
+      });
+
+      if (currentTs) {
+        const sisterTeamSeasons = await prisma.team_seasons.findMany({
+          where: {
+            season_id: currentTs.season_id,
+            teams: {
+              club_id: currentTs.teams.club_id,
+              gender: currentTs.teams.gender,
+              ...(currentTs.age_group ? { age_group: currentTs.age_group } : {}),
+            },
+          },
+          select: { id: true },
+        });
+
+        if (sisterTeamSeasons.length > 0) {
+          targetTsIds = sisterTeamSeasons.map((ts) => ts.id);
+        }
+      }
+    } catch (e) {
+      console.error("Error resolving program pool team seasons:", e);
+    }
+  }
+
   const playersData = await prisma.player_teams.findMany({
-    where: { team_season_id: teamSeasonId },
+    where: { team_season_id: { in: targetTsIds } },
     include: {
       people: true,
       team_seasons: {
@@ -782,8 +834,43 @@ export async function getPlayersByTeamSeason(
       { people: { first_name: "asc" } },
     ],
   });
-  return playersData.map(mapPlayerRow);
+
+  const personMap = new Map<number, { primary: any; squadLevels: Set<string> }>();
+
+  for (const r of playersData) {
+    const pId = r.player_id;
+    const squad = extractSquadLevel(r.team_seasons?.teams?.team_name || "");
+
+    if (!personMap.has(pId)) {
+      personMap.set(pId, {
+        primary: r,
+        squadLevels: new Set([squad]),
+      });
+    } else {
+      const entry = personMap.get(pId)!;
+      entry.squadLevels.add(squad);
+      if (r.team_season_id === teamSeasonId) {
+        entry.primary = r;
+      }
+    }
+  }
+
+  const result: Player[] = [];
+  for (const { primary, squadLevels } of personMap.values()) {
+    const player = mapPlayerRow(primary);
+    const levelsArr = Array.from(squadLevels);
+    player.squadLevels = levelsArr;
+    player.squadLevel = levelsArr.join(" & ");
+    result.push(player);
+  }
+
+  return result.sort((a, b) => {
+    const lastCompare = (a.lastName || "").localeCompare(b.lastName || "");
+    if (lastCompare !== 0) return lastCompare;
+    return (a.firstName || "").localeCompare(b.firstName || "");
+  });
 }
+
 
 export async function getPlayersByPerson(personId: number): Promise<Player[]> {
   const playersData = await prisma.player_teams.findMany({
@@ -931,6 +1018,7 @@ export async function getClubStaff(clubId: number): Promise<ClubStaffMember[]> {
 export async function getGames(filters?: {
   seasonId?: number;
   teamSeasonId?: number;
+  teamSeasonIds?: number[];
   leagueId?: number;
   status?: GameStatus;
   gameType?: GameType;
@@ -939,7 +1027,12 @@ export async function getGames(filters?: {
   const gamesData = await prisma.games.findMany({
     where: {
       season_id: filters?.seasonId ? filters.seasonId : undefined,
-      OR: filters?.teamSeasonId
+      OR: filters?.teamSeasonIds && filters.teamSeasonIds.length > 0
+        ? [
+            { home_team_season_id: { in: filters.teamSeasonIds } },
+            { away_team_season_id: { in: filters.teamSeasonIds } },
+          ]
+        : filters?.teamSeasonId
         ? [
             { home_team_season_id: filters.teamSeasonId },
             { away_team_season_id: filters.teamSeasonId },
@@ -1238,7 +1331,11 @@ export async function getPlayerStatsByTeamSeason(
   teamSeasonId: number,
 ): Promise<PlayerSeasonStats[]> {
   const roster = await prisma.player_teams.findMany({
-    where: { team_season_id: teamSeasonId },
+    where: {
+      team_season_id: teamSeasonId,
+      status: "rostered",
+      is_active: true,
+    },
     include: {
       people: true,
       team_seasons: {
@@ -1254,7 +1351,10 @@ export async function getPlayerStatsByPerson(
   personId: number,
 ): Promise<PlayerSeasonStats[]> {
   const roster = await prisma.player_teams.findMany({
-    where: { player_id: personId },
+    where: {
+      player_id: personId,
+      status: "rostered",
+    },
     include: {
       people: true,
       team_seasons: {

@@ -1,4 +1,5 @@
 import React from "react";
+import prisma from "@/lib/prisma";
 import {
   getTeamSeasonById,
   getPlayersByTeamSeason,
@@ -94,6 +95,30 @@ export default async function TeamPage({ params }: PageProps) {
       );
     }
 
+    // Resolve sister squads in the program pool (sharing club, season, gender)
+    let programTsIds = [idNumber];
+    if (teamSeason?.clubId && teamSeason?.seasonId) {
+      try {
+        const sisters = await prisma.team_seasons.findMany({
+          where: {
+            season_id: teamSeason.seasonId,
+            is_active: true,
+            teams: {
+              club_id: teamSeason.clubId,
+              gender: teamSeason.gender as any,
+              ...(teamSeason.ageGroup ? { age_group: teamSeason.ageGroup } : {}),
+            },
+          },
+          select: { id: true },
+        });
+        if (sisters.length > 0) {
+          programTsIds = sisters.map((s) => s.id);
+        }
+      } catch (e) {
+        console.error("Error resolving program team seasons:", e);
+      }
+    }
+
     // Fetch rest of data in parallel
     const [
       players,
@@ -112,7 +137,7 @@ export default async function TeamPage({ params }: PageProps) {
     ] = await Promise.all([
       getPlayersByTeamSeason(idNumber),
       getTeamStaff(idNumber),
-      getGames({ teamSeasonId: idNumber }),
+      getGames({ teamSeasonIds: programTsIds }),
       getPlayerStatsByTeamSeason(idNumber),
       getTeamSeasonRecords(undefined, idNumber),
       getLeaguesForTeamSeason(idNumber),
@@ -212,6 +237,7 @@ export default async function TeamPage({ params }: PageProps) {
           groups={groups || []}
           pairings={pairings || []}
           unavailabilities={unavailabilities || []}
+          programTeamSeasonIds={programTsIds}
         />
       </main>
     );

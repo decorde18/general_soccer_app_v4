@@ -428,7 +428,9 @@ export const player_teams_status: {
   interested: 'interested',
   rostered: 'rostered',
   trying_out: 'trying_out',
-  not_playing: 'not_playing'
+  not_playing: 'not_playing',
+  quit: 'quit',
+  cut: 'cut'
 };
 
 export type player_teams_status = (typeof player_teams_status)[keyof typeof player_teams_status]

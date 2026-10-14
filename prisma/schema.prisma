@@ -795,6 +795,8 @@ enum player_teams_status {
   rostered
   trying_out  @map("trying out")
   not_playing @map("not playing")
+  quit
+  cut
 }
 
 enum teams_gender {

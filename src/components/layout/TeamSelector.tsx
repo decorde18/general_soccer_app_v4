@@ -30,6 +30,33 @@ const PROGRAM_TYPE_OPTIONS = [
   { value: "high_school", label: "High School" },
 ];
 
+export function getProgramLevelTeamName(teamName: string, clubType?: string | null): string {
+  if (!teamName) return "";
+  const lower = teamName.toLowerCase();
+
+  if (
+    clubType === "high_school" ||
+    lower.includes("high school") ||
+    lower.includes("varsity") ||
+    lower.includes("jv")
+  ) {
+    if (lower.includes("girl")) return "Girls Soccer";
+    if (lower.includes("boy")) return "Boys Soccer";
+    if (lower.includes("coed")) return "Coed Soccer";
+    return teamName
+      .replace(/\b(varsity|junior varsity|jv|freshman|gold|navy)\b/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  // Club teams: strip sub-squad suffix like DC, LM, Premier, Elite, etc.
+  return teamName
+    .replace(/\s*[-–/]\s*(dc|lm|gold|navy|blue|red|white|premier|elite)\b/gi, "")
+    .replace(/\b(dc|lm|gold|navy|blue|red|white|premier|elite)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function TeamSelector({
   type,
   onContextChange,
@@ -212,7 +239,7 @@ function TeamSelector({
   });
 
   // Filter team options based on selected Program Type, Season, and/or Club
-  const filteredTeams = teamSeasons.filter((ts) => {
+  const rawFilteredTeams = teamSeasons.filter((ts) => {
     const matchType =
       !selectedClubType ||
       (selectedClubType === "high_school" && ts.clubType === "high_school") ||
@@ -222,8 +249,51 @@ function TeamSelector({
     return matchType && matchSeason && matchClub;
   });
 
-  const isTeamInFiltered = filteredTeams.some((t) => String(t.id) === String(selectedTeamSeasonId));
-  const activeTeamValue = isTeamInFiltered ? selectedTeamSeasonId : "";
+  interface ProgramGroup {
+    primaryId: number;
+    memberIds: number[];
+    displayName: string;
+    seasonName: string;
+  }
+
+  const programOptions = React.useMemo(() => {
+    const groups = new Map<string, ProgramGroup>();
+
+    rawFilteredTeams.forEach((ts) => {
+      const progName = getProgramLevelTeamName(ts.teamName, ts.clubType);
+      const groupKey = `${ts.clubId}_${ts.seasonId}_${progName}`;
+
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, {
+          primaryId: ts.id,
+          memberIds: [ts.id],
+          displayName: progName,
+          seasonName: ts.seasonName,
+        });
+      } else {
+        const grp = groups.get(groupKey)!;
+        grp.memberIds.push(ts.id);
+        const isVarsity =
+          ts.teamName.toLowerCase().includes("varsity") &&
+          !ts.teamName.toLowerCase().includes("jv");
+        if (isVarsity) {
+          grp.primaryId = ts.id;
+        }
+      }
+    });
+
+    return Array.from(groups.values()).sort((a, b) =>
+      a.displayName.localeCompare(b.displayName)
+    );
+  }, [rawFilteredTeams]);
+
+  // Determine active dropdown value: check if current selectedTeamSeasonId is in any program's memberIds
+  const activeProgram = programOptions.find((p) =>
+    selectedTeamSeasonId
+      ? p.memberIds.includes(Number(selectedTeamSeasonId))
+      : false
+  );
+  const activeTeamValue = activeProgram ? String(activeProgram.primaryId) : "";
 
   if (loading) {
     return (
@@ -277,12 +347,12 @@ function TeamSelector({
         showPlaceholder={false}
       />
 
-      {/* 4. Team Dropdown */}
+      {/* 4. Program Dropdown (Collapsed from sub-squads) */}
       <Select
-        placeholder="Choose Team..."
-        options={filteredTeams.map((t) => ({
-          value: String(t.id),
-          label: `${t.teamName} (${t.seasonName})`,
+        placeholder="Choose Program..."
+        options={programOptions.map((p) => ({
+          value: String(p.primaryId),
+          label: selectedSeasonId ? p.displayName : `${p.displayName} (${p.seasonName})`,
         }))}
         value={activeTeamValue}
         onChange={handleTeamChange}

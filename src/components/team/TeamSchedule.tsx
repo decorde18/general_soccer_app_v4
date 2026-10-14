@@ -41,6 +41,7 @@ interface Game {
 interface TeamScheduleProps {
   teamSeasonId: number;
   games: Game[];
+  programTeamSeasonIds?: number[];
 }
 
 import LocationLink from "@/components/shared/LocationLink";
@@ -58,8 +59,43 @@ function isPastGameDate(dateStr: string) {
   return gameDate.getTime() < today.getTime();
 }
 
-export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps) {
+function getGameSquad(
+  game: Game,
+  programTeamSeasonIds: number[],
+  currentTeamSeasonId: number
+): string {
+  const isHome =
+    programTeamSeasonIds.includes(game.homeTeamSeasonId) ||
+    game.homeTeamSeasonId === currentTeamSeasonId;
+  const isAway =
+    programTeamSeasonIds.includes(game.awayTeamSeasonId) ||
+    game.awayTeamSeasonId === currentTeamSeasonId;
+
+  const ourTeamName = isHome
+    ? game.homeTeamName
+    : isAway
+    ? game.awayTeamName
+    : game.homeTeamName || game.awayTeamName;
+
+  const t = (ourTeamName || "").toLowerCase();
+  if (t.includes("navy")) return "JV Navy";
+  if (t.includes("gold")) return "JV Gold";
+  if (t.includes("varsity")) return "Varsity";
+  if (t.includes("jv")) return "JV";
+  if (t.includes("dc")) return "DC";
+  if (t.includes("lm")) return "LM";
+  if (t.includes("premier")) return "Premier";
+  if (t.includes("elite")) return "Elite";
+  return "Varsity";
+}
+
+export default function TeamSchedule({
+  teamSeasonId,
+  games,
+  programTeamSeasonIds = [],
+}: TeamScheduleProps) {
   const { data: session } = useSession();
+  const [activeSquad, setActiveSquad] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "fixtures" | "results">("all");
   const [venueFilter, setVenueFilter] = useState<"all" | "home" | "away">("all");
   const [quickScoreGame, setQuickScoreGame] = useState<Game | null>(null);
@@ -70,9 +106,29 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
   const canManage = Boolean(session?.user);
 
+  // Extract all distinct squad levels present in the matches
+  const availableSquads = useMemo(() => {
+    const set = new Set<string>();
+    games.forEach((g) => {
+      const sq = getGameSquad(g, programTeamSeasonIds, teamSeasonId);
+      if (sq) set.add(sq);
+    });
+    return Array.from(set).sort((a, b) => {
+      if (a === "Varsity") return -1;
+      if (b === "Varsity") return 1;
+      return a.localeCompare(b);
+    });
+  }, [games, programTeamSeasonIds, teamSeasonId]);
+
   // Sort and filter games
   const processedGames = useMemo(() => {
     let list = [...games];
+
+    if (activeSquad !== "all") {
+      list = list.filter(
+        (g) => getGameSquad(g, programTeamSeasonIds, teamSeasonId) === activeSquad
+      );
+    }
 
     if (statusFilter === "fixtures") {
       list = list.filter((g) => g.status !== "completed");
@@ -96,7 +152,7 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
     });
 
     return list;
-  }, [games, statusFilter, venueFilter, teamSeasonId]);
+  }, [games, activeSquad, statusFilter, venueFilter, programTeamSeasonIds, teamSeasonId]);
 
   const targetGameRef = useRef<HTMLDivElement | null>(null);
 
@@ -126,7 +182,60 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
 
   return (
     <div className="space-y-6">
-      
+      {/* SQUAD LEVEL FILTER TABS (Varsity, JV, etc.) */}
+      {availableSquads.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-surface border border-border/80 rounded-2xl shadow-sm">
+          <button
+            onClick={() => setActiveSquad("all")}
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              activeSquad === "all"
+                ? "bg-primary text-white shadow-sm"
+                : "text-muted hover:text-text hover:bg-background"
+            }`}
+          >
+            <span>All Program Matches</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                activeSquad === "all"
+                  ? "bg-white/20 text-white"
+                  : "bg-border text-muted"
+              }`}
+            >
+              {games.length}
+            </span>
+          </button>
+
+          {availableSquads.map((squad) => {
+            const count = games.filter(
+              (g) => getGameSquad(g, programTeamSeasonIds, teamSeasonId) === squad
+            ).length;
+            const isSelected = activeSquad === squad;
+            return (
+              <button
+                key={squad}
+                onClick={() => setActiveSquad(squad)}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  isSelected
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted hover:text-text hover:bg-background"
+                }`}
+              >
+                <span>{squad}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                    isSelected
+                      ? "bg-white/20 text-white"
+                      : "bg-border text-muted"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* FILTER BUTTONS & CONTROLS */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-surface border border-border/80 p-4 rounded-2xl shadow-sm">
         
@@ -268,6 +377,8 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
               }
             }
 
+            const gameSquad = getGameSquad(game, programTeamSeasonIds, teamSeasonId);
+
             return (
               <React.Fragment key={game.id}>
                 {isTargetClosest && (
@@ -291,6 +402,9 @@ export default function TeamSchedule({ teamSeasonId, games }: TeamScheduleProps)
                     {/* Game Meta & Matchup */}
                     <div className="flex-1 min-w-0 space-y-3.5">
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted font-semibold">
+                        <span className="inline-flex items-center text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded shadow-2xs">
+                          {gameSquad}
+                        </span>
                         <span className="text-primary">{game.seasonName}</span>
                         <span>•</span>
                         <span className="capitalize">{game.gameType} Match</span>

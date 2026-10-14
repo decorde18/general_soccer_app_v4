@@ -1,3 +1,243 @@
+### [2026-10-14 14:45] Lineup Page Mount Loop Elimination, FullscreenManager State Guard & Completed Match Lineup Integrity
+- **Type**: Bug Fix / Stability & Data Integrity
+- **Summary**:
+  1. **Infinite Re-render Loop & Mount Depth Resolution (`FullscreenManager.tsx`, `GameProvider.tsx`, `GameLineupClientPage.tsx`)**:
+     - Identified that `GameProvider`'s loading check `if (!game || players.length === 0)` unmounted and remounted the entire page whenever `players` was modified or empty, causing a cyclic re-mount loop with `GameLineupClientPage` and `FullscreenManager`.
+     - Replaced the brittle `players.length === 0` unmount trigger in `GameProvider` with an explicit `isDataLoading` state guard, preventing sudden component tree tears and remount cascades.
+     - Added a module-level session guard `hasCheckedGlobalFsPref` in `FullscreenManager.tsx` ensuring preference checks and `setShowResumeBanner(true)` are strictly executed once across the entire browser session rather than triggering on rapid remounts.
+     - Updated `GameLineupClientPage` to merge `initialPlayers` with existing store players without stripping `playerGameId` or resetting player stats.
+  2. **Completed Matches Without Starters Safeguard (`gameLineup-actions.ts`, `gamePlayersStore.ts`)**:
+     - Identified that games like 1472, 1456, 1457, 1458, etc., which were completed matches where no individual lineup was ever fielded (0 starters and 0 goalkeepers), had entire program rosters (V and JV/V) auto-marked as `dressed`.
+     - Added `hasRecordedStarters` guard in `loadGameLineup` and `loadPlayers`: for completed matches where 0 starters exist in match records, players are never falsely dressed and default to `not_dressed` (Available) while preserving explicit non-playing statuses (`injured`, `unavailable`, `suspended`).
+  3. **MySQL Connection Pool Optimization (`.env`)**:
+     - Added `connection_limit=5&pool_timeout=20` to `DATABASE_URL` in `.env` to enforce strict connection reuse and prevent exceeding the 500 connections/hour host limit.
+  4. **Quality Verification**:
+     - Passed `npx tsc --noEmit` with 0 errors.
+     - Passed `npx vitest run` with 105/105 tests passing across 28 test files.
+
+### [2026-10-14 14:12] FullscreenManager Re-render Loop Fix, Box Score Duplicate Elimination & Completed Match Roster Integrity
+- **Type**: Bug Fix / UX & Data Integrity
+- **Summary**:
+  1. **FullscreenManager Maximum Update Depth Fix (`FullscreenManager.tsx`)**:
+     - Added `initialCheckDone` ref guard to guarantee preference checks and `setShowResumeBanner` are only executed once per component lifecycle.
+     - Prevented repeated `setShowResumeBanner(true)` invocations from triggering infinite update cycles (`Maximum update depth exceeded`) during route transitions and component mounts.
+  2. **GameProvider Redirection & Subroute Preservation (`GameProvider.tsx`)**:
+     - Added `hasRedirectedRef` to guard bracket resolved team redirection, ensuring it only fires once.
+     - Preserved active subroutes (e.g. `/lineup`, `/manage`, `/live`, `/summary`) when resolving tournament bracket placeholders.
+  3. **Elimination of Duplicate Players on Box Score (`v_player_games`, `updateVPlayerGames.ts`, `gamePlayersStore.ts`)**:
+     - Identified that `pt_prog` subquery in `v_player_games` returned multiple rows for hybrid players active on multiple squads within the same club and season (e.g. JV + Varsity), causing players to appear multiple times in the box score.
+     - Added `GROUP BY pt2.player_id, ts2.season_id, t2.club_id` with `MAX()` aggregations to the `pt_prog` subquery in MySQL view `v_player_games`, guaranteeing exactly one row per player.
+     - Added client-side deduplication in `loadPlayers` (`gamePlayersStore.ts`) by `player_game_id` and `player_id`.
+  4. **Completed Match Roster Integrity & Inactive Players Verification (`gamePlayersStore.ts`, `gameLineup-actions.ts`)**:
+     - Guarded `loadPlayers` so it strictly avoids auto-inserting missing roster players as `dressed` on completed matches (`!isCompletedMatch`).
+     - Updated `loadGameLineup` so that for completed games, unrecorded roster players default to `not_dressed` instead of `dressed`.
+     - Cleaned up 22 spurious `dressed` rows accidentally auto-created on game 1388, restoring the match to its pristine historical roster (1 GK, 10 starters, 8 dressed reserves, 7 injured players, 13 not dressed).
+     - Verified games with recorded injured/unavailable players (such as games 1200–1217 in 2014-15 and game 1388) accurately display all injured players in the dedicated "Inactive Players" card on Game Summary.
+  5. **Verification**:
+     - Passed `npx tsc --noEmit` with 0 errors.
+     - Passed `npx vitest run` with 105/105 tests passing across 28 test files.
+- **Modified Files**:
+  - `src/components/game/FullscreenManager.tsx`
+  - `src/components/game/GameProvider.tsx`
+  - `src/app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/lineup/GameLineupClientPage.tsx`
+  - `src/stores/gamePlayersStore.ts`
+  - `src/lib/actions/gameLineup-actions.ts`
+  - `src/scripts/updateVPlayerGames.ts`
+  - `updates.md`
+
+### [2026-10-14 13:45] Fix Duplicate Entry 1062 on player_games & Resilient Cross-Squad Match Loading
+- **Type**: Bug Fix / Data Integrity & Resilience
+- **Summary**:
+  1. **Cross-Squad Program Roster Join in `v_player_games` (`updateVPlayerGames.ts`)**:
+     - Updated MySQL `v_player_games` view to join both direct team season player affiliations (`pt_direct`) and program-level sister squad affiliations (`pt_prog`, matching club, season, and active status).
+     - Fixed issue where players rostered on sister squads (e.g. JV players dressing for Varsity matches, or hybrid players) were omitted from `v_player_games` because `pt.team_season_id = ts.id` was null, leading downstream checks to falsely treat them as uninitialized.
+  2. **Game-Scoped Existing Check & Number Normalization (`gamePlayersStore.ts`)**:
+     - Updated `loadPlayers` to query all match participants via `{ filters: { game_id: Number(gameId) } }`, ensuring `existingAllInGame` encompasses all players currently associated with the game regardless of squad id.
+     - Scoped `existingPlayerGames` to the current team season while preserving hybrid and sister-squad program players already attached to the match.
+     - Normalized `Number(pg.player_id) === Number(p.player_id)` comparisons to prevent string/number type mismatches from marking existing players as missing.
+  3. **Graceful 1062/409 Duplicate Handling in `upsertPlayerGame` (`gamePlayersStore.ts`)**:
+     - Hardened `upsertPlayerGame` to catch `409`, `1062`, and `"duplicate"` errors.
+     - Upon duplicate detection, safely queries and returns the already-persisted `player_games` row.
+     - Provides a fallback synthetic row so unexpected race conditions or edge cases never trigger unhandled exceptions or crash the `GameProvider` / match tracker page.
+  4. **Quality Verification**:
+     - Passed `npx tsc --noEmit` with 0 errors.
+     - Passed `npx vitest run` with 105/105 tests passing across 28 test files.
+- **Modified Files**:
+  - `src/stores/gamePlayersStore.ts`
+  - `src/scripts/updateVPlayerGames.ts`
+  - `updates.md`
+
+### [2026-10-14 13:08] Sidebar Parent Team Selection, Not-Dressed Player Exclusion & Game Summary Inactive Players Card
+- **Type**: Feature / UX & Data Integrity Enhancement
+- **Summary**:
+  1. **Sidebar Selector Parent Program Grouping (`SidebarTeamSelector.tsx`, `TeamSelector.tsx`)**:
+     - Exported and integrated `getProgramLevelTeamName` to collapse squad variants (e.g. `JV`, `Varsity`) into parent programs (e.g. `Girls Soccer`, `Boys Soccer`).
+     - Restricted selection to parent programs only, redirecting to the primary Varsity team ID.
+     - Automatically displays single-program programs cleanly without sub-squad tags.
+  2. **Strict Exclusion of `not_dressed` Players Post-Lineup**:
+     - Excluded `not_dressed` players from match tracking views (`BenchReservesPanel.tsx`, `MajorEventModal.tsx`, `GameManageClient.tsx`).
+     - Prevented `not_dressed`, `injured`, `suspended`, or `unavailable` players from appearing in bench reserves, on-field lists, sub pickers, or manual event modal options.
+  3. **Dedicated Inactive Players Card on Game Summary (`GameSummaryClient.tsx`)**:
+     - Filtered `fieldPlayers` and `goalkeepers` box score tables to strictly include eligible playing players (`starter`, `goalkeeper`, `dressed`).
+     - Excluded `not_dressed` players from appearing anywhere in the match summary.
+     - Added a dedicated "Inactive Players" card highlighting `Injured`, `Suspended`, and `Unavailable` players with distinct badges, counters, and player detail chips.
+  4. **Automated Testing & Verification**:
+     - Created `SidebarTeamSelector.test.tsx` verifying parent program collapsing and primary ID selection.
+     - Created `GameSummaryClient.test.tsx` verifying `not_dressed` exclusion and inactive player rendering.
+     - Verified `npx tsc --noEmit` (0 errors) and `npx vitest run` (105/105 tests passing across 28 test files).
+- **Modified Files**:
+  - `src/components/layout/TeamSelector.tsx`
+  - `src/components/layout/SidebarTeamSelector.tsx`
+  - `src/components/layout/__tests__/SidebarTeamSelector.test.tsx`
+  - `src/components/game/live/BenchReservesPanel.tsx`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/GameManageClient.tsx`
+  - `src/components/game/GameSummaryClient.tsx`
+  - `src/components/game/__tests__/GameSummaryClient.test.tsx`
+  - `updates.md`
+
+### [2026-10-14 12:25] Enforced Rostered Status Across Lineups, Game Stats & Live Tracking
+- **Type**: Feature / Data Integrity Refactor
+- **Summary**:
+  1. **Game Lineup Builder & Match Availability (`gameLineup-actions.ts`)**:
+     - Restricted `loadGameLineup` to strictly load `status: "rostered"` players across the program pool.
+     - Prevented players with tryout, interested, cut, quit, or not playing statuses from populating into game lineups or match rosters.
+     - Scoped guest fallback to explicit `pg.is_guest: true` records only.
+  2. **Database View Enforcement (`v_players` & `v_player_games`)**:
+     - Updated MySQL `v_players` view with `WHERE pt.status = 'rostered' AND pt.is_active = 1` to guarantee all downstream consumers receive active rostered members.
+     - Updated MySQL `v_player_games` view with `WHERE (pt.status = 'rostered' OR pg.is_guest = 1)` and added `roster_status`.
+  3. **Live Tracking & Game Store Guarding (`gamePlayersStore.ts`)**:
+     - Added `player_status` tracking in `RosterPlayerRow` and ensured `missingPlayers` roster sync only initializes players with `status === "rostered"`.
+  4. **Player Stats & Quick Score Scoping (`queries.ts`, `quickScore-actions.ts`)**:
+     - Filtered `getPlayerStatsByTeamSeason` and `getPlayerStatsByPerson` to active rostered players only.
+     - Filtered quick score match roster options to `status: "rostered"` players.
+  5. **Quality Verification**:
+     - Verified `npx tsc --noEmit` (0 errors).
+     - Verified `npx vitest run` (101/101 tests passing).
+- **Modified Files**:
+  - `src/lib/actions/gameLineup-actions.ts`
+  - `src/lib/actions/quickScore-actions.ts`
+  - `src/lib/data/queries.ts`
+  - `src/stores/gamePlayersStore.ts`
+  - `updates.md`
+
+### [2026-10-14 12:05] Reverted Breaking Prisma 7 Upgrade & Restored Prisma 5.22.0
+- **Type**: Bug Fix / Configuration Recovery
+- **Summary**:
+  1. **Restored Prisma 5.22.0 & Resolved P1012 Validation Error**:
+     - `npm audit fix --force` had forcefully upgraded Prisma to 7.10.0, introducing breaking schema changes where `url` was removed from `schema.prisma`.
+     - Reverted `@prisma/client` and `prisma` to `^5.22.0` and removed `prisma.config.ts`.
+     - Regenerated Prisma Client v5.22.0 and verified database sync with `npx prisma db push`.
+  2. **Restored Vitest Test Dependencies**:
+     - Re-added `vite` and `@testing-library/dom` peer dependencies removed during npm audit pruning.
+     - Verified `npx tsc --noEmit` (0 errors) and `npx vitest run` (101/101 tests passing).
+- **Modified Files**:
+  - `package.json`
+  - `updates.md`
+
+### [2026-10-14 11:50] Program-Level Selector Grouping, Schedule Sub-Squad Tabs, and Player Status Filtering
+- **Type**: Feature / UX Refactor
+- **Summary**:
+  1. **Top-Level Program Selection in Navigation Selectors (`TeamSelector.tsx`)**:
+     - Collapsed sub-squads (`Varsity`, `JV`, `DC`, `LM`, `Gold`, `Navy`) into top-level program options (e.g., `Girls Soccer`, `Boys Soccer`, or base age group program).
+     - Individual sub-squad variants are no longer shown in navigation dropdowns; each program maps to its primary squad ID (prioritizing Varsity).
+     - Maintains active selection state when visiting any sister squad sub-page.
+  2. **Sub-Squad Schedule Tabs & Match Badging (`TeamSchedule.tsx`)**:
+     - Added interactive sub-squad filter tabs (`[All Program Matches]`, `[Varsity]`, `[JV]`, etc.) with match counts to the team schedule view.
+     - Extracted squad levels for games using `programTeamSeasonIds` and rendered a prominent squad badge (`[Varsity]`, `[JV]`) on each match card.
+     - Closest match auto-scrolling and filtering dynamically adapt to the selected squad tab.
+  3. **Player Statuses & Dedicated Roster Filtering (`TeamRoster.tsx`, `roster-actions.ts`)**:
+     - Supported all legacy and modern player statuses: `Rostered`, `Trying Out`, `Interested`, `Not Playing`, `Quit`, and `Cut`.
+     - Added a dedicated Status Filter Bar above the roster with live counts per status.
+     - Set default status filter to `rostered` so only active squad members display upon loading, preventing clutter from tryout, cut, or inactive registrants.
+     - Added status badges in both grid cards and table rows, and added a Player Status dropdown in the Edit Player Modal.
+  4. **Quality & Test Verification**:
+     - Verified `npx tsc --noEmit` compiles cleanly with zero errors.
+     - Verified all 26 test suites and 101 tests pass cleanly (`npx vitest run`).
+- **Modified Files**:
+  - `src/components/layout/TeamSelector.tsx`
+  - `src/components/team/TeamSchedule.tsx`
+  - `src/components/team/TeamRoster.tsx`
+  - `src/components/team/TeamPageClient.tsx`
+  - `src/lib/data/queries.ts`
+  - `src/lib/actions/roster-actions.ts`
+  - `updates.md`
+
+### [2026-10-14 10:35] Unified Program Roster Pool & Complete Historical Match Events & Subs Migration (Steps 3 & 4)
+- **Type**: Feature / Data Migration / UI Refactor
+- **Summary**:
+  1. **Unified Program Roster Pool Architecture**:
+     - **Backend Program Resolution (`queries.ts`)**: Enhanced `getPlayersByTeamSeason()` to automatically resolve all sister team seasons sharing club, season, and gender (`includeProgramPool: true`). Hybrid players rostered on both squads (e.g. Varsity and JV) are deduplicated with composite squad levels (`squadLevels: ['Varsity', 'JV']`, `squadLevel: 'Varsity & JV'`).
+     - **UI Sub-Squad Tabs & Badges (`TeamRoster.tsx`, `TeamPageClient.tsx`)**: Rendered interactive squad pills above the roster (`[All Program Players (N)]`, `[Varsity (N)]`, `[JV (N)]`), added squad badges on player cards, and added a dedicated "Squad" column in the table view.
+     - **Game Day Roster & Lineup Integration (`gameLineup-actions.ts`)**: Updated `loadGameLineup()` to load all program pool players for match day prep. Primary squad players default to `"dressed"` while secondary squad players default to `"not_dressed"` (with `isGuest: false`), allowing coaches to dress or start any player in the program on the fly without using guest player hacks.
+  2. **Robust SQL Tuple Parser & Games Completion**:
+     - Solved a critical parsing issue where semicolons inside legacy comment/details strings prematurely truncated SQL INSERT blocks.
+     - Upgraded `migrate_independence_games.ts` with `parseSqlTuplesRobust`, completing 100% of legacy games (total games in DB now 927; player games at 12,390).
+  3. **Complete Major Events, Goals, Cards & Subs Migration (`migrate_events_and_subs.ts`)**:
+     - **Major Events (`game_events_major`)**: Bulk migrated all 1,352 legacy stoppages, bringing DB total to 1,862.
+     - **Goals (`game_events_goals`)**: Bulk migrated 1,155 goals (776 goals for, 379 goals against) with normalized JSON `goal_types` (`open_play`, `corner_kick`, `penalty`, `header`, `volley`, `direct_free_kick`), bringing DB total to 1,460.
+     - **Cards & Discipline (`game_events_discipline`)**: Bulk migrated 31 cards, bringing DB total to 72.
+     - **Substitutions (`game_subs`)**: Bulk migrated all 6,004 historical substitutions with exact player match mapping, bringing DB total to 13,244.
+  4. **Quality & Test Verification**:
+     - Verified clean TypeScript compilation (`npx tsc --noEmit` exited with 0 errors).
+     - Verified all 26 test suites and 101 tests passing (`npx vitest run`).
+- **Modified Files**:
+  - `src/lib/data/queries.ts`
+  - `src/components/team/TeamPageClient.tsx`
+  - `src/components/team/TeamRoster.tsx`
+  - `src/lib/actions/gameLineup-actions.ts`
+  - `scripts/migrate_independence_games.ts`
+  - `scripts/migrate_events_and_subs.ts`
+  - `updates.md`
+
+### [2026-10-13 16:55] Seasonal Team Rosters Migration (`playerSeasons` → `player_teams`)
+- **Type**: Feature / Data Migration
+- **Summary**:
+  1. **Historical Team Rosters Imported**:
+     - Identified that while game match appearances (`player_games`) were migrated, the seasonal team rosters (`player_teams`) had not yet been populated from legacy `playerSeasons`.
+     - Migrated all 1,195 legacy `playerSeasons` records into 1,314 `player_teams` seasonal roster entries across all 22 seasons for Independence High School Girls squads (`Varsity Girls`, `JV Girls`, `JV Navy Girls`, `JV Gold Girls`).
+     - Preserved all jersey numbers, alt/GK numbers, positions, grades, captain status, and enrollment attributes.
+  2. **Resolved Missing 2014-2015 Season Rosters**:
+     - **Varsity Girls (2014-2015)**: Populated all 24 rostered players with jersey numbers and positions alongside staff.
+     - **JV Girls (2014-2015)**: Populated all 15 rostered players.
+     - Total `player_teams` in the database increased from 122 to 1,436.
+- **Modified Files**:
+  - `scripts/migrate_player_teams.ts`
+  - `updates.md`
+
+### [2026-10-13 16:25] Bulk Migration of Historical Games, Periods & Rosters (Steps 1 & 2)
+- **Type**: Feature / Data Migration
+- **Summary**:
+  1. **Legacy Independence High School Girls Match Import**:
+     - Audited and imported all historical matches from `u676616277_hs_original.sql` across 22 seasons into `games`.
+     - Automatically resolved and created missing high school opponent clubs, girls teams (`Varsity Girls`, `JV Girls`), and team seasons.
+     - Preserved universal UTC date/time formatting via `parseGameDatesAndTimesUTC` without timezone drift.
+  2. **Periods (`game_periods`)**:
+     - Created 790 game periods with UTC epoch millisecond start/end timestamps.
+  3. **Roster Match Appearances (`player_games`)**:
+     - Bulk inserted 8,696+ roster records mapping legacy players to new database people and assigning roles (`starter`, `goalkeeper`, `dressed`, `injured`, `unavailable`).
+     - Total `player_games` in DB now stands at 12,060.
+  4. **Time & Stoppage Analysis for Step 3**:
+     - Verified that legacy `stoppages.begin` and `subs.gameMinute` represent active scoreboard seconds and strictly **exclude** halftime / inter-period breaks, perfectly matching the app's dual-clock active play calculation standard.
+- **Modified Files**:
+  - `scripts/migrate_independence_games.ts`
+  - `updates.md`
+
+### [2026-10-13 14:28] Autonomous Agent Execution & Interruption Suppression Standard (v4 & v5)
+- **Type**: Configuration / Agent Governance Rules
+- **Summary**:
+  - Enforced autonomous agent decision-making across `general_soccer_app_v4` (`AGENTS.md` Rule 14 and `.agents/rules/app-rules.md` Rule 8) and `general_soccer_app_v5` (`AGENTS.md` Rule 7 and `.agents/rules/autonomous-execution.md`).
+  - Explicitly banned unnecessary use of interactive question modals (`ask_question`), routine confirmation dialogues, and multiple-choice interrogations.
+  - Mandated terminal command batching: banned executing long chains of individual exploratory terminal commands (`Get-Content`, `Get-ChildItem`, etc.) that trigger repetitive user confirmation prompts.
+  - Mandated bias-towards-action: agents must make sensible defaults autonomously based on established repository patterns, complete the task, and summarize rationale after the fact, asking only on strictly irrecoverable/destructive blockers.
+- **Modified Files**:
+  - `general_soccer_app_v4/AGENTS.md`
+  - `general_soccer_app_v4/.agents/rules/app-rules.md`
+  - `general_soccer_app_v5/AGENTS.md`
+  - `general_soccer_app_v5/.agents/rules/autonomous-execution.md`
+  - `general_soccer_app_v5/updates.md`
+
+
 ### [2026-10-13 14:20] Persistent Fullscreen Mode & First-Time Onboarding in GameStats (v4 & v5)
 - **Type**: Feature & UX Enhancement
 - **Summary**:

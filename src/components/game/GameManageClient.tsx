@@ -639,7 +639,10 @@ export default function GameManageClient() {
   };
 
   // Select list options helpers
-  const playerOptions = players.map((p) => ({
+  const eligiblePlayers = players.filter(
+    (p) => p.gameStatus === "starter" || p.gameStatus === "goalkeeper" || p.gameStatus === "dressed"
+  );
+  const playerOptions = eligiblePlayers.map((p) => ({
     value: String(p.playerGameId),
     label: `#${p.jerseyNumber || "?"} ${p.fullName}`,
   }));

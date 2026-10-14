@@ -88,6 +88,7 @@ export async function updateRosterPlayer(
     grade?: string | null;
     captain?: boolean;
     isActive?: boolean;
+    status?: string | null;
   }
 ) {
   await requireSession();
@@ -108,6 +109,7 @@ export async function updateRosterPlayer(
       grade: data.grade !== undefined ? data.grade : pt.grade,
       captain: data.captain !== undefined ? data.captain : pt.captain,
       is_active: data.isActive !== undefined ? data.isActive : pt.is_active,
+      status: data.status !== undefined ? (data.status as any) : pt.status,
     },
   });
 

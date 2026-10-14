@@ -1,7 +1,7 @@
 // app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/GameProvider.tsx
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
@@ -30,6 +30,8 @@ export default function GameProvider({ children }: GameProviderProps) {
 
   const [initError, setInitError] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const hasRedirectedRef = useRef(false);
 
   // STEP 1: Wait for hydration, then check auth & permissions (with offline fallback)
   useEffect(() => {
@@ -94,17 +96,27 @@ export default function GameProvider({ children }: GameProviderProps) {
         // Check if game's teams have changed (e.g. bracket placeholder resolved to real team)
         const latestGame = useGameStore.getState().game;
         const numTeamSeasonId = Number(teamSeasonId);
+        const homeTs = Number(latestGame?.home_team_season_id ?? (latestGame as any)?.homeTeamSeasonId);
+        const awayTs = Number(latestGame?.away_team_season_id ?? (latestGame as any)?.awayTeamSeasonId);
 
         if (
           latestGame &&
-          latestGame.homeTeamSeasonId &&
-          latestGame.awayTeamSeasonId &&
-          numTeamSeasonId !== latestGame.homeTeamSeasonId &&
-          numTeamSeasonId !== latestGame.awayTeamSeasonId
+          homeTs &&
+          awayTs &&
+          numTeamSeasonId !== homeTs &&
+          numTeamSeasonId !== awayTs
         ) {
-          console.log(`Bracket team resolved. Redirecting to active team season #${latestGame.homeTeamSeasonId}...`);
-          router.replace(`/gamestats/${latestGame.homeTeamSeasonId}/${id}`);
-          await loadPlayers(id, String(latestGame.homeTeamSeasonId));
+          if (!hasRedirectedRef.current) {
+            hasRedirectedRef.current = true;
+            console.log(`Bracket team resolved. Redirecting to active team season #${homeTs}...`);
+            const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+            const subPath = currentPath.includes(`/${id}/`) ? currentPath.split(`/${id}/`)[1] : "";
+            const targetUrl = subPath
+              ? `/gamestats/${homeTs}/${id}/${subPath}`
+              : `/gamestats/${homeTs}/${id}`;
+            router.replace(targetUrl);
+            await loadPlayers(id, String(homeTs));
+          }
         } else {
           // Load players for this game and team
           await loadPlayers(id, teamSeasonId);
@@ -129,6 +141,8 @@ export default function GameProvider({ children }: GameProviderProps) {
         }
 
         setInitError(error instanceof Error ? error.message : "Something went wrong loading this game.");
+      } finally {
+        setIsDataLoading(false);
       }
     };
 
@@ -137,14 +151,14 @@ export default function GameProvider({ children }: GameProviderProps) {
 
   // STEP 3: Final cache fallback rehydration in useEffect (Hook declared at top level)
   useEffect(() => {
-    if ((!game || players.length === 0) && id) {
+    if (!game && id) {
       const cached = loadGameCache(id);
       if (cached?.game && cached?.players) {
         useGameStore.setState({ game: cached.game, isLoading: false });
         useGamePlayersStore.setState({ players: cached.players, isLoading: false });
       }
     }
-  }, [game, players?.length, id]);
+  }, [game, id]);
 
   // Waiting for hydration or auth check
   if (status === "loading" || !authChecked) {
@@ -164,7 +178,7 @@ export default function GameProvider({ children }: GameProviderProps) {
   }
 
   // Loading game data
-  if (!game || players.length === 0) {
+  if (isDataLoading && !game) {
     return <FullScreenLoader message="Loading game data..." />;
   }
 

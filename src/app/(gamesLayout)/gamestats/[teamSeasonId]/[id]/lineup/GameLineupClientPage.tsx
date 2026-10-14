@@ -21,43 +21,63 @@ export default function GameLineupClientPage({
   const gameId = params.id as string;
   const setPlayers = useGamePlayersStore((s) => s.setPlayers);
 
+  const hasInitialized = React.useRef(false);
+
   useEffect(() => {
-    const mappedPlayers: Player[] = initialPlayers.map((lp) => ({
-      id: lp.id,
-      playerGameId: 0,
-      firstName: lp.firstName,
-      lastName: lp.lastName,
-      fullName: lp.fullName,
-      nickname: null,
-      jerseyNumber: lp.jerseyNumber,
-      position: null,
-      teamId: 0,
-      teamSeasonId: teamSeasonId,
-      homeAway: "home",
-      gameStatus: lp.gameStatus as any,
-      fieldStatus: (lp.gameStatus === "starter" || lp.gameStatus === "goalkeeper") ? "onField" : "onBench",
-      started: lp.gameStatus === "starter" || lp.gameStatus === "goalkeeper",
-      isGuest: lp.isGuest,
-      ins: [],
-      outs: [],
-      subStatus: null,
-      goals: 0,
-      penaltyGoals: 0,
-      assists: 0,
-      shots: 0,
-      shotsOnTarget: 0,
-      saves: 0,
-      goalsAgainst: 0,
-      penaltiesFaced: 0,
-      penaltySaves: 0,
-      cleanSheet: 0,
-      yellowCards: 0,
-      redCards: 0,
-      foulsCommitted: 0,
-      foulsDrawn: 0,
-      goalkeeperTime: 0,
-      plusMinus: 0,
-    }));
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    const currentStorePlayers = useGamePlayersStore.getState().players;
+    const storePlayerMap = new Map(currentStorePlayers.map((p) => [Number(p.id), p]));
+
+    const mappedPlayers: Player[] = initialPlayers.map((lp) => {
+      const existing = storePlayerMap.get(Number(lp.id));
+      if (existing) {
+        return {
+          ...existing,
+          gameStatus: lp.gameStatus as any,
+          fieldStatus: (lp.gameStatus === "starter" || lp.gameStatus === "goalkeeper") ? "onField" : "onBench",
+          started: lp.gameStatus === "starter" || lp.gameStatus === "goalkeeper",
+          isGuest: lp.isGuest,
+        };
+      }
+      return {
+        id: lp.id,
+        playerGameId: 0,
+        firstName: lp.firstName,
+        lastName: lp.lastName,
+        fullName: lp.fullName,
+        nickname: null,
+        jerseyNumber: lp.jerseyNumber,
+        position: null,
+        teamId: 0,
+        teamSeasonId: teamSeasonId,
+        homeAway: "home",
+        gameStatus: lp.gameStatus as any,
+        fieldStatus: (lp.gameStatus === "starter" || lp.gameStatus === "goalkeeper") ? "onField" : "onBench",
+        started: lp.gameStatus === "starter" || lp.gameStatus === "goalkeeper",
+        isGuest: lp.isGuest,
+        ins: [],
+        outs: [],
+        subStatus: null,
+        goals: 0,
+        penaltyGoals: 0,
+        assists: 0,
+        shots: 0,
+        shotsOnTarget: 0,
+        saves: 0,
+        goalsAgainst: 0,
+        penaltiesFaced: 0,
+        penaltySaves: 0,
+        cleanSheet: 0,
+        yellowCards: 0,
+        redCards: 0,
+        foulsCommitted: 0,
+        foulsDrawn: 0,
+        goalkeeperTime: 0,
+        plusMinus: 0,
+      };
+    });
     setPlayers(mappedPlayers);
   }, [initialPlayers, teamSeasonId, setPlayers]);
 
