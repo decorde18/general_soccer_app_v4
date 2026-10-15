@@ -910,12 +910,48 @@ const useGameStore = create<GameStoreState>((set, get) => {
       const game = get().game;
       if (!game) return;
 
+      const nowMs = Date.now();
+      const updatedPeriods = [...game.periods];
+      const currentPeriod = updatedPeriods[game.currentPeriodIndex];
+
+      // 1. Close active period if still running
+      if (currentPeriod && !currentPeriod.endTime) {
+        currentPeriod.endTime = nowMs;
+        try {
+          await apiFetch(`game_periods?id=${currentPeriod.id}`, "PUT", {
+            end_time: nowMs,
+          });
+        } catch (err) {
+          console.error("Error closing final period on game end:", err);
+        }
+      }
+
+      // 2. Close any unended stoppages
+      const gameTime = get().getGameTime();
+      const activeStoppages = (game.gameEventsMajor || []).filter(
+        (s) => s.end_time === null && s.clock_should_run === 0
+      );
+      for (const st of activeStoppages) {
+        try {
+          await apiFetch("game_events_major", "PUT", { end_time: gameTime }, st.id);
+        } catch (err) {
+          console.error("Error closing stoppage on game end:", err);
+        }
+      }
+
+      // 3. Mark game as completed
       try {
         await apiFetch(`games?id=${game.game_id}`, "PUT", {
           status: "completed",
         });
 
-        get().updateGame({ status: "completed" });
+        get().updateGame({
+          status: "completed",
+          periods: updatedPeriods,
+          gameEventsMajor: (game.gameEventsMajor || []).map((s) =>
+            s.end_time === null && s.clock_should_run === 0 ? { ...s, end_time: gameTime } : s
+          ),
+        });
       } catch (error) {
         console.error("Error ending game:", error);
       }

@@ -6,9 +6,11 @@ import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
 import { formatTeamName } from "@/lib/utils/teamName";
 import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
+import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
 import { useOnlineStatus, setSimulatedOfflineMode, isSimulatedOfflineMode } from "@/lib/offline/offlineSync";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
+import FullscreenManager from "@/components/game/FullscreenManager";
 
 interface BroadcastScoreboardProps {
   ourShortName?: string;
@@ -72,8 +74,12 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
 
   // Calculate display seconds based on Mode (Period vs Match) and Direction (Up vs Down)
   const currentPeriodIdx = game?.currentPeriodIndex ?? 0;
-  const periodDurationMins = game?.settings?.periodDuration || 40;
-  const periodDurationSecs = periodDurationMins * 60;
+  const rawPeriodDuration = game?.settings?.periodDuration;
+  // If rawPeriodDuration > 120, it is stored in seconds (e.g. 2400s or 1800s). If <= 120, it is in minutes.
+  const periodDurationSecs = rawPeriodDuration
+    ? (Number(rawPeriodDuration) > 120 ? Number(rawPeriodDuration) : Number(rawPeriodDuration) * 60)
+    : 2400;
+  const periodDurationMins = Math.round(periodDurationSecs / 60);
   const totalPeriods = game?.settings?.periodCount || 2;
   const totalMatchSecs = totalPeriods * periodDurationSecs;
 
@@ -89,7 +95,33 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
   const starterCount = players.filter((p) => p.gameStatus === "starter").length;
   const gkCount = players.filter((p) => p.gameStatus === "goalkeeper").length;
   const playersOnFieldSetting = game?.settings?.playersOnField || 11;
-  const isLineupConfigured = props.isLineupConfigured ?? ((starterCount + gkCount) === playersOnFieldSetting);
+
+  // Red card rule: team plays down only if the red-carded player was on the field
+  const disciplineEvents = game?.gameEventsDiscipline || [];
+  const majorEvents = game?.gameEventsMajor || [];
+  const isPlayerOnFieldAtTime = useGamePlayerTimeStore.getState().isPlayerOnFieldAtTime;
+
+  const onFieldRedCardCount = players.filter((p) => {
+    const pGameId = String(p.playerGameId || p.id);
+    const pCards = disciplineEvents.filter((d) => String(d.player_game_id) === pGameId);
+    const redCards = pCards.filter((d) => d.card_type === "red" || d.card_type === "yellow_red");
+    const yellowCards = pCards.filter((d) => d.card_type === "yellow");
+    const hasRed = (p.redCards || 0) > 0 || redCards.length > 0 || (p.yellowCards || 0) >= 2 || yellowCards.length >= 2;
+    if (!hasRed) return false;
+
+    // A red card forces the team to play down ONLY if the player was on the field when disqualified
+    const disqualifyingCard = redCards[0] || (yellowCards.length >= 2 ? yellowCards[1] : null);
+    if (disqualifyingCard) {
+      const cardTime = disqualifyingCard.game_time ?? majorEvents.find((m) => m.id === disqualifyingCard.major_event_id)?.game_time;
+      if (cardTime !== undefined && cardTime !== null) {
+        return isPlayerOnFieldAtTime(p, Number(cardTime));
+      }
+    }
+    // Fallback: was player on field currently
+    return p.fieldStatus === "onField" || p.fieldStatus === "onFieldGk";
+  }).length;
+  const effectiveRequiredPlayers = Math.max(7, playersOnFieldSetting - onFieldRedCardCount);
+  const isLineupConfigured = props.isLineupConfigured ?? ((starterCount + gkCount) === effectiveRequiredPlayers);
 
   const ourShortName = props.ourShortName ?? (game ? formatTeamName({
     team_name: (game.isHome ? game.homeTeamName : game.awayTeamName) as string | null,
@@ -234,11 +266,13 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
             {opponentShortName}
           </span>
 
+          <FullscreenManager className="p-1.5 ml-1 rounded-lg bg-black/30 hover:bg-black/60 border border-slate-700/80 text-white transition-colors cursor-pointer shrink-0" />
+
           {props.onOpenNavDrawer && (
             <button
               onClick={props.onOpenNavDrawer}
               aria-label="Open Navigation Menu"
-              className="p-1.5 ml-2 rounded-lg bg-black/30 hover:bg-black/60 border border-slate-700/80 text-white transition-colors cursor-pointer shrink-0"
+              className="p-1.5 ml-1 rounded-lg bg-black/30 hover:bg-black/60 border border-slate-700/80 text-white transition-colors cursor-pointer shrink-0"
               title="Open Navigation Menu"
             >
               <Menu size={18} />

@@ -177,8 +177,20 @@ export default function GameProvider({ children }: GameProviderProps) {
     );
   }
 
-  // Loading game data
-  if (isDataLoading && !game) {
+  // Loading game data or switching games: show loader while data is loading OR while the currently loaded game does not match route id
+  const isMatchingGameLoaded = Boolean(game) && String(game?.game_id || game?.id) === String(id);
+
+  if (isDataLoading || !isMatchingGameLoaded) {
+    if (initError && !game) {
+      return (
+        <FullScreenError
+          title="Unable to Load Game"
+          message={initError}
+          actionLabel="Back to Team Schedule"
+          onAction={() => router.push(teamSeasonId ? `/teams/${teamSeasonId}` : "/dashboard")}
+        />
+      );
+    }
     return <FullScreenLoader message="Loading game data..." />;
   }
 

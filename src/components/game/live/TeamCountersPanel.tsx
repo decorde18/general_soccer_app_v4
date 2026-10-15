@@ -60,7 +60,7 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
     }
   }, "short") : "Them");
 
-  const defaultAddTeamEvent = async (teamSeasonIdVal: number | string, eventType: "corner" | "offside" | "foul") => {
+  const defaultAddTeamEvent = (teamSeasonIdVal: number | string, eventType: "corner" | "offside" | "foul") => {
     if (!game) return;
     const tid = Number(teamSeasonIdVal);
     if (!tid || isNaN(tid)) {
@@ -68,52 +68,70 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
       return;
     }
 
-    try {
-      const gameTimeSeconds = useGameStore.getState().getGameTime();
-      const payload = {
-        game_id: Number(game.game_id || game.id),
+    const gameId = Number(game.game_id || game.id);
+    const gameTimeSeconds = useGameStore.getState().getGameTime();
+    const period = game.currentPeriodIndex + 1;
+    const tempEventId = `temp_team_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    // 1. SYNCHRONOUS OPTIMISTIC UPDATE (0ms latency)
+    addTeamEvent({
+      id: tempEventId,
+      game_id: gameId,
+      team_season_id: tid,
+      event_type: eventType as any,
+      game_time: gameTimeSeconds,
+      period,
+    } as any);
+
+    // 2. BACKGROUND SERVER PERSISTENCE
+    fetch(`/api/game_events_team`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        game_id: gameId,
         team_season_id: tid,
         event_type: eventType,
         game_time: gameTimeSeconds,
-        period: game.currentPeriodIndex + 1,
-      };
-
-      const newEvent = await fetch(`/api/game_events_team`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }).then((r) => r.json());
-
-      if (newEvent?.id) {
-        addTeamEvent({
-          id: newEvent.id,
-          game_id: Number(game.game_id || game.id),
-          team_season_id: tid,
-          event_type: eventType as any,
-          game_time: gameTimeSeconds,
-          period: game.currentPeriodIndex + 1,
-        } as any);
-      }
-    } catch (err: any) {
-      toast.error(`Failed to log team event: ${err.message}`);
-    }
+        period,
+      }),
+    })
+      .then((r) => r.json())
+      .then((newEvent) => {
+        if (newEvent?.id) {
+          useGameStore.getState().replaceTeamEvent(tempEventId, {
+            id: newEvent.id,
+            game_id: gameId,
+            team_season_id: tid,
+            event_type: eventType as any,
+            game_time: gameTimeSeconds,
+            period,
+          } as any);
+        }
+      })
+      .catch((err) => {
+        useGameStore.getState().removeTeamEvent(tempEventId);
+        toast.error(`Failed to log team event: ${err.message}`);
+      });
   };
 
-  const defaultRemoveTeamEvent = async (teamSeasonIdVal: number | string, eventType: "corner" | "offside" | "foul") => {
+  const defaultRemoveTeamEvent = (teamSeasonIdVal: number | string, eventType: "corner" | "offside" | "foul") => {
     if (!game) return;
-    try {
-      const matchEvents = teamEvents.filter(
-        (e) => Number(e.team_season_id) === Number(teamSeasonIdVal) && e.event_type === eventType
-      );
-      if (matchEvents.length === 0) return;
+    const matchEvents = teamEvents.filter(
+      (e) => Number(e.team_season_id) === Number(teamSeasonIdVal) && e.event_type === eventType
+    );
+    if (matchEvents.length === 0) return;
 
-      const lastEvent = matchEvents[matchEvents.length - 1];
-      const deleteEventFn = useGameStore.getState().deleteEvent;
-      await deleteEventFn(lastEvent.id, "team");
-      toast.success(`Removed team ${eventType.toUpperCase()}`);
-    } catch (err: any) {
+    const lastEvent = matchEvents[matchEvents.length - 1];
+
+    // 1. SYNCHRONOUS OPTIMISTIC REMOVAL (0ms latency)
+    useGameStore.getState().removeTeamEvent(lastEvent.id);
+
+    // 2. BACKGROUND SERVER PERSISTENCE
+    useGameStore.getState().deleteEvent(lastEvent.id, "team").catch((err: any) => {
+      // Rollback on failure
+      useGameStore.getState().addTeamEvent(lastEvent);
       toast.error(`Failed to remove team event: ${err.message}`);
-    }
+    });
   };
 
   const onAddTeamEvent = props.onAddTeamEvent ?? defaultAddTeamEvent;

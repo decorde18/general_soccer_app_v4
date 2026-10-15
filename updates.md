@@ -1,3 +1,76 @@
+### [2026-10-15 11:37] Step 32: Live Match Audit Findings, Clock/Playing Time Integrity & Mobile/Tablet Enhancements
+- **Type**: Feature / Bug Fix / Refactor / UX Enhancement
+- **Summary**:
+  1. **Red Card Play-Down On-Field Enforcement (`LineupValidationBanner.tsx`, `BroadcastScoreboard.tsx`, `OnFieldPlayersPanel.tsx`, `gameSubsStore.ts`)**:
+     - Enforced that a team only plays down if the red-carded or disqualified player was active on the field at the time the card was received (`isPlayerOnFieldAtTime`).
+     - Disqualifications issued to bench/reserve players send off and gray out the player, but do not decrement on-field headcount or force the team to play down.
+     - Added on-field header status badge indicating `Playing Down (10)` when active on-field red cards exist.
+     - Prevented red-carded players from being substituted out or subbed in.
+  2. **Penalty Kick True 0ms Optimistic Return (`MajorEventModal.tsx`, `gameStore.ts`)**:
+     - Converted penalty kick submission for saved/missed outcomes into a synchronous optimistic update (`addPenaltyEvent`, `addPlayerAction`).
+     - Immediately closes the modal and returns directly to the live game console (0ms latency) without awaiting network roundtrips and bypassing pending substitution prompt interruptions.
+     - Performs non-blocking background persistence with cache auto-sync.
+  3. **Multi-Time Display in Major Event Modal Header (`MajorEventModal.tsx`)**:
+     - Updated header to display the three distinct match metrics:
+       - **Active Game Clock**: Running vs. paused match clock (responsive to the `stopClock` toggle).
+       - **Event Game Time**: Static match timestamp indicating the exact game minute/second the event/stoppage occurred (e.g. `23:45`, not a ticking clock).
+       - **Elapsed Event Time**: Live duration counter tracking how long this specific event or stoppage has been active since opening or since the stoppage began (e.g. weather delay duration).
+  4. **Mobile-Responsive Team Schedule (`TeamSchedule.tsx`)**:
+     - Modernized team schedule filters and action bars for clean wrapping on narrow mobile screens (320px - 414px) without horizontal overflow.
+     - Optimized game cards with compact padding, clear home/away status tags, responsive matchup rows, and touch-friendly action buttons.
+  5. **Scoreboard Countdown Normalization & Defaults (`BroadcastScoreboard.tsx`, `gameRules.ts`)**:
+     - Normalized `periodDuration` handling to parse seconds values (`> 120`) directly without multiplying by 60, eliminating the 3000m countdown glitch.
+     - Defaulted High School Varsity to 40m (`2400s`) and JV to 30m (`1800s`), while preserving explicit node overrides.
+  6. **True 0ms Optimistic Team Counters & Roster Sorting (`TeamCountersPanel.tsx`, `OnFieldPlayersPanel.tsx`, `LivePlayerTable.tsx`)**:
+     - Removed blocking network roundtrips on shot, save, and counter triggers, updating local Zustand state synchronously.
+     - Added column sorting (jersey number, name, shots, goals, assists, saves, GA, +/-, total time, shift time/bench time) with indicator arrows on live box score tables.
+  7. **Game Loading State Guard & Fullscreen Reopen Control (`GameProvider.tsx`, `BroadcastScoreboard.tsx`, `FullscreenManager.tsx`)**:
+     - Guarded `GameProvider` so route transitions never render stale/empty game states while active match data is loading.
+     - Embedded persistent `<FullscreenManager />` in the broadcast scoreboard header for one-touch fullscreen entry on mobile/tablets.
+  8. **Player Shift Time Calculation & Post-Game Lineup Roster (`dateTimeUtils.ts`, `gamePlayerTimeStore.ts`, `gameStore.ts`, `GameSummaryClient.tsx`)**:
+     - Chronologically replayed substitution events in `calculateRecentPlayerTimeOnField` to determine continuous stint starts for re-entering players, excluding position swaps and paused clock stoppages.
+     - Expanded post-game match event details to render the exact on-field lineup present at the event timestamp.
+     - Ensured unended periods and stoppages are closed with `Date.now()` upon game conclusion.
+- **Modified Files**:
+  - `src/components/game/live/BroadcastScoreboard.tsx`
+  - `src/components/game/live/LineupValidationBanner.tsx`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/live/OnFieldPlayersPanel.tsx`
+  - `src/components/game/live/TeamCountersPanel.tsx`
+  - `src/components/game/live/LivePlayerTable.tsx`
+  - `src/components/team/TeamSchedule.tsx`
+  - `src/components/game/GameProvider.tsx`
+  - `src/components/game/FullscreenManager.tsx`
+  - `src/components/game/GameSummaryClient.tsx`
+  - `src/lib/utils/dateTimeUtils.ts`
+  - `src/lib/utils/gameRules.ts`
+  - `src/stores/gamePlayerTimeStore.ts`
+  - `src/stores/gameStore.ts`
+  - `todo.md`
+  - `updates.md`
+
+### [2026-10-15 09:48] Integrated Step 32 Live Match Audit, Clock/Playing Time Integrity & Mobile/Tablet Enhancements
+- **Type**: Configuration / Project Planning & Refactor
+- **Summary**:
+  - Integrated raw testing and audit notes from the bottom of `todo.md` into a formal, structured roadmap: **Step 32: Live Match Audit Findings, Clock/Playing Time Integrity & Mobile/Tablet Enhancements** (tasks 32.1 through 32.13).
+  - Investigated root causes and established technical specifications for all 13 items:
+    1. Mobile-responsive team game schedule (`TeamSchedule.tsx`).
+    2. High School period duration defaults (40m for Varsity vs. 30m for JV).
+    3. Scoreboard countdown clock unit normalization (`BroadcastScoreboard.tsx`, fixing 3000m display caused by multiplying seconds by 60).
+    4. 0ms optimistic UI for team counters, shots, and saves (`OnFieldPlayersPanel.tsx`, `TeamCountersPanel.tsx`).
+    5. Game loading state & stale data prevention (`GameProvider.tsx`).
+    6. Persistent fullscreen reopen control for tablets & mobile (`BroadcastScoreboard.tsx`).
+    7. Column sorting for live box scores (`LivePlayerTable.tsx`).
+    8. Resetting default Major Event tab to Goal on modal open (`MajorEventModal.tsx`).
+    9. Red card disqualification, playing down, and NFHS soft-red replacement rules.
+    10. Multi-clock display in Major Event modal (Game Time, Elapsed Time, and Active Game Clock).
+    11. Returning player shift time calculation fix in `gamePlayerTimeStore.ts`.
+    12. Post-game match event on-field player lineup display in `GameSummaryClient.tsx`.
+    13. Game conclusion period termination and final playing time clamping (`gameStore.ts`, `queries.ts`).
+- **Modified Files**:
+  - `todo.md`
+  - `updates.md`
+
 ### [2026-10-14 14:45] Lineup Page Mount Loop Elimination, FullscreenManager State Guard & Completed Match Lineup Integrity
 - **Type**: Bug Fix / Stability & Data Integrity
 - **Summary**:

@@ -73,12 +73,22 @@ export default function GameSummaryClient() {
 
   const calculateTotalTimeOnField = useGamePlayerTimeStore((s) => s.calculateTotalTimeOnField);
   const calculateAllGoalkeeperTime = useGamePlayerTimeStore((s) => s.calculateAllGoalkeeperTime);
+  const isPlayerOnFieldAtTime = useGamePlayerTimeStore((s) => s.isPlayerOnFieldAtTime);
 
   // Tab State: "boxscore" | "majorevents" | "playbyplay"
   const [activeTab, setActiveTab] = useState<"boxscore" | "majorevents" | "playbyplay">("boxscore");
 
   // Selected Event Popup Modal State
   const [selectedEvent, setSelectedEvent] = useState<UnifiedPlayEvent | null>(null);
+
+  // Active On-Field Lineup at Time of Selected Event
+  const onFieldAtEventTime = useMemo(() => {
+    if (!selectedEvent) return [];
+    return players
+      .filter((p) => p.gameStatus === "starter" || p.gameStatus === "goalkeeper" || p.gameStatus === "dressed")
+      .filter((player) => isPlayerOnFieldAtTime(player, selectedEvent.gameTime))
+      .sort((a, b) => Number(a.jerseyNumber || 999) - Number(b.jerseyNumber || 999));
+  }, [selectedEvent, players, isPlayerOnFieldAtTime]);
 
   // Delete Confirmation State
   const [deletingEvent, setDeletingEvent] = useState<UnifiedPlayEvent | null>(null);
@@ -2009,6 +2019,44 @@ export default function GameSummaryClient() {
               <div className="p-4 rounded-xl bg-background border border-border/80 text-xs font-semibold text-text leading-relaxed">
                 {selectedEvent.notes || selectedEvent.details || "No additional notes recorded for this match event."}
               </div>
+            </div>
+
+            {/* Active On-Field Lineup at Time of Event */}
+            <div className="space-y-2 pt-2 border-t border-border/70">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted flex items-center gap-1.5">
+                  <Users size={13} className="text-primary" />
+                  <span>On-Field Lineup at Event Time ({onFieldAtEventTime.length} Players)</span>
+                </span>
+                <span className="text-[10px] text-muted font-bold font-mono">
+                  Minute {selectedEvent.matchMinute}' ({formatSecondsToMmss(selectedEvent.gameTime)})
+                </span>
+              </div>
+
+              {onFieldAtEventTime.length === 0 ? (
+                <div className="p-3 rounded-xl bg-background border border-border/70 text-xs text-muted text-center font-medium">
+                  No active roster details recorded at this event timestamp.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {onFieldAtEventTime.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border/60 text-xs"
+                    >
+                      <span className="font-mono font-black text-primary text-[11px] w-6 shrink-0 text-center">
+                        {p.jerseyNumber ? `#${p.jerseyNumber}` : "--"}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="font-bold text-text truncate text-[11px]">{p.fullName}</div>
+                        <div className="text-[9px] text-muted uppercase font-semibold">
+                          {p.gameStatus === "goalkeeper" ? "GK" : (p.position || "Field")}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
