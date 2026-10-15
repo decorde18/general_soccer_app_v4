@@ -125,17 +125,24 @@ export function inferRulesFromNodeName(name?: string): Partial<GameSettings> {
     inferred.tiebreakerMode = "pk_only";
   }
 
-  // High school / NFHS rules infer automatic clock stoppage and NFHS profile
+  // High school / NFHS rules infer automatic clock stoppage, NFHS profile, and duration defaults (40m Varsity vs 30m JV)
   if (
     lower.includes("nfhs") ||
     lower.includes("high school") ||
     lower.includes("highschool") ||
     lower.includes("varsity") ||
+    lower.includes("tssaa") ||
     lower.includes(" jv") ||
     lower.startsWith("jv")
   ) {
     inferred.clockRuleProfile = "NFHS";
     inferred.autoStopClockOnMajorEvent = true;
+
+    if (lower.includes("jv") || lower.includes("junior varsity")) {
+      inferred.periodDuration = 1800; // 30 mins for JV
+    } else {
+      inferred.periodDuration = 2400; // 40 mins for Varsity
+    }
   }
 
   return inferred;

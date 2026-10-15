@@ -138,42 +138,58 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
 
   const getPlayerStats = props.getPlayerStats ?? defaultGetPlayerStats;
 
-  const defaultQuickPlayerAction = async (playerId: string | number, actionType: "shot" | "shot_on_target" | "save" | "foul") => {
+  const defaultQuickPlayerAction = (playerId: string | number, actionType: "shot" | "shot_on_target" | "save" | "foul") => {
     if (!storeGame) return;
     const player = storePlayers.find((p) => p.id === playerId);
     if (!player) return;
 
-    try {
-      const payload = {
-        game_id: Number(storeGame.game_id || storeGame.id),
-        player_game_id: Number(player.playerGameId),
+    const gameId = Number(storeGame.game_id || storeGame.id);
+    const teamSeasonId = Number(storeGame.teamSeasonId);
+    const pgId = Number(player.playerGameId);
+    const period = storeGame.currentPeriodIndex + 1;
+    const tempActionId = `temp_act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    // 1. SYNCHRONOUS OPTIMISTIC STORE UPDATE (0ms delay)
+    addPlayerAction({
+      id: tempActionId,
+      game_id: gameId,
+      team_season_id: teamSeasonId,
+      player_game_id: pgId,
+      event_type: actionType as any,
+      game_time: gameTimeSeconds,
+      period,
+    } as any);
+
+    // 2. BACKGROUND SERVER PERSISTENCE
+    fetch("/api/game_events_player_actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        game_id: gameId,
+        player_game_id: pgId,
         event_type: actionType,
         game_time: gameTimeSeconds,
-        period: storeGame.currentPeriodIndex + 1,
-      };
-
-      const res = await fetch("/api/game_events_player_actions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        period,
+      }),
+    })
+      .then((res) => res.json())
+      .then((newAction) => {
+        if (newAction?.id) {
+          const currentActions = useGameStore.getState().game?.playerActions || [];
+          const updated = currentActions.map((a: any) =>
+            a.id === tempActionId ? { ...a, id: newAction.id } : a
+          );
+          useGameStore.getState().updateGame({ playerActions: updated });
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to persist player action:", err);
+        const currentActions = useGameStore.getState().game?.playerActions || [];
+        useGameStore.getState().updateGame({
+          playerActions: currentActions.filter((a: any) => a.id !== tempActionId),
+        });
+        toast.error(`Failed to record ${actionType}`);
       });
-
-      const newAction = await res.json();
-
-      if (newAction?.id) {
-        addPlayerAction({
-          id: newAction.id,
-          game_id: Number(storeGame.game_id || storeGame.id),
-          team_season_id: Number(storeGame.teamSeasonId),
-          player_game_id: Number(player.playerGameId),
-          event_type: actionType as any,
-          game_time: gameTimeSeconds,
-          period: storeGame.currentPeriodIndex + 1,
-        } as any);
-      }
-    } catch (err: any) {
-      console.error("Failed to record player action:", err);
-    }
   };
 
   const handleQuickPlayerAction = props.handleQuickPlayerAction ?? defaultQuickPlayerAction;
@@ -205,6 +221,17 @@ export default function OnFieldPlayersPanel(props: OnFieldPlayersPanelProps) {
         <h3 className="font-extrabold uppercase tracking-wider text-[10px] text-text flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>Players On Field ({onFieldCount})</span>
+          {storeOnFieldPlayers.some((p) => {
+            const stats = getPlayerStats(p);
+            return stats.redCards > 0 || stats.yellowCards >= 2;
+          }) && (
+            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-500">
+              Playing Down ({storeOnFieldPlayers.filter((p) => {
+                const stats = getPlayerStats(p);
+                return !(stats.redCards > 0 || stats.yellowCards >= 2);
+              }).length})
+            </span>
+          )}
         </h3>
         <div className="flex items-center gap-2">
           <button

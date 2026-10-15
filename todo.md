@@ -612,7 +612,78 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
 
 ---
 
-double check for mobile phone responsive
-team game schedule needs to be responsive
 
 - [x] all nodes and sub nodes need default settings (ie Collective Cup has set game length to 40 min and tiebreakers, but U12 has 9v9 and 30 min) — implemented hierarchical settings resolver, schema match_rules, node settings editor, and creation modals.
+
+
+
+## Step 32: Live Match Audit Findings, Clock/Playing Time Integrity & Mobile/Tablet Enhancements
+
+*(Audit findings from testing match: U13 RL vs TBD & high school match configurations)*
+
+- [x] **32.1 Mobile-Responsive Team Game Schedule (`TeamSchedule.tsx`)**
+  - [x] Optimize the team game schedule view for mobile viewports (`block md:hidden` / responsive flex grid).
+  - [x] Implement stacked/compact game cards with touch-friendly elements, opponent badges, location links, and score results without horizontal screen overflow.
+
+- [x] **32.2 High School Period Duration Defaults (Varsity 40m vs. JV 30m)**
+  - [x] Update match rules inheritance and period duration defaults in `gameRules.ts` and `game-actions.ts`:
+    - Default High School Varsity matches to 40-minute halves (`2400` seconds).
+    - Default High School Junior Varsity (JV) matches to 30-minute halves (`1800` seconds).
+  - [x] Preserve explicit game/node overrides whenever custom period lengths are defined on a game or league node.
+
+- [x] **32.3 Scoreboard Countdown Clock Units & Settings Normalization (`BroadcastScoreboard.tsx`)**
+  - [x] Fix countdown clock starting at 3000 minutes: normalize `game.settings.periodDuration` handling in `BroadcastScoreboard.tsx`.
+  - [x] Resolve discrepancy where `periodDuration` stored in seconds (e.g. 2400s or 3000s) was treated as minutes and multiplied by 60 (`periodDurationMins * 60 = 180,000s`), causing countdown to display 3000m.
+  - [x] Ensure duration values `> 120` are parsed directly as seconds, while values `≤ 120` are parsed as minutes.
+
+- [x] **32.4 True 0ms Optimistic UI for Team Counters, Shots & Saves**
+  - [x] Remove blocking `await fetch(...)` network roundtrips prior to store dispatch in `OnFieldPlayersPanel.tsx` and `TeamCountersPanel.tsx`.
+  - [x] Synchronously update local Zustand state (`addPlayerAction`, `addTeamEvent`) with temporary optimistic IDs (0ms UI latency).
+  - [x] Persist changes via API in the background with rollback / error notifications on network failure.
+
+- [x] **32.5 Game Loading State & Stale Data Guard (`GameProvider.tsx`)**
+  - [x] Fix loading condition `if (isDataLoading && !game)` in `GameProvider.tsx` so route transitions and initial loads never render stale or empty game data before the active match is fully loaded.
+  - [x] Ensure `<FullScreenLoader message="Loading game data..." />` remains mounted until the specific game matching the route `id` parameter is verified and hydrated.
+
+- [x] **32.6 Persistent Fullscreen Reopen Control for Tablets & Mobile (`BroadcastScoreboard.tsx`)**
+  - [x] Mount `<FullscreenManager />` directly on `BroadcastScoreboard.tsx` header (accessible beside navigation drawer and scoreboard controls) so users on tablets can re-enter fullscreen at any time.
+  - [x] Add a persistent floating re-open pill when fullscreen exits, avoiding one-time dismissal locks across browser sessions.
+
+- [x] **32.7 Interactive Column Sorting for Live Box Scores (`LivePlayerTable.tsx`)**
+  - [x] Add interactive sortable column headers with indicator arrows (ascending/descending) on `LivePlayerTable.tsx` for Goalkeepers, Field Players, and Bench Reserves (Game Changers).
+  - [x] Support sorting by `#` (Jersey), `Name`, `Shots`, `Goals`, `Assists`, `Saves`, `GA`, `+/-`, `Total Time`, and `Shift Time` / `Bench Time`.
+  - [x] Establish a clear, standardized default sort order (by jersey number or position) on initial table load.
+
+- [x] **32.8 Default Major Event Tab to Goal on Modal Open (`MajorEventModal.tsx`)**
+  - [x] Reset `eventType` to `"goal"` whenever `isOpen` transitions to true in `MajorEventModal.tsx`.
+  - [x] Prevent the modal from preserving previously clicked tabs (e.g. Card, Stoppage, Injury), ensuring every new "+ Major Event" trigger opens directly to the primary Goal recording interface.
+
+- [x] **32.9 Red Card Disqualification, On-Field vs. Bench Enforcement & NFHS Soft-Red Engine**
+  - [x] Enforce red card play-down condition:
+    - If the red-carded player was **on the field** at the time of the card, the team plays down a player (on-field starter count limit is decremented by 1, and no replacement sub is allowed).
+    - If the red-carded player was **on the bench/reserves**, the player is sent off and disqualified/grayed out, but the team on the field does **not** play down and maintains their full on-field headcount.
+  - [x] Implement High School (NFHS) Soft-Red rule option: allow configuring whether a second yellow card disqualification allows replacing the sent-off player from the bench, while a straight red disqualification strictly forces the team to play down (if on field).
+
+- [x] **32.10 Multi-Time Display in Major Event Modal (Game Clock, Event Game Time & Event Elapsed Duration)**
+  - [x] Update `MajorEventModal.tsx` header to render the three distinct times:
+    - **Active Game Clock**: The scoreboard match clock (running vs. paused, responsive to the `stopClock` toggle).
+    - **Game Time of Event**: Static timestamp indicating the exact game minute/second at which the event occurred (e.g. `23:45` in Period 1; not a ticking clock).
+    - **Elapsed Time of Event**: Live duration timer tracking how long this specific event or stoppage has been active since opening (e.g. weather delay, injury evaluation, or stoppage duration).
+
+- [x] **32.11 Returning Player Shift Time Calculation Fix (`gamePlayerTimeStore.ts`)**
+  - [x] Fix shift time calculation for players re-entering the field:
+    - Accurately determine continuous shift start from the latest confirmed substitution entry (`lastIn.gameTime`), filtering out pending subs (`gameTime === null`) and position swaps.
+    - Calculate active shift duration from `currentGameTime - lastIn.gameTime` minus paused clock stoppages within that specific shift window.
+
+- [x] **32.12 Post-Game Match Event Lineup Roster Display (`GameSummaryClient.tsx`)**
+  - [x] In post-game summary match event details (`GameSummaryClient.tsx`), expand goals, cards, and penalties to display the exact list of active on-field players for that team at the timestamp of the event using `isPlayerOnFieldAtTime()`.
+
+- [x] **32.13 Game Conclusion Period Termination & Final Playing Time Integrity (`gameStore.ts`, `queries.ts`)**
+  - [x] Update `endGame()` in `gameStore.ts` to automatically record `end_time = Date.now()` on the active period if unended, persisting via `game_periods` API before setting game status to `completed`.
+  - [x] Ensure `calculatePlayerGameMinutes` in `queries.ts` correctly clamps final player shifts to the period end boundary when games conclude.
+
+- [x] **32.14 Penalty Kick Instant Exit on Save / Miss Without Sub Prompt Interruption**
+  - [x] When recording a Penalty Kick with an outcome of "Saved", "Missed", or "Hit Post", clicking "Log Penalty Kick" immediately saves and returns directly to the live game console.
+  - [x] Completely bypass any pending substitution prompt or dialog interruptions so play can resume with zero delay.
+
+

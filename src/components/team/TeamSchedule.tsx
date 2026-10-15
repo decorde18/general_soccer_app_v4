@@ -237,17 +237,17 @@ export default function TeamSchedule({
       )}
 
       {/* FILTER BUTTONS & CONTROLS */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-surface border border-border/80 p-4 rounded-2xl shadow-sm">
+      <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-stretch md:items-center justify-between bg-surface border border-border/80 p-3 sm:p-4 rounded-2xl shadow-sm">
         
         {/* Status Tab Toggle */}
-        <div className="flex items-center gap-1.5 w-full sm:w-auto">
+        <div className="flex items-center gap-1.5 w-full md:w-auto">
           <span className="text-xs font-bold text-muted uppercase tracking-wider mr-2 hidden sm:inline">Show</span>
-          <div className="inline-flex rounded-xl bg-background border border-border/60 p-1 w-full sm:w-auto">
+          <div className="inline-flex rounded-xl bg-background border border-border/60 p-1 w-full md:w-auto">
             {(["all", "fixtures", "results"] as const).map((opt) => (
               <button
                 key={opt}
                 onClick={() => setStatusFilter(opt)}
-                className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+                className={`flex-1 md:flex-none px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
                   statusFilter === opt ? "bg-primary text-white shadow-sm" : "text-muted hover:text-text"
                 }`}
               >
@@ -258,25 +258,25 @@ export default function TeamSchedule({
         </div>
 
         {/* Venue Filter Toggle & Schedule Action */}
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3 w-full md:w-auto justify-between md:justify-end">
           {canManage && (
             <button
               onClick={() => setIsScheduleModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-sm transition-all"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-sm transition-all flex-1 sm:flex-none"
             >
               <Plus size={15} />
               <span>Schedule Match</span>
             </button>
           )}
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-1 sm:flex-none justify-end">
             <span className="text-xs font-bold text-muted uppercase tracking-wider mr-1 hidden sm:inline">Venue</span>
             <div className="inline-flex rounded-xl bg-background border border-border/60 p-1 w-full sm:w-auto">
               {(["all", "home", "away"] as const).map((opt) => (
                 <button
                   key={opt}
                   onClick={() => setVenueFilter(opt)}
-                  className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+                  className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
                     venueFilter === opt ? "bg-accent text-white shadow-sm" : "text-muted hover:text-text"
                   }`}
                 >
@@ -394,22 +394,22 @@ export default function TeamSchedule({
 
                 <Card 
                   variant="hover" 
-                  padding="md" 
-                  className={`transition-all duration-200 ${cardOutlineClass}`}
+                  padding="sm" 
+                  className={`p-3 sm:p-4 transition-all duration-200 ${cardOutlineClass}`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
                     
                     {/* Game Meta & Matchup */}
-                    <div className="flex-1 min-w-0 space-y-3.5">
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted font-semibold">
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs text-muted font-semibold">
                         <span className="inline-flex items-center text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded shadow-2xs">
                           {gameSquad}
                         </span>
-                        <span className="text-primary">{game.seasonName}</span>
+                        <span className="text-primary truncate max-w-[120px] sm:max-w-none">{game.seasonName}</span>
                         <span>•</span>
                         <span className="capitalize">{game.gameType} Match</span>
                         <span>•</span>
-                        <span className="text-accent">{isHome ? "Home Game" : "Away Game"}</span>
+                        <span className="text-accent">{isHome ? "Home" : "Away"}</span>
                         {resultTag && (
                           <>
                             <span>•</span>
@@ -420,17 +420,17 @@ export default function TeamSchedule({
                           <>
                             <span>•</span>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-muted/70 bg-background/80 border border-border px-2 py-0.5 rounded">
-                              Past Match
+                              Past
                             </span>
                           </>
                         )}
                       </div>
 
-                      <div className="space-y-2.5">
+                      <div className="space-y-2">
                         {/* Home Team */}
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="h-6 w-6 rounded bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-xs text-primary flex-shrink-0">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="h-6 w-6 rounded bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-xs text-primary shrink-0">
                               H
                             </div>
                             <span className={`text-sm sm:text-base truncate ${isCompleted && game.homeScore !== null && game.awayScore !== null && game.homeScore > game.awayScore ? "font-bold text-text" : "font-medium text-text/80"}`}>
@@ -438,16 +438,16 @@ export default function TeamSchedule({
                             </span>
                           </div>
                           {isCompleted && (
-                            <span className={`text-sm sm:text-base font-extrabold px-2.5 py-0.5 rounded-md ${game.homeScore !== null && game.awayScore !== null && game.homeScore > game.awayScore ? "bg-primary text-white" : "bg-background text-muted border border-border"}`}>
+                            <span className={`text-sm sm:text-base font-extrabold px-2.5 py-0.5 rounded-md shrink-0 ${game.homeScore !== null && game.awayScore !== null && game.homeScore > game.awayScore ? "bg-primary text-white" : "bg-background text-muted border border-border"}`}>
                               {game.homeScore}
                             </span>
                           )}
                         </div>
 
                         {/* Away Team */}
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="h-6 w-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center font-bold text-xs text-accent flex-shrink-0">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="h-6 w-6 rounded bg-accent/10 border border-accent/20 flex items-center justify-center font-bold text-xs text-accent shrink-0">
                               A
                             </div>
                             <span className={`text-sm sm:text-base truncate ${isCompleted && game.homeScore !== null && game.awayScore !== null && game.awayScore > game.homeScore ? "font-bold text-text" : "font-medium text-text/80"}`}>
@@ -455,7 +455,7 @@ export default function TeamSchedule({
                             </span>
                           </div>
                           {isCompleted && (
-                            <span className={`text-sm sm:text-base font-extrabold px-2.5 py-0.5 rounded-md ${game.homeScore !== null && game.awayScore !== null && game.awayScore > game.homeScore ? "bg-primary text-white" : "bg-background text-muted border border-border"}`}>
+                            <span className={`text-sm sm:text-base font-extrabold px-2.5 py-0.5 rounded-md shrink-0 ${game.homeScore !== null && game.awayScore !== null && game.awayScore > game.homeScore ? "bg-primary text-white" : "bg-background text-muted border border-border"}`}>
                               {game.awayScore}
                             </span>
                           )}
@@ -464,9 +464,9 @@ export default function TeamSchedule({
                     </div>
 
                     {/* Schedule/Venue Panel */}
-                    <div className="flex flex-col items-start sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-border/50 pt-3.5 sm:pt-0 sm:pl-6 gap-2.5 text-left sm:text-right min-w-[190px]">
+                    <div className="flex flex-col items-start sm:items-end justify-between sm:justify-center border-t sm:border-t-0 sm:border-l border-border/50 pt-3 sm:pt-0 sm:pl-6 gap-2.5 text-left sm:text-right min-w-0 sm:min-w-[190px]">
                       
-                      <div className="flex flex-wrap items-center sm:justify-end gap-2 text-xs font-bold text-text">
+                      <div className="flex flex-wrap items-center sm:justify-end gap-2 text-xs font-bold text-text w-full sm:w-auto">
                         <div className="flex items-center gap-1.5 bg-background sm:bg-transparent px-2.5 py-1 sm:p-0 rounded border sm:border-0 border-border">
                           <Calendar size={14} className="text-primary shrink-0" />
                           <span>{formatDate(game.startDate)}</span>
@@ -477,7 +477,7 @@ export default function TeamSchedule({
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center sm:justify-end gap-2">
+                      <div className="flex flex-wrap items-center sm:justify-end gap-2 w-full sm:w-auto">
                         <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.2em] ${scoreBadgeClass}`}>
                           <Trophy size={11} />
                           <span>{scoreLabel}</span>
@@ -487,16 +487,16 @@ export default function TeamSchedule({
                           locationName={game.locationName}
                           sublocationName={game.sublocationName}
                           showIcon
-                          className="text-xs max-w-[220px]"
+                          className="text-xs max-w-full sm:max-w-[220px]"
                         />
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 mt-1 w-full sm:w-auto justify-start sm:justify-end">
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 mt-1 w-full sm:w-auto justify-start sm:justify-end">
                         {canManage && (
                           <>
                             <button
                               onClick={() => setEditingGame(game)}
-                              className="inline-flex items-center gap-1 text-xs font-bold text-text hover:text-primary bg-background border border-border px-2.5 py-1 rounded-lg transition-colors"
+                              className="inline-flex items-center justify-center gap-1 text-xs font-bold text-text hover:text-primary bg-background border border-border px-2.5 py-1.5 rounded-lg transition-colors"
                               title="Edit Game Details, Cancel, or Delete"
                             >
                               <Edit3 size={13} />
@@ -505,7 +505,7 @@ export default function TeamSchedule({
 
                             <button
                               onClick={() => setQuickScoreGame(game)}
-                              className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg transition-colors"
+                              className="inline-flex items-center justify-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
                               title="Quick Score Entry"
                             >
                               <Edit3 size={13} />
@@ -518,7 +518,7 @@ export default function TeamSchedule({
                           href={`/gamestats/${teamSeasonId}/${game.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-accent-hover bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg transition-colors"
+                          className={`inline-flex items-center justify-center gap-1 text-xs font-bold text-primary hover:text-accent-hover bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg transition-colors ${canManage ? "col-span-2 sm:col-auto" : "col-span-2 sm:col-auto"}`}
                         >
                           <SquareChevronRight size={13} />
                           <span>{isCompleted ? "Match Center" : isInProgress ? "Join Tracker (Live)" : "Track Game"}</span>

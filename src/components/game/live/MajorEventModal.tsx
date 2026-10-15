@@ -78,6 +78,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
   // Live match clock state for modal header
   const [liveSeconds, setLiveSeconds] = useState<number>(0);
+  const [eventStaticGameTime, setEventStaticGameTime] = useState<number>(0);
   const [eventDurationSeconds, setEventDurationSeconds] = useState<number>(0);
   const [isPausedLocally, setIsPausedLocally] = useState<boolean>(false);
 
@@ -98,13 +99,16 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
   const eventOpenMsRef = useRef<number>(Date.now());
 
-  // Event Duration Live Timer
+  // Event Duration Live Timer (Tracks elapsed duration of the event / stoppage)
   useEffect(() => {
     if (!isOpen) {
       setEventDurationSeconds(0);
       return;
     }
-    const startMs = activeStoppage?.start_time ? new Date(activeStoppage.start_time as any).getTime() : eventOpenMsRef.current;
+    const rawStart = activeStoppage?.start_time;
+    const startMs = rawStart
+      ? (typeof rawStart === "number" ? rawStart : new Date(rawStart as any).getTime())
+      : eventOpenMsRef.current;
     const initialSecs = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
     setEventDurationSeconds(initialSecs);
 
@@ -118,6 +122,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
   useEffect(() => {
     if (!isOpen) return;
+    setEventType("goal");
+    const currentMatchTime = useGameStore.getState().getGameTime();
+    // Static game time of the event (e.g. 23:45, not a ticking clock)
+    const eventTime = (activeStoppage?.game_time !== null && activeStoppage?.game_time !== undefined)
+      ? Number(activeStoppage.game_time)
+      : currentMatchTime;
+    setEventStaticGameTime(eventTime);
     eventOpenMsRef.current = Date.now();
     setStopClock(Boolean(game?.settings?.autoStopClockOnMajorEvent));
     setTeamTarget("us");
@@ -831,119 +842,154 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       return;
     }
 
-    // 2. SAVE OR MISS OUTCOME: Log immediate player actions and PK event
-    startTransition(async () => {
-      try {
-        const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
-        const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
-        const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
-        const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
-        
-        const activeGk = players.find((p) => p.fieldStatus === "onFieldGk");
-        const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
+    // 2. SAVE OR MISS OUTCOME: True 0ms optimistic update and immediate return to match console
+    try {
+      const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
+      const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
+      const oppTeamSeasonId = game.opponentId || (game.isHome ? game.away_team_season_id : game.home_team_season_id);
+      const teamSeasonVal = isOpp ? oppTeamSeasonId : ourTeamSeasonId;
+      
+      const activeGk = players.find((p) => p.fieldStatus === "onFieldGk");
+      const defendingGkPlayerGameId = isOpp ? (activeGk?.playerGameId ? Number(activeGk.playerGameId) : (activeGk?.id ? Number(activeGk.id) : null)) : null;
 
-        const takerPgId = !isOpp && taker ? Number(taker.playerGameId || taker.id) : null;
+      const takerPgId = !isOpp && taker ? Number(taker.playerGameId || taker.id) : null;
+      const tempMajorId = `temp_major_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const tempPkId = `temp_pk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
-        // Log player action: shot_on_target for save, shot_off_target for miss
-        if (!isOpp && takerPgId) {
-          const actionType = pkOutcome === "saved" ? "shot" : "shot_off_target";
-          const tempActionId = `temp_act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-          
-          useGameStore.getState().addPlayerAction({
-            id: tempActionId,
-            game_id: Number(game.game_id || game.id),
-            team_season_id: Number(ourTeamSeasonId),
-            player_game_id: takerPgId,
-            event_type: actionType,
-            game_time: gameTimeSeconds,
-            period: game.currentPeriodIndex + 1,
-          } as any);
-
-          fetch("/api/game_events_player_actions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              game_id: Number(game.game_id || game.id),
-              player_game_id: takerPgId,
-              event_type: actionType,
-              game_time: gameTimeSeconds,
-              period: game.currentPeriodIndex + 1,
-            }),
-          }).catch((err) => console.error("Error persisting PK shot action:", err));
-        }
-
-        // ONLY log GK save if defending GK is on a team whose player stats we track (i.e. isOpp is true -> defending GK is OUR goalkeeper)
-        if (pkOutcome === "saved" && isOpp && defendingGkPlayerGameId) {
-          const tempSaveId = `temp_save_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-          useGameStore.getState().addPlayerAction({
-            id: tempSaveId,
-            game_id: Number(game.game_id || game.id),
-            team_season_id: Number(ourTeamSeasonId),
-            player_game_id: defendingGkPlayerGameId,
-            event_type: "save",
-            game_time: gameTimeSeconds,
-            period: game.currentPeriodIndex + 1,
-          } as any);
-
-          fetch("/api/game_events_player_actions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              game_id: Number(game.game_id || game.id),
-              player_game_id: defendingGkPlayerGameId,
-              event_type: "save",
-              game_time: gameTimeSeconds,
-              period: game.currentPeriodIndex + 1,
-            }),
-          }).catch((err) => console.error("Error persisting PK GK save action:", err));
-        }
-
-        // Save Major Event & Penalty Event
-        const majorRes = await fetch(`/api/game_events_major`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            game_id: Number(game.game_id || game.id),
-            period: game.currentPeriodIndex + 1,
-            event_type: "penalty",
-            game_time: gameTimeSeconds,
-            clock_should_run: stopClock ? 0 : 1,
-            details: pkNotes || `Penalty Kick (${pkOutcome.toUpperCase()})`,
-          }),
-        }).then((r) => r.json());
-
-        if (majorRes?.id) {
-          await fetch(`/api/game_events_penalties`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              major_event_id: Number(majorRes.id),
-              team_season_id: Number(teamSeasonVal),
-              shooter_player_game_id: takerPgId,
-              opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
-              outcome: pkOutcome,
-            }),
-          });
-        }
-
-        saveGameCache(
-          game.game_id || game.id || "",
-          useGameStore.getState().game,
-          useGamePlayersStore.getState().players
-        );
-
-        toast.success(`Penalty Kick (${pkOutcome.toUpperCase()}) recorded!`);
-
-        const pendingSubs = getPendingSubsSync();
-        if (pendingSubs.length > 0) {
-          setShowPendingSubPrompt(true);
-        } else {
-          onClose();
-        }
-      } catch (err: any) {
-        toast.error("Failed to record penalty kick: " + err.message);
+      let saveActionObj = null;
+      if (pkOutcome === "saved" && isOpp && defendingGkPlayerGameId) {
+        const tempSaveId = `temp_save_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        saveActionObj = {
+          id: tempSaveId,
+          game_id: Number(game.game_id || game.id),
+          team_season_id: Number(ourTeamSeasonId),
+          player_game_id: defendingGkPlayerGameId,
+          event_type: "save",
+          game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
+        };
       }
-    });
+
+      // 1. Synchronously log penalty and major event to store (0ms UI latency)
+      useGameStore.getState().addPenaltyEvent(
+        {
+          id: tempPkId,
+          major_event_id: tempMajorId,
+          team_season_id: Number(teamSeasonVal),
+          shooter_player_game_id: takerPgId,
+          opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
+          outcome: pkOutcome,
+        } as any,
+        {
+          id: tempMajorId,
+          game_id: Number(game.game_id || game.id),
+          period: game.currentPeriodIndex + 1,
+          event_type: "penalty",
+          game_time: gameTimeSeconds,
+          clock_should_run: stopClock ? 0 : 1,
+          details: pkNotes || `Penalty Kick (${pkOutcome.toUpperCase()})`,
+          start_time: Date.now(),
+          end_time: null,
+        } as any,
+        null,
+        saveActionObj as any
+      );
+
+      // Also synchronously log shooter action if our player
+      if (!isOpp && takerPgId) {
+        const actionType = pkOutcome === "saved" ? "shot" : "shot_off_target";
+        const tempActionId = `temp_act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        useGameStore.getState().addPlayerAction({
+          id: tempActionId,
+          game_id: Number(game.game_id || game.id),
+          team_season_id: Number(ourTeamSeasonId),
+          player_game_id: takerPgId,
+          event_type: actionType,
+          game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
+        } as any);
+      }
+
+      if (stopClock) {
+        setIsPausedLocally(true);
+      }
+
+      saveGameCache(
+        game.game_id || game.id || "",
+        useGameStore.getState().game,
+        useGamePlayersStore.getState().players
+      );
+
+      toast.success(`Penalty Kick (${pkOutcome.toUpperCase()}) recorded!`);
+
+      // Immediately return to match console without sub prompt interruptions or delay
+      onClose();
+
+      // 2. Background Persistence (Non-blocking)
+      (async () => {
+        try {
+          if (!isOpp && takerPgId) {
+            const actionType = pkOutcome === "saved" ? "shot" : "shot_off_target";
+            fetch("/api/game_events_player_actions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                game_id: Number(game.game_id || game.id),
+                player_game_id: takerPgId,
+                event_type: actionType,
+                game_time: gameTimeSeconds,
+                period: game.currentPeriodIndex + 1,
+              }),
+            }).catch((err) => console.error("Error persisting PK shot action:", err));
+          }
+
+          if (pkOutcome === "saved" && isOpp && defendingGkPlayerGameId) {
+            fetch("/api/game_events_player_actions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                game_id: Number(game.game_id || game.id),
+                player_game_id: defendingGkPlayerGameId,
+                event_type: "save",
+                game_time: gameTimeSeconds,
+                period: game.currentPeriodIndex + 1,
+              }),
+            }).catch((err) => console.error("Error persisting PK GK save action:", err));
+          }
+
+          const majorRes = await fetch(`/api/game_events_major`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              game_id: Number(game.game_id || game.id),
+              period: game.currentPeriodIndex + 1,
+              event_type: "penalty",
+              game_time: gameTimeSeconds,
+              clock_should_run: stopClock ? 0 : 1,
+              details: pkNotes || `Penalty Kick (${pkOutcome.toUpperCase()})`,
+            }),
+          }).then((r) => r.json());
+
+          if (majorRes?.id) {
+            await fetch(`/api/game_events_penalties`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                major_event_id: Number(majorRes.id),
+                team_season_id: Number(teamSeasonVal),
+                shooter_player_game_id: takerPgId,
+                opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
+                outcome: pkOutcome,
+              }),
+            });
+          }
+        } catch (err: any) {
+          console.error("Error persisting penalty kick in background:", err);
+        }
+      })();
+    } catch (err: any) {
+      toast.error("Failed to record penalty kick: " + err.message);
+    }
   };
 
   // SUBMIT STOPPAGE / INJURY / VAR
@@ -1127,11 +1173,12 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       <div className="flex flex-col max-h-[75vh] sm:max-h-[80vh] text-xs">
         {/* Scrollable Modal Content Body */}
         <div className="flex-1 overflow-y-auto pr-1 space-y-3 pb-2 min-h-0">
-          {/* Header Bar: Timed Match Clock & Event Duration Clock & Single Pause Toggle */}
+          {/* Header Bar: Active Game Clock, Static Event Game Time, and Event Duration Timer */}
           <div className="flex flex-wrap items-center justify-between p-3 bg-surface border border-border/80 rounded-xl shadow-2xs gap-2">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* 1. Active Game Clock (responsive to pause/run toggle) */}
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Game Clock:</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted">Active Game Clock:</span>
                 <span className={`font-mono font-black text-xs px-2 py-0.5 rounded-md border ${
                   stopClock
                     ? "bg-amber-500/10 text-amber-500 border-amber-500/30 font-bold"
@@ -1141,8 +1188,15 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-0.5 rounded-md text-indigo-400 font-mono font-bold text-xs">
-                <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400/80">Event Duration:</span>
+              {/* 2. Game Time of the Event (Static timestamp, not a ticking clock) */}
+              <div className="flex items-center gap-1.5 bg-slate-500/10 border border-slate-500/30 px-2 py-0.5 rounded-md text-slate-300 font-mono font-bold text-xs">
+                <span className="text-[9px] uppercase font-black tracking-wider text-slate-400">Event Game Time:</span>
+                <span className="text-xs font-black text-white">{formatSecondsToMmss(eventStaticGameTime)}</span>
+              </div>
+
+              {/* 3. Elapsed Time of the Event (Live timer: how long has this event/stoppage been active) */}
+              <div className="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 rounded-md text-indigo-400 font-mono font-bold text-xs">
+                <span className="text-[9px] uppercase font-black tracking-wider text-indigo-400/80">Event Elapsed:</span>
                 <span className="text-xs font-black text-indigo-300 animate-pulse">{formatSecondsToMmss(eventDurationSeconds)}</span>
               </div>
             </div>

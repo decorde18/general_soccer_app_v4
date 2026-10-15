@@ -28,6 +28,11 @@ export default function FullscreenManager({ className = "" }: FullscreenManagerP
       setIsFullscreen(active);
       if (active) {
         setShowResumeBanner(false);
+      } else {
+        const pref = typeof window !== "undefined" ? localStorage.getItem("gamestats_fullscreen_pref") : null;
+        if (pref === "true") {
+          setShowResumeBanner(true);
+        }
       }
     };
 

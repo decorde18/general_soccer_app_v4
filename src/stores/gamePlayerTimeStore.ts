@@ -1,13 +1,19 @@
 import { create } from "zustand";
 import useGameStore from "./gameStore";
 import useGamePlayersStore, { Player } from "./gamePlayersStore";
-import { calculateActivePlayerTimeOnField, calculateActivePlayerTimeOffField, calculateRecentPlayerTimeOffField } from "@/lib/utils/dateTimeUtils";
+import {
+  calculateActivePlayerTimeOnField,
+  calculateActivePlayerTimeOffField,
+  calculateRecentPlayerTimeOffField,
+  calculateRecentPlayerTimeOnField,
+} from "@/lib/utils/dateTimeUtils";
 
 /* ==================== HELPERS ==================== */
 
 const normalizeSubs = (subs: any[]): any[] =>
   (subs || [])
-    .filter((sub) => sub.gameTime !== null && sub.gameTime !== undefined || sub.sub_time !== null && sub.sub_time !== undefined)
+    .filter((sub) => (sub.gameTime !== null && sub.gameTime !== undefined) || (sub.sub_time !== null && sub.sub_time !== undefined))
+    .filter((sub) => !sub.isSwap && !sub.is_swap && sub.is_swap !== 1)
     .sort((a, b) => Number(a.gameTime ?? a.sub_time ?? 0) - Number(b.gameTime ?? b.sub_time ?? 0));
 
 /**
@@ -154,24 +160,17 @@ const useGamePlayerTimeStore = create<GamePlayerTimeStoreState>((set, get) => ({
   calculateCurrentTimeOnField: (player, currentGameTime) => {
     if (!player) return 0;
 
-    if (!isPlayerOnFieldNow(player)) return 0;
-
     const game = useGameStore.getState().game;
     if (!game) return 0;
 
     const periods = getGamePeriodIntervals(game, currentGameTime);
     const stoppages = getGameStoppageIntervals(game);
+    const isStarter = Boolean(player.started || ["starter", "goalkeeper"].includes(player.gameStatus));
 
-    const ins = normalizeSubs(player.ins);
-    const lastIn = ins[ins.length - 1];
-    const isStarter = ["starter", "goalkeeper"].includes(player.gameStatus);
-
-    const activeIns = lastIn ? [lastIn] : [];
-
-    return calculateActivePlayerTimeOnField(
-      isStarter && !lastIn,
-      activeIns,
-      [],
+    return calculateRecentPlayerTimeOnField(
+      isStarter,
+      player.ins,
+      player.outs,
       periods,
       stoppages,
       currentGameTime

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Player } from "@/stores/gamePlayersStore";
 import { PendingSub } from "@/stores/gameSubsStore";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
@@ -48,6 +48,96 @@ export default function LivePlayerTable({
   const isGk = tableType === "gk";
   const isBench = tableType === "bench";
 
+  type SortField = "number" | "name" | "shots" | "saves" | "goals" | "assists" | "ga" | "plusMinus" | "totalTime" | "secondaryTime";
+  type SortOrder = "asc" | "desc";
+
+  const [sortField, setSortField] = useState<SortField>("number");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortOrder(field === "number" || field === "name" ? "asc" : "desc");
+    }
+  };
+
+  const sortedPlayers = useMemo(() => {
+    return [...players].sort((a, b) => {
+      let valA: any = 0;
+      let valB: any = 0;
+
+      switch (sortField) {
+        case "number":
+          valA = a.jerseyNumber !== null && a.jerseyNumber !== undefined ? Number(a.jerseyNumber) : 999;
+          valB = b.jerseyNumber !== null && b.jerseyNumber !== undefined ? Number(b.jerseyNumber) : 999;
+          break;
+        case "name":
+          valA = `${a.lastName || ""} ${a.firstName || ""}`.toLowerCase();
+          valB = `${b.lastName || ""} ${b.firstName || ""}`.toLowerCase();
+          break;
+        case "shots":
+          valA = getPlayerStats(a).shots;
+          valB = getPlayerStats(b).shots;
+          break;
+        case "saves":
+          valA = getPlayerStats(a).saves;
+          valB = getPlayerStats(b).saves;
+          break;
+        case "goals":
+          valA = getPlayerStats(a).goals;
+          valB = getPlayerStats(b).goals;
+          break;
+        case "assists":
+          valA = getPlayerStats(a).assists;
+          valB = getPlayerStats(b).assists;
+          break;
+        case "ga":
+          valA = getPlayerStats(a).goalsAgainst;
+          valB = getPlayerStats(b).goalsAgainst;
+          break;
+        case "plusMinus":
+          valA = getPlayerStats(a).plusMinus || 0;
+          valB = getPlayerStats(b).plusMinus || 0;
+          break;
+        case "totalTime":
+          valA = calculateTotalTimeOnField(a, gameTimeSeconds);
+          valB = calculateTotalTimeOnField(b, gameTimeSeconds);
+          break;
+        case "secondaryTime":
+          valA = calculateSecondaryTime(a, gameTimeSeconds);
+          valB = calculateSecondaryTime(b, gameTimeSeconds);
+          break;
+        default:
+          valA = Number(a.jerseyNumber || 999);
+          valB = Number(b.jerseyNumber || 999);
+      }
+
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [players, sortField, sortOrder, gameTimeSeconds, getPlayerStats, calculateTotalTimeOnField, calculateSecondaryTime]);
+
+  const renderSortHeader = (label: string, field: SortField, className: string = "") => {
+    const isActive = sortField === field;
+    return (
+      <th
+        onClick={() => handleSort(field)}
+        className={`py-0.5 px-1.5 align-middle cursor-pointer hover:text-white transition-colors select-none ${className}`}
+        title={`Sort by ${label}`}
+      >
+        <span className="inline-flex items-center gap-0.5">
+          <span>{label}</span>
+          <span className={`text-[8px] font-mono ${isActive ? "text-primary opacity-100" : "opacity-30"}`}>
+            {isActive ? (sortOrder === "asc" ? "▲" : "▼") : "↕"}
+          </span>
+        </span>
+      </th>
+    );
+  };
+
   const gameStore = useGameStore.getState();
   const currentPeriod = (gameStore.game?.currentPeriodIndex ?? 0) + 1;
   const gameSettings = gameStore.game?.settings;
@@ -61,36 +151,34 @@ export default function LivePlayerTable({
       <table className="w-full text-left select-none border-collapse text-[11px]">
         <thead>
           <tr className="border-b border-border/40 text-muted uppercase font-black text-[9px] h-5.5">
-            <th className="py-0.5 px-1.5 text-center w-8 align-middle">#</th>
-            <th className="py-0.5 px-1.5 w-1/3 align-middle">Name</th>
+            {renderSortHeader("#", "number", "text-center w-8")}
+            {renderSortHeader("Name", "name", "w-1/3")}
             {isPreGame ? (
               <th className="py-0.5 px-1.5 text-center w-36 align-middle">Status</th>
             ) : (
               <>
                 {isGk ? (
                   <>
-                    <th className="py-0.5 px-1.5 text-right w-12 align-middle">Saves</th>
-                    <th className="py-0.5 px-1.5 text-right w-12 align-middle">GA</th>
+                    {renderSortHeader("Saves", "saves", "text-right w-12")}
+                    {renderSortHeader("GA", "ga", "text-right w-12")}
                   </>
                 ) : (
                   <>
-                    <th className="py-0.5 px-1.5 text-right w-10 align-middle">Shots</th>
-                    <th className="py-0.5 px-1.5 text-right w-10 align-middle">Goals</th>
-                    <th className="py-0.5 px-1.5 text-right w-10 align-middle">Assts</th>
+                    {renderSortHeader("Shots", "shots", "text-right w-10")}
+                    {renderSortHeader("Goals", "goals", "text-right w-10")}
+                    {renderSortHeader("Assts", "assists", "text-right w-10")}
                   </>
                 )}
-                <th className="py-0.5 px-1.5 text-center w-10 align-middle">+/-</th>
-                <th className="py-0.5 px-1.5 text-right w-16 align-middle">Total Time</th>
-                <th className="py-0.5 px-1.5 text-right w-16 align-middle">
-                  {isBench ? "Recent Bench" : "Shift Time"}
-                </th>
+                {renderSortHeader("+/-", "plusMinus", "text-center w-10")}
+                {renderSortHeader("Total Time", "totalTime", "text-right w-16")}
+                {renderSortHeader(isBench ? "Recent Bench" : "Shift Time", "secondaryTime", "text-right w-16")}
                 <th className="py-0.5 px-1.5 text-center w-36 align-middle">Action</th>
               </>
             )}
           </tr>
         </thead>
         <tbody className="divide-y divide-border/30">
-          {players.map((player) => {
+          {sortedPlayers.map((player) => {
             const isSelected = subSelectedId === String(player.id);
             const totalTime = calculateTotalTimeOnField(player, gameTimeSeconds);
             const secondaryTime = calculateSecondaryTime(player, gameTimeSeconds);

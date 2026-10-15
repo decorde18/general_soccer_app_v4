@@ -1092,6 +1092,86 @@ export function calculateRecentPlayerTimeOffField(
 }
 
 /**
+ * Calculates a player's MOST RECENT active continuous shift on the field (seconds since current shift start).
+ * Halftime breaks and stopped-clock stoppages do NOT accumulate as active shift time.
+ */
+export function calculateRecentPlayerTimeOnField(
+  isStarter: boolean,
+  subsIn: any[] = [],
+  subsOut: any[] = [],
+  periods: PeriodInterval[] = [],
+  stoppages: StoppageInterval[] = [],
+  currentGameTime: number = 0
+): number {
+  const normIn = (subsIn || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const normOut = (subsOut || [])
+    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
+    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
+    .filter((t) => t >= 0)
+    .sort((a, b) => a - b);
+
+  const events: { type: "IN" | "OUT"; time: number }[] = [];
+  normIn.forEach((t) => events.push({ type: "IN", time: t }));
+  normOut.forEach((t) => events.push({ type: "OUT", time: t }));
+  events.sort((a, b) => a.time - b.time);
+
+  let onField = isStarter;
+  let lastSubInTime: number | null = isStarter ? 0 : null;
+
+  events.forEach((evt) => {
+    if (evt.type === "IN") {
+      onField = true;
+      lastSubInTime = evt.time;
+    } else if (evt.type === "OUT") {
+      onField = false;
+      lastSubInTime = null;
+    }
+  });
+
+  if (!onField || lastSubInTime === null) {
+    return 0;
+  }
+
+  const shiftStart = lastSubInTime;
+  const shiftEnd = Math.max(shiftStart, currentGameTime);
+
+  const effectivePeriods =
+    periods && periods.length > 0
+      ? periods
+      : [{ start: 0, end: shiftEnd }];
+
+  let totalActiveShiftSeconds = 0;
+
+  for (const p of effectivePeriods) {
+    const overlapStart = Math.max(shiftStart, p.start);
+    const overlapEnd = Math.min(shiftEnd, p.end);
+
+    if (overlapEnd > overlapStart) {
+      let activeSecs = overlapEnd - overlapStart;
+
+      for (const s of stoppages) {
+        const sEnd = s.endTime !== null && s.endTime !== undefined ? s.endTime : overlapEnd;
+        const sOverlapStart = Math.max(overlapStart, s.startTime);
+        const sOverlapEnd = Math.min(overlapEnd, sEnd);
+
+        if (sOverlapEnd > sOverlapStart) {
+          activeSecs -= sOverlapEnd - sOverlapStart;
+        }
+      }
+
+      totalActiveShiftSeconds += Math.max(0, activeSecs);
+    }
+  }
+
+  return Math.round(totalActiveShiftSeconds);
+}
+
+/**
  * Legacy wrapper for calculateActivePlayerTimeOnField.
  */
 export function calculatePlayerTimeOnField(
