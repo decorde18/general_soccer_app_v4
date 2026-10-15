@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, X, Settings, BarChart2, Activity, Users } from "lucide-react";
+import { Menu, X, Settings, BarChart2, Activity, Users, Award } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
 
 import useGameStore from "@/stores/gameStore";
@@ -32,7 +32,7 @@ export default function GameNavBar() {
   const isGameCompleted = gameStage === GAME_STAGES.END_GAME;
 
   const isOnSubPage =
-    pathname.includes("/settings") || pathname.includes("/manage");
+    pathname.includes("/settings") || pathname.includes("/manage") || pathname.includes("/shootout");
 
   const navItems: NavItem[] = [
     {
@@ -54,6 +54,15 @@ export default function GameNavBar() {
       icon: <Settings className='h-5 w-5' />,
     },
   ];
+
+  if (game.settings?.hasShootout || pathname.includes("/shootout")) {
+    navItems.push({
+      id: "shootout",
+      label: "Penalty Shootout",
+      path: `${baseGamePath}/shootout`,
+      icon: <Award className='h-5 w-5 text-amber-400' />,
+    });
+  }
 
   if (!isGameCompleted && isOnSubPage) {
     navItems.unshift({

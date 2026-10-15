@@ -28,6 +28,7 @@ describe("LiveNavigationDrawer", () => {
 
     expect(screen.getByText("Match Operations")).toBeInTheDocument();
     expect(screen.getByText("Lineup & Roster Setup")).toBeInTheDocument();
+    expect(screen.getByText("Penalty Shootout Console")).toBeInTheDocument();
     expect(screen.getByText("Game Rules & Settings")).toBeInTheDocument();
     expect(screen.getByText("Game Management")).toBeInTheDocument();
     expect(screen.getByText("Match Summary")).toBeInTheDocument();

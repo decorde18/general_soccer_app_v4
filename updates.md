@@ -1,3 +1,66 @@
+### [2026-10-15 14:10] Penalty Shootout Distance-to-Decision, Lineup Jersey Verification & Master Calendar
+- **Type**: Feature / UX Enhancement / Roadmap Reconciliation
+- **Summary**:
+  1. **Shootout Distance-to-Decision & Live Kick Stakes (`shootoutUtils.ts`, `ShootoutConsoleClient.tsx`)**:
+     - Built `computeMinKicksToDecision` BFS engine determining the exact minimum kicks until a winner can mathematically be declared from any regulation or sudden-death state.
+     - Implemented dynamic live consequences card for the active kick:
+       - ⚽ **If Scores**: Highlights whether the team clinches the win immediately or how many kicks remain to decide.
+       - ❌ **If Misses**: High-contrast alert when the opponent wins the shootout immediately (*"If missed, [Opponent] WINS THE SHOOTOUT!"*) or whether it extends sudden death.
+       - Dynamic badges above kick action buttons (`★ Clinches Win` on Goal, `⚠️ Opponent Wins` on Miss/Saved).
+     - Added comprehensive unit tests in `shootoutUtils.test.ts` (10 tests passing 100%).
+  2. **Lineup Missing & Duplicate Jersey Number Resolution (`LineupJerseyCheckModal.tsx`, `LineupFooter.tsx`, `gameLineup-actions.ts`)**:
+     - Added automatic verification modal on "Confirm Lineup" when starting field players or goalkeepers lack a jersey number or have duplicate numbers.
+     - Allows assigning jersey numbers inline with an optional toggle to save permanently to team roster via `updateLineupPlayerJerseys`.
+  3. **Step 34: Interactive Team & Master Calendar (`/calendar`, `CalendarClient.tsx`, `calendar-actions.ts`)**:
+     - Built `/calendar` aggregating scheduled matches (`getGames`) and program events (`prisma.events`: practices, meetings, camps, banquets).
+     - Multi-view switcher: Month Grid view (with colored category badges and day slots) and Agenda List view.
+     - Category filter pills (Matches, Practices, Meetings, Camps, Team Events).
+     - Interactive Event Modal with venue/sublocation info (`LocationLink`) and direct match links.
+     - Added `Calendar & Schedule` link to primary navigation (`NavLinks.tsx`).
+  4. **`todo.md` Full Audit & Reconciliation**:
+     - Reviewed and resolved every unchecked item in `todo.md`.
+     - Verified Step 12.1 (Jersey Modal), Step 19.1 (superseded by centralized competition settings), Step 19.2 (rollover), Step 30 (awards schema ready), Step 33 (Shootout Console), and Step 34 (Calendar).
+     - Zero unchecked active roadmap items remaining; all 29 test suites (115 tests) passing with 0 TypeScript errors.
+- **Modified Files**:
+  - `src/lib/utils/shootoutUtils.ts`
+  - `src/lib/utils/__tests__/shootoutUtils.test.ts`
+  - `src/components/game/shootout/ShootoutConsoleClient.tsx`
+  - `src/app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/lineup/LineupJerseyCheckModal.tsx`
+  - `src/app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/lineup/LineupFooter.tsx`
+  - `src/lib/actions/gameLineup-actions.ts`
+  - `src/lib/actions/calendar-actions.ts`
+  - `src/components/calendar/CalendarClient.tsx`
+  - `src/app/(mainAppLayout)/calendar/page.tsx`
+  - `src/components/layout/NavLinks.tsx`
+  - `todo.md`
+  - `updates.md`
+
+### [2026-10-15 13:25] Goal Audit Verification & Legacy Migrations (Parents, Relationships, Calendar Events)
+- **Type**: Migration / Audit / Data Integrity
+- **Summary**:
+  1. **Comprehensive Goal Audit of `u676616277_hs_original.sql`**:
+     - Audited all 1,155 goals (776 Goals For, 379 Goals Against) and verified 100% mapping integrity across periods, stoppages, and games with 0 orphan records.
+     - Confirmed exact reasons for completed games without scores: 245 JV games (historical stats were never tracked for JV in legacy system), 33 games from 2004–2006 (prior to stoppage/goal event logging), ~60 pre-season August scrimmages, and 31 regular/playoff games where live tracking was not entered.
+  2. **Parent & Player Relationships Migration (`scripts/migrate_parents_and_relationships.ts`, `scripts/import_player_relationships.sql`)**:
+     - Parsed 310 legacy parents and 318 `playerParents` relationship linkages.
+     - Mapped 100% of player and parent person IDs cleanly to `player_relationships` (`relationship = 'Parent'`).
+     - Generated executable SQL script `scripts/import_player_relationships.sql` with `ON DUPLICATE KEY UPDATE` guards.
+  3. **Calendar Events Migration (`scripts/migrate_calendar_events.ts`, `scripts/import_calendar_events.sql`)**:
+     - Parsed 11 legacy `calendarEvents` (PreSeason, Regular Season, Tryouts, Summer Camps, Alumni Game).
+     - Generated executable SQL script `scripts/import_calendar_events.sql` mapping dates, all-day flags, Google Calendar IDs, and location references into the Prisma `events` table.
+  4. **Minor Events Migration Staging (`scripts/migrate_minor_events.ts`)**:
+     - Staged migration for 64 historical corner kicks (20), offsides (19), fouls (19), and shots (6) mapped across 4 legacy matches.
+- **Modified Files**:
+  - `scripts/migrate_parents_and_relationships.ts`
+  - `scripts/import_player_relationships.sql`
+  - `scripts/migrate_calendar_events.ts`
+  - `scripts/import_calendar_events.sql`
+  - `scripts/migrate_minor_events.ts`
+  - `scratch/analyze_legacy_goals.ts`
+  - `scratch/audit_parents_mapping.ts`
+  - `scratch/audit_calendar_events.ts`
+  - `scratch/audit_minor_events_mapping.ts`
+
 ### [2026-10-15 11:37] Step 32: Live Match Audit Findings, Clock/Playing Time Integrity & Mobile/Tablet Enhancements
 - **Type**: Feature / Bug Fix / Refactor / UX Enhancement
 - **Summary**:

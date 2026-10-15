@@ -266,3 +266,37 @@ export async function saveGameLineup(
   revalidatePath(`/gamestats/${teamSeasonId}/${gameId}`);
   return { success: true };
 }
+
+export async function updateLineupPlayerJerseys(
+  teamSeasonId: number,
+  assignments: { playerId: number; jerseyNumber: number; applyToSeason: boolean }[]
+) {
+  await requireSession();
+  const teamSeason = await prisma.team_seasons.findUnique({
+    where: { id: teamSeasonId },
+    select: { team_id: true },
+  });
+  if (!teamSeason) throw new Error("Team season not found");
+  await verifyTeamAccess(teamSeason.team_id);
+
+  const updates = assignments
+    .filter((a) => a.applyToSeason && a.jerseyNumber > 0)
+    .map((a) =>
+      prisma.player_teams.updateMany({
+        where: {
+          team_season_id: teamSeasonId,
+          player_id: a.playerId,
+        },
+        data: {
+          jersey_number: a.jerseyNumber,
+        },
+      })
+    );
+
+  if (updates.length > 0) {
+    await prisma.$transaction(updates);
+    revalidatePath(`/gamestats/${teamSeasonId}`);
+  }
+
+  return { success: true };
+}

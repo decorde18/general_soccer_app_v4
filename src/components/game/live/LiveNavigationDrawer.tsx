@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { X, Users, Settings, Sliders, FileText, ChevronRight } from "lucide-react";
+import { X, Users, Settings, Sliders, FileText, ChevronRight, Award } from "lucide-react";
 
 interface LiveNavigationDrawerProps {
   isOpen: boolean;
@@ -28,6 +28,13 @@ export default function LiveNavigationDrawer({
       icon: Users,
       path: `/gamestats/${teamSeasonId}/${gameId}/lineup`,
       color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+    },
+    {
+      title: "Penalty Shootout Console",
+      desc: "Record penalty kicks, sudden death & live clinch scenarios",
+      icon: Award,
+      path: `/gamestats/${teamSeasonId}/${gameId}/shootout`,
+      color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
     },
     {
       title: "Game Rules & Settings",

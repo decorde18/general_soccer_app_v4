@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { saveGameLineup } from "@/lib/actions/gameLineup-actions";
 import { toast } from "sonner";
+import LineupJerseyCheckModal, { JerseyIssuePlayer } from "./LineupJerseyCheckModal";
 
 export default function LineupFooter() {
   const params = useParams();
@@ -14,10 +15,13 @@ export default function LineupFooter() {
   const teamSeasonId = params.teamSeasonId as string;
 
   const players = useGamePlayersStore((s) => s.players);
+  const setPlayers = useGamePlayersStore((s) => s.setPlayers);
   const game = useGameStore((s) => s.game);
   const router = useRouter();
 
   const [isSaving, setIsSaving] = useState(false);
+  const [showJerseyModal, setShowJerseyModal] = useState(false);
+  const [jerseyIssues, setJerseyIssues] = useState<JerseyIssuePlayer[]>([]);
 
   if (!game) return null;
 
@@ -29,10 +33,10 @@ export default function LineupFooter() {
 
   const isComplete = startersCount === totalFieldPlayers && hasGoalkeeper;
 
-  const handleConfirmLineup = async () => {
+  const executeSave = async (updatedPlayers = players) => {
     setIsSaving(true);
     try {
-      const playerStatuses = players.map((p) => ({
+      const playerStatuses = updatedPlayers.map((p) => ({
         id: Number(p.id),
         gameStatus: p.gameStatus,
         isGuest: p.isGuest,
@@ -49,6 +53,68 @@ export default function LineupFooter() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleConfirmLineup = () => {
+    // Check for missing or duplicate jersey numbers among starters & goalkeeper
+    const starters = players.filter(
+      (p) => p.gameStatus === "starter" || p.gameStatus === "goalkeeper"
+    );
+
+    const counts = new Map<string, number>();
+    starters.forEach((p) => {
+      if (p.jerseyNumber != null && String(p.jerseyNumber).trim() !== "") {
+        const key = String(p.jerseyNumber);
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+    });
+
+    const issues: JerseyIssuePlayer[] = [];
+    starters.forEach((p) => {
+      const hasNumber = p.jerseyNumber != null && String(p.jerseyNumber).trim() !== "";
+      if (!hasNumber) {
+        issues.push({
+          id: Number(p.id),
+          fullName: p.fullName,
+          jerseyNumber: null,
+          gameStatus: p.gameStatus,
+          issue: "missing",
+        });
+      } else if ((counts.get(String(p.jerseyNumber)) || 0) > 1) {
+        issues.push({
+          id: Number(p.id),
+          fullName: p.fullName,
+          jerseyNumber: p.jerseyNumber,
+          gameStatus: p.gameStatus,
+          issue: "duplicate",
+        });
+      }
+    });
+
+    if (issues.length > 0) {
+      setJerseyIssues(issues);
+      setShowJerseyModal(true);
+    } else {
+      executeSave();
+    }
+  };
+
+  const handleModalConfirm = (assigned: { playerId: number; jerseyNumber: number }[]) => {
+    setShowJerseyModal(false);
+    const updated = players.map((p) => {
+      const found = assigned.find((a) => a.playerId === Number(p.id));
+      if (found) {
+        return { ...p, jerseyNumber: found.jerseyNumber };
+      }
+      return p;
+    });
+    setPlayers(updated);
+    executeSave(updated);
+  };
+
+  const handleProceedAnyway = () => {
+    setShowJerseyModal(false);
+    executeSave();
   };
 
   return (
@@ -96,6 +162,15 @@ export default function LineupFooter() {
           </span>
         </Button>
       </div>
+
+      <LineupJerseyCheckModal
+        isOpen={showJerseyModal}
+        onClose={() => setShowJerseyModal(false)}
+        teamSeasonId={Number(teamSeasonId)}
+        issuePlayers={jerseyIssues}
+        onConfirm={handleModalConfirm}
+        onProceedAnyway={handleProceedAnyway}
+      />
     </div>
   );
 }

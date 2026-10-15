@@ -23,6 +23,9 @@ export default function NavLinks({ pathname, showDashboard, isAdmin }: NavLinksP
         <Link href="/stats" className={linkClass(Boolean(pathname === "/stats" || pathname?.startsWith("/stats")))}>
           <span className="font-medium text-left">Stats Center</span>
         </Link>
+        <Link href="/calendar" className={linkClass(Boolean(pathname === "/calendar" || pathname?.startsWith("/calendar")))}>
+          <span className="font-medium text-left">Calendar & Schedule</span>
+        </Link>
         {showDashboard && (
           <>
             <Link href="/dashboard" className={linkClass(pathname === "/dashboard")}>
