@@ -3,6 +3,8 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import TeamCountersPanel from "../TeamCountersPanel";
 
+import { GAME_STAGES } from "@/stores/gameStore";
+
 describe("TeamCountersPanel", () => {
   const defaultProps = {
     ourShortName: "Lions FC",
@@ -45,5 +47,13 @@ describe("TeamCountersPanel", () => {
 
     fireEvent.click(screen.getByLabelText("Remove Our Offside"));
     expect(defaultProps.onRemoveTeamEvent).toHaveBeenCalledWith(1, "offside");
+  });
+
+  it("disables counter buttons and displays Halftime indicator during BETWEEN_PERIODS", () => {
+    render(<TeamCountersPanel {...defaultProps} currentStage={GAME_STAGES.BETWEEN_PERIODS} />);
+
+    expect(screen.getByLabelText("Add Our Corner")).toBeDisabled();
+    expect(screen.getByLabelText("Remove Our Offside")).toBeDisabled();
+    expect(screen.getByText(/Halftime \(Paused\)/i)).toBeInTheDocument();
   });
 });

@@ -96,7 +96,19 @@ function getGameStoppageIntervals(game: any): { startTime: number; endTime: numb
 
   if (Array.isArray(game.gameEventsMajor)) {
     game.gameEventsMajor.forEach((m: any) => {
-      if (m.clock_should_run === 0 || m.event_type === "stoppage") {
+      if (
+        m.clock_should_run === 0 ||
+        m.clock_should_run === false ||
+        (m.clock_should_run === undefined && m.event_type === "stoppage")
+      ) {
+        // Ignore orphan cards/goals whose child event was deleted
+        if (m.event_type === "card" && (!game.gameEventsDiscipline || !game.gameEventsDiscipline.some((d: any) => String(d.major_event_id) === String(m.id)))) {
+          return;
+        }
+        if (m.event_type === "goal" && (!game.gameEventsGoals || !game.gameEventsGoals.some((g: any) => String(g.major_event_id) === String(m.id)))) {
+          return;
+        }
+
         const startSec = Number(m.game_time ?? 0);
         let endSec: number | null = null;
 

@@ -20,6 +20,8 @@ interface GameSettingsInput {
   maxSubWindowsPerGame?: number;
   maxSubWindowsPerHalf?: number;
   autoStopClockOnMajorEvent?: boolean;
+  mercyRuleGoalDiff?: number;
+  mercyRuleRunningClock?: boolean;
 }
 
 export async function updateGameSettings(
@@ -70,6 +72,12 @@ export async function updateGameSettings(
   }
   if (typeof settings.autoStopClockOnMajorEvent === "boolean") {
     notesObj.autoStopClockOnMajorEvent = settings.autoStopClockOnMajorEvent;
+  }
+  if (typeof settings.mercyRuleGoalDiff === "number") {
+    notesObj.mercyRuleGoalDiff = settings.mercyRuleGoalDiff;
+  }
+  if (typeof settings.mercyRuleRunningClock === "boolean") {
+    notesObj.mercyRuleRunningClock = settings.mercyRuleRunningClock;
   }
   if (typeof settings.goldenGoal === "boolean") {
     notesObj.goldenGoal = settings.goldenGoal;

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import Modal from "@/components/ui/Modal";
+import Dialog from "@/components/ui/Dialog";
 import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
@@ -10,6 +11,7 @@ import useGameStore from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
 import useGameSubsStore from "@/stores/gameSubsStore";
 import { checkPlayerSubEligibility } from "@/lib/utils/subRules";
+import { shouldAutoStopClockOnMajorEvent } from "@/lib/utils/gameRules";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
 import { GOAL_METHOD_OPTIONS } from "@/lib/utils/goalUtils";
@@ -88,9 +90,10 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   const [allowExhaustedOverride, setAllowExhaustedOverride] = useState(false);
   const [showPendingSubPrompt, setShowPendingSubPrompt] = useState(false);
   const [isSubWidgetExpanded, setIsSubWidgetExpanded] = useState(false);
+  const [showSplitConfirmDialog, setShowSplitConfirmDialog] = useState(false);
 
-  // Stop Clock toggle state (default: determined by game settings autoStopClockOnMajorEvent)
-  const [stopClock, setStopClock] = useState<boolean>(() => Boolean(game?.settings?.autoStopClockOnMajorEvent));
+  // Stop Clock toggle state (default: determined by game settings autoStopClockOnMajorEvent and NFHS mercy rule)
+  const [stopClock, setStopClock] = useState<boolean>(() => shouldAutoStopClockOnMajorEvent(game));
 
   // Active unended stoppage (strictly of type "stoppage")
   const activeStoppage = game?.gameEventsMajor?.find(
@@ -130,7 +133,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       : currentMatchTime;
     setEventStaticGameTime(eventTime);
     eventOpenMsRef.current = Date.now();
-    setStopClock(Boolean(game?.settings?.autoStopClockOnMajorEvent));
+    setStopClock(shouldAutoStopClockOnMajorEvent(game));
     setTeamTarget("us");
 
     // Reset Goal Form
@@ -297,40 +300,176 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     });
   };
 
-  const handleToggleClock = async () => {
+  const handleClockToggleClick = () => {
     if (!game) return;
-    if (activeStoppage) {
-      await endStoppage(activeStoppage.id);
-      setIsPausedLocally(false);
-    } else {
-      const gameTimeSeconds = useGameStore.getState().getGameTime();
-      const newMajor = await fetch(`/api/game_events_major`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          game_id: Number(game.game_id || game.id),
-          event_type: "stoppage",
-          period: game.currentPeriodIndex + 1,
-          game_time: gameTimeSeconds,
-          clock_should_run: 0,
-          details: "Manual Clock Pause",
-        }),
-      }).then((r) => r.json());
 
-      if (newMajor?.id) {
-        addMajorEvent({
-          id: newMajor.id,
-          game_id: Number(game.game_id || game.id),
-          period: game.currentPeriodIndex + 1,
-          game_time: gameTimeSeconds,
-          clock_should_run: 0,
-          details: "Manual Clock Pause",
-          start_time: Date.now(),
-          end_time: null,
-        });
+    if (!stopClock) {
+      // Clock is running; user clicked to pause it. Prompt with the 3 scenarios:
+      setShowSplitConfirmDialog(true);
+    } else {
+      // Clock is paused; user clicked to resume/run the clock.
+      if (activeStoppage) {
+        endStoppage(activeStoppage.id);
       }
-      setIsPausedLocally(true);
+      setStopClock(false);
+      setIsPausedLocally(false);
+      toast.info("Clock set to continuous running mode ⏱️");
     }
+  };
+
+  // Scenario 2: User confirms the whole event should be a stopped clock from event start
+  const handlePauseFromEventStart = () => {
+    if (!game) return;
+
+    // Start open paused stoppage from eventStaticGameTime with clock_should_run: 0
+    const pausedDesc =
+      stoppageDetails ||
+      `${(eventType === "stoppage" ? stoppageCategory : eventType).toUpperCase()} (Clock Paused from Start)`;
+    const tempPausedMajorId = `temp_major_pause_${Date.now()}`;
+
+    addMajorEvent({
+      id: tempPausedMajorId,
+      game_id: Number(game.game_id || game.id),
+      period: game.currentPeriodIndex + 1,
+      event_type: "stoppage",
+      game_time: eventStaticGameTime,
+      end_time: null,
+      clock_should_run: 0,
+      details: pausedDesc,
+      start_time: Date.now(),
+    } as any);
+
+    // Update Modal State
+    setStopClock(true);
+    setIsPausedLocally(true);
+    setLiveSeconds(eventStaticGameTime);
+    setEventDurationSeconds(0);
+    eventOpenMsRef.current = Date.now();
+    saveGameCache(
+      game.game_id || game.id || "",
+      useGameStore.getState().game,
+      useGamePlayersStore.getState().players
+    );
+
+    toast.success(
+      `Clock paused from event start (${formatSecondsToMmss(eventStaticGameTime)}).`
+    );
+
+    // Async Server Persistence
+    startTransition(async () => {
+      try {
+        await fetch(`/api/game_events_major`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            game_id: Number(game.game_id || game.id),
+            period: game.currentPeriodIndex + 1,
+            event_type: "stoppage",
+            game_time: eventStaticGameTime,
+            end_time: null,
+            clock_should_run: 0,
+            details: pausedDesc,
+          }),
+        });
+      } catch (err: any) {
+        console.error("Failed to persist paused stoppage to server:", err);
+      }
+    });
+  };
+
+  // Scenario 3: User chooses to pause clock at current time (split running play into closed interval)
+  const handleConfirmSplitToPause = () => {
+    if (!game) return;
+    const currentMatchTime = useGameStore.getState().getGameTime();
+    const currentLiveSecs = Math.max(liveSeconds, currentMatchTime);
+    const elapsedSecs = Math.max(0, currentLiveSecs - eventStaticGameTime);
+
+    // 1. Record running interval (T1 -> T2) with clock_should_run: 1
+    const runningDesc =
+      stoppageDetails ||
+      `${(eventType === "stoppage" ? stoppageCategory : eventType).toUpperCase()} (Running Play Interval)`;
+    const tempRunningMajorId = `temp_major_run_${Date.now()}`;
+
+    addMajorEvent({
+      id: tempRunningMajorId,
+      game_id: Number(game.game_id || game.id),
+      period: game.currentPeriodIndex + 1,
+      event_type: "stoppage",
+      game_time: eventStaticGameTime,
+      end_time: currentLiveSecs,
+      clock_should_run: 1,
+      details: runningDesc,
+      start_time: Date.now() - elapsedSecs * 1000,
+    } as any);
+
+    // 2. Start open paused stoppage at T2 with clock_should_run: 0
+    const pausedDesc =
+      stoppageDetails ||
+      `${(eventType === "stoppage" ? stoppageCategory : eventType).toUpperCase()} (Clock Paused)`;
+    const tempPausedMajorId = `temp_major_pause_${Date.now()}`;
+
+    addMajorEvent({
+      id: tempPausedMajorId,
+      game_id: Number(game.game_id || game.id),
+      period: game.currentPeriodIndex + 1,
+      event_type: "stoppage",
+      game_time: currentLiveSecs,
+      end_time: null,
+      clock_should_run: 0,
+      details: pausedDesc,
+      start_time: Date.now(),
+    } as any);
+
+    // 3. Update Modal State
+    setStopClock(true);
+    setIsPausedLocally(true);
+    setEventStaticGameTime(currentLiveSecs);
+    setEventDurationSeconds(0);
+    eventOpenMsRef.current = Date.now();
+    saveGameCache(
+      game.game_id || game.id || "",
+      useGameStore.getState().game,
+      useGamePlayersStore.getState().players
+    );
+
+    toast.success(
+      `Running play recorded (${formatSecondsToMmss(eventStaticGameTime)} – ${formatSecondsToMmss(currentLiveSecs)}). Clock paused!`
+    );
+
+    // 4. Async Server Persistence
+    startTransition(async () => {
+      try {
+        await fetch(`/api/game_events_major`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            game_id: Number(game.game_id || game.id),
+            period: game.currentPeriodIndex + 1,
+            event_type: "stoppage",
+            game_time: eventStaticGameTime,
+            end_time: currentLiveSecs,
+            clock_should_run: 1,
+            details: runningDesc,
+          }),
+        });
+
+        await fetch(`/api/game_events_major`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            game_id: Number(game.game_id || game.id),
+            period: game.currentPeriodIndex + 1,
+            event_type: "stoppage",
+            game_time: currentLiveSecs,
+            end_time: null,
+            clock_should_run: 0,
+            details: pausedDesc,
+          }),
+        });
+      } catch (err: any) {
+        console.error("Failed to persist split event to server:", err);
+      }
+    });
   };
 
   // Queue sub for restart
@@ -513,7 +652,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           clock_should_run: stopClock ? 0 : 1,
           details: goalNotes || (isOwnGoal ? "Own Goal Stoppage" : "Goal Kickoff Stoppage"),
           start_time: Date.now(),
-          end_time: null,
+          end_time: stopClock ? null : gameTimeSeconds,
         } as any
       );
 
@@ -576,6 +715,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
               game_time: gameTimeSeconds,
               clock_should_run: stopClock ? 0 : 1,
               details: goalNotes || (isOwnGoal ? "Own Goal Stoppage" : "Goal Kickoff Stoppage"),
+              end_time: stopClock ? null : gameTimeSeconds,
             }),
           }).then((r) => r.json());
 
@@ -618,7 +758,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                 clock_should_run: stopClock ? 0 : 1,
                 details: goalNotes || (isOwnGoal ? "Own Goal Stoppage" : "Goal Kickoff Stoppage"),
                 start_time: Date.now(),
-                end_time: null,
+                end_time: stopClock ? null : gameTimeSeconds,
               } as any
             );
             saveGameCache(
@@ -707,7 +847,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           clock_should_run: stopClock ? 0 : 1,
           details: cardReason || `${cardType.toUpperCase()} Card Stoppage`,
           start_time: Date.now(),
-          end_time: null,
+          end_time: stopClock ? null : gameTimeSeconds,
         } as any
       );
 
@@ -743,6 +883,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
               game_time: gameTimeSeconds,
               clock_should_run: stopClock ? 0 : 1,
               details: cardReason || `${cardType.toUpperCase()} Card Stoppage`,
+              end_time: stopClock ? null : gameTimeSeconds,
             }),
           }).then((r) => r.json());
 
@@ -775,12 +916,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
               {
                 id: Number(majorRes.id),
                 game_id: Number(game.game_id || game.id),
+                event_type: "card",
                 period: game.currentPeriodIndex + 1,
                 game_time: gameTimeSeconds,
                 clock_should_run: stopClock ? 0 : 1,
                 details: cardReason || `${cardType.toUpperCase()} Card Stoppage`,
                 start_time: Date.now(),
-                end_time: null,
+                end_time: stopClock ? null : gameTimeSeconds,
               } as any
             );
             saveGameCache(
@@ -889,7 +1031,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           clock_should_run: stopClock ? 0 : 1,
           details: pkNotes || `Penalty Kick (${pkOutcome.toUpperCase()})`,
           start_time: Date.now(),
-          end_time: null,
+          end_time: stopClock ? null : gameTimeSeconds,
         } as any,
         null,
         saveActionObj as any
@@ -967,6 +1109,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
               game_time: gameTimeSeconds,
               clock_should_run: stopClock ? 0 : 1,
               details: pkNotes || `Penalty Kick (${pkOutcome.toUpperCase()})`,
+              end_time: stopClock ? null : gameTimeSeconds,
             }),
           }).then((r) => r.json());
 
@@ -1008,11 +1151,11 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       game_id: Number(game.game_id || game.id),
       period: game.currentPeriodIndex + 1,
       event_type: "stoppage",
-      game_time: gameTimeSeconds,
+      game_time: eventStaticGameTime || gameTimeSeconds,
       clock_should_run: stopClock ? 0 : 1,
       details: reasonStr,
       start_time: Date.now(),
-      end_time: null,
+      end_time: stopClock ? null : gameTimeSeconds,
     });
 
     if (stopClock) {
@@ -1044,9 +1187,10 @@ export default function MajorEventModal(props: MajorEventModalProps) {
             game_id: Number(game.game_id || game.id),
             event_type: "stoppage",
             period: game.currentPeriodIndex + 1,
-            game_time: gameTimeSeconds,
+            game_time: eventStaticGameTime || gameTimeSeconds,
             clock_should_run: stopClock ? 0 : 1,
             details: reasonStr,
+            end_time: stopClock ? null : gameTimeSeconds,
           }),
         }).then((r) => r.json());
 
@@ -1161,6 +1305,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   );
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -1201,27 +1346,36 @@ export default function MajorEventModal(props: MajorEventModalProps) {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setStopClock(!stopClock)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer shadow-2xs ${
-                stopClock
-                  ? "bg-amber-500/15 border-amber-500/40 text-amber-500 hover:bg-amber-500/25"
-                  : "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
-              }`}
-            >
-              {stopClock ? (
-                <>
-                  <PauseCircle size={15} className="text-amber-500 animate-pulse" />
-                  <span>Clock Paused ⏸️</span>
-                </>
-              ) : (
-                <>
-                  <PlayCircle size={15} className="text-emerald-400" />
-                  <span>Clock Running ⏱️</span>
-                </>
+            <div className="flex items-center gap-2">
+              {Boolean(game?.settings?.autoStopClockOnMajorEvent) && (
+                <span className="text-[9px] font-bold text-muted hidden sm:inline-block">
+                  {shouldAutoStopClockOnMajorEvent(game)
+                    ? "NFHS: Clock stops on major events"
+                    : `NFHS (+${game?.settings?.mercyRuleGoalDiff ?? 5} lead): Continuous clock`}
+                </span>
               )}
-            </button>
+              <button
+                type="button"
+                onClick={handleClockToggleClick}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer shadow-2xs ${
+                  stopClock
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-500 hover:bg-amber-500/25"
+                    : "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
+                }`}
+              >
+                {stopClock ? (
+                  <>
+                    <PauseCircle size={15} className="text-amber-500 animate-pulse" />
+                    <span>Clock Paused ⏸️</span>
+                  </>
+                ) : (
+                  <>
+                    <PlayCircle size={15} className="text-emerald-400" />
+                    <span>Clock Running ⏱️</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Quick Action Event Type Button Bar */}
@@ -1648,5 +1802,21 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         </div>
       </div>
     </Modal>
+
+    {/* Confirmation Dialog: 3 Scenarios for Clock Pause */}
+    <Dialog
+      isOpen={showSplitConfirmDialog}
+      onClose={() => setShowSplitConfirmDialog(false)}
+      title="Pause Match Clock?"
+      type="confirm"
+      size="md"
+      confirmText={`Yes, Pause Clock at Current Time (${formatSecondsToMmss(Math.max(liveSeconds, useGameStore.getState().getGameTime()))})`}
+      extraButtonText={`Pause from Event Start (${formatSecondsToMmss(eventStaticGameTime)})`}
+      onExtraButton={handlePauseFromEventStart}
+      cancelText="Keep Clock Running"
+      onConfirm={handleConfirmSplitToPause}
+      message={`This event started at ${formatSecondsToMmss(eventStaticGameTime)} with a running match clock.\n\nThe match clock has reached ${formatSecondsToMmss(Math.max(liveSeconds, useGameStore.getState().getGameTime()))} (${formatSecondsToMmss(Math.max(0, Math.max(liveSeconds, useGameStore.getState().getGameTime()) - eventStaticGameTime))} elapsed).\n\nWould you like to pause the clock at the current time, or treat the entire event as a stopped clock from the start?`}
+    />
+    </>
   );
 }

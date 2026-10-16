@@ -431,8 +431,88 @@ export async function DELETE(req: Request, context: RouteContext) {
   const id = url.searchParams.get("id");
   if (!id) return badRequest("Missing id parameter");
 
+  const numId = Number(id);
+
+  if (table === "game_periods") {
+    const periods = await prisma.$queryRawUnsafe<{ id: number; game_id: number; period_number: number }[]>(
+      `SELECT id, game_id, period_number FROM \`game_periods\` WHERE id = ?`,
+      numId
+    );
+    if (periods.length > 0) {
+      const { game_id, period_number } = periods[0];
+      // 1. Delete all game_events_major for this period (cascades to discipline, goals, penalties in MySQL)
+      await prisma.$executeRawUnsafe(
+        `DELETE FROM \`game_events_major\` WHERE game_id = ? AND period = ?`,
+        game_id,
+        period_number
+      );
+      // 2. Delete team events for this period
+      await prisma.$executeRawUnsafe(
+        `DELETE FROM \`game_events_team\` WHERE game_id = ? AND period = ?`,
+        game_id,
+        period_number
+      );
+      // 3. Delete player actions for this period
+      await prisma.$executeRawUnsafe(
+        `DELETE FROM \`game_events_player_actions\` WHERE game_id = ? AND period = ?`,
+        game_id,
+        period_number
+      );
+      // 4. Delete substitutions for this period
+      await prisma.$executeRawUnsafe(
+        `DELETE FROM \`game_subs\` WHERE game_id = ? AND period = ?`,
+        game_id,
+        period_number
+      );
+      // 5. Delete any unlinked penalties for this period/game
+      await prisma.$executeRawUnsafe(
+        `DELETE FROM \`game_events_penalties\` WHERE game_id = ? AND major_event_id IS NULL`,
+        game_id
+      );
+      // 6. Delete the period itself
+      await prisma.$executeRawUnsafe(`DELETE FROM \`game_periods\` WHERE id = ?`, numId);
+      return NextResponse.json({ success: true });
+    }
+  }
+
+  if (table === "game_events_discipline") {
+    const discRows = await prisma.$queryRawUnsafe<{ id: number; major_event_id: number | null }[]>(
+      `SELECT id, major_event_id FROM \`game_events_discipline\` WHERE id = ? OR major_event_id = ?`,
+      numId,
+      numId
+    );
+    if (discRows.length > 0 && discRows[0].major_event_id) {
+      await prisma.$executeRawUnsafe(`DELETE FROM \`game_events_major\` WHERE id = ?`, discRows[0].major_event_id);
+      return NextResponse.json({ success: true });
+    }
+  }
+
+  if (table === "game_events_goals") {
+    const goalRows = await prisma.$queryRawUnsafe<{ id: number; major_event_id: number | null }[]>(
+      `SELECT id, major_event_id FROM \`game_events_goals\` WHERE id = ? OR major_event_id = ?`,
+      numId,
+      numId
+    );
+    if (goalRows.length > 0 && goalRows[0].major_event_id) {
+      await prisma.$executeRawUnsafe(`DELETE FROM \`game_events_major\` WHERE id = ?`, goalRows[0].major_event_id);
+      return NextResponse.json({ success: true });
+    }
+  }
+
+  if (table === "game_events_penalties") {
+    const penRows = await prisma.$queryRawUnsafe<{ id: number; major_event_id: number | null }[]>(
+      `SELECT id, major_event_id FROM \`game_events_penalties\` WHERE id = ? OR major_event_id = ?`,
+      numId,
+      numId
+    );
+    if (penRows.length > 0 && penRows[0].major_event_id) {
+      await prisma.$executeRawUnsafe(`DELETE FROM \`game_events_major\` WHERE id = ?`, penRows[0].major_event_id);
+      return NextResponse.json({ success: true });
+    }
+  }
+
   const sql = `DELETE FROM \`${table}\` WHERE id = ?`;
-  await prisma.$executeRawUnsafe(sql, Number(id));
+  await prisma.$executeRawUnsafe(sql, numId);
 
   return NextResponse.json({ success: true });
 }

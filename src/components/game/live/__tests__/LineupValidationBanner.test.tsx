@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import LineupValidationBanner from "../LineupValidationBanner";
+import { GAME_STAGES } from "@/stores/gameStore";
 
 const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -25,7 +26,7 @@ describe("LineupValidationBanner", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders warning banner when lineup is misconfigured", () => {
+  it("renders warning banner when lineup is misconfigured during BEFORE_START", () => {
     render(
       <LineupValidationBanner
         isLineupConfigured={false}
@@ -40,6 +41,32 @@ describe("LineupValidationBanner", () => {
       screen.getByText(/Roster setup required: starting lineup size mismatch \(9\/11\)\./i)
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Configure Lineup/i })).toBeInTheDocument();
+  });
+
+  it("renders nothing during period or between periods even if lineup is misconfigured", () => {
+    const { container: c1 } = render(
+      <LineupValidationBanner
+        isLineupConfigured={false}
+        currentStage={GAME_STAGES.DURING_PERIOD}
+        onFieldCount={9}
+        playersOnFieldSetting={11}
+        teamSeasonId="1"
+        gameId="10"
+      />
+    );
+    expect(c1.firstChild).toBeNull();
+
+    const { container: c2 } = render(
+      <LineupValidationBanner
+        isLineupConfigured={false}
+        currentStage={GAME_STAGES.BETWEEN_PERIODS}
+        onFieldCount={9}
+        playersOnFieldSetting={11}
+        teamSeasonId="1"
+        gameId="10"
+      />
+    );
+    expect(c2.firstChild).toBeNull();
   });
 
   it("navigates to lineup page on button click", () => {

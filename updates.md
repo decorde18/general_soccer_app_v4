@@ -1,3 +1,107 @@
+### [2026-10-16 10:16] Major Event Clock: 3 Clock Pause Scenarios & Removal of 5s Threshold
+- **Type**: Feature / UX Standard / User Request
+- **Summary**:
+  1. **Tri-State Clock Pause Dialog**:
+     - Upgraded the clock pause transition dialog in `MajorEventModal.tsx` and `Dialog.tsx` to handle all 3 user scenarios when toggling a running clock:
+       1. **Cancel Clock Stop Change** (`"Keep Clock Running"`): Dismisses the prompt and maintains continuous running clock without changes.
+       2. **Confirm Whole Event as Stopped Clock** (`"Pause from Event Start ({T1})"`): Retroactively treats the entire event interval as a stopped clock from $T_1$, starting an open stoppage without creating an intermediate running interval.
+       3. **Pause Clock at Current Time** (`"Yes, Pause Clock at Current Time ({T2})"`): Closes the elapsed running interval ($T_1 \to T_2$) with `clock_should_run: 1` and begins a new open stoppage at $T_2$ with `clock_should_run: 0`.
+  2. **Universal Event Scope & Removal of 5s Check**:
+     - Removed the 5-second elapsed threshold check so the user is always in full control regardless of when they click to pause the clock.
+     - Ensured the 3 scenarios apply universally across all major event types (Goal, Card, Penalty Kick, Injury, Hydration, Weather, Delay, Pause).
+  3. **Responsive Dialog Layout**:
+     - Enhanced `Dialog.tsx` to support the `size` prop and `flex-wrap` button layouts, cleanly accommodating 3 descriptive action buttons across desktop and mobile screens.
+- **Modified Files**:
+  - `src/components/ui/Dialog.tsx`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/live/__tests__/MajorEventModal.test.tsx`
+  - `updates.md`
+
+### [2026-10-16 09:58] Major Event Clock Architecture: Explicit Clock Stopping, NFHS Mercy Rule Running Clock & Split-Event Transition
+- **Type**: Feature / Bug Fix / UX Standard
+- **Summary**:
+  1. **Strict Explicit Clock Stopping & Running Stoppage Integrity (`dateTimeUtils.ts`, `gamePlayerTimeStore.ts`)**:
+     - Fixed critical timing bug where `event_type === "stoppage"` was automatically treated as paused clock regardless of `clock_should_run`. Now, only `clock_should_run === 0` (or `false`) pauses player on-field playing time calculations.
+     - Major events with a running clock (`clock_should_run: 1`) will never pause player active playing minutes or freeze game timers.
+     - Ensured NO major event receives an end time before it is recorded: instantaneous events with running clock receive `end_time = gameTimeSeconds` strictly upon submission, while stopped-clock stoppages remain open (`end_time = null`) until play is resumed. Fixed bug where background cache synchronization inadvertently reset `end_time` to `null`.
+  2. **Instance A: NFHS Auto-Pause vs. Mercy Rule Continuous Clock (`gameRules.ts`, `MajorEventModal.tsx`, `BroadcastScoreboard.tsx`, `MatchSettingsAccordions.tsx`, `GameSettingsEditor.tsx`)**:
+     - Added `shouldAutoStopClockOnMajorEvent(game)` evaluating whether the clock should pause: returns `true` under NFHS rules unless the score differential reaches +5 goals (configurable via `mercyRuleGoalDiff`) or continuous running clock is agreed upon by referees (`mercyRuleRunningClock === true`).
+     - Major event modal defaults the clock button to paused or running based on `shouldAutoStopClockOnMajorEvent(game)` and renders a contextual indicator badge. Switching event tabs (Goal, Card, PK, Injury, Hydration) never forcefully toggles the clock off without user action.
+  3. **Instance B: Non-NFHS Running Clock to Stopped Clock Split Transition (`MajorEventModal.tsx`, `Dialog.tsx`)**:
+     - Implemented split-event workflow when game play is paused for an injury or issue with a running clock ($T_1$) and the referee later signals time-off ($T_2$):
+       - If user clicks `[Clock Running ⏱️]` to pause the clock after $> 5$ seconds of play have elapsed, an interactive confirmation `Dialog` appears.
+       - Upon confirmation, the app records the elapsed running play ($T_1 \to T_2$) with `clock_should_run: 1` and `end_time = T2` (preserving player on-field minutes), and begins a new stoppage at $T_2$ with `clock_should_run: 0` and `end_time = null`.
+       - The modal smoothly switches to paused stoppage mode at $T_2$ with an active paused timer.
+- **Modified Files**:
+  - `src/lib/utils/dateTimeUtils.ts`
+  - `src/stores/gamePlayerTimeStore.ts`
+  - `src/lib/utils/gameRules.ts`
+  - `src/types/game.ts`
+  - `src/stores/gameStore.ts`
+  - `src/lib/data/queries.ts`
+  - `src/lib/actions/gameSettings-actions.ts`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/live/BroadcastScoreboard.tsx`
+  - `src/components/game/MatchSettingsAccordions.tsx`
+  - `src/components/game/GameSettingsEditor.tsx`
+  - `src/components/game/live/__tests__/MajorEventModal.test.tsx`
+  - `updates.md`
+
+### [2026-10-16 09:05] Revert Synthetic 60s Timeout Cap, Enforce Strict Event Cascade Deletion & Fix Major Event Clock Defaults
+- **Type**: Bug Fix / Refactor / Data Integrity
+- **Summary**:
+  1. **Revert Synthetic Stoppage Timeout Cap (`gamePlayerTimeStore.ts`, `queries.ts`)**:
+     - Removed the synthetic 60-second completion timeout cap on unended stoppages. Stoppages now adhere strictly to authentic match period boundaries and explicit event times.
+  2. **Bidirectional Cascade Event Deletion (`api/[tableName]/route.ts`, `gameStore.ts`)**:
+     - Enforced strict cascade deletion across both database and Zustand store: deleting any discipline, goal, or penalty record immediately deletes its linked parent `game_events_major` record (and vice versa).
+     - Enhanced `route.ts` DELETE handler for `game_events_discipline`, `game_events_goals`, and `game_events_penalties` to query `id = ? OR major_event_id = ?` and execute parent major event deletion, triggering MySQL's native foreign key cascade.
+     - Hardened `gameStore.ts` `deleteEvent()` to proactively find and remove linked major and child events from in-memory state with 0ms lag, guaranteeing no orphan stopped-clock major event records remain.
+  3. **Major Event Clock State & Instantaneous Event Closure (`MajorEventModal.tsx`)**:
+     - Clarified and enforced running-clock defaults when `autoStopClockOnMajorEvent: false`: cards, goals, and penalty kicks recorded with running clock now write `clock_should_run: 1` and `end_time: gameTimeSeconds` immediately, preventing instantaneous events from ever lingering as unended stoppages.
+     - Updated event type switching in `MajorEventModal` so selecting non-stoppage event types (card, goal, pk) automatically synchronizes `stopClock` with the match's `autoStopClockOnMajorEvent` rule setting.
+- **Modified Files**:
+  - `src/stores/gamePlayerTimeStore.ts`
+  - `src/lib/data/queries.ts`
+  - `src/stores/gameStore.ts`
+  - `src/app/api/[tableName]/route.ts`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `updates.md`
+
+### [2026-10-15 17:02] Live Match Audit Fixes: Period Cascade, Stoppage Playing Time Freeze, Grayed Player Contrast, Red Card Lineup Warning & Intermission State
+- **Type**: Bug Fix / Data Integrity / UX Polish
+- **Summary**:
+  1. **Period Deletion Full Cascade (`api/[tableName]/route.ts`, `gameStore.ts`)**:
+     - Updated `DELETE /api/game_periods` to cascade-delete all linked records for that period and match: `game_events_major`, `game_events_goals`, `game_events_discipline`, `game_events_penalties`, `game_events_team`, `game_events_player_actions`, and `game_subs`.
+     - Added reverse cascade when deleting child events (`game_events_discipline`, `game_events_goals`, `game_events_penalties`) so their linked parent `game_events_major` stoppage records are automatically removed simultaneously.
+     - Updated `deletePeriod` in `gameStore.ts` to clear in-memory period events and re-evaluate team scores, player stats, and +/- dynamically.
+  2. **1:13 Playing Time Freeze & Stoppage Integrity (`gamePlayerTimeStore.ts`, `queries.ts`, `gameStore.ts`)**:
+     - Fixed root cause where deleted disciplinary events left orphan `game_events_major` records with `clock_should_run: 0` and `end_time: null`, causing `calculateActivePlayerTimeOnField` to subtract all subsequent period minutes and capping player times to 1:13.
+     - Enhanced `getGameStoppageIntervals` and `calculatePlayerGameMinutes` to filter out orphan card/goal major events whose child discipline/goal row was deleted, and capped unended stoppages with no trailing events to a 60-second limit rather than consuming entire periods.
+     - Updated `endPeriod()` in `gameStore.ts` to automatically close any active unended stoppages when a period ends.
+  3. **High-Contrast Typography for Grayed-Out Player Rows (`LivePlayerTable.tsx`)**:
+     - Replaced low-contrast `opacity-40` and muted text on sent-off (red-carded) and exhausted player rows with vibrant, readable styles: high-contrast white text (`text-slate-100 dark:text-slate-100 font-medium`) for player names, `text-slate-200` for jersey numbers, `text-emerald-400 font-black` for goals, `text-blue-400` for assists, and `text-slate-300 font-semibold` for playing times.
+  4. **Pregame Scoping for Starting Lineup Size Validation (`LineupValidationBanner.tsx`, `BroadcastScoreboard.tsx`)**:
+     - Fixed issue where issuing a red card to an on-field player decremented the required field count (e.g. from 11 to 10), triggering the pregame "Configure Lineup" mismatch banner and disabling the period clock button with "Roster config mismatch".
+     - Guarded `LineupValidationBanner` to render strictly during `GAME_STAGES.BEFORE_START`, suppressing starting lineup size warnings during live play or between periods.
+     - Updated `handleDefaultToggleClock` and `isClockButtonDisabled` in `BroadcastScoreboard.tsx` so `isLineupConfigured` is checked strictly before kickoff, allowing `Start Period 2` to execute smoothly at halftime without blocking.
+  5. **Intermission & Halftime Workspace Controls (`TeamCountersPanel.tsx`, `LivePlayerTable.tsx`, `gameStore.ts`)**:
+     - Disabled Team Counter +/- buttons during `GAME_STAGES.BETWEEN_PERIODS` and `BEFORE_START` with a visual `"Halftime (Paused)"` indicator badge, preventing stray corner/foul/offside logs during intermissions.
+     - Made `LivePlayerTable` game stage evaluation reactive to store updates, ensuring quick actions (`+SHOT`, `+SAVE`) are cleanly hidden as soon as the match transitions to intermission.
+     - Exported `GAME_STAGES` from `gameStore.ts` to maintain unified type safety across all live match subcomponents.
+- **Modified Files**:
+  - `src/app/api/[tableName]/route.ts`
+  - `src/stores/gameStore.ts`
+  - `src/stores/gamePlayerTimeStore.ts`
+  - `src/lib/data/queries.ts`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/live/LivePlayerTable.tsx`
+  - `src/components/game/live/LineupValidationBanner.tsx`
+  - `src/components/game/live/BroadcastScoreboard.tsx`
+  - `src/components/game/live/TeamCountersPanel.tsx`
+  - `src/components/game/live/__tests__/LineupValidationBanner.test.tsx`
+  - `src/components/game/live/__tests__/TeamCountersPanel.test.tsx`
+  - `updates.md`
+
 ### [2026-10-15 14:10] Penalty Shootout Distance-to-Decision, Lineup Jersey Verification & Master Calendar
 - **Type**: Feature / UX Enhancement / Roadmap Reconciliation
 - **Summary**:

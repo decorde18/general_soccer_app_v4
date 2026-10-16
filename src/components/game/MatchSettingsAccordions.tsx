@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Toggle from "@/components/ui/Toggle";
+import Input from "@/components/ui/Input";
 import type { GameSettings, TiebreakerMode } from "@/types/game";
 
 interface MatchSettingsAccordionsProps {
@@ -284,6 +285,39 @@ export default function MatchSettingsAccordions({
                   onChange={(val: boolean) => updateSetting("autoStopClockOnMajorEvent", val)}
                 />
               </div>
+
+              {Boolean(settings.autoStopClockOnMajorEvent) && (
+                <div className="space-y-3 bg-surface p-3 rounded-xl border border-border/60">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-text">NFHS Running Clock Mercy Rule</div>
+                      <div className="text-[10px] text-muted">Clock keeps running when lead meets threshold (NFHS standard: 5+ goals)</div>
+                    </div>
+                    <div className="flex items-center gap-1.5 w-24">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={settings.mercyRuleGoalDiff ?? 5}
+                        onChange={(e: any) => updateSetting("mercyRuleGoalDiff", Number(e.target.value) || 5)}
+                        className="text-center font-bold"
+                      />
+                      <span className="text-[10px] text-muted font-bold">goals</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                    <div>
+                      <div className="text-xs font-bold text-text">Force Running Clock (Ref Agreement)</div>
+                      <div className="text-[10px] text-muted">Manually keep clock running regardless of score</div>
+                    </div>
+                    <Toggle
+                      checked={Boolean(settings.mercyRuleRunningClock)}
+                      onChange={(val: boolean) => updateSetting("mercyRuleRunningClock", val)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

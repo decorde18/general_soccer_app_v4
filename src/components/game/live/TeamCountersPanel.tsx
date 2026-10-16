@@ -3,7 +3,7 @@
 import React from "react";
 import { Zap, PlusCircle, MinusCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import useGameStore from "@/stores/gameStore";
+import useGameStore, { GAME_STAGES } from "@/stores/gameStore";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ interface TeamCountersPanelProps {
   oppOffsides?: number;
   ourFouls?: number;
   oppFouls?: number;
+  currentStage?: any;
   onAddTeamEvent?: (teamSeasonId: number | string, type: "corner" | "offside" | "foul") => void;
   onRemoveTeamEvent?: (teamSeasonId: number | string, type: "corner" | "offside" | "foul") => void;
 }
@@ -28,6 +29,13 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
   const params = (rawParams || {}) as { id?: string; teamSeasonId?: string };
   const game = useGameStore((s) => s.game);
   const addTeamEvent = useGameStore((s) => s.addTeamEvent);
+  const storeStage = useGameStore((s) => s.getGameStage());
+
+  const currentStage = props.currentStage ?? (game ? storeStage : GAME_STAGES.DURING_PERIOD);
+  const isCountersDisabled =
+    currentStage === GAME_STAGES.BETWEEN_PERIODS ||
+    currentStage === GAME_STAGES.BEFORE_START ||
+    currentStage === GAME_STAGES.END_GAME;
 
   const teamSeasonIdParam = params?.teamSeasonId;
   const gameIdParam = params?.id;
@@ -139,9 +147,16 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
 
   return (
     <Card variant="outlined" padding="sm" className="h-[182px] shrink-0 flex flex-col bg-surface shadow-xs rounded-xl overflow-hidden p-2.5">
-      <div className="flex items-center gap-1 border-b border-border/40 pb-1 px-1 shrink-0">
-        <Zap size={11} className="text-primary" />
-        <span className="font-extrabold uppercase tracking-wider text-[10px] text-text">Team Counters</span>
+      <div className="flex items-center justify-between border-b border-border/40 pb-1 px-1 shrink-0">
+        <div className="flex items-center gap-1">
+          <Zap size={11} className="text-primary" />
+          <span className="font-extrabold uppercase tracking-wider text-[10px] text-text">Team Counters</span>
+        </div>
+        {currentStage === GAME_STAGES.BETWEEN_PERIODS && (
+          <span className="text-[8px] font-black uppercase text-amber-500 bg-amber-500/10 px-1.5 py-0.25 rounded border border-amber-500/20">
+            Halftime (Paused)
+          </span>
+        )}
       </div>
 
       <div className="flex-1 grid grid-cols-2 gap-2 text-[10px] p-1.5 min-h-0 overflow-y-auto mt-1">
@@ -157,14 +172,16 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
                 <button
                   aria-label="Remove Our Corner"
                   onClick={() => onRemoveTeamEvent(ourId, "corner")}
-                  className="p-0.5 text-muted hover:text-danger cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-muted hover:text-danger cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <MinusCircle size={12} />
                 </button>
                 <button
                   aria-label="Add Our Corner"
                   onClick={() => onAddTeamEvent(ourId, "corner")}
-                  className="p-0.5 text-primary hover:text-primary-hover cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-primary hover:text-primary-hover cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <PlusCircle size={12} />
                 </button>
@@ -176,14 +193,16 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
                 <button
                   aria-label="Remove Our Offside"
                   onClick={() => onRemoveTeamEvent(ourId, "offside")}
-                  className="p-0.5 text-muted hover:text-danger cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-muted hover:text-danger cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <MinusCircle size={12} />
                 </button>
                 <button
                   aria-label="Add Our Offside"
                   onClick={() => onAddTeamEvent(ourId, "offside")}
-                  className="p-0.5 text-primary hover:text-primary-hover cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-primary hover:text-primary-hover cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <PlusCircle size={12} />
                 </button>
@@ -195,14 +214,16 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
                 <button
                   aria-label="Remove Our Foul"
                   onClick={() => onRemoveTeamEvent(ourId, "foul")}
-                  className="p-0.5 text-muted hover:text-danger cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-muted hover:text-danger cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <MinusCircle size={12} />
                 </button>
                 <button
                   aria-label="Add Our Foul"
                   onClick={() => onAddTeamEvent(ourId, "foul")}
-                  className="p-0.5 text-primary hover:text-primary-hover cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-primary hover:text-primary-hover cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <PlusCircle size={12} />
                 </button>
@@ -223,14 +244,16 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
                 <button
                   aria-label="Remove Opponent Corner"
                   onClick={() => onRemoveTeamEvent(oppId, "corner")}
-                  className="p-0.5 text-muted hover:text-danger cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-muted hover:text-danger cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <MinusCircle size={12} />
                 </button>
                 <button
                   aria-label="Add Opponent Corner"
                   onClick={() => onAddTeamEvent(oppId, "corner")}
-                  className="p-0.5 text-accent hover:text-accent-hover cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-accent hover:text-accent-hover cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <PlusCircle size={12} />
                 </button>
@@ -242,14 +265,16 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
                 <button
                   aria-label="Remove Opponent Offside"
                   onClick={() => onRemoveTeamEvent(oppId, "offside")}
-                  className="p-0.5 text-muted hover:text-danger cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-muted hover:text-danger cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <MinusCircle size={12} />
                 </button>
                 <button
                   aria-label="Add Opponent Offside"
                   onClick={() => onAddTeamEvent(oppId, "offside")}
-                  className="p-0.5 text-accent hover:text-accent-hover cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-accent hover:text-accent-hover cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <PlusCircle size={12} />
                 </button>
@@ -261,14 +286,16 @@ export default function TeamCountersPanel(props: TeamCountersPanelProps) {
                 <button
                   aria-label="Remove Opponent Foul"
                   onClick={() => onRemoveTeamEvent(oppId, "foul")}
-                  className="p-0.5 text-muted hover:text-danger cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-muted hover:text-danger cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <MinusCircle size={12} />
                 </button>
                 <button
                   aria-label="Add Opponent Foul"
                   onClick={() => onAddTeamEvent(oppId, "foul")}
-                  className="p-0.5 text-accent hover:text-accent-hover cursor-pointer"
+                  disabled={isCountersDisabled}
+                  className="p-0.5 text-accent hover:text-accent-hover cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 >
                   <PlusCircle size={12} />
                 </button>

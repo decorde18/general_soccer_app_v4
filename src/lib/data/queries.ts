@@ -253,6 +253,8 @@ export interface Game {
     maxSubWindowsPerHalf?: number;
     autoStopClockOnMajorEvent?: boolean;
     clockRuleProfile?: string;
+    mercyRuleGoalDiff?: number;
+    mercyRuleRunningClock?: boolean;
   };
   ourName?: string;
   opponentName?: string;
@@ -1299,6 +1301,8 @@ function mapGameRow(r: any): Game {
       clockRuleProfile: notesObj?.clockRuleProfile ?? (
         leagueName?.toLowerCase().match(/nfhs|high school|highschool|varsity|\bjv\b/) ? "NFHS" : "USSF"
       ),
+      mercyRuleGoalDiff: notesObj?.mercyRuleGoalDiff ?? 5,
+      mercyRuleRunningClock: notesObj?.mercyRuleRunningClock ?? false,
     },
   };
 }
@@ -1440,6 +1444,12 @@ function calculatePlayerGameMinutes(pg: any): {
   const stoppageIntervals: { startTime: number; endTime: number | null }[] = [];
   majorEvents.forEach((e: any, idx: number) => {
     if (e.clock_should_run === false || e.clock_should_run === 0) {
+      if (e.event_type === "card" && (!e.game_events_discipline || e.game_events_discipline.length === 0)) {
+        return;
+      }
+      if (e.event_type === "goal" && (!e.game_events_goals || e.game_events_goals.length === 0)) {
+        return;
+      }
       const pOffset = periodOffsets.get(Number(e.period || 1)) || 0;
       const startCumSecs = pOffset + Number(e.game_time || 0);
       let endCumSecs: number | null = null;
@@ -1451,7 +1461,8 @@ function calculatePlayerGameMinutes(pg: any): {
           endCumSecs = pOffset + Number(nextEvent.game_time || 0);
         } else {
           const pIdx = Number(e.period || 1) - 1;
-          if (periodIntervals[pIdx]) endCumSecs = periodIntervals[pIdx].end;
+          const pEnd = periodIntervals[pIdx] ? periodIntervals[pIdx].end : null;
+          endCumSecs = pEnd;
         }
       }
       stoppageIntervals.push({ startTime: startCumSecs, endTime: endCumSecs });

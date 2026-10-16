@@ -11,6 +11,7 @@ import { useOnlineStatus, setSimulatedOfflineMode, isSimulatedOfflineMode } from
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import FullscreenManager from "@/components/game/FullscreenManager";
+import { shouldAutoStopClockOnMajorEvent } from "@/lib/utils/gameRules";
 
 interface BroadcastScoreboardProps {
   ourShortName?: string;
@@ -149,11 +150,13 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
         for (const st of activeStoppages) {
           await endStoppage(st.id);
         }
-      } else if (currentStage === GAME_STAGES.BEFORE_START || currentStage === GAME_STAGES.BETWEEN_PERIODS) {
+      } else if (currentStage === GAME_STAGES.BEFORE_START) {
         if (!isLineupConfigured) {
           toast.error("Roster config mismatch. Set starting lineup first.");
           return;
         }
+        await startNextPeriod();
+      } else if (currentStage === GAME_STAGES.BETWEEN_PERIODS) {
         await startNextPeriod();
       } else if (currentStage === GAME_STAGES.DURING_PERIOD) {
         await endPeriod();
@@ -177,9 +180,7 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
   };
 
   const isClockButtonDisabled =
-    (!isLineupConfigured &&
-      currentStage !== GAME_STAGES.DURING_PERIOD &&
-      currentStage !== GAME_STAGES.IN_STOPPAGE) ||
+    (currentStage === GAME_STAGES.BEFORE_START && !isLineupConfigured) ||
     currentStage === GAME_STAGES.END_GAME;
 
   const isDev = process.env.NODE_ENV === "development";
@@ -245,13 +246,20 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
           )}
 
           {/* CONTEXT SUB-LABEL */}
-          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
-            {currentStage === GAME_STAGES.BETWEEN_PERIODS
-              ? "PERIOD INTERMISSION"
-              : clockMode === "period"
-              ? (clockDirection === "down" ? `${periodLabel} (REMAINING)` : periodLabel)
-              : (clockDirection === "down" ? "MATCH REMAINING" : "CUMULATIVE MATCH TIME")}
-          </span>
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">
+              {currentStage === GAME_STAGES.BETWEEN_PERIODS
+                ? "PERIOD INTERMISSION"
+                : clockMode === "period"
+                ? (clockDirection === "down" ? `${periodLabel} (REMAINING)` : periodLabel)
+                : (clockDirection === "down" ? "MATCH REMAINING" : "CUMULATIVE MATCH TIME")}
+            </span>
+            {Boolean(game?.settings?.autoStopClockOnMajorEvent && !shouldAutoStopClockOnMajorEvent(game)) && (
+              <span className="text-[7.5px] font-black px-1.5 py-0.25 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                ⚡ Running Clock ({Math.abs(goalsFor - goalsAgainst) >= (game?.settings?.mercyRuleGoalDiff ?? 5) ? `+${game?.settings?.mercyRuleGoalDiff ?? 5} Lead` : "Ref Agreement"})
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Away team & Hamburger */}

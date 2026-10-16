@@ -19,6 +19,8 @@ export const SYSTEM_DEFAULT_GAME_SETTINGS: GameSettings = {
   reentryRule: "unlimited",
   autoStopClockOnMajorEvent: false,
   clockRuleProfile: "USSF",
+  mercyRuleGoalDiff: 5,
+  mercyRuleRunningClock: false,
 };
 
 /**
@@ -137,6 +139,8 @@ export function inferRulesFromNodeName(name?: string): Partial<GameSettings> {
   ) {
     inferred.clockRuleProfile = "NFHS";
     inferred.autoStopClockOnMajorEvent = true;
+    inferred.mercyRuleGoalDiff = 5;
+    inferred.mercyRuleRunningClock = false;
 
     if (lower.includes("jv") || lower.includes("junior varsity")) {
       inferred.periodDuration = 1800; // 30 mins for JV
@@ -146,6 +150,36 @@ export function inferRulesFromNodeName(name?: string): Partial<GameSettings> {
   }
 
   return inferred;
+}
+
+/**
+ * Evaluates whether a game should automatically pause the clock on a major event.
+ * Takes into account:
+ * 1. base autoStopClockOnMajorEvent setting
+ * 2. referee agreement running clock override (mercyRuleRunningClock)
+ * 3. NFHS mercy rule goal differential (+5 lead keeps clock running)
+ */
+export function shouldAutoStopClockOnMajorEvent(game: any): boolean {
+  if (!game) return false;
+  const baseAutoStop = Boolean(game.settings?.autoStopClockOnMajorEvent);
+  if (!baseAutoStop) return false;
+
+  // If manual ref agreement override to keep clock running is active
+  if (game.settings?.mercyRuleRunningClock === true) {
+    return false;
+  }
+
+  // Under NFHS rules, check goal differential (default threshold is 5 goals)
+  const threshold = typeof game.settings?.mercyRuleGoalDiff === "number" ? game.settings.mercyRuleGoalDiff : 5;
+  if (threshold > 0) {
+    const goalDiff = Math.abs((Number(game.goalsFor) || 0) - (Number(game.goalsAgainst) || 0));
+    if (goalDiff >= threshold) {
+      // Score lead meets or exceeds mercy rule (e.g. +5 goals) -> Clock keeps running!
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export interface HierarchyNodeLike {

@@ -561,7 +561,9 @@ export function convertPeriodClockToAbsoluteSeconds(
     .filter((s) => {
       const sPeriod = Number(s.period || 1);
       const clockStopped =
-        s.clock_should_run === 0 || s.clock_should_run === false || s.event_type === "stoppage";
+        s.clock_should_run === 0 ||
+        s.clock_should_run === false ||
+        (s.clock_should_run === undefined && s.event_type === "stoppage");
       return sPeriod === targetPeriodNum && clockStopped;
     })
     .map((s) => {
@@ -696,7 +698,9 @@ export function convertAbsoluteSecondsToPeriodClock(
     .filter((s) => {
       const sPeriod = Number(s.period || 1);
       const clockStopped =
-        s.clock_should_run === 0 || s.clock_should_run === false || s.event_type === "stoppage";
+        s.clock_should_run === 0 ||
+        s.clock_should_run === false ||
+        (s.clock_should_run === undefined && s.event_type === "stoppage");
       return sPeriod === targetPeriodNum && clockStopped;
     })
     .map((s) => {

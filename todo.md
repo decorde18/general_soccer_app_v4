@@ -698,3 +698,26 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Interactive Event Modal with venue/location links (`LocationLink`) and description notes.
   - [x] Added `Calendar & Schedule` link to primary navigation (`NavLinks.tsx`).
 
+Root Cause:
+When a Yellow Card was entered at 1:13 with clock pause enabled, a game_events_major row was created with clock_should_run: 0 and end_time: null.
+When the Yellow Card was deleted, only the child game_events_discipline row was removed, leaving an orphan game_events_major stoppage row with no end time.
+Playing time calculation functions (
+
+calculateActivePlayerTimeOnField
+ and 
+
+calculatePlayerGameMinutes
+) saw this unended stoppage at 1:13 and subtracted all remaining seconds until the end of the period, capping every player's time to 1:13.
+Fix in 
+
+gamePlayerTimeStore.ts
+, 
+
+queries.ts
+, and 
+
+gameStore.ts
+:
+Filtering now ignores orphan card and goal major event stoppages whose linked discipline/goal rows were deleted.
+Unended stoppages with no subsequent events are capped at a maximum 60-second delay rather than consuming the entire period.
+endPeriod() in gameStore.ts now automatically closes any active unended stoppage (end_time = gameTime) when a period ends, preventing open stoppages from bleeding into subsequent periods.

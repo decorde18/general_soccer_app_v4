@@ -45,6 +45,8 @@ export interface GameSettings {
   maxSubWindowsPerHalf?: number;
   autoStopClockOnMajorEvent?: boolean;
   clockRuleProfile?: "NFHS" | "USSF";
+  mercyRuleGoalDiff?: number;
+  mercyRuleRunningClock?: boolean;
 }
 
 // ==================== PERIODS ====================

@@ -69,6 +69,8 @@ export default function GameSettingsEditor({
           maxSubWindowsPerGame: localSettings.maxSubWindowsPerGame,
           maxSubWindowsPerHalf: localSettings.maxSubWindowsPerHalf,
           autoStopClockOnMajorEvent: localSettings.autoStopClockOnMajorEvent,
+          mercyRuleGoalDiff: localSettings.mercyRuleGoalDiff,
+          mercyRuleRunningClock: localSettings.mercyRuleRunningClock,
         });
 
         // Sync to store

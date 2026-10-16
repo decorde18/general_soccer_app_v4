@@ -32,6 +32,7 @@ const Dialog = ({
   showCancel = true,
   extraButtonText,
   onExtraButton,
+  size = "sm",
 }: any) => {
   const handleConfirm = () => {
     if (onConfirm) {
@@ -131,7 +132,7 @@ const Dialog = ({
       isOpen={isOpen}
       onClose={onClose}
       title={title}
-      size='sm'
+      size={size}
       closeOnOverlayClick={false}
       showCloseButton={false}
       footer={null}
@@ -139,7 +140,7 @@ const Dialog = ({
       <div className='text-center'>
         {getIcon()}
         <p className='text-sm text-text whitespace-pre-line mb-6'>{message}</p>
-        <div className='flex gap-2 justify-center'>
+        <div className='flex flex-wrap gap-2 justify-center'>
           {showCancel && type !== "alert" && (
             <Button
               variant='outline'

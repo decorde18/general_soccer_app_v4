@@ -4,7 +4,7 @@ import React from "react";
 import { AlertTriangle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { useRouter, useParams } from "next/navigation";
-import useGameStore from "@/stores/gameStore";
+import useGameStore, { GAME_STAGES } from "@/stores/gameStore";
 import useGamePlayersStore from "@/stores/gamePlayersStore";
 import useGamePlayerTimeStore from "@/stores/gamePlayerTimeStore";
 
@@ -14,6 +14,7 @@ interface LineupValidationBannerProps {
   playersOnFieldSetting?: number;
   teamSeasonId?: string;
   gameId?: string;
+  currentStage?: any;
 }
 
 export default function LineupValidationBanner(props: LineupValidationBannerProps) {
@@ -23,6 +24,15 @@ export default function LineupValidationBanner(props: LineupValidationBannerProp
 
   const storeGame = useGameStore((s) => s.game);
   const storePlayers = useGamePlayersStore((s) => s.players);
+  const storeStage = useGameStore((s) => s.getGameStage());
+
+  const currentStage = props.currentStage ?? storeStage;
+
+  // Starting lineup setup is strictly a pregame check.
+  // Once the match has begun or between periods, starting lineup mismatch warnings are suppressed.
+  if (currentStage !== GAME_STAGES.BEFORE_START) {
+    return null;
+  }
 
   const teamSeasonId = props.teamSeasonId ?? params?.teamSeasonId ?? "";
   const gameId = props.gameId ?? params?.id ?? "";

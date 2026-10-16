@@ -23,6 +23,8 @@ import {
   type OtConfig,
 } from "@/types/game";
 
+export { GAME_STAGES };
+
 type EventTypeKey =
   | "major"
   | "goal"
@@ -56,6 +58,8 @@ const DEFAULT_GAME_SETTINGS: GameSettings = {
   reentryRule: "unlimited",
   autoStopClockOnMajorEvent: false,
   clockRuleProfile: "USSF",
+  mercyRuleGoalDiff: 5,
+  mercyRuleRunningClock: false,
 };
 
 interface CalculateTeamStatTotalsInput {
@@ -499,6 +503,34 @@ const useGameStore = create<GameStoreState>((set, get) => {
             }
             return false;
           })(),
+          mercyRuleGoalDiff: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && typeof parsed.mercyRuleGoalDiff === "number") {
+                  return parsed.mercyRuleGoalDiff;
+                }
+              } catch {}
+            }
+            return 5;
+          })(),
+          mercyRuleRunningClock: (() => {
+            if (dbGame.notes) {
+              try {
+                let parsed = JSON.parse(dbGame.notes);
+                if (typeof parsed === "string") {
+                  try { parsed = JSON.parse(parsed); } catch {}
+                }
+                if (parsed && typeof parsed === "object" && typeof parsed.mercyRuleRunningClock === "boolean") {
+                  return parsed.mercyRuleRunningClock;
+                }
+              } catch {}
+            }
+            return false;
+          })(),
         };
 
         // Build periods array (all timestamps are Unix ms from DB BIGINT)
@@ -830,18 +862,42 @@ const useGameStore = create<GameStoreState>((set, get) => {
       const nowMs = Date.now();
       const currentPeriod = game.periods[game.currentPeriodIndex];
 
+      // Close any active unended stoppages for this period
+      const gameTime = get().getGameTime();
+      const activeStoppages = (game.gameEventsMajor || []).filter(
+        (s) => s.end_time === null && s.period === currentPeriod?.periodNumber && s.clock_should_run === 0
+      );
+      for (const st of activeStoppages) {
+        try {
+          await apiFetch("game_events_major", "PUT", { end_time: gameTime }, st.id);
+        } catch (err) {
+          console.error("Error closing stoppage on period end:", err);
+        }
+      }
+
       try {
-        await apiFetch(`game_periods?id=${currentPeriod.id}`, "PUT", {
-          end_time: nowMs,
-        });
+        if (currentPeriod?.id) {
+          await apiFetch(`game_periods?id=${currentPeriod.id}`, "PUT", {
+            end_time: nowMs,
+          });
+        }
 
         const updatedPeriods = [...game.periods];
-        updatedPeriods[game.currentPeriodIndex] = {
-          ...updatedPeriods[game.currentPeriodIndex],
-          endTime: nowMs,
-        };
+        if (updatedPeriods[game.currentPeriodIndex]) {
+          updatedPeriods[game.currentPeriodIndex] = {
+            ...updatedPeriods[game.currentPeriodIndex],
+            endTime: nowMs,
+          };
+        }
 
-        get().updateGame({ periods: updatedPeriods });
+        get().updateGame({
+          periods: updatedPeriods,
+          gameEventsMajor: (game.gameEventsMajor || []).map((s) =>
+            s.end_time === null && s.period === currentPeriod?.periodNumber && s.clock_should_run === 0
+              ? { ...s, end_time: gameTime }
+              : s
+          ),
+        });
         await get().syncGameStatus();
       } catch (error) {
         console.error("Error ending period:", error);
@@ -961,17 +1017,42 @@ const useGameStore = create<GameStoreState>((set, get) => {
 
     deletePeriod: async (periodId) => {
       try {
-        await apiFetch(`game_periods?id=${periodId}`, "DELETE");
-
         const game = get().game;
         if (!game) return;
 
-        const updatedPeriods = game.periods.filter((p) => p.id !== periodId);
-        get().updateGame({
+        const targetPeriod = game.periods.find((p) => String(p.id) === String(periodId));
+        const targetPeriodNumber = targetPeriod?.periodNumber;
+
+        await apiFetch(`game_periods?id=${periodId}`, "DELETE");
+
+        const updatedPeriods = game.periods.filter((p) => String(p.id) !== String(periodId));
+        const updates: Partial<Game> = {
           periods: updatedPeriods,
           currentPeriodIndex: Math.max(0, updatedPeriods.length - 1),
-        });
+        };
 
+        if (targetPeriodNumber !== undefined) {
+          updates.gameEventsMajor = (game.gameEventsMajor || []).filter((m) => m.period !== targetPeriodNumber);
+          const remainingGoals = (game.gameEventsGoals || []).filter((g) => g.period !== targetPeriodNumber);
+          updates.gameEventsGoals = remainingGoals;
+          const remainingDiscipline = (game.gameEventsDiscipline || []).filter((d) => (d as any).period !== targetPeriodNumber);
+          updates.gameEventsDiscipline = remainingDiscipline;
+          updates.gameEventsPenalties = (game.gameEventsPenalties || []).filter((p) => (p as any).period !== targetPeriodNumber);
+          updates.playerActions = (game.playerActions || []).filter((a) => a.period !== targetPeriodNumber);
+          updates.gameEventsTeam = (game.gameEventsTeam || []).filter((t) => t.period !== targetPeriodNumber);
+          updates.gameSubs = (game.gameSubs || []).filter((s) => s.period !== targetPeriodNumber);
+
+          const teamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
+          updates.goalsFor = remainingGoals.filter((g) => String(g.team_season_id) === String(teamSeasonId)).length;
+          updates.goalsAgainst = remainingGoals.filter((g) => String(g.team_season_id) !== String(teamSeasonId)).length;
+
+          useGamePlayersStore.getState().recalculatePlayerStatsFromEvents(
+            remainingGoals,
+            remainingDiscipline
+          );
+        }
+
+        get().updateGame(updates);
         await get().syncGameStatus();
       } catch (error) {
         console.error("Error deleting period:", error);
@@ -1114,21 +1195,36 @@ const useGameStore = create<GameStoreState>((set, get) => {
         } else if (eventType === "goal") {
           goalIdToDelete = eventId;
           const goal = game.gameEventsGoals?.find(
-            (g) => String(g.id) === String(eventId) || String(g.goal_id) === String(eventId)
+            (g) => String(g.id) === String(eventId) || String(g.goal_id) === String(eventId) || String((g as any).major_event_id) === String(eventId)
           );
-          if ((goal as any)?.major_event_id) majorIdToDelete = (goal as any).major_event_id;
+          if ((goal as any)?.major_event_id) {
+            majorIdToDelete = (goal as any).major_event_id;
+          } else {
+            const major = game.gameEventsMajor?.find((m) => String(m.id) === String(eventId));
+            if (major) majorIdToDelete = major.id;
+          }
         } else if (eventType === "discipline") {
           disciplineIdToDelete = eventId;
           const disc = game.gameEventsDiscipline?.find(
-            (d) => String(d.id) === String(eventId) || String(d.discipline_id) === String(eventId)
+            (d) => String(d.id) === String(eventId) || String(d.discipline_id) === String(eventId) || String((d as any).major_event_id) === String(eventId)
           );
-          if ((disc as any)?.major_event_id) majorIdToDelete = (disc as any).major_event_id;
+          if ((disc as any)?.major_event_id) {
+            majorIdToDelete = (disc as any).major_event_id;
+          } else {
+            const major = game.gameEventsMajor?.find((m) => String(m.id) === String(eventId));
+            if (major) majorIdToDelete = major.id;
+          }
         } else if (eventType === "penalty") {
           penaltyIdToDelete = eventId;
           const pen = game.gameEventsPenalties?.find(
-            (p) => String(p.id) === String(eventId) || String(p.penalty_id) === String(eventId)
+            (p) => String(p.id) === String(eventId) || String(p.penalty_id) === String(eventId) || String((p as any).major_event_id) === String(eventId)
           );
-          if ((pen as any)?.major_event_id) majorIdToDelete = (pen as any).major_event_id;
+          if ((pen as any)?.major_event_id) {
+            majorIdToDelete = (pen as any).major_event_id;
+          } else {
+            const major = game.gameEventsMajor?.find((m) => String(m.id) === String(eventId));
+            if (major) majorIdToDelete = major.id;
+          }
         }
 
         // 1. Update Zustand game state synchronously (0ms lag)
@@ -1142,7 +1238,9 @@ const useGameStore = create<GameStoreState>((set, get) => {
         if (goalIdToDelete || eventType === "goal") {
           const targetGoalId = goalIdToDelete || eventId;
           const remainingGoals = (game.gameEventsGoals || []).filter(
-            (g) => String(g.goal_id) !== String(targetGoalId) && String(g.id) !== String(targetGoalId)
+            (g) => String(g.goal_id) !== String(targetGoalId) &&
+                   String(g.id) !== String(targetGoalId) &&
+                   (!majorIdToDelete || String((g as any).major_event_id) !== String(majorIdToDelete))
           );
           updates.gameEventsGoals = remainingGoals;
           const teamSeasonId = game.teamSeasonId || (game.isHome
@@ -1158,13 +1256,17 @@ const useGameStore = create<GameStoreState>((set, get) => {
         if (disciplineIdToDelete || eventType === "discipline") {
           const targetDiscId = disciplineIdToDelete || eventId;
           updates.gameEventsDiscipline = (game.gameEventsDiscipline || []).filter(
-            (d) => String(d.discipline_id) !== String(targetDiscId) && String(d.id) !== String(targetDiscId)
+            (d) => String(d.discipline_id) !== String(targetDiscId) &&
+                   String(d.id) !== String(targetDiscId) &&
+                   (!majorIdToDelete || String((d as any).major_event_id) !== String(majorIdToDelete))
           );
         }
         if (penaltyIdToDelete || eventType === "penalty") {
           const targetPenId = penaltyIdToDelete || eventId;
           updates.gameEventsPenalties = (game.gameEventsPenalties || []).filter(
-            (p) => String(p.penalty_id) !== String(targetPenId) && String(p.id) !== String(targetPenId)
+            (p) => String(p.penalty_id) !== String(targetPenId) &&
+                   String(p.id) !== String(targetPenId) &&
+                   (!majorIdToDelete || String((p as any).major_event_id) !== String(majorIdToDelete))
           );
         }
         if (eventType === "player_action") {
