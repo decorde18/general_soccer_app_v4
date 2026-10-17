@@ -1,9 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import useGamePlayersStore from "@/stores/gamePlayersStore";
+import { useParams } from "next/navigation";
+import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
 import useGameStore from "@/stores/gameStore";
 import PlayerRow from "./PlayerRow";
+import Button from "@/components/ui/Button";
+import { UserPlus } from "lucide-react";
+import AddGuestPlayerModal from "./AddGuestPlayerModal";
+import { LineupPlayer } from "@/lib/actions/gameLineup-actions";
 import { toast } from "sonner";
 
 interface StatusObj {
@@ -46,14 +51,60 @@ const statusArray: StatusObj[] = [
 ];
 
 export default function PlayerStatusSections() {
+  const params = useParams();
+  const gameId = params.id as string;
+  const teamSeasonId = params.teamSeasonId as string;
+
   const roster = useGamePlayersStore((s) => s.players);
+  const setPlayers = useGamePlayersStore((s) => s.setPlayers);
   const updateGameStatus = useGamePlayersStore((s) => s.updateGameStatus);
   const game = useGameStore((s) => s.game);
 
   const [activeHoverSection, setActiveHoverSection] = useState<string | null>(null);
+  const [isAddGuestOpen, setIsAddGuestOpen] = useState(false);
 
   const handleStatus = (playerId: number, action: string) => {
     updateGameStatus(playerId, action as any);
+  };
+
+  const handleGuestAdded = (guest: LineupPlayer) => {
+    const newPlayer: Player = {
+      id: guest.id,
+      playerGameId: 0,
+      firstName: guest.firstName,
+      lastName: guest.lastName,
+      fullName: guest.fullName,
+      nickname: null,
+      jerseyNumber: guest.jerseyNumber,
+      position: null,
+      teamId: 0,
+      teamSeasonId: Number(teamSeasonId),
+      homeAway: "home",
+      gameStatus: guest.gameStatus as any,
+      fieldStatus: (guest.gameStatus === "starter" || guest.gameStatus === "goalkeeper") ? "onField" : "onBench",
+      started: guest.gameStatus === "starter" || guest.gameStatus === "goalkeeper",
+      isGuest: true,
+      ins: [],
+      outs: [],
+      subStatus: null,
+      goals: 0,
+      penaltyGoals: 0,
+      assists: 0,
+      shots: 0,
+      shotsOnTarget: 0,
+      saves: 0,
+      goalsAgainst: 0,
+      penaltiesFaced: 0,
+      penaltySaves: 0,
+      cleanSheet: 0,
+      yellowCards: 0,
+      redCards: 0,
+      foulsCommitted: 0,
+      foulsDrawn: 0,
+      goalkeeperTime: 0,
+      plusMinus: 0,
+    };
+    setPlayers([...roster, newPlayer]);
   };
 
   const starterLength = roster.filter(
@@ -283,13 +334,26 @@ export default function PlayerStatusSections() {
                 onDragLeave={() => setActiveHoverSection(null)}
                 onDrop={(e) => handleDrop(e, statusObj.section)}
               >
-                <div className="flex items-center justify-between mb-3 select-none">
+                <div className="flex items-center justify-between mb-3 select-none gap-2">
                   <h2 className="text-sm font-bold text-text uppercase tracking-wide">
                     {statusObj.label}
                   </h2>
-                  <span className="bg-muted/10 text-muted text-xs px-2 py-0.5 rounded-full font-bold">
-                    {filteredPlayers.length}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {statusObj.section === "available" && (
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => setIsAddGuestOpen(true)}
+                        className="text-[11px] py-1 px-2.5 font-bold flex items-center gap-1.5 border-primary/40 text-primary hover:bg-primary/10 shadow-xs"
+                      >
+                        <UserPlus size={13} />
+                        <span>Add Guest</span>
+                      </Button>
+                    )}
+                    <span className="bg-muted/10 text-muted text-xs px-2 py-0.5 rounded-full font-bold">
+                      {filteredPlayers.length}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex-1 space-y-2 overflow-y-auto">
@@ -315,6 +379,15 @@ export default function PlayerStatusSections() {
             );
           })}
       </div>
+
+      <AddGuestPlayerModal
+        isOpen={isAddGuestOpen}
+        onClose={() => setIsAddGuestOpen(false)}
+        gameId={Number(gameId)}
+        teamSeasonId={Number(teamSeasonId)}
+        existingPlayerIds={roster.map((p) => Number(p.id))}
+        onGuestAdded={handleGuestAdded}
+      />
     </div>
   );
 }

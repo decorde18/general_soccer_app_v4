@@ -1,3 +1,18 @@
+### [2026-10-16 22:30] Inline Guest Player Management on Game Lineup Page
+- **Type**: Feature / UX Standard
+- **Summary**:
+  1. **Direct Lineup Guest Player Insertion**:
+     - Added an inline **"+ Add Guest"** button to the Available (Not Dressed) section header on the match lineup page (`/gamestats/[teamSeasonId]/[id]/lineup`).
+     - Created `AddGuestPlayerModal.tsx` allowing coaches and admins to search any person/player across the organization or club, view their primary club and team, assign an optional match jersey number, choose their initial section (Dressed/Bench, Starters, or Available), and immediately insert them into the active lineup.
+  2. **Guest Player Query Resilience (`loadGameLineup`, `addGuestPlayerToLineup`)**:
+     - Updated `loadGameLineup` in `gameLineup-actions.ts` to query `player_games` with an `OR: [{ team_season_id: { in: siblingTeamSeasonIds } }, { is_guest: true }]` clause so guest players assigned from outside the team's squad pool are never filtered out.
+     - Automatically resolves default jersey numbers for guest players from their primary team rosters.
+- **Modified Files**:
+  - `src/lib/actions/gameLineup-actions.ts`
+  - `src/app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/lineup/PlayerStatusSections.tsx`
+  - `src/app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/lineup/AddGuestPlayerModal.tsx`
+  - `updates.md`
+
 ### [2026-10-16 22:00] Sub-Team & Squad Architecture: Distinct Tabs for U12 Elite (LM/DC) and High School (Varsity/JV)
 - **Type**: Feature / Refactor / Architecture Fix
 - **Summary**:

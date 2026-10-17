@@ -65,12 +65,15 @@ export async function loadGameLineup(gameId: number, teamSeasonId: number): Prom
     }
   }
 
-  // 3. Fetch existing player_games records for this match across the program pool
+  // 3. Fetch existing player_games records for this match across the program pool OR any guests
   const [playerGames, gameRecord] = await Promise.all([
     prisma.player_games.findMany({
       where: {
         game_id: gameId,
-        team_season_id: { in: siblingTeamSeasonIds },
+        OR: [
+          { team_season_id: { in: siblingTeamSeasonIds } },
+          { is_guest: true },
+        ],
       },
     }),
     prisma.games.findUnique({
@@ -138,13 +141,31 @@ export async function loadGameLineup(gameId: number, teamSeasonId: number): Prom
   const guestPlayerGames = playerGames.filter((pg) => !poolPersonIds.has(pg.player_id) && pg.is_guest);
 
   if (guestPlayerGames.length > 0) {
-    const guestPeople = await prisma.people.findMany({
-      where: {
-        id: { in: guestPlayerGames.map((pg) => pg.player_id) },
-      },
-    });
+    const guestPersonIds = guestPlayerGames.map((pg) => pg.player_id);
+    const [guestPeople, guestRosters] = await Promise.all([
+      prisma.people.findMany({
+        where: { id: { in: guestPersonIds } },
+      }),
+      prisma.player_teams.findMany({
+        where: {
+          player_id: { in: guestPersonIds },
+          is_active: true,
+        },
+        select: {
+          player_id: true,
+          jersey_number: true,
+        },
+        orderBy: { id: "desc" },
+      }),
+    ]);
 
     const guestPeopleMap = new Map(guestPeople.map((p) => [p.id, p]));
+    const guestJerseyMap = new Map<number, number | null>();
+    guestRosters.forEach((gr) => {
+      if (!guestJerseyMap.has(gr.player_id) && gr.jersey_number != null) {
+        guestJerseyMap.set(gr.player_id, gr.jersey_number);
+      }
+    });
 
     guestPlayerGames.forEach((pg) => {
       const person = guestPeopleMap.get(pg.player_id);
@@ -155,7 +176,7 @@ export async function loadGameLineup(gameId: number, teamSeasonId: number): Prom
           fullName: `${person.first_name} ${person.last_name}`,
           firstName: person.first_name,
           lastName: person.last_name,
-          jerseyNumber: null,
+          jerseyNumber: guestJerseyMap.get(pg.player_id) ?? null,
           gameStatus: pg.game_status as any,
           isGuest: true,
           squadLevel: "Guest",
@@ -265,4 +286,133 @@ export async function updateLineupPlayerJerseys(
   }
 
   return { success: true };
+}
+
+export async function searchGuestPlayerCandidates(query: string) {
+  await requireSession();
+  if (!query || query.trim().length < 2) return [];
+
+  const q = query.trim().toLowerCase();
+  const people = await prisma.people.findMany({
+    where: {
+      is_active: true,
+      OR: [
+        { first_name: { contains: q } },
+        { last_name: { contains: q } },
+        { nickname: { contains: q } },
+        { email: { contains: q } },
+      ],
+    },
+    include: {
+      player_teams: {
+        where: { is_active: true },
+        include: {
+          team_seasons: {
+            include: {
+              teams: {
+                include: { clubs: true },
+              },
+              seasons: true,
+            },
+          },
+        },
+        take: 1,
+      },
+    },
+    take: 20,
+  });
+
+  return people.map((p) => {
+    const pt = p.player_teams[0];
+    const team = pt?.team_seasons?.teams;
+    const club = team?.clubs;
+    return {
+      id: p.id,
+      firstName: p.first_name,
+      lastName: p.last_name,
+      fullName: `${p.first_name} ${p.last_name}`,
+      jerseyNumber: pt?.jersey_number ?? null,
+      clubName: club?.name ?? null,
+      teamName: team?.team_name ?? null,
+      seasonName: pt?.team_seasons?.seasons?.season_name ?? null,
+    };
+  });
+}
+
+export async function addGuestPlayerToLineup(
+  gameId: number,
+  teamSeasonId: number,
+  data: {
+    personId: number;
+    jerseyNumber?: number | null;
+    gameStatus?: "starter" | "goalkeeper" | "dressed" | "not_dressed" | "unavailable";
+  }
+): Promise<{ success: boolean; player: LineupPlayer }> {
+  await requireSession();
+
+  const teamSeason = await prisma.team_seasons.findUnique({
+    where: { id: teamSeasonId },
+    select: { team_id: true },
+  });
+  if (!teamSeason) {
+    throw new Error("Target team season not found");
+  }
+  await verifyTeamAccess(teamSeason.team_id);
+
+  const person = await prisma.people.findUnique({
+    where: { id: data.personId },
+  });
+  if (!person) {
+    throw new Error("Selected player not found");
+  }
+
+  const gameStatus = data.gameStatus || "dressed";
+
+  // Upsert into player_games for this match
+  const existing = await prisma.player_games.findFirst({
+    where: {
+      game_id: gameId,
+      player_id: data.personId,
+    },
+  });
+
+  if (existing) {
+    await prisma.player_games.update({
+      where: { id: existing.id },
+      data: {
+        is_guest: true,
+        team_season_id: teamSeasonId,
+        game_status: gameStatus,
+        started: gameStatus === "starter" || gameStatus === "goalkeeper",
+      },
+    });
+  } else {
+    await prisma.player_games.create({
+      data: {
+        game_id: gameId,
+        player_id: data.personId,
+        team_season_id: teamSeasonId,
+        is_guest: true,
+        game_status: gameStatus,
+        started: gameStatus === "starter" || gameStatus === "goalkeeper",
+      },
+    });
+  }
+
+  revalidatePath(`/gamestats/${teamSeasonId}/${gameId}/lineup`);
+
+  return {
+    success: true,
+    player: {
+      id: person.id,
+      playerTeamId: 0,
+      fullName: `${person.first_name} ${person.last_name}`,
+      firstName: person.first_name,
+      lastName: person.last_name,
+      jerseyNumber: data.jerseyNumber ?? null,
+      gameStatus: gameStatus as any,
+      isGuest: true,
+      squadLevel: "Guest",
+    },
+  };
 }
