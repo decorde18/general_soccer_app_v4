@@ -43,8 +43,20 @@ export default function NavBar({ user }: NavBarProps) {
   const { sidebarOpen, setSidebarOpen } = useSidebarState();
   const { activeView, changeActiveView } = useActiveRoleView();
 
-  const [selectedClubType, setSelectedClubType] = useState<string>("");
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string>("");
+  const [selectedClubType, setSelectedClubType] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("soccer_sidepanel_club_type");
+      if (saved) return saved;
+    }
+    return "club";
+  });
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("soccer_sidepanel_season_id");
+      if (saved) return saved;
+    }
+    return "";
+  });
   const [selectedClubId, setSelectedClubId] = useSelectedClub(teamSeasons, loading);
 
   const [isNavigating, startTransition] = useTransition();
@@ -56,6 +68,28 @@ export default function NavBar({ user }: NavBarProps) {
     setOptimisticTeamId(null);
   }, [pathname]);
 
+  // Default to active season if selectedSeasonId is empty or not in seasons
+  useEffect(() => {
+    if (loading || seasons.length === 0) return;
+
+    if (!selectedSeasonId) {
+      const savedSeasonId = typeof window !== "undefined" ? localStorage.getItem("soccer_sidepanel_season_id") : null;
+      const matchedSaved = savedSeasonId ? seasons.find((s) => String(s.id) === savedSeasonId) : null;
+      if (matchedSaved) {
+        setSelectedSeasonId(String(matchedSaved.id));
+      } else {
+        const activeSeason = seasons.find((s) => s.status === "active") || seasons[0];
+        if (activeSeason) {
+          const defaultId = String(activeSeason.id);
+          setSelectedSeasonId(defaultId);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("soccer_sidepanel_season_id", defaultId);
+          }
+        }
+      }
+    }
+  }, [loading, seasons, selectedSeasonId]);
+
   // Sync selectedClubType and selectedSeasonId when on a team page
   useEffect(() => {
     const urlTeamMatch = pathname?.match(/\/teams\/(\d+)/);
@@ -64,13 +98,22 @@ export default function NavBar({ user }: NavBarProps) {
       const currentTeam = teamSeasons.find((t) => t.id === currentId);
       if (currentTeam) {
         if (currentTeam.seasonId) {
-          setSelectedSeasonId(String(currentTeam.seasonId));
+          const sId = String(currentTeam.seasonId);
+          setSelectedSeasonId(sId);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("soccer_sidepanel_season_id", sId);
+          }
         }
-        if (currentTeam.clubType) {
-          setSelectedClubType(currentTeam.clubType);
-        } else {
+        let resolvedType = currentTeam.clubType;
+        if (!resolvedType) {
           const club = clubs.find((c) => c.id === currentTeam.clubId);
-          if (club?.type) setSelectedClubType(club.type);
+          if (club?.type) resolvedType = club.type;
+        }
+        if (resolvedType) {
+          setSelectedClubType(resolvedType);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("soccer_sidepanel_club_type", resolvedType);
+          }
         }
       }
     }
@@ -139,6 +182,10 @@ export default function NavBar({ user }: NavBarProps) {
 
   const handleClubTypeChange = (newType: string) => {
     setSelectedClubType(newType);
+    if (typeof window !== "undefined") {
+      if (newType) localStorage.setItem("soccer_sidepanel_club_type", newType);
+      else localStorage.removeItem("soccer_sidepanel_club_type");
+    }
     setSelectedClubId("");
     if (newType && selectedSeasonId) {
       const seasonHasTeamsOfType = accessibleTeams.some(
@@ -156,6 +203,10 @@ export default function NavBar({ user }: NavBarProps) {
   const handleSeasonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSeasonId = e.target.value;
     setSelectedSeasonId(newSeasonId);
+    if (typeof window !== "undefined") {
+      if (newSeasonId) localStorage.setItem("soccer_sidepanel_season_id", newSeasonId);
+      else localStorage.removeItem("soccer_sidepanel_season_id");
+    }
     if (newSeasonId && selectedClubId) {
       const clubHasTeamsInSeason = accessibleTeams.some(
         (t) => t.clubId === Number(selectedClubId) && t.seasonId === Number(newSeasonId)

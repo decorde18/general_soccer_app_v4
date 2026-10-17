@@ -29,6 +29,7 @@ export interface CreateGameData {
   otDuration?: number; // seconds, default 600
   soIfTied?: boolean;
   notes?: string | null;
+  videoLink?: string | null;
   gameSettings?: Record<string, any>;
   allowConflictOverride?: boolean;
 }
@@ -261,6 +262,7 @@ export async function createGame(data: CreateGameData) {
       ot_if_tied: effectiveSettings?.hasOvertime ?? data.otIfTied ?? false,
       ot_duration: effectiveSettings?.overtimeDuration ?? data.otDuration ?? 600,
       so_if_tied: effectiveSettings?.hasShootout ?? data.soIfTied ?? false,
+      video_link: data.videoLink ? data.videoLink.trim() : null,
       notes: finalNotesStr,
       status: "scheduled",
     },
@@ -347,6 +349,7 @@ export async function updateGame(
   if (data.otDuration !== undefined) updateData.ot_duration = Number(data.otDuration);
   if (data.soIfTied !== undefined) updateData.so_if_tied = Boolean(data.soIfTied);
   if (data.notes !== undefined) updateData.notes = data.notes;
+  if (data.videoLink !== undefined) updateData.video_link = data.videoLink ? data.videoLink.trim() : null;
   if (data.status) updateData.status = data.status;
 
   const updated = await prisma.games.update({
@@ -484,6 +487,7 @@ export async function getGameEditDetailsAction(gameId: number) {
     gameId: game.id,
     seasonId: game.season_id,
     gameType: game.game_type,
+    videoLink: game.video_link ?? null,
     attachedCompetitions,
   };
 }

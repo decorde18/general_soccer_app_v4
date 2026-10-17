@@ -1,3 +1,29 @@
+### [2026-10-17 08:10] Veo Match Video Link Integration, Tournament Stats Hierarchy Resolution & Sidepanel Defaults
+- **Type**: Feature / Bug Fix / UX Architecture
+- **Summary**:
+  1. **Veo Match Video Link Integration**:
+     - Added `videoLink` support to `CreateGameData`, `createGame`, `updateGame`, and `getGameEditDetailsAction` in `src/lib/actions/game-actions.ts`.
+     - Integrated a modern "Veo / Match Video Link" field into `GameEditModal.tsx` (`src/components/dashboard/GameEditModal.tsx`) with real-time video link persistence.
+     - Added a dedicated "Veo" watch button with video icon on match cards in `src/components/team/TeamSchedule.tsx` linking directly to external match footage.
+  2. **Tournament & Competition Stats Hierarchy Resolution**:
+     - Fixed `getComprehensivePlayerStats` in `src/lib/data/queries.ts` where filtering by a competition/tournament node only matched an isolated `league_node_season_id`.
+     - Expanded `getComprehensivePlayerStats` to resolve the full competition tree (parent category, child brackets/flights, and all node seasons under the competition's `league_id`), and match across both `league_node_id` and `league_node_seasons.id` as well as `game_standings_inclusions`.
+     - Updated `TeamStatsProps` in `src/components/team/TeamStats.tsx` with optional `leagueId` support.
+  3. **Sidebar Dropdown Defaults (Program Type "club", Active Season, Last Used)**:
+     - Updated `NavBar.tsx` and `useSelectedClub.ts` to default Program Type to `"club"` and current active season (`status === "active"`), while persisting user selections in `localStorage` across page navigations.
+     - Updated `api/teams-data/route.ts` and `types/nav.ts` to provide `status`, `start_date`, and `end_date` for robust active season identification.
+- **Modified Files**:
+  - `src/lib/actions/game-actions.ts`
+  - `src/components/dashboard/GameEditModal.tsx`
+  - `src/components/team/TeamSchedule.tsx`
+  - `src/lib/data/queries.ts`
+  - `src/components/team/TeamStats.tsx`
+  - `src/types/nav.ts`
+  - `src/app/api/teams-data/route.ts`
+  - `src/hooks/useSelectedClub.ts`
+  - `src/components/layout/NavBar.tsx`
+  - `updates.md`
+
 ### [2026-10-16 23:00] Admin People Management, Fuzzy Search Resolution, Season-Scoped Guest Players & On-The-Fly Rostering
 - **Type**: Feature / UX Architecture / Data Integrity
 - **Summary**:

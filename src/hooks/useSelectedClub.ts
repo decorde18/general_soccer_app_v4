@@ -8,8 +8,28 @@ export function useSelectedClub(
   teamSeasons: TeamSeason[],
   loading: boolean
 ): [string, (id: string) => void] {
-  const [selectedClubId, setSelectedClubId] = useState("");
+  const [selectedClubId, setSelectedClubIdState] = useState("");
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("soccer_sidepanel_club_id");
+      if (saved) {
+        setSelectedClubIdState(saved);
+      }
+    }
+  }, []);
+
+  const setSelectedClubId = (id: string) => {
+    setSelectedClubIdState(id);
+    if (typeof window !== "undefined") {
+      if (id) {
+        localStorage.setItem("soccer_sidepanel_club_id", id);
+      } else {
+        localStorage.removeItem("soccer_sidepanel_club_id");
+      }
+    }
+  };
 
   useEffect(() => {
     if (loading || teamSeasons.length === 0) return;
@@ -19,7 +39,11 @@ export function useSelectedClub(
       const currentId = Number(teamMatch[1]);
       const currentTeam = teamSeasons.find((t) => t.id === currentId);
       if (currentTeam) {
-        setSelectedClubId(String(currentTeam.clubId));
+        const cId = String(currentTeam.clubId);
+        setSelectedClubIdState(cId);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("soccer_sidepanel_club_id", cId);
+        }
       }
     }
   }, [pathname, loading, teamSeasons]);

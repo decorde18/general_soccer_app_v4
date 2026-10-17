@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const seasons = await prisma.seasons.findMany({
       orderBy: { start_date: "desc" },
-      select: { id: true, season_name: true }
+      select: { id: true, season_name: true, status: true, start_date: true, end_date: true }
     });
 
     const clubs = await prisma.clubs.findMany({

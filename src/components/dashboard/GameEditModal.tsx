@@ -12,6 +12,7 @@ import {
   Trophy,
   Plus,
   Layers,
+  Video,
 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -62,6 +63,7 @@ interface GameEditModalProps {
     sublocationName?: string | null;
     homeScore: number | null;
     awayScore: number | null;
+    videoLink?: string | null;
     settings?: {
       playersOnField?: number;
       periodDuration?: number;
@@ -79,6 +81,7 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
     (game.gameType as any) || "league"
   );
   const [status, setStatus] = useState(game.status || "scheduled");
+  const [videoLink, setVideoLink] = useState(game.videoLink || "");
 
   const [playersOnField, setPlayersOnField] = useState<number>(
     game.settings?.playersOnField || 11
@@ -140,6 +143,9 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
           }))
         );
       }
+      if (details?.videoLink) {
+        setVideoLink(details.videoLink);
+      }
     });
   }, [game]);
 
@@ -186,6 +192,7 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
           locationId: selectedLocationId || null,
           sublocationId: selectedSublocationId || null,
           periodDuration: durationNum * 60,
+          videoLink: videoLink.trim() || null,
           notes: JSON.stringify({ playersOnField: Number(playersOnField) }),
           competitionNodes: compNodes,
         });
@@ -588,6 +595,23 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
                     ...(activeVenue?.sublocations.map((sub) => ({ value: sub.id, label: sub.name })) || []),
                   ]}
                 />
+              </div>
+
+              {/* Veo / Match Video Link */}
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold text-text flex items-center gap-1.5">
+                  <Video size={14} className="text-emerald-500" />
+                  <span>Veo / Match Video Link</span>
+                </label>
+                <Input
+                  type="url"
+                  value={videoLink}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setVideoLink(e.target.value)}
+                  placeholder="e.g. https://app.veo.co/matches/..."
+                />
+                <p className="text-[11px] text-muted">
+                  Paste the direct Veo match recording link or external video URL to link match footage.
+                </p>
               </div>
 
             </div>

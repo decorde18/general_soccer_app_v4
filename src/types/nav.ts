@@ -8,6 +8,7 @@ export interface NavUser {
 export interface Season {
   id: number;
   season_name: string;
+  status?: string;
 }
 
 export interface Club {

@@ -1887,8 +1887,46 @@ export async function getComprehensivePlayerStats(
 
   if (leagueId || leagueNodeSeasonId) {
     let targetLnsIds: number[] = [];
+    let targetLeagueNodeIds: number[] = [];
+
     if (leagueNodeSeasonId) {
-      targetLnsIds = [leagueNodeSeasonId];
+      targetLnsIds.push(leagueNodeSeasonId);
+
+      const currentLns = await prisma.league_node_seasons.findUnique({
+        where: { id: leagueNodeSeasonId },
+        include: {
+          league_nodes: {
+            include: {
+              leagues: true,
+            },
+          },
+        },
+      });
+
+      if (currentLns) {
+        if (currentLns.league_node_id) {
+          targetLeagueNodeIds.push(currentLns.league_node_id);
+        }
+
+        // Expand to all related node seasons (children, siblings, parent in this competition/tournament)
+        const relatedNodeSeasons = await prisma.league_node_seasons.findMany({
+          where: {
+            OR: [
+              { league_nodes: { league_id: currentLns.league_nodes.league_id } },
+              { league_nodes: { parent_id: currentLns.league_node_id } },
+              currentLns.league_nodes.parent_id
+                ? { league_nodes: { id: currentLns.league_nodes.parent_id } }
+                : {},
+            ],
+          },
+          select: { id: true, league_node_id: true },
+        });
+
+        relatedNodeSeasons.forEach((r) => {
+          targetLnsIds.push(r.id);
+          if (r.league_node_id) targetLeagueNodeIds.push(r.league_node_id);
+        });
+      }
     } else if (leagueId) {
       const lnsList = await prisma.league_node_seasons.findMany({
         where: {
@@ -1896,16 +1934,44 @@ export async function getComprehensivePlayerStats(
             league_id: leagueId,
           },
         },
-        select: { id: true },
+        select: { id: true, league_node_id: true },
       });
       targetLnsIds = lnsList.map((lns) => lns.id);
+      targetLeagueNodeIds = lnsList.map((lns) => lns.league_node_id);
     }
 
+    targetLnsIds = Array.from(new Set(targetLnsIds));
+    targetLeagueNodeIds = Array.from(new Set(targetLeagueNodeIds));
+
+    const matchConditions: any[] = [];
     if (targetLnsIds.length > 0) {
-      playerGameWhere.games = {
+      matchConditions.push({
         game_league_nodes: {
-          some: { league_node_seasons: { id: { in: targetLnsIds } } },
+          some: {
+            OR: [
+              { league_node_id: { in: targetLnsIds } },
+              { league_node_seasons: { id: { in: targetLnsIds } } },
+            ],
+          },
         },
+      });
+    }
+    if (targetLeagueNodeIds.length > 0) {
+      matchConditions.push({
+        game_league_nodes: {
+          some: { league_node_id: { in: targetLeagueNodeIds } },
+        },
+      });
+      matchConditions.push({
+        game_standings_inclusions: {
+          some: { league_node_id: { in: targetLeagueNodeIds } },
+        },
+      });
+    }
+
+    if (matchConditions.length > 0) {
+      playerGameWhere.games = {
+        OR: matchConditions,
       };
     } else {
       // Specified league has no node seasons / linked games in database

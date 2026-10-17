@@ -22,6 +22,7 @@ interface TeamStatsProps {
   stats: PlayerSeasonStats[];
   teamSeasonId?: number;
   leagueLinks?: {
+    leagueId?: number;
     leagueNodeSeasonId: number;
     leagueName: string;
     leagueNodeName: string;

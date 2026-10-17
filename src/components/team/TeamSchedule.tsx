@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
-import { Calendar, MapPin, Clock, Trophy, Play, ShieldAlert, SquareChevronRight, Edit3, Plus } from "lucide-react";
+import { Calendar, MapPin, Clock, Trophy, Play, ShieldAlert, SquareChevronRight, Edit3, Plus, Video } from "lucide-react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
@@ -512,6 +512,19 @@ export default function TeamSchedule({
                               <span>Quick Score</span>
                             </button>
                           </>
+                        )}
+
+                        {game.videoLink && (
+                          <a
+                            href={game.videoLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors shadow-2xs"
+                            title="Watch Match Recording on Veo"
+                          >
+                            <Video size={13} className="shrink-0" />
+                            <span>Veo</span>
+                          </a>
                         )}
 
                         <Link
