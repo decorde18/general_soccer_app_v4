@@ -178,6 +178,21 @@ export interface TeamSeason {
   gender?: string | null;
 }
 
+export interface SubTeamInfo {
+  teamSeasonId: number;
+  teamId: number;
+  squadCode: string;
+  squadName: string;
+  teamName: string;
+  isCurrent: boolean;
+}
+
+export interface SubTeamResolution {
+  currentTeamSeason: TeamSeason | null;
+  subTeams: SubTeamInfo[];
+  programTeamSeasonIds: number[];
+}
+
 export interface LeagueNode {
   id: number;
   leagueId: number;
@@ -288,6 +303,7 @@ export interface Player {
   photoRejectionReason?: string | null;
   squadLevel?: string | null;
   squadLevels?: string[];
+  teamSeasonIds?: number[];
 }
 
 export interface TeamStaffMember {
@@ -766,14 +782,206 @@ export async function getTeamSeasonById(
   };
 }
 
+// ─── Sub-Teams & Squad Resolution ─────────────────────────────────────────────
+
+export async function resolveSubTeams(
+  teamSeasonId: number
+): Promise<SubTeamResolution> {
+  const currentTs = await prisma.team_seasons.findUnique({
+    where: { id: teamSeasonId },
+    include: {
+      teams: {
+        include: {
+          clubs: true,
+        },
+      },
+      seasons: true,
+      age_groups: true,
+    },
+  });
+
+  if (!currentTs) {
+    return {
+      currentTeamSeason: null,
+      subTeams: [],
+      programTeamSeasonIds: [teamSeasonId],
+    };
+  }
+
+  const teamInfo: TeamSeason = {
+    id: currentTs.id,
+    teamId: currentTs.team_id,
+    teamName: currentTs.teams.team_name,
+    clubId: currentTs.teams.club_id,
+    clubName: currentTs.teams.clubs.name,
+    clubType: currentTs.teams.clubs.type,
+    seasonId: currentTs.season_id,
+    seasonName: currentTs.seasons.season_name,
+    ageGroup: currentTs.age_group,
+    ageGroupName: currentTs.age_groups?.name ?? null,
+    isActive: Boolean(currentTs.is_active),
+    gender: currentTs.teams.gender,
+  };
+
+  const isHighSchool =
+    currentTs.teams.clubs.type === "high_school" ||
+    currentTs.teams.team_name.toLowerCase().includes("varsity") ||
+    currentTs.teams.team_name.toLowerCase().includes("jv") ||
+    currentTs.teams.team_name.toLowerCase().includes("freshman");
+
+  const nameLower = currentTs.teams.team_name.toLowerCase();
+  const isU12OrClubSquad =
+    nameLower.includes("elite") ||
+    nameLower.includes("lm") ||
+    nameLower.includes("dc") ||
+    nameLower.includes("premier") ||
+    Boolean(currentTs.age_group);
+
+  // If neither high school nor potential club squad, return self strictly
+  if (!isHighSchool && !isU12OrClubSquad) {
+    return {
+      currentTeamSeason: teamInfo,
+      subTeams: [],
+      programTeamSeasonIds: [currentTs.id],
+    };
+  }
+
+  // Find candidate sister teams under the same club, season, and gender
+  const candidates = await prisma.team_seasons.findMany({
+    where: {
+      season_id: currentTs.season_id,
+      is_active: true,
+      teams: {
+        club_id: currentTs.teams.club_id,
+        gender: currentTs.teams.gender,
+      },
+    },
+    include: {
+      teams: true,
+    },
+    orderBy: { id: "asc" },
+  });
+
+  if (candidates.length <= 1) {
+    return {
+      currentTeamSeason: teamInfo,
+      subTeams: [],
+      programTeamSeasonIds: [currentTs.id],
+    };
+  }
+
+  let matchedSisters: typeof candidates = [];
+
+  if (isHighSchool) {
+    // Only include teams that are high school squads (Varsity, JV, Frosh)
+    matchedSisters = candidates.filter((ts) => {
+      const tn = ts.teams.team_name.toLowerCase();
+      return (
+        tn.includes("varsity") ||
+        tn.includes("jv") ||
+        tn.includes("freshman") ||
+        tn.includes("frosh")
+      );
+    });
+  } else {
+    // Club squads (e.g. U12 Elite with LM and DC)
+    // Must either match age_group or share name roots (e.g. both have "u12" or "elite" or "lm" or "dc")
+    const isCurrentLMOrDC = nameLower.includes("lm") || nameLower.includes("dc");
+    const isCurrentElite = nameLower.includes("elite");
+
+    matchedSisters = candidates.filter((ts) => {
+      // Must be same age group if both have age group specified
+      if (currentTs.age_group && ts.age_group && currentTs.age_group !== ts.age_group) {
+        return false;
+      }
+
+      const tn = ts.teams.team_name.toLowerCase();
+      const isSisterLMOrDC = tn.includes("lm") || tn.includes("dc");
+      const isSisterElite = tn.includes("elite");
+
+      if ((isCurrentLMOrDC || isCurrentElite) && (isSisterLMOrDC || isSisterElite)) {
+        return true;
+      }
+
+      // Check common age prefix e.g. "u12" or "u-12"
+      const ageMatchesCurrent = currentTs.teams.team_name.match(/u[- ]?(\d+)/i);
+      const ageMatchesSister = ts.teams.team_name.match(/u[- ]?(\d+)/i);
+      if (ageMatchesCurrent && ageMatchesSister && ageMatchesCurrent[1] === ageMatchesSister[1]) {
+        return isSisterLMOrDC || isSisterElite;
+      }
+
+      return false;
+    });
+  }
+
+  // If only 1 or 0 matched, no sub-teams exist
+  if (matchedSisters.length <= 1) {
+    return {
+      currentTeamSeason: teamInfo,
+      subTeams: [],
+      programTeamSeasonIds: [currentTs.id],
+    };
+  }
+
+  // Map to SubTeamInfo
+  const subTeams: SubTeamInfo[] = matchedSisters.map((ts) => {
+    const rawName = ts.teams.team_name;
+    const squad = extractSquadLevel(rawName);
+    let squadCode = squad;
+    let squadName = squad;
+
+    if (squad === "Varsity") {
+      squadCode = "V";
+      squadName = "Varsity (V)";
+    } else if (squad === "JV") {
+      squadCode = "JV";
+      squadName = "Junior Varsity (JV)";
+    } else if (squad === "Elite") {
+      squadCode = "Elite";
+      squadName = rawName.includes("U12") ? "U12 Elite" : "Elite";
+    }
+
+    return {
+      teamSeasonId: ts.id,
+      teamId: ts.team_id,
+      squadCode,
+      squadName,
+      teamName: rawName,
+      isCurrent: ts.id === currentTs.id,
+    };
+  });
+
+  // Sort subTeams logically:
+  // High School: Varsity (V) first, then JV, then others
+  // Club: Elite first, then LM, DC, or alphabetically
+  subTeams.sort((a, b) => {
+    if (a.squadCode === "V") return -1;
+    if (b.squadCode === "V") return 1;
+    if (a.squadCode === "JV" && b.squadCode !== "V") return -1;
+    if (b.squadCode === "JV" && a.squadCode !== "V") return 1;
+    if (a.squadCode === "Elite") return -1;
+    if (b.squadCode === "Elite") return 1;
+    if (a.squadCode === "LM" && b.squadCode === "DC") return -1;
+    if (a.squadCode === "DC" && b.squadCode === "LM") return 1;
+    return a.squadName.localeCompare(b.squadName);
+  });
+
+  return {
+    currentTeamSeason: teamInfo,
+    subTeams,
+    programTeamSeasonIds: subTeams.map((st) => st.teamSeasonId),
+  };
+}
+
 // ─── Players (roster) ─────────────────────────────────────────────────────────
 
 export function extractSquadLevel(teamName: string): string {
   const t = (teamName || "").toLowerCase();
   if (t.includes("navy")) return "JV Navy";
   if (t.includes("gold")) return "JV Gold";
+  if (t.includes("freshman") || t.includes("frosh")) return "Freshman";
+  if (t.includes("junior varsity") || t.includes("jv")) return "JV";
   if (t.includes("varsity")) return "Varsity";
-  if (t.includes("jv")) return "JV";
   if (t.includes("dc")) return "DC";
   if (t.includes("lm")) return "LM";
   if (t.includes("premier")) return "Premier";
@@ -783,39 +991,19 @@ export function extractSquadLevel(teamName: string): string {
 
 export async function getPlayersByTeamSeason(
   teamSeasonId: number,
-  options?: { includeProgramPool?: boolean }
+  options?: {
+    includeProgramPool?: boolean;
+    targetTeamSeasonIds?: number[];
+  }
 ): Promise<Player[]> {
-  const includePool = options?.includeProgramPool !== false;
-  let targetTsIds = [teamSeasonId];
+  let targetTsIds = options?.targetTeamSeasonIds;
 
-  if (includePool) {
-    try {
-      const currentTs = await prisma.team_seasons.findUnique({
-        where: { id: teamSeasonId },
-        include: {
-          teams: true,
-        },
-      });
-
-      if (currentTs) {
-        const sisterTeamSeasons = await prisma.team_seasons.findMany({
-          where: {
-            season_id: currentTs.season_id,
-            teams: {
-              club_id: currentTs.teams.club_id,
-              gender: currentTs.teams.gender,
-              ...(currentTs.age_group ? { age_group: currentTs.age_group } : {}),
-            },
-          },
-          select: { id: true },
-        });
-
-        if (sisterTeamSeasons.length > 0) {
-          targetTsIds = sisterTeamSeasons.map((ts) => ts.id);
-        }
-      }
-    } catch (e) {
-      console.error("Error resolving program pool team seasons:", e);
+  if (!targetTsIds || targetTsIds.length === 0) {
+    if (options?.includeProgramPool !== false) {
+      const res = await resolveSubTeams(teamSeasonId);
+      targetTsIds = res.programTeamSeasonIds;
+    } else {
+      targetTsIds = [teamSeasonId];
     }
   }
 
@@ -837,7 +1025,7 @@ export async function getPlayersByTeamSeason(
     ],
   });
 
-  const personMap = new Map<number, { primary: any; squadLevels: Set<string> }>();
+  const personMap = new Map<number, { primary: any; squadLevels: Set<string>; teamSeasonIds: Set<number> }>();
 
   for (const r of playersData) {
     const pId = r.player_id;
@@ -847,10 +1035,12 @@ export async function getPlayersByTeamSeason(
       personMap.set(pId, {
         primary: r,
         squadLevels: new Set([squad]),
+        teamSeasonIds: new Set([r.team_season_id]),
       });
     } else {
       const entry = personMap.get(pId)!;
       entry.squadLevels.add(squad);
+      entry.teamSeasonIds.add(r.team_season_id);
       if (r.team_season_id === teamSeasonId) {
         entry.primary = r;
       }
@@ -858,11 +1048,12 @@ export async function getPlayersByTeamSeason(
   }
 
   const result: Player[] = [];
-  for (const { primary, squadLevels } of personMap.values()) {
+  for (const { primary, squadLevels, teamSeasonIds } of personMap.values()) {
     const player = mapPlayerRow(primary);
     const levelsArr = Array.from(squadLevels);
     player.squadLevels = levelsArr;
     player.squadLevel = levelsArr.join(" & ");
+    player.teamSeasonIds = Array.from(teamSeasonIds);
     result.push(player);
   }
 

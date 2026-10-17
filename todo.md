@@ -721,3 +721,152 @@ gameStore.ts
 Filtering now ignores orphan card and goal major event stoppages whose linked discipline/goal rows were deleted.
 Unended stoppages with no subsequent events are capped at a maximum 60-second delay rather than consuming the entire period.
 endPeriod() in gameStore.ts now automatically closes any active unended stoppage (end_time = gameTime) when a period ends, preventing open stoppages from bleeding into subsequent periods.
+
+---
+
+## Future Milestone: Legacy MS Access Database Features & Historical Data Migration (`IHS Girls Soccer - Most Recent.accdb`)
+
+> **Note**: Deferred to a future phase per user request. Documented for future planning.
+
+- [ ] **F.1 Player Awards & Honors System (`player_awards`, `player_awards_earned`)**
+  - Schema extension for 18 award categories: All-District, All-Region, All-State, Overall MVP, Offensive MVP, Defensive MVP, Eagle Heart Award, Eagle Tough Award, Most Improved, Most Outstanding JV Athlete, Coaches' Choice, District Player of the Year.
+  - Import 204 historical awards earned linking players, awards, and seasons.
+  - UI: Awards & Honors showcase tab on player profiles and team season overviews.
+
+- [ ] **F.2 High School Letterman Award Tracking (`player_season_letters`)**
+  - Schema extension for high school athletic letter tracking: `varsity_letter`, `graduation_number_patch`, `certificate`, `chevron_bar`, `sport_ball_patch`, `number_patch_needed`, `varsity_patch_needed`.
+  - Import 420 historical letterman records.
+  - Business logic: Auto-calculate 1st-year varsity jacket patch + sport ball vs repeat lettering chevron bars based on years of varsity participation.
+
+- [ ] **F.3 Conditioning & Fitness Testing System (`fitness_tests`, `fitness_results`)**
+  - Schema extension for Beep Test / Yo-Yo multistage shuttle run fitness testing (stages, distance in meters, test runs, end run stage achieved).
+  - Import 91 beep test stages and 629 historical player fitness test results.
+  - UI: Dedicated Fitness & Conditioning tab for coaching staff with historical player progression charts.
+
+- [ ] **F.4 Penalty Shootout Kick-by-Kick Archive (`shootouts`, `shootout_kicks`)**
+  - Import 21 historical penalty kick shootout rounds from `ShootoutTable` into the new shootout engine.
+
+- [ ] **F.5 Pre-2006 Historical Aggregates & Match Archives (`past_season_stats`, `past_stats_game_scores`)**
+  - Import early program history (pre-2006 player goals, assists, saves, and game scores) to preserve all-time school records.
+
+- [ ] **F.6 Granular In-Game Tracking & Advanced Metrics**
+  - Plus/Minus ($+/-$) rating: Auto-calculate $+1$ on field during goals scored, $-1$ during goals conceded.
+  - Individual player shot attempts (`shots`) and goalkeeper saves (`saves`) per match.
+  - Dedicated goalkeeper minutes in net (`min_in_goal`) distinct from field minutes.
+  - Travel logistics: Away match bus departure times (`departure_time`) and venue travel durations (`travel_time`).
+
+
+
+## 1. Have We Missed Tables from the Original DB?
+
+**Yes.** The legacy MySQL dump (`u676616277_hs_original.sql`) that informed the initial migration plan did **not** contain several feature domains that were fully built and populated in your Access database.
+
+Here are the **6 feature domains and tables** that were missed:
+
+| Missed Table | Record Count | Purpose & Features in Original DB |
+| :--- | :---: | :--- |
+| **`PlayerAwards`** | 18 | Master list of high school awards: *All-District, All-Region, All-State, Overall MVP, Offensive MVP, Defensive MVP, Eagle Heart Award, Eagle Tough Award, Most Improved, Most Outstanding JV Athlete, Coaches' Choice, District Player of the Year*. |
+| **`PlayerAwardsEarned`** | 204 | Historical awards earned by players per season (`AwardID`, `PlayerID`, `SeasonID`). |
+| **`PlayerSeasonLetters`** | 420 | High school letterman system: tracks `Varsity Letter`, `Number Patch` (e.g. graduation year `2013`), `Certificate`, `Bar` (chevrons for subsequent lettering years), `Ball` (sport ball patch), `NumberPatchNeeded`, and `VarsityPatchNeeded`. |
+| **`BeepInformation`** | 91 | Beep Test / Yo-Yo fitness testing stages (`Run` level e.g. 5.1, 9.1, 14.5, and `Distance` in meters). |
+| **`BeepResults`** | 629 | Fitness testing test runs across seasons: tracks `PlayerID`, `SeasonID`, `RunDate`, `RunNo` (e.g. Run 1, Run 2), and `EndRun` (final stage achieved, e.g. `16.7`). |
+| **`ShootoutTable`** | 21 | Penalty kick shootout kick-by-kick logs for tied playoff matches: tracks `Kick#`, `Kicker` player ID, `Result` (Goal/Miss), `OppKick#`, `OppResult`, Goalkeeper `GK` ID, and `Save` (True/False). |
+| **`PastSeasonStats`** | 29 | Historical pre-2006 player aggregate stats (`Goals`, `Assists`, `GoalsAgainst`, `Saves`) prior to in-game event logging. |
+| **`PastStatsGameScores`** | 33 | Historical match scores (`IndyScore`, `OpponentScore`) from early seasons. |
+
+### Additional Granular Columns Missed in Migrated Tables:
+- **`GamesTable`**:
+  - `DepartureTime`: Bus departure time for away games (used by the team schedule and travel forms).
+  - Match running totals: `CornersFor`, `CornersAgainst`, `FoulsFor`, `FoulsAgainst`, `OffsideFor`, `OffsideAgainst`.
+  - `CurrentGK`: Active goalkeeper player ID.
+  - Overtime / Shootout configuration: `SOifTied`, `OTifTied`, `MaxOTPeriods`, `OT1Minutes`, `OT2Minutes`, `RegPeriods`.
+- **`Player-GameInfo`**:
+  - `Plus` and `Minus`: Hockey-style $+/-$ rating per player per match.
+  - `Shots`: Individual shot attempts taken by each player.
+  - `Saves`: Individual saves made by the goalkeeper in that match.
+  - `MinInGoal`: Minutes played specifically as goalkeeper (distinct from general field minutes).
+  - `YellowCardReason` and `RedCardReason`: Specific infraction notes.
+- **`PlayerSeasonTable`**:
+  - TSSAA Eligibility & Academic compliance: `ParentLivingHome`, `Enrolled12months`, `ParticipateLastYear`, `EarnedCredits`.
+  - Roles: `Captain`, `Starter`, `Varsity`, `JuniorVarsity`.
+  - Jersey Numbers: `Roster#`, `AltRoster#` (alternate jersey), `GKRoster#` (goalkeeper jersey number).
+  - `Picture`: Binary OLE photo storage for player headshots.
+- **`LocationTable`**:
+  - `TravelTime`: Estimated bus travel time to the venue (e.g. `"45 mins"`).
+- **`SeasonTable`**:
+  - Staff / Administration: `Principal`, `Assistant Principals`, `Athletic Director`, `TrainerName`, `ManagerName`.
+
+---
+
+## 2. Form Analysis: Author Thoughts, Mental Models & Workflows
+
+By reading the extracted VBA code in [`scratch/extracted_vba/`](file:///d:/Development/general_soccer_app_v4/scratch/extracted_vba/), we uncovered the original business logic and design decisions:
+
+### A. The Soccer Plus/Minus Stat System (`PublicSubs.vba`)
+In [`PublicSubs.vba:L69`](file:///d:/Development/general_soccer_app_v4/scratch/extracted_vba/PublicSubs.vba#L69), the app maintained a full hockey-style $+/-$ tracking system:
+```vb
+UPDATE [Player-GameInfo] 
+SET [Player-GameInfo].Plus = 1 * DSum('[PlayerPlus]', '[STATSPlusPerGame]', ...), 
+    [Player-GameInfo].Minus = 1 * DSum('[PlayerMinus]', '[STATSMinusPerGame]', ...)
+```
+- Whenever the team scored a goal (`GoalsFor`), every player active on the pitch at that game timestamp received `+1` (Plus).
+- Whenever an opponent scored (`GoalsAgainst`), every player on the pitch received `-1` (Minus).
+- Generated dedicated season and career reports: `CareerPlusReport`, `CareerPlusMinusReport`, `SeasonPlusReport`, `SeasonPlusMinusReport`.
+
+### B. High School 5-Goal Mercy Rule / Running Clock (`Form_GameStatsFormVersion3_Stoppage.vba`)
+In [`Form_GameStatsFormVersion3_Stoppage.vba:L78`](file:///d:/Development/general_soccer_app_v4/scratch/extracted_vba/Form_GameStatsFormVersion3_Stoppage.vba#L78):
+```vb
+If Abs(strGF - strGA) > 5 Then StopClock = 0
+```
+- If the score differential exceeded 5 goals, the stoppage form automatically forced the clock to **keep running** (`StopClock = 0`), strictly mirroring TSSAA / NFHS soccer mercy rule running-clock guidelines!
+
+### C. Goalkeeper Substitution vs. Pitch Switch (`Form_GameStatsFormVersion3_Subs.vba`)
+The app distinguished between two kinds of goalkeeper changes:
+1. **Bench Sub (`NewGK`)**: Bringing a fresh goalkeeper off the bench.
+2. **Field Switch (`FieldGK` / `SwitchGKButton`)**: Swapping the current goalkeeper with an existing outfield player without bringing on a sub from the bench.
+- When swapped, `UpdateGKMin()` finalized the outgoing keeper's minutes in net, switched `CurrentGK`, and updated `GamesTable.CurrentGK`.
+
+### D. Varsity Letterman Allocation Logic (`Form_PlayerLetterWinners.vba`)
+In [`Form_PlayerLetterWinners.vba`](file:///d:/Development/general_soccer_app_v4/scratch/extracted_vba/Form_PlayerLetterWinners.vba), high school letter awards followed a structured athletic rule:
+- **Freshmen / Newcomers**: If `ParticipateLastYear = 0` or entering 9th grade, they were awarded their Graduation Year number patch (`NumberPatch = PlayerYearEntered9th + 4`).
+- **First-Time Varsity Letter**: If `SumOfVarsity = 1`, the player received the Varsity Letter (`VarsityLetter = -1`), the Varsity Letter Jacket Patch (`VarsityPatchNeeded = -1`), the Sport Ball patch (`Ball = -1`), and a Bar (`Bar = -1`).
+- **Repeat Varsity Letter**: If `SumOfVarsity > 1`, they did not need a new letter jacket patch; they received an additional chevron bar (`Bar = -1`).
+- **All Participants**: Received a Certificate (`Certificate = -1`).
+
+### E. Schedule Automation (`Form_GameScheduleForm.vba`)
+In [`Form_GameScheduleForm.vba:L174-183`](file:///d:/Development/general_soccer_app_v4/scratch/extracted_vba/Form_GameScheduleForm.vba#L174-L183):
+- Selecting a venue automatically evaluated: `If [LocationIDGames] = strHomeLocation Then [HomeGame] = -1 Else [HomeGame] = 0`.
+- Selecting an opponent automatically looked up their TSSAA classification and district: if `HighSchoolClassification == "AAA"` and `HighSchoolDistrict == "12"` (Independence's district), it automatically checked `DistrictMatch = True`.
+
+### F. Dual Interface Layouts (`FormsLayout` in `DatabaseDefaults`)
+In [`Form_GameStatsFormVersion3.vba:L140-143`](file:///d:/Development/general_soccer_app_v4/scratch/extracted_vba/Form_GameStatsFormVersion3.vba#L140-L143):
+- The app provided two live match control layouts:
+  - `GameStatsFormVersion3_InGame` (Horizontal desktop view)
+  - `GameStatsFormVersion3_InGameVertical` (Vertical layout for tablet or split screen)
+
+### G. School Dynamic Theming (`TeamColors()` in `PublicSubs.vba`)
+The app loaded `SchoolPrimaryColor`, `SchoolSecondaryColor`, and `SchoolTertiaryColor` from `DatabaseDefaults` (Independence High was `#002649` Navy, `#a89469` Vegas Gold, `#024930` Forest Green) and dynamically styled all buttons, detail sections, hover states, and headers to match the school colors.
+
+### H. Automated Team Website PDF Publishing (`Form_NavigationForm.vba`)
+The `Save_Reports_Click` button in [`Form_NavigationForm.vba:L173-210`](file:///d:/Development/general_soccer_app_v4/scratch/extracted_vba/Form_NavigationForm.vba#L173-L210) automatically exported 20+ formatted PDF reports into a Google Drive sync directory (`STATSFiles/`) for the team website:
+- Schedules, Rosters (Varsity only, JV only, Numerical)
+- Leaderboards: Career & Season Points, Goals, Assists, Plus, and Plus/Minus
+- Goalkeeper Leaderboards: Saves, GAA (Goals Against Average), and Save Percentage
+- Series Records vs. every opponent in program history.
+
+---
+
+## 3. Recommended Next Steps
+
+1. **Incorporate Missed Domains into Prisma Schema**:
+   - `player_awards` & `player_awards_earned` (honor rolls, all-district, MVPs).
+   - `player_season_letters` (varsity letters, graduation patches, bars).
+   - `fitness_tests` & `fitness_results` (beep / yo-yo test tracker).
+   - `shootouts` & `shootout_kicks` (penalty kick shootout tracking).
+   - Add Plus/Minus, individual Shots, and GK saves/minutes to `player_games`.
+2. **Import Historical Data**:
+   - Import the 204 earned player awards, 420 letter winner records, 629 beep test records, and 21 penalty shootout attempts directly from the `.accdb` file.
+3. **Expose Features in the Web UI**:
+   - Add an **Awards & Honors** tab to player profiles and team season overviews.
+   - Add a **Conditioning / Beep Test** tab for coaches.
+   - Enable the **Plus/Minus (+/-)** column on player match summaries and season leaderboards.

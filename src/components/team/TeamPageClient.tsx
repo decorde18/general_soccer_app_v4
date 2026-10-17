@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Activity,
   Calendar,
@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Zap,
   CalendarOff,
+  Layers,
 } from "lucide-react";
 import TeamHeader, { type TeamLeagueLink } from "./TeamHeader";
 import TeamOverview from "./TeamOverview";
@@ -25,7 +26,8 @@ import TeamGroups from "./TeamGroups";
 import TeamAvailability from "./TeamAvailability";
 
 import TabbedPanel, { type TabItem } from "@/components/ui/TabbedPanel";
-import type { PlayerSeasonStats } from "@/lib/data/queries";
+import Button from "@/components/ui/Button";
+import type { PlayerSeasonStats, SubTeamInfo } from "@/lib/data/queries";
 
 interface Game {
   id: number;
@@ -62,6 +64,8 @@ interface Player {
   isActive: boolean;
   squadLevel?: string | null;
   squadLevels?: string[];
+  teamSeasonId?: number;
+  teamSeasonIds?: number[];
 }
 
 interface TeamStaffMember {
@@ -89,6 +93,8 @@ interface TeamSeason {
 
 interface TeamPageClientProps {
   teamSeason: TeamSeason;
+  subTeams?: SubTeamInfo[];
+  programTeamSeasonIds?: number[];
   players: Player[];
   staff: TeamStaffMember[];
   games: Game[];
@@ -107,11 +113,12 @@ interface TeamPageClientProps {
   groups?: any[];
   pairings?: any[];
   unavailabilities?: any[];
-  programTeamSeasonIds?: number[];
 }
 
 export default function TeamPageClient({
   teamSeason,
+  subTeams = [],
+  programTeamSeasonIds = [],
   players,
   staff,
   games,
@@ -125,7 +132,6 @@ export default function TeamPageClient({
   groups = [],
   pairings = [],
   unavailabilities = [],
-  programTeamSeasonIds = [],
 }: TeamPageClientProps) {
   type TabType =
     | "overview"
@@ -140,22 +146,116 @@ export default function TeamPageClient({
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
-  // Determine next match & recent matches
-  const nextMatch =
-    games
-      .filter((g) => g.status !== "completed")
+  // Determine if sub-teams exist (e.g. LM & DC for U12 Elite, or Varsity & JV for high school)
+  const hasSubTeams = Boolean(subTeams && subTeams.length > 0);
+
+  // Sub-team tab filter state: "all" or specific teamSeasonId
+  const [selectedSubTeam, setSelectedSubTeam] = useState<number | "all">(() => {
+    if (hasSubTeams) {
+      const current = subTeams.find((st) => st.isCurrent);
+      return current ? current.teamSeasonId : teamSeason.id;
+    }
+    return "all";
+  });
+
+  const currentSubTeamInfo = useMemo(() => {
+    if (selectedSubTeam === "all" || !hasSubTeams) return null;
+    return subTeams.find((st) => st.teamSeasonId === selectedSubTeam) || null;
+  }, [selectedSubTeam, hasSubTeams, subTeams]);
+
+  // Filter games based on selected squad
+  const filteredGames = useMemo(() => {
+    if (selectedSubTeam === "all") return games;
+    return games.filter(
+      (g) =>
+        g.homeTeamSeasonId === selectedSubTeam ||
+        g.awayTeamSeasonId === selectedSubTeam
+    );
+  }, [games, selectedSubTeam]);
+
+  // Filter roster based on selected squad
+  const filteredPlayers = useMemo(() => {
+    if (selectedSubTeam === "all") return players;
+    return players.filter((p) => {
+      if (p.teamSeasonId === selectedSubTeam) return true;
+      if (p.teamSeasonIds?.includes(selectedSubTeam)) return true;
+      if (
+        currentSubTeamInfo?.squadCode &&
+        p.squadLevels?.includes(currentSubTeamInfo.squadCode)
+      ) {
+        return true;
+      }
+      if (
+        currentSubTeamInfo?.squadName &&
+        p.squadLevels?.includes(currentSubTeamInfo.squadName)
+      ) {
+        return true;
+      }
+      return false;
+    });
+  }, [players, selectedSubTeam, currentSubTeamInfo]);
+
+  // Recalculate W-L-D-Points record strictly for active squad
+  const activeRecord = useMemo(() => {
+    if (selectedSubTeam === "all" && record) {
+      return record;
+    }
+    const rec = { wins: 0, losses: 0, draws: 0, points: 0 };
+    const completed = filteredGames.filter(
+      (g) => g.status === "completed" && (g.homeScore ?? 0) + (g.awayScore ?? 0) > 0
+    );
+    completed.forEach((g) => {
+      const isHome = g.homeTeamSeasonId === selectedSubTeam;
+      const ourScore = isHome ? g.homeScore : g.awayScore;
+      const oppScore = isHome ? g.awayScore : g.homeScore;
+      if (
+        ourScore !== null &&
+        oppScore !== null &&
+        ourScore !== undefined &&
+        oppScore !== undefined
+      ) {
+        if (ourScore > oppScore) {
+          rec.wins += 1;
+          rec.points += 3;
+        } else if (ourScore < oppScore) {
+          rec.losses += 1;
+        } else {
+          rec.draws += 1;
+          rec.points += 1;
+        }
+      }
+    });
+    return rec;
+  }, [filteredGames, selectedSubTeam, record]);
+
+  // Determine next match & recent matches based on filtered games
+  const nextMatch = useMemo(() => {
+    return (
+      filteredGames
+        .filter((g) => g.status !== "completed")
+        .sort(
+          (a, b) =>
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+        )[0] || null
+    );
+  }, [filteredGames]);
+
+  const recentResults = useMemo(() => {
+    return filteredGames
+      .filter((g) => g.status === "completed")
       .sort(
         (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-      )[0] || null;
+          new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
+      )
+      .slice(0, 3);
+  }, [filteredGames]);
 
-  const recentResults = games
-    .filter((g) => g.status === "completed")
-    .sort(
-      (a, b) =>
-        new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
-    )
-    .slice(0, 3);
+  const activeTeamName = currentSubTeamInfo
+    ? currentSubTeamInfo.teamName
+    : teamSeason.teamName;
+
+  const activeTeamSeasonId =
+    typeof selectedSubTeam === "number" ? selectedSubTeam : teamSeason.id;
 
   const competitions: TeamCompetitionSummary[] = (leagueLinks ?? []).map(
     (link) => ({
@@ -183,16 +283,61 @@ export default function TeamPageClient({
   ];
 
   return (
-    <div className='w-full space-y-8'>
+    <div className='w-full space-y-6'>
       {/* Visual Header Banner */}
       <TeamHeader
-        teamName={teamSeason.teamName}
+        teamName={activeTeamName}
         clubName={teamSeason.clubName}
         seasonName={teamSeason.seasonName}
         ageGroup={teamSeason.ageGroup}
         ageGroupName={teamSeason.ageGroupName}
-        record={record}
+        record={activeRecord}
       />
+
+      {/* Sub-Teams / Squads Tab Bar */}
+      {hasSubTeams && subTeams.length > 0 && (
+        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 sm:px-4 bg-surface/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-xs'>
+          <div className='flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted px-1'>
+            <Layers size={15} className='text-primary' />
+            <span>Squads / Sub-Teams:</span>
+          </div>
+
+          <div className='flex flex-wrap items-center gap-1.5'>
+            <Button
+              type='button'
+              variant={selectedSubTeam === "all" ? "primary" : "ghost"}
+              size='sm'
+              onClick={() => setSelectedSubTeam("all")}
+              className={`text-xs px-3.5 py-1.5 rounded-xl transition-all duration-150 ${
+                selectedSubTeam === "all"
+                  ? "shadow-sm font-semibold"
+                  : "text-muted hover:text-text hover:bg-surface-hover"
+              }`}
+            >
+              All Squads
+            </Button>
+            {subTeams.map((st) => {
+              const isSelected = selectedSubTeam === st.teamSeasonId;
+              return (
+                <Button
+                  key={st.teamSeasonId}
+                  type='button'
+                  variant={isSelected ? "primary" : "ghost"}
+                  size='sm'
+                  onClick={() => setSelectedSubTeam(st.teamSeasonId)}
+                  className={`text-xs px-3.5 py-1.5 rounded-xl transition-all duration-150 ${
+                    isSelected
+                      ? "shadow-sm font-semibold"
+                      : "text-muted hover:text-text hover:bg-surface-hover"
+                  }`}
+                >
+                  <span>{st.squadName}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <TabbedPanel
         tabs={tabs}
@@ -205,8 +350,8 @@ export default function TeamPageClient({
       <div className='transition-all duration-200'>
         {activeTab === "overview" && (
           <TeamOverview
-            teamSeasonId={teamSeason.id}
-            record={record}
+            teamSeasonId={activeTeamSeasonId}
+            record={activeRecord}
             nextMatch={nextMatch}
             recentResults={recentResults}
             stats={stats}
@@ -218,23 +363,23 @@ export default function TeamPageClient({
         {activeTab === "competitions" && (
           <TeamCompetitions
             competitions={competitions}
-            teamSeasonId={teamSeason.id}
+            teamSeasonId={activeTeamSeasonId}
             seasonId={teamSeason.seasonId}
           />
         )}
 
         {activeTab === "roster" && (
           <TeamRoster
-            teamSeasonId={teamSeason.id}
-            players={players}
+            teamSeasonId={activeTeamSeasonId}
+            players={filteredPlayers}
             staff={staff}
           />
         )}
 
         {activeTab === "requirements" && (
           <TeamRequirements
-            teamSeasonId={teamSeason.id}
-            players={players}
+            teamSeasonId={activeTeamSeasonId}
+            players={filteredPlayers}
             definitions={customDefs}
             initialValues={customVals}
           />
@@ -242,8 +387,8 @@ export default function TeamPageClient({
 
         {activeTab === "performance" && (
           <TeamPerformance
-            teamSeasonId={teamSeason.id}
-            players={players}
+            teamSeasonId={activeTeamSeasonId}
+            players={filteredPlayers}
             tests={perfTests}
             initialLogs={perfLogs}
           />
@@ -251,8 +396,8 @@ export default function TeamPageClient({
 
         {activeTab === "groups" && (
           <TeamGroups
-            teamSeasonId={teamSeason.id}
-            players={players}
+            teamSeasonId={activeTeamSeasonId}
+            players={filteredPlayers}
             groups={groups}
             pairings={pairings}
           />
@@ -260,16 +405,16 @@ export default function TeamPageClient({
 
         {activeTab === "availability" && (
           <TeamAvailability
-            teamSeasonId={teamSeason.id}
-            players={players}
+            teamSeasonId={activeTeamSeasonId}
+            players={filteredPlayers}
             records={unavailabilities}
           />
         )}
 
         {activeTab === "schedule" && (
           <TeamSchedule
-            teamSeasonId={teamSeason.id}
-            games={games}
+            teamSeasonId={activeTeamSeasonId}
+            games={filteredGames}
             programTeamSeasonIds={programTeamSeasonIds}
           />
         )}
@@ -277,7 +422,7 @@ export default function TeamPageClient({
         {activeTab === "stats" && (
           <TeamStats
             stats={stats}
-            teamSeasonId={teamSeason.id}
+            teamSeasonId={activeTeamSeasonId}
             leagueLinks={leagueLinks}
           />
         )}

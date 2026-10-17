@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { requireSession, verifyTeamAccess } from "@/lib/auth/auth-utils";
 import { revalidatePath } from "next/cache";
+import { resolveSubTeams, extractSquadLevel } from "@/lib/data/queries";
 
 export interface LineupPlayer {
   id: number; // player_id (pointing to people.id)
@@ -17,29 +18,8 @@ export interface LineupPlayer {
 }
 
 export async function loadGameLineup(gameId: number, teamSeasonId: number): Promise<LineupPlayer[]> {
-  // 1. Fetch current team season to identify program pool (club, season, gender)
-  const currentTs = await prisma.team_seasons.findUnique({
-    where: { id: teamSeasonId },
-    include: {
-      teams: true,
-    },
-  });
-
-  let siblingTeamSeasonIds = [teamSeasonId];
-  if (currentTs?.teams?.club_id && currentTs?.season_id) {
-    const siblings = await prisma.team_seasons.findMany({
-      where: {
-        season_id: currentTs.season_id,
-        is_active: true,
-        teams: {
-          club_id: currentTs.teams.club_id,
-          gender: currentTs.teams.gender,
-        },
-      },
-      select: { id: true },
-    });
-    siblingTeamSeasonIds = siblings.map((s) => s.id);
-  }
+  // 1. Resolve sub-teams/squads (strictly scoped to sister squads like Varsity/JV or LM/DC)
+  const { programTeamSeasonIds: siblingTeamSeasonIds } = await resolveSubTeams(teamSeasonId);
 
   // 2. Fetch all active player_teams records across the program pool
   const rosterRecords = await prisma.player_teams.findMany({
@@ -64,20 +44,6 @@ export async function loadGameLineup(gameId: number, teamSeasonId: number): Prom
     fallbackRecord: typeof rosterRecords[0];
     squadLevels: string[];
   }>();
-
-function extractSquadLevel(teamName: string): string {
-  const t = teamName.toLowerCase();
-  if (t.includes("freshman") || t.includes("frosh")) return "Freshman";
-  if (t.includes("blue")) return "JV Blue";
-  if (t.includes("gold")) return "JV Gold";
-  if (t.includes("varsity")) return "Varsity";
-  if (t.includes("jv")) return "JV";
-  if (t.includes("dc")) return "DC";
-  if (t.includes("lm")) return "LM";
-  if (t.includes("premier")) return "Premier";
-  if (t.includes("elite")) return "Elite";
-  return teamName;
-}
 
   for (const pt of rosterRecords) {
     const existing = personRosterMap.get(pt.player_id);

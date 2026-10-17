@@ -2,6 +2,7 @@ import React from "react";
 import prisma from "@/lib/prisma";
 import {
   getTeamSeasonById,
+  resolveSubTeams,
   getPlayersByTeamSeason,
   getTeamStaff,
   getGames,
@@ -95,29 +96,8 @@ export default async function TeamPage({ params }: PageProps) {
       );
     }
 
-    // Resolve sister squads in the program pool (sharing club, season, gender)
-    let programTsIds = [idNumber];
-    if (teamSeason?.clubId && teamSeason?.seasonId) {
-      try {
-        const sisters = await prisma.team_seasons.findMany({
-          where: {
-            season_id: teamSeason.seasonId,
-            is_active: true,
-            teams: {
-              club_id: teamSeason.clubId,
-              gender: teamSeason.gender as any,
-              ...(teamSeason.ageGroup ? { age_group: teamSeason.ageGroup } : {}),
-            },
-          },
-          select: { id: true },
-        });
-        if (sisters.length > 0) {
-          programTsIds = sisters.map((s) => s.id);
-        }
-      } catch (e) {
-        console.error("Error resolving program team seasons:", e);
-      }
-    }
+    // Resolve sub-teams / squads (e.g. LM and DC for U12 Elite, Varsity and JV for High School)
+    const { subTeams, programTeamSeasonIds } = await resolveSubTeams(idNumber);
 
     // Fetch rest of data in parallel
     const [
@@ -135,9 +115,9 @@ export default async function TeamPage({ params }: PageProps) {
       pairings,
       unavailabilities,
     ] = await Promise.all([
-      getPlayersByTeamSeason(idNumber),
+      getPlayersByTeamSeason(idNumber, { targetTeamSeasonIds: programTeamSeasonIds }),
       getTeamStaff(idNumber),
-      getGames({ teamSeasonIds: programTsIds }),
+      getGames({ teamSeasonIds: programTeamSeasonIds }),
       getPlayerStatsByTeamSeason(idNumber),
       getTeamSeasonRecords(undefined, idNumber),
       getLeaguesForTeamSeason(idNumber),
@@ -237,7 +217,8 @@ export default async function TeamPage({ params }: PageProps) {
           groups={groups || []}
           pairings={pairings || []}
           unavailabilities={unavailabilities || []}
-          programTeamSeasonIds={programTsIds}
+          subTeams={subTeams}
+          programTeamSeasonIds={programTeamSeasonIds}
         />
       </main>
     );

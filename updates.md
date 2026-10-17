@@ -1,3 +1,36 @@
+### [2026-10-16 22:00] Sub-Team & Squad Architecture: Distinct Tabs for U12 Elite (LM/DC) and High School (Varsity/JV)
+- **Type**: Feature / Refactor / Architecture Fix
+- **Summary**:
+  1. **Elimination of Club-Wide Bleed**:
+     - Removed legacy queries filtering on `teams: { club_id }` in `getPlayersByTeamSeason`, `loadGameLineup`, and `teams/[teamSeasonId]/page.tsx`, which erroneously pooled and mashed all games, records, and rosters for every team under the same club.
+  2. **Scoped Sub-Team Resolution (`resolveSubTeams`)**:
+     - Implemented `resolveSubTeams(teamSeasonId)` in `queries.ts` to identify legitimate sub-squads:
+       - **High School programs**: Scopes strictly to sister high school squads (`Varsity (V)`, `Junior Varsity (JV)`, `JV Gold`, `JV Navy`, `Freshman`).
+       - **U12 Elite programs**: Scopes strictly to sub-squads (`LM`, `DC`, and `U12 Elite`).
+       - **Standard / Single teams**: Returns empty sub-teams list (`[]`) and scopes strictly to self (`[teamSeasonId]`), preventing any cross-team bleed.
+  3. **Interactive Sub-Team / Squad Tab Bar in `TeamPageClient.tsx`**:
+     - Added prominent Sub-Team Squad Bar (`[ All Squads ]`, `[ LM ]`, `[ DC ]` or `[ All Squads ]`, `[ Varsity (V) ]`, `[ Junior Varsity (JV) ]`) built with standard `<Button>` UI primitives.
+     - Dynamically filters games, rosters, W-L-D-Points records, next match, and recent results strictly to the active squad upon click, or displays the aggregate program pool when "All Squads" is selected.
+  4. **Strict Lineup Call-Up Scoping**:
+     - Updated `loadGameLineup` in `gameLineup-actions.ts` to use `resolveSubTeams`, preventing illegal cross-team call-ups across unrelated club age groups.
+- **Modified Files**:
+  - `src/lib/data/queries.ts`
+  - `src/app/(mainAppLayout)/teams/[teamSeasonId]/page.tsx`
+  - `src/components/team/TeamPageClient.tsx`
+  - `src/lib/actions/gameLineup-actions.ts`
+  - `src/lib/data/__tests__/resolveSubTeams.test.ts`
+  - `updates.md`
+
+### [2026-10-16 21:00] Legacy Access Database Audit & Sub-Team Architecture Planning
+- **Type**: Configuration / Documentation
+- **Summary**:
+  - Extracted and audited all 24 user tables, 236 stored queries, and 65 decompressed VBA modules/forms from `IHS Girls Soccer - Most Recent.accdb`.
+  - Added Future Milestone to `todo.md` (deferred per user request) documenting historical feature domains: Player Awards & Honors (`player_awards`, `player_awards_earned`), Varsity Letterman system (`player_season_letters`), Beep Test / Yo-Yo fitness conditioning (`fitness_tests`, `fitness_results`), Shootout archives (`shootouts`), pre-2006 historical stats, and granular metrics (+/- ratings, shots, GK minutes, travel times).
+  - Analyzed and formulated clean sub-team / squad architecture to eliminate club-wide game and roster blending and provide dedicated squad tabs (LM vs DC for U12 Elite, Varsity vs JV for High School).
+- **Modified Files**:
+  - `todo.md`
+  - `updates.md`
+
 ### [2026-10-16 10:16] Major Event Clock: 3 Clock Pause Scenarios & Removal of 5s Threshold
 - **Type**: Feature / UX Standard / User Request
 - **Summary**:
