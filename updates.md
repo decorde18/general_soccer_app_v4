@@ -1,3 +1,30 @@
+### [2026-10-17 08:50] Bulk Schedule Importer Entity Resolution & Subnode Input Readability Fix
+- **Type**: Bug Fix / Data Integrity / UX Architecture
+- **Summary**:
+  1. **Step 1 Club Creation & Defaults in Entity Matching Wizard (`EntityMatchingWizardModal.tsx`)**:
+     - Fixed Step 1 where unrecognized clubs defaulted to `-- Select Existing Club --` without prominent "Create New Club" visibility.
+     - Unrecognized clubs now default automatically to `+ Create New Club "{club}"` with an inline editable name field and a prominent `+ Create New Club` badge.
+     - Added inline creation during Step 1 transition: When clicking "Next: Match Teams", all pending new clubs are created immediately in the database via `createInlineClub`.
+     - The newly created clubs and their generated database IDs are persisted into `clubsList` and `mappings` before advancing to Step 2.
+  2. **Step 2 Team-to-Club Linkage Enforcement**:
+     - Teams in Step 2 are now strictly bound and scoped to the club resolved or created in Step 1 (`targetClubId`, `targetClubName`).
+     - The team card and dropdown explicitly display the target club (`Club: [Club Name] (✓ Ready in Database)`), and the dropdown defaults to `+ Create New Team "{teamName}" in [Club Name]`.
+     - Resolved mappings attach both `clubId` and `clubName` to each team item.
+  3. **Backend Importer Safeguards (`src/lib/actions/import-actions.ts`)**:
+     - Updated `batchImportSchedule` to honor `clubId` passed directly from team mappings.
+     - Multi-key candidate resolution for home and away clubs ensures clubs are never null or blank, preventing orphaned teams or teams created with empty club names.
+  4. **Subnode Input Box Styling Fix (`src/components/admin/BatchImporterClient.tsx`)**:
+     - Fixed the division subnode creation text input which rendered white text on a white background ("light on light").
+     - Applied dark background and border tokens (`bg-slate-950 text-white border-slate-700 placeholder:text-slate-500`) to ensure high contrast and readability.
+  5. **Unit Tests Added (`src/lib/actions/__tests__/importEntityResolution.test.ts`)**:
+     - Added comprehensive unit tests validating `discernClubAndTeam` extraction across delimiters, prefix stripping, and team-club linkage preservation.
+- **Modified Files**:
+  - `src/components/admin/BatchImporterClient.tsx`
+  - `src/components/admin/importer/EntityMatchingWizardModal.tsx`
+  - `src/lib/actions/import-actions.ts`
+  - `src/lib/actions/__tests__/importEntityResolution.test.ts`
+  - `updates.md`
+
 ### [2026-10-17 08:10] Veo Match Video Link Integration, Tournament Stats Hierarchy Resolution & Sidepanel Defaults
 - **Type**: Feature / Bug Fix / UX Architecture
 - **Summary**:

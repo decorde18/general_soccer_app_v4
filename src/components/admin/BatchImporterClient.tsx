@@ -2350,7 +2350,7 @@ export default function BatchImporterClient({
                   value={newNodeName}
                   onChange={(e: any) => setNewNodeName(e.target.value)}
                   placeholder="e.g. Girls > U11/U12 Girls Yellow or U13 Boys Navy"
-                  className="w-full text-white"
+                  className="w-full bg-slate-950 text-white border-slate-700 placeholder:text-slate-500 focus:border-indigo-500"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">
                   Tip: Subnodes automatically nest under the parent selected above. You can also type a full hierarchy path using <code className="text-indigo-300 font-mono">&gt;</code> (e.g. <span className="text-slate-300 font-medium">Girls &gt; U11/U12 Girls Yellow</span>) to create multiple levels at once.

@@ -288,28 +288,48 @@ export async function batchImportSchedule(
       const homeTeamName = discernedHome.teamName || rec.homeTeamName;
 
       let homeClub: any = null;
-      const mappedHomeClub = resolvedMappings?.[homeClubName] || resolvedMappings?.[rec.homeClubName];
-      if (mappedHomeClub?.matchedId) {
-        homeClub = await prisma.clubs.findUnique({ where: { id: mappedHomeClub.matchedId } });
+      const mappedHomeTeam = resolvedMappings?.[homeTeamName] || resolvedMappings?.[rec.homeTeamName];
+      if (mappedHomeTeam?.clubId) {
+        homeClub = await prisma.clubs.findUnique({ where: { id: mappedHomeTeam.clubId } });
       }
-      if (!homeClub && homeClubName) {
+
+      if (!homeClub) {
+        const candidateClubKeys = [homeClubName, rec.homeClubName, discernedHome.clubName].filter(Boolean) as string[];
+        for (const k of candidateClubKeys) {
+          const m = resolvedMappings?.[k] || Object.entries(resolvedMappings || {}).find(
+            ([name]) => name.toLowerCase().trim() === k.toLowerCase().trim()
+          )?.[1];
+          if (m?.matchedId) {
+            homeClub = await prisma.clubs.findUnique({ where: { id: m.matchedId } });
+            if (homeClub) break;
+          }
+        }
+      }
+
+      if (!homeClub && homeClubName && homeClubName.trim()) {
         homeClub = await prisma.clubs.findFirst({
           where: { name: { equals: homeClubName.trim() } },
         });
       }
-      if (!homeClub && homeClubName) {
-        homeClub = await prisma.clubs.create({
-          data: {
-            name: homeClubName.trim(),
-            abbreviation: deriveClubAbbreviation(homeClubName.trim()),
-            type: "club",
-          },
+      if (!homeClub && rec.homeClubName && rec.homeClubName.trim()) {
+        homeClub = await prisma.clubs.findFirst({
+          where: { name: { equals: rec.homeClubName.trim() } },
         });
+      }
+      if (!homeClub) {
+        const fallbackClubName = (homeClubName || rec.homeClubName || "Unaffiliated").trim();
+        if (fallbackClubName) {
+          homeClub = await prisma.clubs.create({
+            data: {
+              name: fallbackClubName,
+              abbreviation: deriveClubAbbreviation(fallbackClubName),
+              type: "club",
+            },
+          });
+        }
       }
 
       let homeTeam: any = null;
-      const mappedHomeTeam = resolvedMappings?.[homeTeamName] || resolvedMappings?.[rec.homeTeamName];
-
       if (mappedHomeTeam?.matchedId) {
         homeTeamSeason = await prisma.team_seasons.findUnique({
           where: { id: mappedHomeTeam.matchedId },
@@ -367,28 +387,48 @@ export async function batchImportSchedule(
       const awayTeamName = discernedAway.teamName || rec.awayTeamName;
 
       let awayClub: any = null;
-      const mappedAwayClub = resolvedMappings?.[awayClubName] || resolvedMappings?.[rec.awayClubName];
-      if (mappedAwayClub?.matchedId) {
-        awayClub = await prisma.clubs.findUnique({ where: { id: mappedAwayClub.matchedId } });
+      const mappedAwayTeam = resolvedMappings?.[awayTeamName] || resolvedMappings?.[rec.awayTeamName];
+      if (mappedAwayTeam?.clubId) {
+        awayClub = await prisma.clubs.findUnique({ where: { id: mappedAwayTeam.clubId } });
       }
-      if (!awayClub && awayClubName) {
+
+      if (!awayClub) {
+        const candidateClubKeys = [awayClubName, rec.awayClubName, discernedAway.clubName].filter(Boolean) as string[];
+        for (const k of candidateClubKeys) {
+          const m = resolvedMappings?.[k] || Object.entries(resolvedMappings || {}).find(
+            ([name]) => name.toLowerCase().trim() === k.toLowerCase().trim()
+          )?.[1];
+          if (m?.matchedId) {
+            awayClub = await prisma.clubs.findUnique({ where: { id: m.matchedId } });
+            if (awayClub) break;
+          }
+        }
+      }
+
+      if (!awayClub && awayClubName && awayClubName.trim()) {
         awayClub = await prisma.clubs.findFirst({
           where: { name: { equals: awayClubName.trim() } },
         });
       }
-      if (!awayClub && awayClubName) {
-        awayClub = await prisma.clubs.create({
-          data: {
-            name: awayClubName.trim(),
-            abbreviation: deriveClubAbbreviation(awayClubName.trim()),
-            type: "club",
-          },
+      if (!awayClub && rec.awayClubName && rec.awayClubName.trim()) {
+        awayClub = await prisma.clubs.findFirst({
+          where: { name: { equals: rec.awayClubName.trim() } },
         });
+      }
+      if (!awayClub) {
+        const fallbackClubName = (awayClubName || rec.awayClubName || "Unaffiliated").trim();
+        if (fallbackClubName) {
+          awayClub = await prisma.clubs.create({
+            data: {
+              name: fallbackClubName,
+              abbreviation: deriveClubAbbreviation(fallbackClubName),
+              type: "club",
+            },
+          });
+        }
       }
 
       let awayTeam: any = null;
-      const mappedAwayTeam = resolvedMappings?.[awayTeamName] || resolvedMappings?.[rec.awayTeamName];
-
       if (mappedAwayTeam?.matchedId) {
         awayTeamSeason = await prisma.team_seasons.findUnique({
           where: { id: mappedAwayTeam.matchedId },
