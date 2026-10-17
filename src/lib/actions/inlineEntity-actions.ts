@@ -282,3 +282,40 @@ export async function enrollTeamInLeagueNode(data: {
   return { success: true, enrollment, nodeSeason };
 }
 
+/**
+ * Helper to fetch clubs and teams list for inline selectors
+ */
+export async function getClubAndTeamOptions(seasonId?: number) {
+  await requireSession();
+  const [clubs, teams] = await Promise.all([
+    prisma.clubs.findMany({
+      where: { is_active: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.teams.findMany({
+      where: { is_active: true },
+      select: {
+        id: true,
+        team_name: true,
+        club_id: true,
+        team_seasons: {
+          where: seasonId ? { season_id: seasonId, is_active: true } : { is_active: true },
+          select: { id: true, season_id: true },
+        },
+      },
+      orderBy: { team_name: "asc" },
+    }),
+  ]);
+
+  return {
+    clubs,
+    teams: teams.map((t) => ({
+      id: t.id,
+      name: t.team_name,
+      clubId: t.club_id,
+      teamSeasonId: t.team_seasons[0]?.id || null,
+    })),
+  };
+}
+

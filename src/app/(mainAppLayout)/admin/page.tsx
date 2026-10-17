@@ -16,6 +16,15 @@ import { Card } from "@/components/ui/Card";
 export default async function AdminDashboardPage() {
   const adminModules = [
     {
+      title: "People Directory",
+      description:
+        "Manage player, coach, and individual person profiles. Add new individuals or update contact and gender info.",
+      route: "/admin/people",
+      icon: Users,
+      color:
+        "from-cyan-500/10 to-blue-500/10 border-cyan-500/20 text-cyan-500",
+    },
+    {
       title: "User Accounts",
       description:
         "Manage login credentials, profiles, passwords, and system administrator access levels.",

@@ -25,6 +25,7 @@ export default async function GuestPlayersPage() {
     teamName: ts.teamName,
     clubName: ts.clubName,
     seasonName: ts.seasonName,
+    seasonId: ts.seasonId,
   }));
 
   return (

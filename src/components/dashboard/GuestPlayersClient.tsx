@@ -13,9 +13,13 @@ import {
   Square,
   Shield,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { formatTimeStandard } from "@/lib/utils/dateTimeUtils";
 import {
   addGuestPlayersToGames,
@@ -23,7 +27,10 @@ import {
   getGuestPlayerOptionsAction,
   getGamesAction,
   getExistingGuestPlayersAction,
+  rosterPersonAndAssignGuestGames,
 } from "@/lib/actions/guestPlayer-actions";
+import { searchPeopleFuzzy } from "@/lib/actions/people-actions";
+import InlineEntityModal, { InlineEntityType } from "@/components/dashboard/InlineEntityModal";
 
 import Dialog from "@/components/ui/Dialog";
 
@@ -31,7 +38,7 @@ interface GuestPlayersClientProps {
   clubs: { id: number; name: string }[];
   ageGroups: { id: number; name: string }[];
   teams: { id: number; name: string; clubId: number }[];
-  teamSeasons: { id: number; teamName: string; clubName: string; seasonName: string }[];
+  teamSeasons: { id: number; teamName: string; clubName: string; seasonName: string; seasonId?: number }[];
 }
 
 interface PlayerOption {
@@ -105,11 +112,48 @@ export default function GuestPlayersClient({
   const [isGamesLoading, setIsGamesLoading] = useState(false);
   const [isExistingLoading, setIsExistingLoading] = useState(false);
 
+  // Dynamic Clubs & Teams lists (augmentable by inline entity creation)
+  const [currentClubs, setCurrentClubs] = useState(clubs);
+  const [currentTeams, setCurrentTeams] = useState(teams);
+
+  // Target team season's seasonId
+  const selectedTargetSeasonId = React.useMemo(() => {
+    if (!targetTeamSeasonId) return undefined;
+    const ts = teamSeasons.find((t) => t.id === Number(targetTeamSeasonId));
+    return ts?.seasonId;
+  }, [teamSeasons, targetTeamSeasonId]);
+
+  // Roster New Player modal state
+  const [isRosterModalOpen, setIsRosterModalOpen] = useState(false);
+  const [rosterPersonMode, setRosterPersonMode] = useState<"search" | "create">("search");
+  const [rosterPersonSearch, setRosterPersonSearch] = useState("");
+  const [rosterPersonResults, setRosterPersonResults] = useState<Array<{ id: number; firstName: string; lastName: string; nickname?: string | null; email: string | null }>>([]);
+  const [rosterSelectedPerson, setRosterSelectedPerson] = useState<{ id: number; firstName: string; lastName: string } | null>(null);
+
+  const [rosterFirstName, setRosterFirstName] = useState("");
+  const [rosterLastName, setRosterLastName] = useState("");
+  const [rosterNickname, setRosterNickname] = useState("");
+  const [rosterGender, setRosterGender] = useState("FEMALE");
+  const [rosterBirthDate, setRosterBirthDate] = useState("");
+  const [rosterEmail, setRosterEmail] = useState("");
+  const [rosterPhone, setRosterPhone] = useState("");
+
+  const [rosterClubId, setRosterClubId] = useState<number | "">("");
+  const [rosterTeamId, setRosterTeamId] = useState<number | "">("");
+  const [inlineModalType, setInlineModalType] = useState<InlineEntityType | null>(null);
+  const [isRosteringSubmitting, setIsRosteringSubmitting] = useState(false);
+
   // Filtered teams list based on selected club
   const filteredTeams = React.useMemo(() => {
-    if (!selectedClubId) return teams;
-    return teams.filter((t) => t.clubId === Number(selectedClubId));
-  }, [selectedClubId, teams]);
+    if (!selectedClubId) return currentTeams;
+    return currentTeams.filter((t) => t.clubId === Number(selectedClubId));
+  }, [selectedClubId, currentTeams]);
+
+  // Filtered teams in Roster modal
+  const rosterFilteredTeams = React.useMemo(() => {
+    if (!rosterClubId) return currentTeams;
+    return currentTeams.filter((t) => t.clubId === Number(rosterClubId));
+  }, [rosterClubId, currentTeams]);
 
   // Load players on filter changes
   useEffect(() => {
@@ -123,6 +167,7 @@ export default function GuestPlayersClient({
           teamId: selectedTeamId ? Number(selectedTeamId) : undefined,
           searchQuery: playerSearchQuery || undefined,
           excludeTeamSeasonId: targetTeamSeasonId ? Number(targetTeamSeasonId) : undefined,
+          seasonId: selectedTargetSeasonId,
         });
         if (active) {
           setPlayersList(players);
@@ -139,7 +184,26 @@ export default function GuestPlayersClient({
       active = false;
       clearTimeout(timer);
     };
-  }, [selectedClubId, selectedAgeGroupId, selectedTeamId, playerSearchQuery, targetTeamSeasonId]);
+  }, [selectedClubId, selectedAgeGroupId, selectedTeamId, playerSearchQuery, targetTeamSeasonId, selectedTargetSeasonId]);
+
+  // Debounced search for existing people directory in Roster modal
+  useEffect(() => {
+    if (!isRosterModalOpen || rosterPersonMode !== "search" || rosterPersonSearch.trim().length < 2) {
+      setRosterPersonResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const results = await searchPeopleFuzzy(rosterPersonSearch, { limit: 15 });
+        setRosterPersonResults(results);
+      } catch (err: any) {
+        console.error("Error searching people:", err);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [isRosterModalOpen, rosterPersonMode, rosterPersonSearch]);
 
   // Load games on target team season or date range changes
   useEffect(() => {
@@ -296,6 +360,91 @@ export default function GuestPlayersClient({
     return new Set(existingGuests.map((g) => g.personId));
   }, [existingGuests]);
 
+  const handleInlineSuccess = (res: any) => {
+    setInlineModalType(null);
+    if (res.club) {
+      const newClub = { id: res.club.id, name: res.club.name };
+      setCurrentClubs((prev) => [...prev, newClub]);
+      setRosterClubId(newClub.id);
+      setRosterTeamId("");
+      toast.success(`Club "${newClub.name}" created!`);
+    } else if (res.team) {
+      const newTeam = { id: res.team.id, name: res.team.team_name, clubId: res.team.club_id };
+      setCurrentTeams((prev) => [...prev, newTeam]);
+      setRosterTeamId(newTeam.id);
+      toast.success(`Team "${newTeam.name}" created!`);
+    }
+  };
+
+  const handleRosterPlayerSubmit = async () => {
+    if (!targetTeamSeasonId) {
+      toast.warning("Please choose a Target Team Season first so we know which season to enroll this player into.");
+      return;
+    }
+    if (!rosterTeamId) {
+      toast.warning("Please select a club and team to roster this player on.");
+      return;
+    }
+    if (rosterPersonMode === "search" && !rosterSelectedPerson) {
+      toast.warning("Please select a person from search or switch to 'Create Person'.");
+      return;
+    }
+    if (rosterPersonMode === "create" && (!rosterFirstName.trim() || !rosterLastName.trim())) {
+      toast.warning("First Name and Last Name are required.");
+      return;
+    }
+
+    setIsRosteringSubmitting(true);
+    try {
+      const res = await rosterPersonAndAssignGuestGames({
+        targetTeamSeasonId: Number(targetTeamSeasonId),
+        gameIds: Array.from(selectedGameIds),
+        personId: rosterPersonMode === "search" ? rosterSelectedPerson?.id : undefined,
+        newPerson: rosterPersonMode === "create"
+          ? {
+              firstName: rosterFirstName.trim(),
+              lastName: rosterLastName.trim(),
+              nickname: rosterNickname.trim() || undefined,
+              gender: rosterGender,
+              birthDate: rosterBirthDate || undefined,
+              email: rosterEmail.trim() || undefined,
+              phone: rosterPhone.trim() || undefined,
+            }
+          : undefined,
+        rosterTeamId: Number(rosterTeamId),
+      });
+
+      toast.success("Player successfully rostered and ready for guest matches!");
+      setSelectedPlayerIds((prev) => new Set([...prev, res.personId]));
+      // Trigger player list refresh
+      const players = await getGuestPlayerOptionsAction({
+        excludeTeamSeasonId: Number(targetTeamSeasonId),
+        seasonId: selectedTargetSeasonId,
+      });
+      setPlayersList(players);
+
+      if (selectedGameIds.size > 0) {
+        const guests = await getExistingGuestPlayersAction(Array.from(selectedGameIds));
+        setExistingGuests(guests);
+      }
+      setIsRosterModalOpen(false);
+      // Reset form
+      setRosterSelectedPerson(null);
+      setRosterPersonSearch("");
+      setRosterFirstName("");
+      setRosterLastName("");
+      setRosterNickname("");
+      setRosterBirthDate("");
+      setRosterEmail("");
+      setRosterPhone("");
+      setRosterTeamId("");
+    } catch (err: any) {
+      toast.error("Failed to roster player: " + err.message);
+    } finally {
+      setIsRosteringSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* HEADER BANNER */}
@@ -321,11 +470,21 @@ export default function GuestPlayersClient({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* LEFT COLUMN: PLAYER SELECTION (6 cols) */}
         <div className="lg:col-span-6 bg-surface border border-border/80 rounded-2xl p-4 shadow-sm space-y-2.5 flex flex-col max-h-[88vh]">
-          <div className="flex items-center gap-2 border-b border-border/50 pb-1.5">
-            <Users size={15} className="text-primary" />
-            <h3 className="font-bold text-xs text-text uppercase tracking-wider">
-              Step 1: Select Roster Players
-            </h3>
+          <div className="flex items-center justify-between border-b border-border/50 pb-1.5">
+            <div className="flex items-center gap-2">
+              <Users size={15} className="text-primary" />
+              <h3 className="font-bold text-xs text-text uppercase tracking-wider">
+                Step 1: Select Roster Players
+              </h3>
+            </div>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => setIsRosterModalOpen(true)}
+              className="text-[10px] font-bold"
+            >
+              + Roster New Player
+            </Button>
           </div>
 
           {/* Player Filters Grid */}
@@ -427,8 +586,16 @@ export default function GuestPlayersClient({
                 <span>Loading players...</span>
               </div>
             ) : playersList.length === 0 ? (
-              <div className="text-center py-16 text-xs text-muted font-medium bg-background/25 border border-dashed border-border rounded-xl">
-                No rostered players match your filters.
+              <div className="text-center py-12 px-4 text-xs text-muted font-medium bg-background/25 border border-dashed border-border rounded-xl space-y-2">
+                <p>No rostered players match your filters.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsRosterModalOpen(true)}
+                  className="text-xs"
+                >
+                  + Roster a Player to a Team This Season
+                </Button>
               </div>
             ) : (
               playersList.map((player) => {
@@ -698,6 +865,271 @@ export default function GuestPlayersClient({
         cancelText="Cancel"
         onConfirm={confirmRemoveGuest}
       />
+
+      {/* ROSTER NEW / EXTERNAL PLAYER MODAL */}
+      <Modal
+        isOpen={isRosterModalOpen}
+        onClose={() => setIsRosterModalOpen(false)}
+        title="Roster Player to a Team (This Season)"
+        description="Roster an existing person or register a new player into a club roster for this season so they can be assigned as a guest."
+        maxWidth="lg"
+        footer={
+          <div className="flex w-full items-center justify-between gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsRosterModalOpen(false)}
+              disabled={isRosteringSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleRosterPlayerSubmit}
+              disabled={
+                isRosteringSubmitting ||
+                !rosterTeamId ||
+                (rosterPersonMode === "search" && !rosterSelectedPerson) ||
+                (rosterPersonMode === "create" && (!rosterFirstName.trim() || !rosterLastName.trim()))
+              }
+              isLoading={isRosteringSubmitting}
+            >
+              {isRosteringSubmitting ? "Enrolling..." : "Roster Player for Season"}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {/* Step 1: Person */}
+          <div className="p-3.5 bg-surface/40 border border-border rounded-xl space-y-3">
+            <div className="flex items-center justify-between border-b border-border/70 pb-2">
+              <span className="text-xs font-bold text-text uppercase tracking-wider">
+                Step 1: Player Information
+              </span>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setRosterPersonMode("search")}
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded ${
+                    rosterPersonMode === "search" ? "bg-primary text-white" : "text-muted hover:text-text"
+                  }`}
+                >
+                  Search Directory
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRosterPersonMode("create")}
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded ${
+                    rosterPersonMode === "create" ? "bg-primary text-white" : "text-muted hover:text-text"
+                  }`}
+                >
+                  + Create Person
+                </button>
+              </div>
+            </div>
+
+            {rosterPersonMode === "search" ? (
+              <div className="space-y-2">
+                <div className="relative">
+                  <Input
+                    placeholder="Search all people in directory..."
+                    value={rosterPersonSearch}
+                    onChange={(e: any) => setRosterPersonSearch(e.target.value)}
+                    className="pl-8 text-xs"
+                  />
+                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                </div>
+
+                {rosterPersonResults.length > 0 && !rosterSelectedPerson && (
+                  <div className="border border-border rounded-lg divide-y divide-border/60 max-h-36 overflow-y-auto bg-background">
+                    {rosterPersonResults.map((p) => (
+                      <div
+                        key={p.id}
+                        onClick={() => setRosterSelectedPerson(p)}
+                        className="p-2 hover:bg-primary/10 cursor-pointer flex items-center justify-between text-xs transition-colors"
+                      >
+                        <div>
+                          <span className="font-semibold">{p.firstName} {p.lastName}</span>
+                          {p.nickname && <span className="text-muted ml-1">({p.nickname})</span>}
+                          <span className="text-muted text-[10px] block">{p.email || "No email"}</span>
+                        </div>
+                        <Button variant="ghost" size="xs" className="text-primary font-bold text-[10px]">
+                          Select
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {rosterSelectedPerson && (
+                  <div className="p-2 rounded-lg border border-primary/30 bg-primary/5 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-muted">Selected: </span>
+                      <span className="font-bold text-primary">{rosterSelectedPerson.firstName} {rosterSelectedPerson.lastName}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setRosterSelectedPerson(null)}
+                      className="text-[11px] text-muted hover:text-danger font-medium"
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    label="First Name *"
+                    value={rosterFirstName}
+                    onChange={(e: any) => setRosterFirstName(e.target.value)}
+                    placeholder="Alex"
+                    size="sm"
+                  />
+                  <Input
+                    label="Last Name *"
+                    value={rosterLastName}
+                    onChange={(e: any) => setRosterLastName(e.target.value)}
+                    placeholder="Morgan"
+                    size="sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    label="Nickname"
+                    value={rosterNickname}
+                    onChange={(e: any) => setRosterNickname(e.target.value)}
+                    placeholder="Ali"
+                    size="sm"
+                  />
+                  <div>
+                    <label className="text-xs font-bold text-muted uppercase block mb-1">Gender *</label>
+                    <Select
+                      value={rosterGender}
+                      onChange={(e: any) => setRosterGender(e.target.value)}
+                      options={[
+                        { value: "FEMALE", label: "Female (Girls / Women)" },
+                        { value: "MALE", label: "Male (Boys / Men)" },
+                        { value: "MIXED", label: "Mixed / Co-Ed" },
+                      ]}
+                      width="full"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    label="Birth Date"
+                    type="date"
+                    value={rosterBirthDate}
+                    onChange={(e: any) => setRosterBirthDate(e.target.value)}
+                    size="sm"
+                  />
+                  <Input
+                    label="Phone Number"
+                    value={rosterPhone}
+                    onChange={(e: any) => setRosterPhone(e.target.value)}
+                    placeholder="(555) 000-0000"
+                    size="sm"
+                  />
+                </div>
+                <Input
+                  label="Email Address"
+                  type="email"
+                  value={rosterEmail}
+                  onChange={(e: any) => setRosterEmail(e.target.value)}
+                  placeholder="player@example.com"
+                  size="sm"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Step 2: Club & Team Selection */}
+          <div className="p-3.5 bg-surface/40 border border-border rounded-xl space-y-3">
+            <span className="text-xs font-bold text-text uppercase tracking-wider block border-b border-border/70 pb-2">
+              Step 2: Club & Team Affiliation for this Season
+            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-muted uppercase block mb-1">
+                  Club Affiliation
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1">
+                    <Select
+                      value={rosterClubId}
+                      onChange={(e: any) => {
+                        const cId = e.target.value ? Number(e.target.value) : "";
+                        setRosterClubId(cId);
+                        setRosterTeamId("");
+                      }}
+                      options={currentClubs.map((c) => ({ value: c.id, label: c.name }))}
+                      placeholder="Select Club..."
+                      showPlaceholder={true}
+                      width="full"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInlineModalType("club")}
+                    title="Add New Club"
+                    className="px-2"
+                  >
+                    <Plus size={14} className="text-primary" />
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-muted uppercase block mb-1">
+                  Team Roster
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1">
+                    <Select
+                      value={rosterTeamId}
+                      onChange={(e: any) => setRosterTeamId(e.target.value ? Number(e.target.value) : "")}
+                      options={rosterFilteredTeams.map((t) => ({ value: t.id, label: t.name }))}
+                      placeholder={rosterClubId ? "Select Team..." : "Select Club first..."}
+                      showPlaceholder={true}
+                      disabled={!rosterClubId}
+                      width="full"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInlineModalType("team")}
+                    title="Add New Team"
+                    disabled={!rosterClubId}
+                    className="px-2"
+                  >
+                    <Plus size={14} className="text-primary" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Sub-Modal for Inline Club / Team Creation */}
+      {inlineModalType && (
+        <InlineEntityModal
+          entityType={inlineModalType}
+          contextData={{
+            clubId: rosterClubId ? Number(rosterClubId) : undefined,
+            clubs: currentClubs,
+            seasonId: selectedTargetSeasonId,
+          }}
+          onClose={() => setInlineModalType(null)}
+          onSuccess={handleInlineSuccess}
+        />
+      )}
     </div>
   );
 }

@@ -1,3 +1,39 @@
+### [2026-10-16 23:00] Admin People Management, Fuzzy Search Resolution, Season-Scoped Guest Players & On-The-Fly Rostering
+- **Type**: Feature / UX Architecture / Data Integrity
+- **Summary**:
+  1. **Admin People Directory & Management (`/admin/people`)**:
+     - Added dedicated "People Directory" module card to the Admin Portal (`src/app/(mainAppLayout)/admin/page.tsx`).
+     - Created `people.config.ts` entity configuration and server actions (`getAdminPeople`, `createPerson`, `updatePerson`, `deletePerson` in `people-actions.ts`) with normalized gender enforcement (`normalizeGender`), UTC birth dates, and soft-delete safeguards.
+     - Built the admin management page (`/admin/people/page.tsx`) with `EntityShell`, search/filter, stats metrics (Total People, Active Profiles, Rostered Players, Coaches/Staff), and full CRUD.
+  2. **Intelligent Fuzzy Logic Search Engine (`src/lib/utils/fuzzySearch.ts`)**:
+     - Developed a high-performance Levenshtein distance, token-matching, and multi-field fuzzy search utility (`fuzzyFilterPeople`, `scorePersonQuery`, `stringSimilarity`).
+     - Supports typo tolerance, transposed letters, reversed names ("Morgan Alex"), nicknames, and full name matching across first name, last name, nickname, and email.
+     - Covered with comprehensive unit tests (`src/lib/utils/__tests__/fuzzySearch.test.ts`).
+  3. **Season-Scoped Guest Player Resolution**:
+     - Enforced that candidate guest players on both the match lineup modal (`AddGuestPlayerModal.tsx`) and the bulk guest assignments page (`GuestPlayersClient.tsx`) MUST be players on an active roster for that specific season (`team_seasons.season_id`).
+     - Updated `getGuestPlayerOptions` in `queries.ts` and `searchGuestPlayerCandidates` in `gameLineup-actions.ts` to strictly scope by `seasonId` and rank candidates using fuzzy search.
+  4. **On-the-Fly Person, Club & Team Creation and Rostering**:
+     - **Team Roster Page (`TeamRoster.tsx`)**: Upgraded the Add Player modal with standard UI primitives (`Modal`, `Input`, `Select`, `Checkbox`, `Button`). Added a "+ Create New Person" mode allowing coaches to create a person on-the-fly and immediately roster them to the team via `createPersonAndAddToRoster`.
+     - **Match Lineup Modal (`AddGuestPlayerModal.tsx`)**: Added "+ Roster New / External Player" mode: allows selecting an existing directory person (not yet rostered this season) or creating a new person, cascading Club selection (with `+` inline creation) and Team selection (with `+` inline creation), rostering them to that team for the season, and inserting them as a guest in the active match lineup via `rosterPersonAndAddGuestToLineup`.
+     - **Bulk Guest Player Management (`GuestPlayersClient.tsx`)**: Added "+ Roster New Player" button and modal allowing on-the-fly creation/resolution of person, club, and team, immediately enrolling them into the season roster and optionally assigning them as guests to selected matches via `rosterPersonAndAssignGuestGames`.
+- **Modified Files**:
+  - `src/lib/utils/fuzzySearch.ts`
+  - `src/lib/utils/__tests__/fuzzySearch.test.ts`
+  - `src/lib/actions/people-actions.ts`
+  - `src/lib/entities/configs/people.config.ts`
+  - `src/app/(mainAppLayout)/admin/page.tsx`
+  - `src/app/(mainAppLayout)/admin/people/page.tsx`
+  - `src/lib/data/queries.ts`
+  - `src/lib/actions/roster-actions.ts`
+  - `src/components/team/TeamRoster.tsx`
+  - `src/lib/actions/gameLineup-actions.ts`
+  - `src/app/(gamesLayout)/gamestats/[teamSeasonId]/[id]/lineup/AddGuestPlayerModal.tsx`
+  - `src/lib/actions/guestPlayer-actions.ts`
+  - `src/app/(mainAppLayout)/dashboard/guest-players/page.tsx`
+  - `src/components/dashboard/GuestPlayersClient.tsx`
+  - `src/lib/actions/inlineEntity-actions.ts`
+  - `updates.md`
+
 ### [2026-10-16 22:30] Inline Guest Player Management on Game Lineup Page
 - **Type**: Feature / UX Standard
 - **Summary**:

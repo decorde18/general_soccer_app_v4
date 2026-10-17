@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireSession, verifyTeamAccess } from "@/lib/auth/auth-utils";
 import { getGuestPlayerOptions, getGames, getExistingGuestPlayers } from "@/lib/data/queries";
+import { normalizeGender } from "@/lib/utils/gender";
 
 export async function addGuestPlayersToGames(
   playerIds: number[],
@@ -143,11 +144,101 @@ export async function getGuestPlayerOptionsAction(filters?: {
   clubId?: number;
   ageGroupId?: number;
   teamId?: number;
+  seasonId?: number;
   searchQuery?: string;
   excludeTeamSeasonId?: number;
 }) {
   await requireSession();
   return await getGuestPlayerOptions(filters);
+}
+
+/**
+ * On-the-fly flow: Roster a person to a team for the season (creating the person if needed),
+ * and optionally assign them as guest player to specified games.
+ */
+export async function rosterPersonAndAssignGuestGames(data: {
+  targetTeamSeasonId: number;
+  gameIds?: number[];
+  personId?: number;
+  newPerson?: {
+    firstName: string;
+    lastName: string;
+    nickname?: string;
+    gender: string;
+    birthDate?: string;
+    email?: string;
+    phone?: string;
+  };
+  rosterTeamId: number;
+  jerseyNumber?: number | null;
+}) {
+  await requireSession();
+
+  const targetTs = await prisma.team_seasons.findUnique({
+    where: { id: data.targetTeamSeasonId },
+    select: { team_id: true, season_id: true },
+  });
+  if (!targetTs) throw new Error("Target team season not found");
+  await verifyTeamAccess(targetTs.team_id);
+
+  let finalPersonId = data.personId;
+  if (!finalPersonId && data.newPerson) {
+    const person = await prisma.people.create({
+      data: {
+        first_name: data.newPerson.firstName.trim(),
+        last_name: data.newPerson.lastName.trim(),
+        nickname: data.newPerson.nickname?.trim() || null,
+        gender: normalizeGender(data.newPerson.gender, "MIXED"),
+        email: data.newPerson.email?.trim() || null,
+        phone: data.newPerson.phone?.trim() || null,
+        birth_date: data.newPerson.birthDate ? new Date(data.newPerson.birthDate) : null,
+        is_active: true,
+      },
+    });
+    finalPersonId = person.id;
+  }
+
+  if (!finalPersonId) {
+    throw new Error("No person was specified or created.");
+  }
+
+  // Ensure team_seasons exists for this team in this season
+  let rosterTs = await prisma.team_seasons.findFirst({
+    where: { team_id: data.rosterTeamId, season_id: targetTs.season_id },
+  });
+  if (!rosterTs) {
+    rosterTs = await prisma.team_seasons.create({
+      data: {
+        team_id: data.rosterTeamId,
+        season_id: targetTs.season_id,
+        is_active: true,
+      },
+    });
+  }
+
+  // Check if player is already rostered on this team_season
+  const existingPt = await prisma.player_teams.findFirst({
+    where: { team_season_id: rosterTs.id, player_id: finalPersonId },
+  });
+  if (!existingPt) {
+    await prisma.player_teams.create({
+      data: {
+        team_season_id: rosterTs.id,
+        player_id: finalPersonId,
+        jersey_number: data.jerseyNumber ?? null,
+        is_active: true,
+        status: "rostered",
+      },
+    });
+  }
+
+  // If gameIds are provided, assign as guest players
+  if (data.gameIds && data.gameIds.length > 0) {
+    await addGuestPlayersToGames([finalPersonId], data.gameIds, data.targetTeamSeasonId);
+  }
+
+  revalidatePath("/dashboard/guest-players");
+  return { success: true, personId: finalPersonId };
 }
 
 export async function getGamesAction(filters: {

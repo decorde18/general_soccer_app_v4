@@ -9,6 +9,7 @@
 import prisma from "@/lib/prisma";
 import { formatTeamName } from "@/lib/utils/teamName";
 import { calculateActivePlayerTimeOnField, getPlayerOnFieldIntervals } from "@/lib/utils/dateTimeUtils";
+import { fuzzyFilterPeople } from "@/lib/utils/fuzzySearch";
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -2932,42 +2933,53 @@ export async function getGuestPlayerOptions(filters?: {
   clubId?: number;
   ageGroupId?: number;
   teamId?: number;
+  seasonId?: number;
   searchQuery?: string;
   excludeTeamSeasonId?: number;
 }): Promise<GuestPlayerOption[]> {
-  const whereClause: any = {};
+  const whereClause: any = {
+    is_active: true,
+  };
+
+  let targetSeasonId = filters?.seasonId;
 
   if (filters?.excludeTeamSeasonId) {
-    const existingRoster = await prisma.player_teams.findMany({
-      where: { team_season_id: filters.excludeTeamSeasonId, is_active: true },
-      select: { player_id: true },
-    });
+    const [existingRoster, targetTs] = await Promise.all([
+      prisma.player_teams.findMany({
+        where: { team_season_id: filters.excludeTeamSeasonId, is_active: true },
+        select: { player_id: true },
+      }),
+      !targetSeasonId
+        ? prisma.team_seasons.findUnique({
+            where: { id: filters.excludeTeamSeasonId },
+            select: { season_id: true },
+          })
+        : null,
+    ]);
+
+    if (targetTs?.season_id) {
+      targetSeasonId = targetTs.season_id;
+    }
+
     const excludeIds = existingRoster.map((r) => r.player_id);
     if (excludeIds.length > 0) {
       whereClause.player_id = { notIn: excludeIds };
     }
   }
 
+  whereClause.team_seasons = {
+    is_active: true,
+    ...(targetSeasonId ? { season_id: targetSeasonId } : {}),
+  };
+
   if (filters?.teamId) {
-    whereClause.team_seasons = { team_id: filters.teamId };
+    whereClause.team_seasons.team_id = filters.teamId;
   } else if (filters?.clubId) {
-    whereClause.team_seasons = { teams: { club_id: filters.clubId } };
+    whereClause.team_seasons.teams = { club_id: filters.clubId };
   }
 
   if (filters?.ageGroupId) {
-    if (!whereClause.team_seasons) whereClause.team_seasons = {};
     whereClause.team_seasons.age_group = filters.ageGroupId;
-  }
-
-  if (filters?.searchQuery) {
-    const q = filters.searchQuery.trim().toLowerCase();
-    whereClause.people = {
-      OR: [
-        { first_name: { contains: q } },
-        { last_name: { contains: q } },
-        { email: { contains: q } },
-      ],
-    };
   }
 
   const rostered = await prisma.player_teams.findMany({
@@ -2985,6 +2997,7 @@ export async function getGuestPlayerOptions(filters?: {
       { people: { last_name: "asc" } },
       { people: { first_name: "asc" } },
     ],
+    take: 300,
   });
 
   const seen = new Set<number>();
@@ -3003,6 +3016,24 @@ export async function getGuestPlayerOptions(filters?: {
       ageGroupName: r.team_seasons.age_groups?.name ?? null,
     });
   });
+
+  if (filters?.searchQuery && filters.searchQuery.trim().length > 0) {
+    const candidates = deduped.map((d) => ({
+      ...d,
+      id: d.personId,
+      fullName: `${d.firstName} ${d.lastName}`,
+    }));
+    const ranked = fuzzyFilterPeople(candidates, filters.searchQuery.trim(), 0.4);
+    return ranked.map((r) => ({
+      personId: r.personId,
+      firstName: r.firstName,
+      lastName: r.lastName,
+      email: r.email,
+      clubName: r.clubName,
+      teamName: r.teamName,
+      ageGroupName: r.ageGroupName,
+    }));
+  }
 
   return deduped;
 }

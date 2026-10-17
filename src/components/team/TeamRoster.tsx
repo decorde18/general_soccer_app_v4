@@ -6,6 +6,7 @@ import { Grid, List, Search, Star, User, Plus, Edit2, Trash2, UserPlus, ShieldCh
 import { useSession } from "next-auth/react";
 import {
   addPlayerToRoster,
+  createPersonAndAddToRoster,
   updateRosterPlayer,
   removePlayerFromRoster,
   assignTeamStaff,
@@ -14,6 +15,12 @@ import {
 } from "@/lib/actions/roster-actions";
 
 import Dialog from "@/components/ui/Dialog";
+import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Checkbox from "@/components/ui/Checkbox";
+import { toast } from "sonner";
 
 interface Player {
   id: number;
@@ -101,9 +108,20 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
 
   // Add player modal state
   const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
+  const [isCreatePersonMode, setIsCreatePersonMode] = useState(false);
   const [personSearch, setPersonSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<Array<{ id: number; firstName: string; lastName: string; email: string | null }>>([]);
+  const [searchResults, setSearchResults] = useState<Array<{ id: number; firstName: string; lastName: string; nickname?: string | null; email: string | null }>>([]);
   const [selectedPerson, setSelectedPerson] = useState<{ id: number; firstName: string; lastName: string } | null>(null);
+
+  // New person fields
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
+  const [newNickname, setNewNickname] = useState("");
+  const [newGender, setNewGender] = useState("FEMALE");
+  const [newBirthDate, setNewBirthDate] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+
   const [addJersey, setAddJersey] = useState("");
   const [addPosition, setAddPosition] = useState("");
   const [addGrade, setAddGrade] = useState("");
@@ -178,10 +196,28 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
   }, [players, statusFilter, activeSquad, searchQuery]);
 
 
+  const resetAddForm = () => {
+    setIsCreatePersonMode(false);
+    setSelectedPerson(null);
+    setPersonSearch("");
+    setSearchResults([]);
+    setNewFirstName("");
+    setNewLastName("");
+    setNewNickname("");
+    setNewGender("FEMALE");
+    setNewBirthDate("");
+    setNewEmail("");
+    setNewPhone("");
+    setAddJersey("");
+    setAddPosition("");
+    setAddGrade("");
+    setAddCaptain(false);
+  };
+
   const handleSearchPeople = async (q: string) => {
     setPersonSearch(q);
     if (q.trim().length >= 2) {
-      const results = await searchPeople(q);
+      const results = await searchPeople(q, teamSeasonId);
       setSearchResults(results);
     } else {
       setSearchResults([]);
@@ -222,24 +258,57 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
   };
 
   const handleAddPlayer = () => {
-    if (!selectedPerson) return;
-    startTransition(async () => {
-      await addPlayerToRoster({
-        teamSeasonId,
-        personId: selectedPerson.id,
-        jerseyNumber: addJersey ? Number(addJersey) : null,
-        position: addPosition || null,
-        grade: addGrade || null,
-        captain: addCaptain,
+    if (isCreatePersonMode) {
+      if (!newFirstName.trim() || !newLastName.trim()) {
+        toast.error("First Name and Last Name are required.");
+        return;
+      }
+      startTransition(async () => {
+        try {
+          await createPersonAndAddToRoster({
+            teamSeasonId,
+            firstName: newFirstName.trim(),
+            lastName: newLastName.trim(),
+            nickname: newNickname.trim() || null,
+            gender: newGender,
+            birthDate: newBirthDate || null,
+            email: newEmail.trim() || null,
+            phone: newPhone.trim() || null,
+            jerseyNumber: addJersey ? Number(addJersey) : null,
+            position: addPosition || null,
+            grade: addGrade || null,
+            captain: addCaptain,
+          });
+          toast.success("Player created and added to roster!");
+          setIsAddPlayerOpen(false);
+          resetAddForm();
+        } catch (err: any) {
+          toast.error("Failed to add player: " + err.message);
+        }
       });
-      setIsAddPlayerOpen(false);
-      setSelectedPerson(null);
-      setPersonSearch("");
-      setAddJersey("");
-      setAddPosition("");
-      setAddGrade("");
-      setAddCaptain(false);
-    });
+    } else {
+      if (!selectedPerson) {
+        toast.error("Please select a person from search or switch to 'Create New Person'.");
+        return;
+      }
+      startTransition(async () => {
+        try {
+          await addPlayerToRoster({
+            teamSeasonId,
+            personId: selectedPerson.id,
+            jerseyNumber: addJersey ? Number(addJersey) : null,
+            position: addPosition || null,
+            grade: addGrade || null,
+            captain: addCaptain,
+          });
+          toast.success("Player added to roster!");
+          setIsAddPlayerOpen(false);
+          resetAddForm();
+        } catch (err: any) {
+          toast.error("Failed to add player: " + err.message);
+        }
+      });
+    }
   };
 
   const handleAddStaff = () => {
@@ -734,23 +803,55 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
       )}
 
       {/* ADD PLAYER MODAL */}
-      {isAddPlayerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
-            <h3 className="font-extrabold text-base text-text">Add Player to Roster</h3>
+      <Modal
+        isOpen={isAddPlayerOpen}
+        onClose={() => {
+          setIsAddPlayerOpen(false);
+          resetAddForm();
+        }}
+        title="Add Player to Roster"
+        description="Search for an existing person using fuzzy matching, or create a new player directly into this team's roster."
+        maxWidth="lg"
+      >
+        <div className="space-y-4">
+          {/* Mode Switcher Tabs */}
+          <div className="flex border-b border-border pb-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setIsCreatePersonMode(false)}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                !isCreatePersonMode
+                  ? "bg-primary text-white"
+                  : "text-muted hover:text-text hover:bg-surface"
+              }`}
+            >
+              Search Existing Person
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCreatePersonMode(true)}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                isCreatePersonMode
+                  ? "bg-primary text-white"
+                  : "text-muted hover:text-text hover:bg-surface"
+              }`}
+            >
+              + Create New Person
+            </button>
+          </div>
 
+          {!isCreatePersonMode ? (
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-muted uppercase">Search Person Directory</label>
-                <input
-                  type="text"
+                <Input
                   value={personSearch}
-                  onChange={(e) => handleSearchPeople(e.target.value)}
-                  placeholder="Type name or email..."
-                  className="w-full mt-1 px-3 py-2 text-sm bg-background border border-border rounded-xl focus:outline-none focus:border-primary text-text"
+                  onChange={(e: any) => handleSearchPeople(e.target.value)}
+                  placeholder="Type name (e.g. Alex Morgan, Smith, Soph) or email..."
+                  className="mt-1"
                 />
                 {searchResults.length > 0 && (
-                  <div className="mt-1 max-h-36 overflow-y-auto border border-border rounded-xl bg-background divide-y divide-border/60">
+                  <div className="mt-2 max-h-40 overflow-y-auto border border-border rounded-xl bg-background divide-y divide-border/60">
                     {searchResults.map((p) => (
                       <button
                         key={p.id}
@@ -760,88 +861,189 @@ export default function TeamRoster({ teamSeasonId, players, staff = [] }: TeamRo
                           setSearchResults([]);
                           setPersonSearch(`${p.firstName} ${p.lastName}`);
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-surface text-xs font-medium text-text flex items-center justify-between"
+                        className="w-full text-left px-3 py-2.5 hover:bg-primary/10 text-xs font-medium text-text flex items-center justify-between transition-colors"
                       >
-                        <span>{p.firstName} {p.lastName}</span>
-                        <span className="text-muted text-[10px]">{p.email}</span>
+                        <div>
+                          <span className="font-semibold">{p.firstName} {p.lastName}</span>
+                          {p.nickname && <span className="text-muted ml-1.5">({p.nickname})</span>}
+                        </div>
+                        <span className="text-muted text-[11px]">{p.email || "No email"}</span>
                       </button>
                     ))}
                   </div>
                 )}
+
+                {personSearch.trim().length >= 2 && searchResults.length === 0 && !selectedPerson && (
+                  <div className="mt-2 p-3 rounded-xl border border-dashed border-border/80 bg-surface/50 text-center space-y-2">
+                    <p className="text-xs text-muted">
+                      No matching person found for <span className="font-semibold text-text">&quot;{personSearch}&quot;</span>.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const parts = personSearch.trim().split(/\s+/);
+                        if (parts.length >= 2) {
+                          setNewFirstName(parts[0]);
+                          setNewLastName(parts.slice(1).join(" "));
+                        } else {
+                          setNewFirstName(personSearch.trim());
+                        }
+                        setIsCreatePersonMode(true);
+                      }}
+                      className="text-xs"
+                    >
+                      + Create &quot;{personSearch}&quot; as New Person
+                    </Button>
+                  </div>
+                )}
+
                 {selectedPerson && (
-                  <div className="mt-2 text-xs font-bold text-primary">
-                    Selected: {selectedPerson.firstName} {selectedPerson.lastName}
+                  <div className="mt-2 p-2.5 rounded-xl border border-primary/30 bg-primary/5 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-muted font-medium">Selected: </span>
+                      <span className="font-bold text-primary">{selectedPerson.firstName} {selectedPerson.lastName}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPerson(null);
+                        setPersonSearch("");
+                      }}
+                      className="text-xs text-muted hover:text-danger font-medium"
+                    >
+                      Clear
+                    </button>
                   </div>
                 )}
               </div>
-
-              <div>
-                <label className="text-xs font-bold text-muted uppercase">Jersey Number</label>
-                <input
-                  type="number"
-                  value={addJersey}
-                  onChange={(e) => setAddJersey(e.target.value)}
-                  placeholder="e.g. 7"
-                  className="w-full mt-1 px-3 py-2 text-sm bg-background border border-border rounded-xl focus:outline-none focus:border-primary text-text"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-muted uppercase">Position</label>
-                <input
-                  type="text"
-                  value={addPosition}
-                  onChange={(e) => setAddPosition(e.target.value)}
-                  placeholder="e.g. Defender"
-                  className="w-full mt-1 px-3 py-2 text-sm bg-background border border-border rounded-xl focus:outline-none focus:border-primary text-text"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-muted uppercase">Grade / Class</label>
-                <input
-                  type="text"
-                  value={addGrade}
-                  onChange={(e) => setAddGrade(e.target.value)}
-                  placeholder="e.g. 11"
-                  className="w-full mt-1 px-3 py-2 text-sm bg-background border border-border rounded-xl focus:outline-none focus:border-primary text-text"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="addCaptain"
-                  checked={addCaptain}
-                  onChange={(e) => setAddCaptain(e.target.checked)}
-                  className="rounded border-border text-primary focus:ring-primary h-4 w-4"
-                />
-                <label htmlFor="addCaptain" className="text-xs font-bold text-text">
-                  Team Captain
-                </label>
-              </div>
             </div>
-
-            <div className="flex items-center justify-end gap-2 pt-4 border-t border-border">
-              <button
-                type="button"
-                onClick={() => setIsAddPlayerOpen(false)}
-                className="px-3 py-1.5 text-xs font-bold text-muted hover:text-text rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleAddPlayer}
-                disabled={!selectedPerson || isPending}
-                className="px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 rounded-xl shadow-sm"
-              >
-                Add to Roster
-              </button>
+          ) : (
+            <div className="space-y-3 bg-surface/40 p-3 rounded-xl border border-border/70">
+              <span className="text-xs font-bold text-text uppercase tracking-wider block">New Person Information</span>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="First Name *"
+                  value={newFirstName}
+                  onChange={(e: any) => setNewFirstName(e.target.value)}
+                  placeholder="e.g. Alex"
+                  size="sm"
+                />
+                <Input
+                  label="Last Name *"
+                  value={newLastName}
+                  onChange={(e: any) => setNewLastName(e.target.value)}
+                  placeholder="e.g. Morgan"
+                  size="sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="Preferred / Nickname"
+                  value={newNickname}
+                  onChange={(e: any) => setNewNickname(e.target.value)}
+                  placeholder="e.g. Ali"
+                  size="sm"
+                />
+                <div>
+                  <label className="text-xs font-bold text-muted uppercase block mb-1">Gender *</label>
+                  <Select
+                    value={newGender}
+                    onChange={(e: any) => setNewGender(e.target.value)}
+                    options={[
+                      { value: "FEMALE", label: "Female (Girls / Women)" },
+                      { value: "MALE", label: "Male (Boys / Men)" },
+                      { value: "MIXED", label: "Mixed / Co-Ed" },
+                    ]}
+                    width="full"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="Birth Date"
+                  type="date"
+                  value={newBirthDate}
+                  onChange={(e: any) => setNewBirthDate(e.target.value)}
+                  size="sm"
+                />
+                <Input
+                  label="Phone Number"
+                  value={newPhone}
+                  onChange={(e: any) => setNewPhone(e.target.value)}
+                  placeholder="(555) 000-0000"
+                  size="sm"
+                />
+              </div>
+              <Input
+                label="Email Address"
+                type="email"
+                value={newEmail}
+                onChange={(e: any) => setNewEmail(e.target.value)}
+                placeholder="player@example.com"
+                size="sm"
+              />
             </div>
+          )}
+
+          {/* Roster-Specific Attributes */}
+          <div className="border-t border-border pt-3 space-y-3">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider block">Roster Assignment Details</span>
+            <div className="grid grid-cols-3 gap-3">
+              <Input
+                label="Jersey Number"
+                type="number"
+                value={addJersey}
+                onChange={(e: any) => setAddJersey(e.target.value)}
+                placeholder="e.g. 10"
+                size="sm"
+              />
+              <Input
+                label="Position"
+                value={addPosition}
+                onChange={(e: any) => setAddPosition(e.target.value)}
+                placeholder="e.g. Forward"
+                size="sm"
+              />
+              <Input
+                label="Grade / Class"
+                value={addGrade}
+                onChange={(e: any) => setAddGrade(e.target.value)}
+                placeholder="e.g. 10 / Soph"
+                size="sm"
+              />
+            </div>
+            <Checkbox
+              label="Designate as Team Captain"
+              checked={addCaptain}
+              onChange={(checked: boolean) => setAddCaptain(checked)}
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsAddPlayerOpen(false);
+                resetAddForm();
+              }}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleAddPlayer}
+              disabled={(!isCreatePersonMode && !selectedPerson) || isPending}
+              isLoading={isPending}
+            >
+              {isCreatePersonMode ? "Create & Add to Roster" : "Add to Roster"}
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* ADD STAFF MODAL */}
       {isAddStaffOpen && (
