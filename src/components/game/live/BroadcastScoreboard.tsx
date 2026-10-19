@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import FullscreenManager from "@/components/game/FullscreenManager";
 import { shouldAutoStopClockOnMajorEvent } from "@/lib/utils/gameRules";
+import Dialog from "@/components/ui/Dialog";
 
 interface BroadcastScoreboardProps {
   ourShortName?: string;
@@ -51,6 +52,8 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
     (game?.settings?.clockDirection as "up" | "down") || "up"
   );
   const [clockMode, setClockMode] = useState<"period" | "match">("period");
+  const [showEarlyEndConfirm, setShowEarlyEndConfirm] = useState(false);
+  const [isEndingPeriod, setIsEndingPeriod] = useState(false);
 
   // Local timer tick for smooth scoreboard clock
   const [storeGameTimeSeconds, setStoreGameTimeSeconds] = useState<number>(0);
@@ -75,7 +78,10 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
 
   // Calculate display seconds based on Mode (Period vs Match) and Direction (Up vs Down)
   const currentPeriodIdx = game?.currentPeriodIndex ?? 0;
-  const rawPeriodDuration = game?.settings?.periodDuration;
+  const regularPeriods = game?.settings?.periodCount || 2;
+  const rawPeriodDuration = currentPeriodIdx < regularPeriods
+    ? game?.settings?.periodDuration
+    : (game?.settings?.overtimeDuration || game?.settings?.periodDuration);
   // If rawPeriodDuration > 120, it is stored in seconds (e.g. 2400s or 1800s). If <= 120, it is in minutes.
   const periodDurationSecs = rawPeriodDuration
     ? (Number(rawPeriodDuration) > 120 ? Number(rawPeriodDuration) : Number(rawPeriodDuration) * 60)
@@ -140,6 +146,18 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
     }
   }, "short") : "AWAY");
 
+  const handleConfirmEndEarly = async () => {
+    try {
+      setIsEndingPeriod(true);
+      setShowEarlyEndConfirm(false);
+      await endPeriod();
+    } catch (err: any) {
+      toast.error("Clock action error: " + err.message);
+    } finally {
+      setIsEndingPeriod(false);
+    }
+  };
+
   const handleDefaultToggleClock = async () => {
     if (!game) return;
     try {
@@ -159,6 +177,11 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
       } else if (currentStage === GAME_STAGES.BETWEEN_PERIODS) {
         await startNextPeriod();
       } else if (currentStage === GAME_STAGES.DURING_PERIOD) {
+        // Prompt confirmation if ending period prior to scheduled duration
+        if (periodScoreboardSeconds < periodDurationSecs) {
+          setShowEarlyEndConfirm(true);
+          return;
+        }
         await endPeriod();
       }
     } catch (err: any) {
@@ -346,7 +369,7 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
           {currentStage !== GAME_STAGES.END_GAME && (
             <button
               onClick={onTogglePeriodClock}
-              disabled={isClockButtonDisabled}
+              disabled={isClockButtonDisabled || isEndingPeriod}
               className="h-6 py-0 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[10px] font-black shadow-xs disabled:opacity-50 transition-colors cursor-pointer uppercase tracking-wide"
             >
               {getClockButtonText()}
@@ -354,6 +377,21 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
           )}
         </div>
       </div>
+
+      {/* Early Period End Confirmation Dialog */}
+      <Dialog
+        isOpen={showEarlyEndConfirm}
+        onClose={() => setShowEarlyEndConfirm(false)}
+        title="End Period Early?"
+        type="confirm"
+        size="sm"
+        confirmText="Yes, End Period"
+        cancelText="Cancel"
+        isLoading={isEndingPeriod}
+        disabled={isEndingPeriod}
+        onConfirm={handleConfirmEndEarly}
+        message={`The scheduled period length is ${formatSecondsToMmss(periodDurationSecs)}, but only ${formatSecondsToMmss(periodScoreboardSeconds)} has elapsed.\n\nAre you sure you want to end Period ${currentPeriodNum} early?`}
+      />
     </div>
   );
 }

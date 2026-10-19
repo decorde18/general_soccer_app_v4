@@ -93,17 +93,22 @@ export async function apiFetch<T = any>(
   let cleanTable = table;
   let targetId = id;
 
+  const params = new URLSearchParams();
+
   if (cleanTable.includes("?")) {
     const [realTable, queryStr] = cleanTable.split("?");
     cleanTable = realTable;
     const parsedParams = new URLSearchParams(queryStr);
-    if (parsedParams.has("id") && !targetId) {
-      targetId = parsedParams.get("id");
+    for (const [k, v] of parsedParams.entries()) {
+      if (k === "id" && !targetId) {
+        targetId = v;
+      } else if (k !== "id") {
+        params.append(k, v);
+      }
     }
   }
 
   let url = `${API_BASE_URL}/${cleanTable}`;
-  const params = new URLSearchParams();
 
   // Handle GET, PUT, PATCH, DELETE with ID
   if (targetId && (method === "GET" || method === "DELETE" || method === "PUT" || method === "PATCH")) {

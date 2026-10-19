@@ -809,3 +809,31 @@ export async function ensureBothTeamsEnrolledInGameLeagueNodes(gameId: number) {
     }
   }
 }
+
+/**
+ * Deletes pending substitutions from ended/completed games.
+ * If targetGameId is supplied, cleans up only that game.
+ * If omitted, cleans up all games whose status is 'completed'.
+ */
+export async function deletePendingSubsFromEndedGames(targetGameId?: number) {
+  if (targetGameId) {
+    const deleted = await prisma.game_subs.deleteMany({
+      where: {
+        game_id: targetGameId,
+        sub_time: null,
+      },
+    });
+    return { count: deleted.count };
+  }
+
+  const deleted = await prisma.game_subs.deleteMany({
+    where: {
+      sub_time: null,
+      games: {
+        status: "completed",
+      },
+    },
+  });
+  return { count: deleted.count };
+}
+

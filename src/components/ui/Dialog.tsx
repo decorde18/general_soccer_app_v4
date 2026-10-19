@@ -33,15 +33,18 @@ const Dialog = ({
   extraButtonText,
   onExtraButton,
   size = "sm",
+  isLoading = false,
+  disabled = false,
 }: any) => {
   const handleConfirm = () => {
+    if (isLoading || disabled) return;
     if (onConfirm) {
       onConfirm();
     }
-    onClose();
   };
 
   const handleCancel = () => {
+    if (isLoading || disabled) return;
     if (onCancel) {
       onCancel();
     }
@@ -146,6 +149,7 @@ const Dialog = ({
               variant='outline'
               onClick={handleCancel}
               className='min-w-[100px]'
+              disabled={disabled || isLoading}
             >
               {cancelText}
             </Button>
@@ -158,6 +162,7 @@ const Dialog = ({
                 onClose();
               }}
               className='min-w-[100px]'
+              disabled={disabled || isLoading}
             >
               {extraButtonText}
             </Button>
@@ -166,6 +171,8 @@ const Dialog = ({
             variant={getConfirmVariant()}
             onClick={handleConfirm}
             className='min-w-[100px]'
+            disabled={disabled || isLoading}
+            isLoading={isLoading}
           >
             {confirmText}
           </Button>

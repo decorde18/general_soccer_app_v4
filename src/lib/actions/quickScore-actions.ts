@@ -109,6 +109,14 @@ export async function recordQuickScore({
     },
   });
 
+  // Delete pending subs for this completed game
+  await prisma.game_subs.deleteMany({
+    where: {
+      game_id: gameId,
+      sub_time: null,
+    },
+  });
+
   // 5. Update/Upsert game_standings_inclusions for associated league nodes
   if (game.game_league_nodes && game.game_league_nodes.length > 0) {
     for (const node of game.game_league_nodes) {
@@ -502,6 +510,14 @@ export async function recordDetailedMatchScore({
   await prisma.games.update({
     where: { id: gameId },
     data: { status: "completed" },
+  });
+
+  // Delete pending subs for this completed game
+  await prisma.game_subs.deleteMany({
+    where: {
+      game_id: gameId,
+      sub_time: null,
+    },
   });
 
   // 6. Update Standings Inclusions

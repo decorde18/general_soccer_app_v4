@@ -116,7 +116,17 @@ export default function LivePlayerTable({
 
       if (valA < valB) return sortOrder === "asc" ? -1 : 1;
       if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-      return 0;
+
+      // Stable secondary tiebreaker: Jersey Number, then Name, then Unique Player ID
+      const numA = a.jerseyNumber !== null && a.jerseyNumber !== undefined ? Number(a.jerseyNumber) : 999;
+      const numB = b.jerseyNumber !== null && b.jerseyNumber !== undefined ? Number(b.jerseyNumber) : 999;
+      if (numA !== numB) return numA - numB;
+
+      const nameA = `${a.lastName || ""} ${a.firstName || ""}`.toLowerCase();
+      const nameB = `${b.lastName || ""} ${b.firstName || ""}`.toLowerCase();
+      if (nameA !== nameB) return nameA.localeCompare(nameB);
+
+      return String(a.playerGameId || a.id).localeCompare(String(b.playerGameId || b.id));
     });
   }, [players, sortField, sortOrder, gameTimeSeconds, getPlayerStats, calculateTotalTimeOnField, calculateSecondaryTime]);
 
@@ -185,7 +195,6 @@ export default function LivePlayerTable({
             const totalTime = calculateTotalTimeOnField(player, gameTimeSeconds);
             const secondaryTime = calculateSecondaryTime(player, gameTimeSeconds);
             const stats = getPlayerStats(player);
-            (player as any).redCards = stats.redCards;
             const isRedCarded = stats.redCards > 0 || stats.yellowCards >= 2;
 
             const eligibility = isBench
@@ -222,10 +231,11 @@ export default function LivePlayerTable({
 
             const pmVal = stats.plusMinus !== undefined ? stats.plusMinus : (player.plusMinus || 0);
             const isDimmed = isRedCarded || isExhausted;
+            const rowKey = player.playerGameId ? `pg-${player.playerGameId}` : `p-${player.id}`;
 
             return (
               <tr
-                key={player.id}
+                key={rowKey}
                 className={rowClass}
                 onClick={() => {
                   if (isPreGame || isRedCarded || isPendingOut || isPendingIn) return;

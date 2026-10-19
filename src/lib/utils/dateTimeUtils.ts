@@ -765,6 +765,18 @@ export interface StoppageInterval {
 }
 
 /**
+ * Safely extracts confirmed substitution game time in seconds.
+ * Excludes pending substitutions where time is null or undefined.
+ */
+function extractConfirmedSubTime(sub: any): number | null {
+  if (!sub || sub.is_swap === 1 || sub.is_swap === true || sub.isSwap) return null;
+  const raw = sub.gameTime ?? sub.sub_time;
+  if (raw === null || raw === undefined) return null;
+  const num = Number(raw);
+  return !isNaN(num) && num >= 0 ? num : null;
+}
+
+/**
  * Calculates player's actual time on field (active playing time, excluding halftime & stoppages).
  */
 export function calculateActivePlayerTimeOnField(
@@ -776,15 +788,13 @@ export function calculateActivePlayerTimeOnField(
   currentGameTime: number = 0
 ): number {
   const normIn = (subsIn || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const events: { type: "IN" | "OUT"; time: number }[] = [];
@@ -869,15 +879,13 @@ export function getPlayerOnFieldIntervals(
   currentGameTime: number = 0
 ): { start: number; end: number }[] {
   const normIn = (subsIn || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const events: { type: "IN" | "OUT"; time: number }[] = [];
@@ -933,15 +941,13 @@ export function calculateActivePlayerTimeOffField(
   currentGameTime: number = 0
 ): number {
   const normIn = (subsIn || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const events: { type: "IN" | "OUT"; time: number }[] = [];
@@ -1028,15 +1034,13 @@ export function calculateRecentPlayerTimeOffField(
   currentGameTime: number = 0
 ): number {
   const normIn = (subsIn || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const events: { type: "IN" | "OUT"; time: number }[] = [];
@@ -1108,15 +1112,13 @@ export function calculateRecentPlayerTimeOnField(
   currentGameTime: number = 0
 ): number {
   const normIn = (subsIn || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const normOut = (subsOut || [])
-    .filter((s) => !s.is_swap && !s.isSwap && s.is_swap !== 1)
-    .map((s) => Number(s.gameTime ?? s.sub_time ?? 0))
-    .filter((t) => t >= 0)
+    .map(extractConfirmedSubTime)
+    .filter((t): t is number => t !== null)
     .sort((a, b) => a - b);
 
   const events: { type: "IN" | "OUT"; time: number }[] = [];

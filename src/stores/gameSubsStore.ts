@@ -87,6 +87,7 @@ export interface GameSubsState {
   confirmSub: (subId: string | number) => Promise<void>;
   confirmAllPendingSubs: () => Promise<ConfirmAllResult>;
   cancelSub: (subId: string | number) => Promise<void>;
+  clearAllPendingSubs: (gameId?: string | number) => Promise<void>;
 }
 
 /**
@@ -739,12 +740,67 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
         }),
       );
 
-      // ❌ DO NOT CALL updateAllSubStatuses
-      // await playersStore.updateAllSubStatuses(useGameStore.getState().game?.game_id);
+      // Also clean up gameStore.pendingSubs
+      const gameStore = useGameStore.getState();
+      if (gameStore.game?.pendingSubs) {
+        gameStore.updateGame({
+          pendingSubs: gameStore.game.pendingSubs.filter((s: any) => String(s.id) !== String(subId)),
+        });
+      }
 
       console.log(`Cancelled sub ${subId}`);
     } catch (error) {
       console.error("Error cancelling sub:", error);
+    }
+  },
+
+  clearAllPendingSubs: async (gameId?: string | number) => {
+    try {
+      const targetGameId = gameId || useGameStore.getState().game?.game_id;
+
+      // 1. Synchronously clear pending subs from gameStore
+      const gameStore = useGameStore.getState();
+      if (gameStore.game) {
+        gameStore.updateGame({ pendingSubs: [] });
+      }
+
+      // 2. Synchronously clear pending sub references from all players in playersStore
+      const playersStore = useGamePlayersStore.getState();
+      const calculateFieldStatus = playersStore.calculateFieldStatus;
+
+      playersStore.setPlayers(
+        playersStore.players.map((player) => {
+          const updatedIns = (player.ins || []).filter((s) => s.gameTime !== null);
+          const updatedOuts = (player.outs || []).filter((s) => s.gameTime !== null);
+
+          if (
+            updatedIns.length !== (player.ins || []).length ||
+            updatedOuts.length !== (player.outs || []).length ||
+            player.subStatus !== null
+          ) {
+            const updatedPlayer: Player = {
+              ...player,
+              ins: updatedIns,
+              outs: updatedOuts,
+              subStatus: null,
+            };
+            return {
+              ...updatedPlayer,
+              fieldStatus: calculateFieldStatus(updatedPlayer),
+            };
+          }
+          return player;
+        }),
+      );
+
+      // 3. Delete from backend database
+      if (targetGameId) {
+        await apiFetch(`game_subs?game_id=${targetGameId}&pending=true`, "DELETE").catch(() => {});
+      }
+      // Also delete any pending subs from previously ended games
+      await apiFetch("game_subs?clean_completed=true", "DELETE").catch(() => {});
+    } catch (err) {
+      console.error("Error clearing all pending subs:", err);
     }
   },
 }));

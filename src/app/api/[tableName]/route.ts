@@ -407,6 +407,14 @@ export async function PUT(req: Request, context: RouteContext) {
   const sql = `UPDATE \`${table}\` SET ${setSQL} WHERE id = ?`;
   await prisma.$executeRawUnsafe(sql, ...values);
 
+  if (table === "games" && body.status === "completed") {
+    // Automatically delete pending substitutions when a game ends
+    await prisma.$executeRawUnsafe(
+      "DELETE FROM `game_subs` WHERE game_id = ? AND sub_time IS NULL",
+      Number(id)
+    );
+  }
+
   return NextResponse.json({ success: true, id: Number(id) });
 }
 
@@ -429,6 +437,28 @@ export async function DELETE(req: Request, context: RouteContext) {
 
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
+
+  // Allow deleting pending subs for a game or cleaning all ended games without single id
+  if (table === "game_subs") {
+    const cleanCompleted = url.searchParams.get("clean_completed");
+    if (cleanCompleted === "true") {
+      const deletedCount = await prisma.$executeRawUnsafe(
+        "DELETE FROM `game_subs` WHERE sub_time IS NULL AND game_id IN (SELECT id FROM `games` WHERE status = 'completed')"
+      );
+      return NextResponse.json({ success: true, count: deletedCount });
+    }
+
+    const pendingOnly = url.searchParams.get("pending");
+    const gameId = url.searchParams.get("game_id");
+    if (pendingOnly === "true" && gameId) {
+      const deletedCount = await prisma.$executeRawUnsafe(
+        "DELETE FROM `game_subs` WHERE game_id = ? AND sub_time IS NULL",
+        Number(gameId)
+      );
+      return NextResponse.json({ success: true, count: deletedCount });
+    }
+  }
+
   if (!id) return badRequest("Missing id parameter");
 
   const numId = Number(id);

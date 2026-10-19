@@ -443,7 +443,9 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
           filters: { game_id: gameId },
         },
       );
-      const pendingSubs = allSubs.filter((sub) => sub.sub_time === null);
+      const pendingSubs = isCompletedMatch
+        ? []
+        : allSubs.filter((sub) => sub.sub_time === null);
       const confirmedSubs = allSubs.filter((sub) => sub.sub_time !== null);
 
       const hasStarters = allPlayerGames.some(

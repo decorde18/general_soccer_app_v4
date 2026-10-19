@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import BroadcastScoreboard from "../BroadcastScoreboard";
+import useGameStore from "@/stores/gameStore";
 
 const GAME_STAGES = {
   BEFORE_START: 0,
@@ -67,5 +68,32 @@ describe("BroadcastScoreboard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Record Major Event/i }));
     expect(defaultProps.onOpenMajorEventModal).toHaveBeenCalledTimes(1);
+  });
+
+  it("prompts for confirmation when ending period before scheduled duration", () => {
+    // Set game in store so handleDefaultToggleClock has active game context
+    useGameStore.setState({
+      game: {
+        game_id: 1,
+        currentPeriodIndex: 0,
+        periods: [{ id: 10, periodNumber: 1, startTime: Date.now() - 1200000, endTime: null }],
+        settings: { periodCount: 2, periodDuration: 2400 },
+        gameEventsMajor: [],
+      },
+    });
+
+    // Render without onTogglePeriodClock override so default handler runs
+    const { onTogglePeriodClock, ...propsWithoutHandler } = defaultProps;
+    render(
+      <BroadcastScoreboard
+        {...propsWithoutHandler}
+        gameTimeSeconds={1200} // 20:00 (less than 40:00)
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /End Period/i }));
+
+    expect(screen.getByText("End Period Early?")).toBeInTheDocument();
+    expect(screen.getByText(/Are you sure you want to end Period/i)).toBeInTheDocument();
   });
 });

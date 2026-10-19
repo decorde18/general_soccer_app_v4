@@ -99,6 +99,13 @@ export default function GameManageClient() {
   const [subTimeSec, setSubTimeSec] = useState<string>("0");
   const [isGkSub, setIsGkSub] = useState<boolean>(false);
 
+  // Bulk Sub Time Edit State
+  const [isBulkSubModalOpen, setIsBulkSubModalOpen] = useState<boolean>(false);
+  const [bulkTargetSubIds, setBulkTargetSubIds] = useState<string[]>([]);
+  const [bulkSubPeriod, setBulkSubPeriod] = useState<string>("1");
+  const [bulkSubTimeMin, setBulkSubTimeMin] = useState<string>("0");
+  const [bulkSubTimeSec, setBulkSubTimeSec] = useState<string>("0");
+
   // Card Form State
   const [cardPlayerId, setCardPlayerId] = useState<string>("");
   const [cardType, setCardType] = useState<string>("yellow");
@@ -224,61 +231,114 @@ export default function GameManageClient() {
     return new Date(val).getTime();
   };
 
-  // Perform single or bulk delete actions
+  // Perform single or bulk delete actions optimistically
   const handleDeleteConfirm = async () => {
     if (!deleteConfirmation) return;
     const { id: targetId, type, label, targetIds } = deleteConfirmation;
 
+    // 1. Synchronously update Zustand state optimistically (0ms lag)
+    const currentGame = useGameStore.getState().game;
+    if (currentGame) {
+      if (type === "goal" && targetId) {
+        useGameStore.getState().updateGame({
+          gameEventsGoals: (currentGame.gameEventsGoals || []).filter((g: any) => String(getGoalId(g)) !== String(targetId)),
+          gameEventsMajor: (currentGame.gameEventsMajor || []).filter((m: any) => String(m.id) !== String(targetId)),
+        });
+        setSelectedGoalIds((prev) => prev.filter((i) => i !== String(targetId)));
+      } else if (type === "card" && targetId) {
+        useGameStore.getState().updateGame({
+          gameEventsDiscipline: (currentGame.gameEventsDiscipline || []).filter((c: any) => String(getCardId(c)) !== String(targetId)),
+          gameEventsMajor: (currentGame.gameEventsMajor || []).filter((m: any) => String(m.id) !== String(targetId)),
+        });
+        setSelectedCardIds((prev) => prev.filter((i) => i !== String(targetId)));
+      } else if (type === "sub" && targetId) {
+        useGameStore.getState().updateGame({
+          gameSubs: (currentGame.gameSubs || []).filter((s: any) => String(getSubId(s)) !== String(targetId)),
+        });
+        setSelectedSubIds((prev) => prev.filter((i) => i !== String(targetId)));
+      } else if (type === "period" && targetId) {
+        useGameStore.getState().updateGame({
+          periods: (currentGame.periods || []).filter((p: any) => String(getPeriodId(p)) !== String(targetId)),
+        });
+        setSelectedPeriodIds((prev) => prev.filter((i) => i !== String(targetId)));
+      } else if (type === "bulk_goals" && targetIds) {
+        const idSet = new Set(targetIds.map(String));
+        useGameStore.getState().updateGame({
+          gameEventsGoals: (currentGame.gameEventsGoals || []).filter((g: any) => !idSet.has(String(getGoalId(g)))),
+          gameEventsMajor: (currentGame.gameEventsMajor || []).filter((m: any) => !idSet.has(String(m.id))),
+        });
+        setSelectedGoalIds([]);
+      } else if (type === "bulk_subs" && targetIds) {
+        const idSet = new Set(targetIds.map(String));
+        useGameStore.getState().updateGame({
+          gameSubs: (currentGame.gameSubs || []).filter((s: any) => !idSet.has(String(getSubId(s)))),
+        });
+        setSelectedSubIds([]);
+      } else if (type === "bulk_cards" && targetIds) {
+        const idSet = new Set(targetIds.map(String));
+        useGameStore.getState().updateGame({
+          gameEventsDiscipline: (currentGame.gameEventsDiscipline || []).filter((c: any) => !idSet.has(String(getCardId(c)))),
+          gameEventsMajor: (currentGame.gameEventsMajor || []).filter((m: any) => !idSet.has(String(m.id))),
+        });
+        setSelectedCardIds([]);
+      } else if (type === "bulk_periods" && targetIds) {
+        const idSet = new Set(targetIds.map(String));
+        useGameStore.getState().updateGame({
+          periods: (currentGame.periods || []).filter((p: any) => !idSet.has(String(getPeriodId(p)))),
+        });
+        setSelectedPeriodIds([]);
+      } else if (type === "bulk_all") {
+        const goalSet = new Set(selectedGoalIds);
+        const subSet = new Set(selectedSubIds);
+        const cardSet = new Set(selectedCardIds);
+        const periodSet = new Set(selectedPeriodIds);
+        useGameStore.getState().updateGame({
+          gameEventsGoals: (currentGame.gameEventsGoals || []).filter((g: any) => !goalSet.has(String(getGoalId(g)))),
+          gameSubs: (currentGame.gameSubs || []).filter((s: any) => !subSet.has(String(getSubId(s)))),
+          gameEventsDiscipline: (currentGame.gameEventsDiscipline || []).filter((c: any) => !cardSet.has(String(getCardId(c)))),
+          periods: (currentGame.periods || []).filter((p: any) => !periodSet.has(String(getPeriodId(p)))),
+        });
+        setSelectedGoalIds([]);
+        setSelectedSubIds([]);
+        setSelectedCardIds([]);
+        setSelectedPeriodIds([]);
+      }
+    }
+
+    setDeleteConfirmation(null);
+
+    // 2. Perform backend persistence in parallel
     startTransition(async () => {
       try {
         if (type === "goal" && targetId) {
           await deleteEvent(targetId, "goal");
-          setSelectedGoalIds((prev) => prev.filter((i) => i !== targetId));
         } else if (type === "card" && targetId) {
           await deleteEvent(targetId, "discipline");
-          setSelectedCardIds((prev) => prev.filter((i) => i !== targetId));
         } else if (type === "sub" && targetId) {
           await deleteSub(targetId);
-          setSelectedSubIds((prev) => prev.filter((i) => i !== targetId));
         } else if (type === "period" && targetId) {
           await deletePeriod(targetId);
-          setSelectedPeriodIds((prev) => prev.filter((i) => i !== targetId));
         } else if (type === "bulk_goals" && targetIds) {
-          for (const gId of targetIds) {
-            await deleteEvent(gId, "goal");
-          }
-          setSelectedGoalIds([]);
+          await Promise.all(targetIds.map((gId) => deleteEvent(gId, "goal")));
         } else if (type === "bulk_subs" && targetIds) {
-          for (const sId of targetIds) {
-            await deleteSub(sId);
-          }
-          setSelectedSubIds([]);
+          await Promise.all(targetIds.map((sId) => deleteSub(sId)));
         } else if (type === "bulk_cards" && targetIds) {
-          for (const cId of targetIds) {
-            await deleteEvent(cId, "discipline");
-          }
-          setSelectedCardIds([]);
+          await Promise.all(targetIds.map((cId) => deleteEvent(cId, "discipline")));
         } else if (type === "bulk_periods" && targetIds) {
-          for (const pId of targetIds) {
-            await deletePeriod(pId);
-          }
-          setSelectedPeriodIds([]);
+          await Promise.all(targetIds.map((pId) => deletePeriod(pId)));
         } else if (type === "bulk_all") {
-          for (const gId of selectedGoalIds) await deleteEvent(gId, "goal");
-          for (const sId of selectedSubIds) await deleteSub(sId);
-          for (const cId of selectedCardIds) await deleteEvent(cId, "discipline");
-          for (const pId of selectedPeriodIds) await deletePeriod(pId);
-          setSelectedGoalIds([]);
-          setSelectedSubIds([]);
-          setSelectedCardIds([]);
-          setSelectedPeriodIds([]);
+          await Promise.all([
+            ...selectedGoalIds.map((gId) => deleteEvent(gId, "goal")),
+            ...selectedSubIds.map((sId) => deleteSub(sId)),
+            ...selectedCardIds.map((cId) => deleteEvent(cId, "discipline")),
+            ...selectedPeriodIds.map((pId) => deletePeriod(pId)),
+          ]);
         }
         await initializeGame(id, teamSeasonId);
         toast.success(`Deleted: ${label}`);
       } catch (err: any) {
         toast.error("Failed to delete: " + err.message);
-      } finally {
-        setDeleteConfirmation(null);
+        await initializeGame(id, teamSeasonId);
       }
     });
   };
@@ -544,6 +604,100 @@ export default function GameManageClient() {
         setEditingSub(null);
       } catch (err: any) {
         toast.error("Failed to save substitution: " + err.message);
+      }
+    });
+  };
+
+  // --- BULK SUB TIME EDIT HANDLERS ---
+  const openBulkSubModal = (subIdsToEdit?: string[]) => {
+    const targetIds = subIdsToEdit && subIdsToEdit.length > 0 ? subIdsToEdit : selectedSubIds;
+    if (targetIds.length === 0) {
+      toast.error("Please select at least one substitution to edit.");
+      return;
+    }
+
+    setBulkTargetSubIds(targetIds);
+
+    const firstSub = (game.gameSubs || []).find((s) => targetIds.includes(String(getSubId(s))));
+    if (firstSub) {
+      const pNum = Number(firstSub.period || 1);
+      setBulkSubPeriod(String(pNum));
+      const totalSec = firstSub.sub_time !== undefined && firstSub.sub_time !== null ? Number(firstSub.sub_time) : 0;
+      const clock = convertAbsoluteSecondsToPeriodClock(
+        totalSec,
+        pNum,
+        game?.periods || [],
+        game?.gameEventsMajor || [],
+        game?.settings?.periodDuration || 2400
+      );
+      setBulkSubTimeMin(String(clock.minutes));
+      setBulkSubTimeSec(String(clock.seconds));
+    } else {
+      setBulkSubPeriod("1");
+      setBulkSubTimeMin("0");
+      setBulkSubTimeSec("0");
+    }
+
+    setIsBulkSubModalOpen(true);
+  };
+
+  const toggleBulkTargetSub = (subIdStr: string) => {
+    setBulkTargetSubIds((prev) =>
+      prev.includes(subIdStr) ? prev.filter((id) => id !== subIdStr) : [...prev, subIdStr]
+    );
+  };
+
+  const selectAllSubsMatchingTime = (timeSec: number | null | undefined, period: number | null | undefined) => {
+    const matching = (game.gameSubs || [])
+      .filter((s) => s.sub_time === timeSec && (!period || s.period === period))
+      .map((s) => getSubId(s));
+    setSelectedSubIds(Array.from(new Set([...selectedSubIds, ...matching])));
+    toast.info(`Selected ${matching.length} substitution(s) matching this timestamp.`);
+  };
+
+  const handleBulkUpdateSubTimes = async () => {
+    if (bulkTargetSubIds.length === 0) {
+      toast.error("Please select at least one substitution to update.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const totalSeconds = resolveGameTimeSeconds(bulkSubPeriod, bulkSubTimeMin, bulkSubTimeSec);
+        const pNum = Number(bulkSubPeriod);
+        const idSet = new Set(bulkTargetSubIds);
+
+        // 1. Optimistically update gameSubs in Zustand store
+        const currentGame = useGameStore.getState().game;
+        if (currentGame) {
+          const updatedSubs = (currentGame.gameSubs || []).map((s: any) => {
+            if (idSet.has(String(getSubId(s)))) {
+              return {
+                ...s,
+                period: pNum,
+                sub_time: totalSeconds,
+              };
+            }
+            return s;
+          });
+          useGameStore.getState().updateGame({ gameSubs: updatedSubs });
+        }
+
+        // 2. Persist in parallel
+        await Promise.all(
+          bulkTargetSubIds.map((sId) =>
+            apiFetch("game_subs", "PUT", { sub_time: totalSeconds, period: pNum }, sId)
+          )
+        );
+
+        toast.success(`Updated ${bulkTargetSubIds.length} substitution(s) to Period ${pNum} (${bulkSubTimeMin}m ${bulkSubTimeSec}s).`);
+        setIsBulkSubModalOpen(false);
+        setBulkTargetSubIds([]);
+        setSelectedSubIds([]);
+        await initializeGame(id, teamSeasonId);
+      } catch (err: any) {
+        toast.error("Failed to update substitution times: " + err.message);
+        await initializeGame(id, teamSeasonId);
       }
     });
   };
@@ -885,6 +1039,7 @@ export default function GameManageClient() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleClearPeriodEndTime(p.id)}
+                          disabled={isPending}
                           className="text-xs text-rose-500 hover:bg-rose-500/10 flex items-center gap-1 border border-rose-500/20"
                           title="Delete/clear period end timestamp"
                         >
@@ -902,6 +1057,7 @@ export default function GameManageClient() {
                             label: `Period #${p.periodNumber}`,
                           })
                         }
+                        disabled={isPending}
                         className="text-xs flex items-center gap-1"
                       >
                         <Trash2 size={12} />
@@ -947,6 +1103,7 @@ export default function GameManageClient() {
                     targetIds: selectedGoalIds,
                   })
                 }
+                disabled={isPending}
                 className="flex items-center gap-1 text-xs"
               >
                 <Trash2 size={13} />
@@ -957,6 +1114,7 @@ export default function GameManageClient() {
               variant="primary"
               size="sm"
               onClick={openAddGoalModal}
+              disabled={isPending}
               className="flex items-center gap-1 text-xs"
             >
               <Plus size={14} />
@@ -1025,6 +1183,7 @@ export default function GameManageClient() {
                       variant="outline"
                       size="sm"
                       onClick={() => openEditGoalModal(g)}
+                      disabled={isPending}
                       className="flex items-center gap-1 text-[11px]"
                     >
                       <Pencil size={12} />
@@ -1040,6 +1199,7 @@ export default function GameManageClient() {
                           label: `Goal by ${scorerName}`,
                         })
                       }
+                      disabled={isPending}
                       className="flex items-center gap-1 text-[11px]"
                     >
                       <Trash2 size={12} />
@@ -1074,26 +1234,40 @@ export default function GameManageClient() {
 
           <div className="flex items-center gap-2">
             {selectedSubIds.length > 0 && (
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() =>
-                  setDeleteConfirmation({
-                    type: "bulk_subs",
-                    label: `${selectedSubIds.length} substitutions`,
-                    targetIds: selectedSubIds,
-                  })
-                }
-                className="flex items-center gap-1 text-xs"
-              >
-                <Trash2 size={13} />
-                <span>Delete Selected ({selectedSubIds.length})</span>
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openBulkSubModal(selectedSubIds)}
+                  disabled={isPending}
+                  className="flex items-center gap-1 text-xs text-primary border-primary/40 hover:bg-primary/10"
+                >
+                  <Clock size={13} />
+                  <span>Bulk Change Time ({selectedSubIds.length})</span>
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() =>
+                    setDeleteConfirmation({
+                      type: "bulk_subs",
+                      label: `${selectedSubIds.length} substitutions`,
+                      targetIds: selectedSubIds,
+                    })
+                  }
+                  disabled={isPending}
+                  className="flex items-center gap-1 text-xs"
+                >
+                  <Trash2 size={13} />
+                  <span>Delete Selected ({selectedSubIds.length})</span>
+                </Button>
+              </>
             )}
             <Button
               variant="primary"
               size="sm"
               onClick={openAddSubModal}
+              disabled={isPending}
               className="flex items-center gap-1 text-xs"
             >
               <Plus size={14} />
@@ -1116,7 +1290,7 @@ export default function GameManageClient() {
                 <div
                   key={`sub-${subIdStr}`}
                   className={`flex items-center justify-between p-3 rounded-xl border transition-all text-xs ${
-                    isSelected ? "border-danger/50 bg-danger/5" : "border-border bg-background/40"
+                    isSelected ? "border-primary/60 bg-primary/5" : "border-border bg-background/40"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -1133,18 +1307,30 @@ export default function GameManageClient() {
                       <p className="font-semibold text-text">
                         &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-rose-500 font-bold">OUT</span>: {pOut?.fullName || "Unknown"} (#{pOut?.jerseyNumber || "?"})
                       </p>
-                      <p className="text-[10px] text-muted mt-1 font-semibold">
-                        Time: {s.sub_time !== undefined && s.sub_time !== null ? (() => {
-                          const pNum = Number(s.period || 1);
-                          const clock = convertAbsoluteSecondsToPeriodClock(
-                            Number(s.sub_time),
-                            pNum,
-                            game?.periods || [],
-                            game?.gameEventsMajor || [],
-                            game?.settings?.periodDuration || 2400
-                          );
-                          return `${clock.formattedTime} (Match ${formatSecondsToMmss(Number(s.sub_time))})`;
-                        })() : "--"} {s.period ? `• Period ${s.period}` : ""} {s.gk_sub === 1 && (s.is_swap === 1 ? "• Goalkeeper Swap 🧤" : "• Goalkeeper Sub 🧤")}
+                      <p className="text-[10px] text-muted mt-1 font-semibold flex items-center flex-wrap gap-1">
+                        <span>
+                          Time: {s.sub_time !== undefined && s.sub_time !== null ? (() => {
+                            const pNum = Number(s.period || 1);
+                            const clock = convertAbsoluteSecondsToPeriodClock(
+                              Number(s.sub_time),
+                              pNum,
+                              game?.periods || [],
+                              game?.gameEventsMajor || [],
+                              game?.settings?.periodDuration || 2400
+                            );
+                            return `${clock.formattedTime} (Match ${formatSecondsToMmss(Number(s.sub_time))})`;
+                          })() : "--"} {s.period ? `• Period ${s.period}` : ""} {s.gk_sub === 1 && (s.is_swap === 1 ? "• Goalkeeper Swap 🧤" : "• Goalkeeper Sub 🧤")}
+                        </span>
+                        {s.sub_time !== undefined && s.sub_time !== null && (
+                          <button
+                            type="button"
+                            onClick={() => selectAllSubsMatchingTime(s.sub_time, s.period)}
+                            className="text-primary hover:underline font-bold text-[9px] ml-1.5 cursor-pointer"
+                            title="Select all subs made at this exact timestamp"
+                          >
+                            [Select All at this Time]
+                          </button>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -1153,7 +1339,19 @@ export default function GameManageClient() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => openBulkSubModal([subIdStr])}
+                      disabled={isPending}
+                      className="flex items-center gap-1 text-[11px] text-primary border-primary/30 hover:bg-primary/10"
+                      title="Bulk change or modify time"
+                    >
+                      <Clock size={12} />
+                      <span>Change Time</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => openEditSubModal(s)}
+                      disabled={isPending}
                       className="flex items-center gap-1 text-[11px]"
                     >
                       <Pencil size={12} />
@@ -1169,6 +1367,7 @@ export default function GameManageClient() {
                           label: `Sub: ${pIn?.fullName} for ${pOut?.fullName}`,
                         })
                       }
+                      disabled={isPending}
                       className="flex items-center gap-1 text-[11px]"
                     >
                       <Trash2 size={12} />
@@ -1213,6 +1412,7 @@ export default function GameManageClient() {
                     targetIds: selectedCardIds,
                   })
                 }
+                disabled={isPending}
                 className="flex items-center gap-1 text-xs"
               >
                 <Trash2 size={13} />
@@ -1223,6 +1423,7 @@ export default function GameManageClient() {
               variant="primary"
               size="sm"
               onClick={openAddCardModal}
+              disabled={isPending}
               className="flex items-center gap-1 text-xs"
             >
               <Plus size={14} />
@@ -1294,6 +1495,7 @@ export default function GameManageClient() {
                       variant="outline"
                       size="sm"
                       onClick={() => openEditCardModal(c)}
+                      disabled={isPending}
                       className="flex items-center gap-1 text-[11px]"
                     >
                       <Pencil size={12} />
@@ -1309,6 +1511,7 @@ export default function GameManageClient() {
                           label: `Card for ${player?.fullName || "Player"}`,
                         })
                       }
+                      disabled={isPending}
                       className="flex items-center gap-1 text-[11px]"
                     >
                       <Trash2 size={12} />
@@ -1574,6 +1777,151 @@ export default function GameManageClient() {
         </div>
       </Modal>
 
+      {/* MODAL: BULK CHANGE SUBSTITUTION TIME */}
+      <Modal
+        isOpen={isBulkSubModalOpen}
+        onClose={() => {
+          setIsBulkSubModalOpen(false);
+          setBulkTargetSubIds([]);
+        }}
+        title="Bulk Change Substitution Time"
+        size="md"
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <p className="text-muted leading-relaxed">
+            Pick which substitution(s) you would like to move, and set their new period and game time:
+          </p>
+
+          {/* Sub selection list with checkboxes */}
+          <div className="border border-border rounded-xl divide-y divide-border/40 max-h-48 overflow-y-auto bg-background/50 p-1">
+            {(game.gameSubs || [])
+              .filter((s) => bulkTargetSubIds.includes(String(getSubId(s))) || selectedSubIds.includes(String(getSubId(s))))
+              .map((s) => {
+                const subIdStr = getSubId(s);
+                const isChecked = bulkTargetSubIds.includes(subIdStr);
+                const pIn = players.find((p) => String(p.playerGameId) === String(s.in_player_id) || String(p.id) === String(s.in_player_id));
+                const pOut = players.find((p) => String(p.playerGameId) === String(s.out_player_id) || String(p.id) === String(s.out_player_id));
+                const clock = s.sub_time !== null && s.sub_time !== undefined ? convertAbsoluteSecondsToPeriodClock(
+                  Number(s.sub_time),
+                  Number(s.period || 1),
+                  game?.periods || [],
+                  game?.gameEventsMajor || [],
+                  game?.settings?.periodDuration || 2400
+                ) : null;
+
+                return (
+                  <label
+                    key={`bulk-item-${subIdStr}`}
+                    className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-background/80 transition-colors ${
+                      isChecked ? "bg-primary/5" : "opacity-60"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleBulkTargetSub(subIdStr)}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 font-bold text-text truncate">
+                        <span className="text-emerald-500 font-extrabold">IN: {pIn?.fullName || "Unknown"} (#{pIn?.jerseyNumber || "?"})</span>
+                        <span className="text-muted">/</span>
+                        <span className="text-rose-500 font-extrabold">OUT: {pOut?.fullName || "Unknown"} (#{pOut?.jerseyNumber || "?"})</span>
+                      </div>
+                      <div className="text-[10px] text-muted font-medium mt-0.5">
+                        Current: {clock ? `${clock.formattedTime} (Match ${formatSecondsToMmss(Number(s.sub_time))}) • Period ${s.period}` : "No time set"}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+          </div>
+
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-muted">
+              {bulkTargetSubIds.length} substitution(s) selected to change
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setBulkTargetSubIds((game.gameSubs || []).map((s) => String(getSubId(s))))}
+                className="text-primary hover:underline font-bold cursor-pointer"
+              >
+                Select All
+              </button>
+              <span className="text-muted">•</span>
+              <button
+                type="button"
+                onClick={() => setBulkTargetSubIds([])}
+                className="text-muted hover:underline cursor-pointer"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+
+          <div className="border-t border-border/60 pt-3 space-y-3">
+            <h4 className="font-extrabold text-xs uppercase tracking-wider text-text">New Target Timestamp</h4>
+            <div className="grid grid-cols-3 gap-3">
+              <Select
+                label="Match Period"
+                options={periodOptions}
+                value={bulkSubPeriod}
+                onChange={(e: any) => setBulkSubPeriod(e.target?.value ?? e)}
+              />
+              <Input
+                label="Minute (mm)"
+                type="number"
+                min="0"
+                value={bulkSubTimeMin}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBulkSubTimeMin(e.target.value)}
+              />
+              <Input
+                label="Second (ss)"
+                type="number"
+                min="0"
+                max="59"
+                value={bulkSubTimeSec}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBulkSubTimeSec(e.target.value)}
+              />
+            </div>
+
+            <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between text-xs">
+              <div>
+                <span className="font-bold text-text">New Converted Time: </span>
+                <span className="font-extrabold text-primary text-sm">
+                  {calculatePreviewTime(bulkSubPeriod, bulkSubTimeMin, bulkSubTimeSec).displayLabel}
+                </span>
+              </div>
+              <span className="text-[10px] text-muted font-medium">
+                Applied to all {bulkTargetSubIds.length} checked subs
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsBulkSubModalOpen(false);
+                setBulkTargetSubIds([]);
+              }}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleBulkUpdateSubTimes}
+              disabled={isPending || bulkTargetSubIds.length === 0}
+              isLoading={isPending}
+            >
+              {isPending ? "Updating Subs..." : `Update ${bulkTargetSubIds.length} Substitution(s)`}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* MODAL: ADD / EDIT CARD */}
       <Modal
         isOpen={isCardModalOpen}
@@ -1674,6 +2022,8 @@ export default function GameManageClient() {
         confirmText="Confirm Delete"
         cancelText="Cancel"
         onConfirm={handleDeleteConfirm}
+        isLoading={isPending}
+        disabled={isPending}
       />
     </div>
   );

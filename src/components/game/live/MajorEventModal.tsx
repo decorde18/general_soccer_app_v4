@@ -83,6 +83,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   const [eventStaticGameTime, setEventStaticGameTime] = useState<number>(0);
   const [eventDurationSeconds, setEventDurationSeconds] = useState<number>(0);
   const [isPausedLocally, setIsPausedLocally] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // In-Stoppage Substitutions State
   const [stoppageSubOutId, setStoppageSubOutId] = useState("");
@@ -102,29 +103,47 @@ export default function MajorEventModal(props: MajorEventModalProps) {
 
   const eventOpenMsRef = useRef<number>(Date.now());
 
-  // Event Duration Live Timer (Tracks elapsed duration of the event / stoppage)
+  // Event Duration Live Timer:
+  // Strictly evaluates current time - event start time as expected
   useEffect(() => {
     if (!isOpen) {
       setEventDurationSeconds(0);
+      setIsSubmitting(false);
       return;
     }
-    const rawStart = activeStoppage?.start_time;
-    const startMs = rawStart
-      ? (typeof rawStart === "number" ? rawStart : new Date(rawStart as any).getTime())
-      : eventOpenMsRef.current;
-    const initialSecs = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-    setEventDurationSeconds(initialSecs);
 
-    const interval = setInterval(() => {
-      const elapsed = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-      setEventDurationSeconds(elapsed);
-    }, 1000);
+    const updateDuration = () => {
+      const currentMatchSecs = useGameStore.getState().getGameTime();
+      const currentLiveSecs = liveSeconds || currentMatchSecs;
 
+      if (!stopClock) {
+        // Clock running: current match time minus event start game time
+        const diff = Math.max(0, currentLiveSecs - eventStaticGameTime);
+        setEventDurationSeconds(diff);
+      } else {
+        // Clock stopped: if running seconds elapsed before stopping, use that difference
+        if (currentLiveSecs > eventStaticGameTime) {
+          setEventDurationSeconds(currentLiveSecs - eventStaticGameTime);
+        } else {
+          // Stopped at start: track wall-clock stoppage duration since event started
+          const rawStart = activeStoppage?.start_time || activeStoppage?.created_at;
+          const startMs = rawStart
+            ? (typeof rawStart === "number" ? rawStart : new Date(rawStart as any).getTime())
+            : eventOpenMsRef.current;
+          const elapsedSecs = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+          setEventDurationSeconds(elapsedSecs);
+        }
+      }
+    };
+
+    updateDuration();
+    const interval = setInterval(updateDuration, 1000);
     return () => clearInterval(interval);
-  }, [isOpen, activeStoppage?.start_time]);
+  }, [isOpen, liveSeconds, eventStaticGameTime, stopClock, activeStoppage?.start_time, activeStoppage?.created_at]);
 
   useEffect(() => {
     if (!isOpen) return;
+    setIsSubmitting(false);
     setEventType("goal");
     const currentMatchTime = useGameStore.getState().getGameTime();
     // Static game time of the event (e.g. 23:45, not a ticking clock)
@@ -586,11 +605,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   // SUBMIT GOAL
   const handleGoalSubmit = () => {
     if (!game) return;
+    if (isSubmitting) return;
 
     if (teamTarget === "us" && !isOwnGoal && !goalScorerId) {
       toast.error("Please select the goal scorer from currently on-field players.");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const isOpp = teamTarget === "opp";
@@ -693,14 +715,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         useGamePlayersStore.getState().players
       );
 
-      // Check if pending subs exist to prompt user before closing
+      // Always close modal immediately upon recording goal to prevent duplicate clicks
+      onClose();
+      toast.success(isOwnGoal ? "Own Goal recorded!" : "Goal recorded! ⚽");
+
       const queuedSubs = getPendingSubsSync();
       if (queuedSubs.length > 0) {
-        setShowPendingSubPrompt(true);
-      } else {
-        onClose();
+        toast.info(`${queuedSubs.length} pending sub(s) ready in the Upcoming Subs panel.`);
       }
-      toast.success(isOwnGoal ? "Own Goal recorded!" : "Goal recorded! ⚽");
 
       // 2. Background Persistence (Non-blocking)
       (async () => {
@@ -798,11 +820,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   // SUBMIT CARD / DISCIPLINE
   const handleCardSubmit = () => {
     if (!game) return;
+    if (isSubmitting) return;
 
     if (teamTarget === "us" && !cardPlayerId) {
       toast.error("Please select a player for the card.");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const isOpp = teamTarget === "opp";
@@ -861,14 +886,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         useGamePlayersStore.getState().players
       );
 
-      // Check if pending subs exist to prompt user before closing
+      // Always close modal immediately upon recording card to prevent duplicate clicks
+      onClose();
+      toast.success(`${cardType.toUpperCase()} Card recorded! 🟨🟥`);
+
       const queuedSubs = getPendingSubsSync();
       if (queuedSubs.length > 0) {
-        setShowPendingSubPrompt(true);
-      } else {
-        onClose();
+        toast.info(`${queuedSubs.length} pending sub(s) ready in the Upcoming Subs panel.`);
       }
-      toast.success(`${cardType.toUpperCase()} Card recorded! 🟨🟥`);
 
       // 2. Background Persistence
       (async () => {
@@ -960,11 +985,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   // SUBMIT PENALTY KICK (PK)
   const handlePkSubmit = () => {
     if (!game) return;
+    if (isSubmitting) return;
 
     if (teamTarget === "us" && !pkTakerId) {
       toast.error("Please select an on-field player for the Penalty Kick.");
       return;
     }
+
+    setIsSubmitting(true);
 
     const isOpp = teamTarget === "opp";
     const taker = players.find((p) => String(p.id) === pkTakerId || String(p.playerGameId) === pkTakerId);
@@ -1138,6 +1166,9 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   // SUBMIT STOPPAGE / INJURY / VAR
   const handleStoppageSubmit = () => {
     if (!game) return;
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
 
     const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
     const reasonStr =
@@ -1169,12 +1200,12 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       useGamePlayersStore.getState().players
     );
 
-    // Check if pending subs exist to prompt user before closing
+    // Always close modal immediately upon recording stoppage to prevent duplicate clicks
+    onClose();
+
     const queuedSubs = getPendingSubsSync();
     if (queuedSubs.length > 0) {
-      setShowPendingSubPrompt(true);
-    } else {
-      onClose();
+      toast.info(`${queuedSubs.length} pending sub(s) ready in the Upcoming Subs panel.`);
     }
 
     // 2. Background Persistence
@@ -1783,20 +1814,44 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           )}
 
           {eventType === "goal" ? (
-            <Button variant="primary" size="sm" onClick={handleGoalSubmit} disabled={isPending}>
-              Record Goal ⚽
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleGoalSubmit}
+              disabled={isPending || isSubmitting}
+              isLoading={isSubmitting}
+            >
+              {isSubmitting ? "Recording Goal..." : "Record Goal ⚽"}
             </Button>
           ) : eventType === "card" ? (
-            <Button variant="primary" size="sm" onClick={handleCardSubmit} disabled={isPending}>
-              Record Card 🟨🟥
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleCardSubmit}
+              disabled={isPending || isSubmitting}
+              isLoading={isSubmitting}
+            >
+              {isSubmitting ? "Recording Card..." : "Record Card 🟨🟥"}
             </Button>
           ) : eventType === "pk" ? (
-            <Button variant="primary" size="sm" onClick={handlePkSubmit} disabled={isPending}>
-              Log Penalty Kick 🎯
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handlePkSubmit}
+              disabled={isPending || isSubmitting}
+              isLoading={isSubmitting}
+            >
+              {isSubmitting ? "Logging PK..." : "Log Penalty Kick 🎯"}
             </Button>
           ) : (
-            <Button variant="primary" size="sm" onClick={handleStoppageSubmit} disabled={isPending}>
-              Log Stoppage ⏸️
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleStoppageSubmit}
+              disabled={isPending || isSubmitting}
+              isLoading={isSubmitting}
+            >
+              {isSubmitting ? "Logging Stoppage..." : "Log Stoppage ⏸️"}
             </Button>
           )}
         </div>

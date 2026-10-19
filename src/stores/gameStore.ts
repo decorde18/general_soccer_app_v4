@@ -244,9 +244,9 @@ const useGameStore = create<GameStoreState>((set, get) => {
         const gameSubs = allSubs.filter(
           (s: { sub_time: number | null }) => s.sub_time !== null,
         );
-        const pendingSubs = allSubs.filter(
-          (s: { sub_time: number | null }) => s.sub_time === null,
-        );
+        const pendingSubs = dbGame.status === "completed"
+          ? []
+          : allSubs.filter((s: { sub_time: number | null }) => s.sub_time === null);
 
         // Fetch all game events in parallel
         let [
@@ -623,6 +623,14 @@ const useGameStore = create<GameStoreState>((set, get) => {
         // Calculate and sync game stage/status
         await get().syncGameStatus();
 
+        // If game is completed or ended, purge any orphan pending subs immediately
+        if (finalGame.status === "completed" || get().getGameStage() === GAME_STAGES.END_GAME) {
+          useGameSubsStore.getState().clearAllPendingSubs(finalGame.game_id).catch(() => {});
+        } else {
+          // Clean up any pending subs lingering from any previously ended games
+          apiFetch("game_subs?clean_completed=true", "DELETE").catch(() => {});
+        }
+
         return finalGame;
       } catch (error) {
         console.error("Error loading game:", error);
@@ -725,6 +733,11 @@ const useGameStore = create<GameStoreState>((set, get) => {
             status: newStatus,
           });
           get().updateGame({ status: newStatus });
+
+          // When a game ends, delete any pending subs
+          if (newStatus === "completed") {
+            await useGameSubsStore.getState().clearAllPendingSubs(game.game_id);
+          }
         } catch (error) {
           console.error("Error syncing game status:", error);
         }
@@ -1001,9 +1014,13 @@ const useGameStore = create<GameStoreState>((set, get) => {
           status: "completed",
         });
 
+        // Delete all pending subs when game ends
+        await useGameSubsStore.getState().clearAllPendingSubs(game.game_id);
+
         get().updateGame({
           status: "completed",
           periods: updatedPeriods,
+          pendingSubs: [],
           gameEventsMajor: (game.gameEventsMajor || []).map((s) =>
             s.end_time === null && s.clock_should_run === 0 ? { ...s, end_time: gameTime } : s
           ),

@@ -1,3 +1,60 @@
+### [2026-10-19 13:40] Early Period End Confirmation Prompt & Ended Games Pending Subs Deletion
+- **Type**: Feature / UX Safeguard / Data Integrity
+- **Summary**:
+  1. **Early Period End Confirmation Prompt (`BroadcastScoreboard.tsx`)**:
+     - Added an "Are you sure?" confirmation prompt dialog (`<Dialog type="confirm">`) when the user clicks to end a period prior to the scheduled period duration (handles both regular periods and overtime periods).
+     - Displays the scheduled duration vs elapsed period time, with action disabling and loading indicators during submission.
+  2. **Pending Substitutions Deletion When Game Ends & Purge from Ended Games**:
+     - **Game Stores (`gameStore.ts`, `gameSubsStore.ts`, `gamePlayersStore.ts`)**:
+       - Added `clearAllPendingSubs` to `useGameSubsStore` that optimistically purges pending substitutions, resets player `subStatus` to `null`, and triggers deletion on backend.
+       - Wired `clearAllPendingSubs` into `endGame()`, `syncGameStatus()` (when transition to `"completed"` occurs), and `initializeGame()`.
+       - Filtered out pending substitutions when loading completed matches in `gamePlayersStore.ts` and `gameStore.ts`.
+     - **API & Server Actions (`route.ts`, `fetcher.ts`, `game-actions.ts`, `quickScore-actions.ts`)**:
+       - Added server action `deletePendingSubsFromEndedGames(targetGameId?)`.
+       - Updated `api/[tableName]/route.ts` so `PUT` with `status: "completed"` and `DELETE` with `clean_completed=true` or `pending=true` purge unconfirmed pending substitutions (`sub_time IS NULL`) from completed games.
+       - Fixed `apiFetch` in `fetcher.ts` to preserve and forward all query parameters when table query strings are passed.
+- **Modified Files**:
+  - `src/components/game/live/BroadcastScoreboard.tsx`
+  - `src/components/game/live/__tests__/BroadcastScoreboard.test.tsx`
+  - `src/app/api/[tableName]/route.ts`
+  - `src/app/api/fetcher.ts`
+  - `src/lib/actions/game-actions.ts`
+  - `src/lib/actions/quickScore-actions.ts`
+  - `src/stores/gameStore.ts`
+  - `src/stores/gameSubsStore.ts`
+  - `src/stores/gamePlayersStore.ts`
+  - `updates.md`
+
+### [2026-10-19 13:20] Live Match Player Times, Major Event Duration, Optimistic Controls & Bulk Substitution Edits
+- **Type**: Bug Fix / Feature / UX Resilience
+- **Summary**:
+  1. **Fixed Shift Time 0:00 Reset on Pending Subs (`dateTimeUtils.ts`)**:
+     - Resolved root cause where pending substitutions with `null` `gameTime` / `sub_time` fell back to `0` in `calculateActivePlayerTimeOnField`, terminating the starter's on-field shift at second 0.
+     - Added `extractConfirmedSubTime` to safely ignore unconfirmed/pending substitutions, preserving active shift time until a sub is executed.
+  2. **Accurate Major Event Duration Calculation (`MajorEventModal.tsx`)**:
+     - Streamlined event duration display to strictly calculate `currentMatchSecs - eventStaticGameTime` when the clock is running, and preserve stoppage elapsed seconds when the clock is paused.
+  3. **Event Modal Closure & Duplicate Submit Prevention (`MajorEventModal.tsx`)**:
+     - Added re-entrancy and submission guards (`isSubmitting`) across all event submissions (Goal, Card, Penalty, Stoppage).
+     - Removed blocking `showPendingSubPrompt` flow that hijacked the modal and left it open after goal recording.
+     - Automatically disables action buttons with inline loading spinners to prevent duplicate goal submissions.
+  4. **Optimistic Deletions & Button Disabling in Manual Stats Entry (`GameManageClient.tsx`, `Dialog.tsx`)**:
+     - Updated deletion confirmations to optimistically remove records from UI state immediately with zero lag.
+     - Added `disabled={isPending}` states and `isLoading` spinner support to Dialog confirmation actions and management buttons.
+  5. **Deterministic Player Box Sorting Stability (`LivePlayerTable.tsx`)**:
+     - Replaced non-unique keying with stable player ID keys (`pg-[playerGameId]`).
+     - Added secondary tiebreakers (jersey number, name, ID) so sorting doesn't shift rows erratically or scramble live times.
+     - Removed in-render store mutations during sort rendering.
+  6. **Bulk Substitution Time Modification (`GameManageClient.tsx`)**:
+     - Added a dedicated "Bulk Change Time" modal allowing coaches to select multiple substitutions and batch-update their period, minute, and second timestamps in a single action.
+     - Added an inline "Select All at this Time" shortcut to quickly group substitutions executed at the same timestamp.
+- **Modified Files**:
+  - `src/lib/utils/dateTimeUtils.ts`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/game/live/LivePlayerTable.tsx`
+  - `src/components/ui/Dialog.tsx`
+  - `src/components/game/GameManageClient.tsx`
+  - `updates.md`
+
 ### [2026-10-17 08:50] Bulk Schedule Importer Entity Resolution & Subnode Input Readability Fix
 - **Type**: Bug Fix / Data Integrity / UX Architecture
 - **Summary**:
