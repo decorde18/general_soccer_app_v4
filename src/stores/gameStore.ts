@@ -861,8 +861,11 @@ const useGameStore = create<GameStoreState>((set, get) => {
           await get().syncGameStatus();
         }
 
-        // Confirm all pending subs synchronously (0ms delay) on period start
-        await useGameSubsStore.getState().confirmAllPendingSubs();
+        // Confirm all pending subs synchronously (0ms delay) on period start (halftime/break sub, excluded from windows)
+        await useGameSubsStore.getState().confirmAllPendingSubs({
+          isBreak: true,
+          overridePeriod: nextNumber,
+        });
       } catch (error) {
         console.error("Error starting next period:", error);
       }

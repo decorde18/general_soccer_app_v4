@@ -17,11 +17,6 @@ export interface SubEligibilityResult {
   subWindowsCountPeriod?: number;
 }
 
-/**
- * Calculates the number of distinct substitution windows (occasions) used.
- * Multiple substitutions occurring at the exact same stoppage/timestamp (period + sub_time)
- * count as 1 single window. Halftime/pre-game subs (sub_time === 0) are excluded.
- */
 export function calculateSubWindowsUsed(
   teamSubs: SubWindowMinimal[] = [],
   targetPeriod?: number
@@ -30,20 +25,39 @@ export function calculateSubWindowsUsed(
 
   const validSubs = teamSubs.filter((s) => {
     if (s.sub_time === null || s.sub_time === undefined) return false;
-    // Exclude halftime/pre-game subs (sub_time === 0)
-    if (s.sub_time === 0) return false;
+    // Exclude halftime/pre-game subs (sub_time === 0, is_halftime, or is_break)
+    if (s.sub_time === 0 || s.is_halftime || s.is_break) return false;
     const subP = s.period ?? 1;
     if (targetPeriod !== undefined && subP !== targetPeriod) return false;
     return true;
   });
 
-  const uniqueWindows = new Set<string>();
+  if (validSubs.length === 0) return 0;
+
+  // Group subs by period and cluster timestamps within 15 seconds (same stoppage opportunity)
+  const subsByPeriod: Record<number, number[]> = {};
   validSubs.forEach((s) => {
     const subP = s.period ?? 1;
-    uniqueWindows.add(`${subP}-${s.sub_time}`);
+    if (!subsByPeriod[subP]) subsByPeriod[subP] = [];
+    subsByPeriod[subP].push(Number(s.sub_time));
   });
 
-  return uniqueWindows.size;
+  let totalWindows = 0;
+  for (const periodKey of Object.keys(subsByPeriod)) {
+    const times = subsByPeriod[Number(periodKey)].sort((a, b) => a - b);
+    let periodWindows = 0;
+    let lastWindowTime: number | null = null;
+
+    for (const time of times) {
+      if (lastWindowTime === null || Math.abs(time - lastWindowTime) > 15) {
+        periodWindows++;
+        lastWindowTime = time;
+      }
+    }
+    totalWindows += periodWindows;
+  }
+
+  return totalWindows;
 }
 
 export function checkPlayerSubEligibility(

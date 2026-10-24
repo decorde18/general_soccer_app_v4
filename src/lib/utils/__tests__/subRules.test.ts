@@ -153,4 +153,42 @@ describe("checkPlayerSubEligibility", () => {
     expect(gameRes.isEligible).toBe(false);
     expect(gameRes.reason).toContain("Max Sub Windows Reached for Game");
   });
+
+  it("treats batch subs entered together ('Enter All') and subs within 15 seconds as a single window", () => {
+    // 3 subs confirmed simultaneously in 'Enter All' at gameTime 400
+    const enterAllSubs = [
+      { period: 1, sub_time: 400 },
+      { period: 1, sub_time: 400 },
+      { period: 1, sub_time: 400 },
+    ];
+    expect(calculateSubWindowsUsed(enterAllSubs)).toBe(1);
+    expect(calculateSubWindowsUsed(enterAllSubs, 1)).toBe(1);
+
+    // 2 subs confirmed 4 seconds apart during the same stoppage
+    const stoppageClusterSubs = [
+      { period: 1, sub_time: 400 },
+      { period: 1, sub_time: 404 },
+    ];
+    expect(calculateSubWindowsUsed(stoppageClusterSubs)).toBe(1);
+
+    // Sub 800 seconds later is a new window
+    const multipleWindows = [
+      ...stoppageClusterSubs,
+      { period: 1, sub_time: 1200 },
+    ];
+    expect(calculateSubWindowsUsed(multipleWindows)).toBe(2);
+  });
+
+  it("excludes subs marked with is_halftime or is_break from window count", () => {
+    const subsWithBreaks = [
+      { period: 1, sub_time: 300 }, // window 1
+      { period: 2, sub_time: 2400, is_halftime: true }, // halftime sub (excluded)
+      { period: 2, sub_time: 2400, is_break: true }, // period break sub (excluded)
+      { period: 2, sub_time: 3000 }, // window 2
+    ];
+
+    expect(calculateSubWindowsUsed(subsWithBreaks)).toBe(2);
+    expect(calculateSubWindowsUsed(subsWithBreaks, 1)).toBe(1);
+    expect(calculateSubWindowsUsed(subsWithBreaks, 2)).toBe(1);
+  });
 });

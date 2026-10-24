@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import useGamePlayersStore, { Player } from "@/stores/gamePlayersStore";
 import useGameSubsStore, { PendingSub } from "@/stores/gameSubsStore";
 import useGameStore from "@/stores/gameStore";
+import { calculateSubWindowsUsed } from "@/lib/utils/subRules";
 import { toast } from "sonner";
 
 interface UpcomingSubsPanelProps {
@@ -111,6 +112,21 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
     gameStage === gameStore.GAME_STAGES.BETWEEN_PERIODS ||
     gameStage === gameStore.GAME_STAGES.BEFORE_START;
 
+  const storeGame = gameStore.game;
+  const settings = storeGame?.settings;
+  const gameSubs = storeGame?.gameSubs || [];
+  const currentPeriod = (storeGame?.currentPeriodIndex ?? 0) + 1;
+  const windowsGameUsed = calculateSubWindowsUsed(gameSubs);
+  const windowsHalfUsed = calculateSubWindowsUsed(gameSubs, currentPeriod);
+  const maxGame = settings?.maxSubWindowsPerGame;
+  const maxHalf = settings?.maxSubWindowsPerHalf;
+  const isMaxedOut = Boolean(
+    !isPeriodBreak && (
+      (maxGame && windowsGameUsed >= maxGame) ||
+      (maxHalf && windowsHalfUsed >= maxHalf)
+    )
+  );
+
   return (
     <Card variant="outlined" padding="sm" className="flex-1 min-h-0 flex flex-col bg-surface shadow-xs rounded-xl overflow-hidden p-2.5">
       <div className="flex items-center justify-between border-b border-border/40 pb-1 px-1 shrink-0">
@@ -122,6 +138,13 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
           isPeriodBreak ? (
             <span className="text-[8px] font-extrabold uppercase text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
               Auto-enters at Start
+            </span>
+          ) : isMaxedOut ? (
+            <span
+              className="text-[8px] font-extrabold uppercase text-rose-500 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 animate-pulse"
+              title="Maximum substitution windows reached for this half/game"
+            >
+              Max Windows Reached
             </span>
           ) : (
             <button
@@ -161,9 +184,14 @@ export default function UpcomingSubsPanel(props: UpcomingSubsPanelProps) {
                   {!isPeriodBreak && (
                     <button
                       aria-label="Confirm Sub"
-                      onClick={() => onConfirmSingleSub(sub.subId)}
-                      className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[9px] font-bold cursor-pointer transition-colors"
-                      title="Confirm Sub"
+                      disabled={isMaxedOut}
+                      onClick={() => !isMaxedOut && onConfirmSingleSub(sub.subId)}
+                      className={`flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold transition-colors ${
+                        isMaxedOut
+                          ? "bg-slate-300 dark:bg-slate-800 text-muted opacity-50 cursor-not-allowed border border-border"
+                          : "bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer"
+                      }`}
+                      title={isMaxedOut ? "Cannot enter: Maximum substitution windows reached for this half/game." : "Confirm Sub"}
                     >
                       <Check size={10} /> Enter
                     </button>

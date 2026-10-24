@@ -1,3 +1,32 @@
+### [2026-10-24 08:10] Substitution Windows Tracking, Batch Sync & Limit Restriction Enforcement
+- **Type**: Bug Fix / Feature / UX Resilience
+- **Summary**:
+  1. **Sub Windows Real-Time Tracking & Game Store Synchronization (`gameSubsStore.ts`)**:
+     - Resolved the core bug where confirmed substitutions (`confirmSub` and `confirmAllPendingSubs`) never populated or updated `gameStore.game.gameSubs`.
+     - `confirmSub` now synchronously updates both `gameStore.game.pendingSubs` and `gameStore.game.gameSubs`, ensuring that `BenchReservesPanel` and `LivePlayerTable` instantly recalculate `calculateSubWindowsUsed` for the game and half.
+  2. **Batch "Enter All" Single-Window Consolidation (`gameSubsStore.ts`, `subRules.ts`)**:
+     - `confirmAllPendingSubs` now unifies pending substitutions with a single shared timestamp (`batchTime`) and period (`batchPeriod`) across the batch.
+     - `calculateSubWindowsUsed` groups substitutions occurring at the exact same timestamp or within a 15-second stoppage window into a single substitution window (occasion), adhering to soccer rules.
+  3. **Halftime & Period Break Exclusion (`gameSubsStore.ts`, `gameStore.ts`, `subRules.ts`)**:
+     - Substitutions made during inter-period breaks, before match start, or auto-entered at period kickoff are flagged with `is_halftime` / `is_break`.
+     - `calculateSubWindowsUsed` excludes these break substitutions so they never consume in-play substitution windows per half or game.
+  4. **Strict Enforcement & UI Safeguards when Max Windows Reached (`UpcomingSubsPanel.tsx`, `BenchReservesPanel.tsx`, `gameSubsStore.ts`)**:
+     - When `maxSubWindowsPerHalf` or `maxSubWindowsPerGame` limits are reached:
+       - `UpcomingSubsPanel` disables the "Enter" and "Enter All" buttons with clear disabled states and displays a pulsating `Max Windows Reached` badge.
+       - `confirmSub` and `confirmAllPendingSubs` reject additional window creation and notify via toast error.
+       - `LivePlayerTable` marks bench players as "Exhausted" with reasons (e.g. `Max Sub Windows Reached for Half (X/Y Used)`), blocking quick-tap selection without ref override.
+       - `BenchReservesPanel` displays windows used whenever limits are configured or windows have been used (`Windows: X/Y G • A/B H`), pulsing red when maxed out.
+  5. **Dynamic Rollback on Sub Deletion / Cancellation (`gameSubsStore.ts`)**:
+     - `cancelSub` removes deleted substitutions from `gameStore.game.gameSubs`, decrementing windows used dynamically.
+- **Modified Files**:
+  - `src/stores/gameSubsStore.ts`
+  - `src/stores/gameStore.ts`
+  - `src/lib/utils/subRules.ts`
+  - `src/components/game/live/UpcomingSubsPanel.tsx`
+  - `src/components/game/live/BenchReservesPanel.tsx`
+  - `src/lib/utils/__tests__/subRules.test.ts`
+  - `updates.md`
+
 ### [2026-10-19 13:40] Early Period End Confirmation Prompt & Ended Games Pending Subs Deletion
 - **Type**: Feature / UX Safeguard / Data Integrity
 - **Summary**:

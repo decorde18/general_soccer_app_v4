@@ -10,6 +10,8 @@ import useGamePlayersStore, {
 import { apiFetch } from "@/app/api/fetcher";
 import useGameStore from "./gameStore";
 import { saveGameCache, enqueueOfflineAction } from "@/lib/offline/offlineSync";
+import { toast } from "sonner";
+import { calculateSubWindowsUsed } from "@/lib/utils/subRules";
 
 // ==================== TYPES ====================
 
@@ -26,6 +28,8 @@ export interface GameSub {
   period: number;
   gk_sub: 0 | 1;
   is_swap: 0 | 1;
+  is_halftime?: boolean;
+  is_break?: boolean;
 }
 
 /** Partial update payload for updatePendingSub */
@@ -56,6 +60,12 @@ export interface ConfirmAllResult {
   pending?: number;
 }
 
+export interface ConfirmSubOptions {
+  overrideTime?: number;
+  overridePeriod?: number;
+  isBreak?: boolean;
+}
+
 export interface GameSubsState {
   // ---- helpers ----
   getCurrentGoalkeeper: () => Promise<Player | null | undefined>;
@@ -84,8 +94,13 @@ export interface GameSubsState {
     subId: string | number,
     updates: GameSubUpdate,
   ) => Promise<GameSub | null>;
-  confirmSub: (subId: string | number) => Promise<void>;
-  confirmAllPendingSubs: () => Promise<ConfirmAllResult>;
+  confirmSub: (
+    subId: string | number,
+    options?: ConfirmSubOptions,
+  ) => Promise<void>;
+  confirmAllPendingSubs: (
+    options?: ConfirmSubOptions,
+  ) => Promise<ConfirmAllResult>;
   cancelSub: (subId: string | number) => Promise<void>;
   clearAllPendingSubs: (gameId?: string | number) => Promise<void>;
 }
@@ -560,9 +575,39 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
 
   // ==================== CONFIRM SUB ====================
 
-  confirmSub: async (subId) => {
+  confirmSub: async (subId, options) => {
     const gameStore = useGameStore.getState();
-    const gameTime = gameStore.getGameTime();
+    const gameStage = gameStore.getGameStage();
+    const isBreakSub = options?.isBreak ?? (
+      gameStage === gameStore.GAME_STAGES.BETWEEN_PERIODS ||
+      gameStage === gameStore.GAME_STAGES.BEFORE_START
+    );
+    const gameTime = options?.overrideTime !== undefined ? options.overrideTime : gameStore.getGameTime();
+    const subPeriod = options?.overridePeriod !== undefined ? options.overridePeriod : (gameStore.getCurrentPeriodNumber() || 1);
+
+    // Guard sub window limits if not a break sub
+    if (!isBreakSub) {
+      const settings = gameStore.game?.settings;
+      const maxGame = settings?.maxSubWindowsPerGame;
+      const maxHalf = settings?.maxSubWindowsPerHalf;
+      if (maxGame || maxHalf) {
+        const currentSubs = gameStore.game?.gameSubs || [];
+        const windowsGameUsed = calculateSubWindowsUsed(currentSubs);
+        const windowsHalfUsed = calculateSubWindowsUsed(currentSubs, subPeriod);
+
+        const wouldBeNewHalfWindow = calculateSubWindowsUsed([...currentSubs, { period: subPeriod, sub_time: gameTime }], subPeriod) > windowsHalfUsed;
+        const wouldBeNewGameWindow = calculateSubWindowsUsed([...currentSubs, { period: subPeriod, sub_time: gameTime }]) > windowsGameUsed;
+
+        if (maxHalf && windowsHalfUsed >= maxHalf && wouldBeNewHalfWindow) {
+          toast.error(`Maximum substitution windows reached for this half (${windowsHalfUsed}/${maxHalf} used)`);
+          return;
+        }
+        if (maxGame && windowsGameUsed >= maxGame && wouldBeNewGameWindow) {
+          toast.error(`Maximum substitution windows reached for this game (${windowsGameUsed}/${maxGame} used)`);
+          return;
+        }
+      }
+    }
 
     const playersStore = useGamePlayersStore.getState();
     const calculateFieldStatus = playersStore.calculateFieldStatus;
@@ -571,11 +616,11 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
     playersStore.setPlayers(
       playersStore.players.map((player) => {
         const updatedIns = (player.ins || []).map((s) =>
-          String(s.subId) === String(subId) ? { ...s, gameTime } : s,
+          String(s.subId) === String(subId) ? { ...s, gameTime, period: subPeriod } : s,
         );
 
         const updatedOuts = (player.outs || []).map((s) =>
-          String(s.subId) === String(subId) ? { ...s, gameTime } : s,
+          String(s.subId) === String(subId) ? { ...s, gameTime, period: subPeriod } : s,
         );
 
         const hasUpdatedIn = updatedIns.some(
@@ -629,10 +674,46 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
       playersStore.calculateAndUpdatePlusMinus(targetGameId);
     }
 
-    // Update pendingSubs in gameStore
+    // Lookup sub details to update gameStore.gameSubs
     const currentPending = gameStore.game?.pendingSubs || [];
+    const targetPendingSub = currentPending.find((s) => String(s.id) === String(subId));
+    const inPlayer = playersStore.players.find((p) => (p.ins || []).some((s) => String(s.subId) === String(subId)));
+    const outPlayer = playersStore.players.find((p) => (p.outs || []).some((s) => String(s.subId) === String(subId)));
+
+    const inPlayerId = targetPendingSub?.in_player_id ?? (inPlayer?.playerGameId || null);
+    const outPlayerId = targetPendingSub?.out_player_id ?? (outPlayer?.playerGameId || null);
+    const isGk = Boolean(targetPendingSub?.gk_sub || inPlayer?.gameStatus === "goalkeeper" || outPlayer?.gameStatus === "goalkeeper");
+
+    const confirmedSub: any = {
+      id: subId,
+      game_id: targetGameId || 0,
+      in_player_id: inPlayerId,
+      out_player_id: outPlayerId,
+      sub_time: gameTime,
+      period: subPeriod,
+      gk_sub: isGk ? 1 : 0,
+      is_swap: (targetPendingSub as any)?.is_swap ? 1 : 0,
+      is_halftime: isBreakSub,
+      is_break: isBreakSub,
+    };
+
+    // Update pendingSubs and gameSubs in gameStore
     const updatedPending = currentPending.filter((s) => String(s.id) !== String(subId));
-    gameStore.updateGame({ pendingSubs: updatedPending as any });
+    const currentConfirmed = gameStore.game?.gameSubs || [];
+    const existingIndex = currentConfirmed.findIndex((s) => String(s.id) === String(subId));
+    let updatedGameSubs: any[];
+    if (existingIndex >= 0) {
+      updatedGameSubs = currentConfirmed.map((s, idx) =>
+        idx === existingIndex ? { ...s, ...confirmedSub } : s
+      );
+    } else {
+      updatedGameSubs = [...currentConfirmed, confirmedSub];
+    }
+
+    gameStore.updateGame({
+      pendingSubs: updatedPending as any,
+      gameSubs: updatedGameSubs,
+    });
 
     // Save instant cache snapshot to localStorage
     if (gameStore.game) {
@@ -647,10 +728,12 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
     if (!String(subId).startsWith("temp_")) {
       apiFetch(`game_subs?id=${subId}`, "PUT", {
         sub_time: gameTime,
+        period: subPeriod,
       }).catch((error) => {
         console.warn("Background sub confirmation error, queued for sync:", error);
         enqueueOfflineAction("substitution", `game_subs?id=${subId}`, "PUT", {
           sub_time: gameTime,
+          period: subPeriod,
         });
       });
     }
@@ -658,18 +741,55 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
 
   // ==================== CONFIRM ALL PENDING SUBS ====================
 
-  confirmAllPendingSubs: async () => {
+  confirmAllPendingSubs: async (options) => {
+    const gameStore = useGameStore.getState();
     const pendingSubs = get().getPendingSubsSync();
 
     if (pendingSubs.length === 0) {
       return { confirmed: 0, errors: [] };
     }
 
+    const gameStage = gameStore.getGameStage();
+    const isBreakSub = options?.isBreak ?? (
+      gameStage === gameStore.GAME_STAGES.BETWEEN_PERIODS ||
+      gameStage === gameStore.GAME_STAGES.BEFORE_START
+    );
+    const batchTime = options?.overrideTime !== undefined ? options.overrideTime : gameStore.getGameTime();
+    const batchPeriod = options?.overridePeriod !== undefined ? options.overridePeriod : (gameStore.getCurrentPeriodNumber() || 1);
+
+    // Guard sub window limits if not a break sub
+    if (!isBreakSub) {
+      const settings = gameStore.game?.settings;
+      const maxGame = settings?.maxSubWindowsPerGame;
+      const maxHalf = settings?.maxSubWindowsPerHalf;
+      if (maxGame || maxHalf) {
+        const currentSubs = gameStore.game?.gameSubs || [];
+        const windowsGameUsed = calculateSubWindowsUsed(currentSubs);
+        const windowsHalfUsed = calculateSubWindowsUsed(currentSubs, batchPeriod);
+
+        const wouldBeNewHalfWindow = calculateSubWindowsUsed([...currentSubs, { period: batchPeriod, sub_time: batchTime }], batchPeriod) > windowsHalfUsed;
+        const wouldBeNewGameWindow = calculateSubWindowsUsed([...currentSubs, { period: batchPeriod, sub_time: batchTime }]) > windowsGameUsed;
+
+        if (maxHalf && windowsHalfUsed >= maxHalf && wouldBeNewHalfWindow) {
+          toast.error(`Maximum substitution windows reached for this half (${windowsHalfUsed}/${maxHalf} used)`);
+          return { confirmed: 0, errors: ["Max windows reached for half"] };
+        }
+        if (maxGame && windowsGameUsed >= maxGame && wouldBeNewGameWindow) {
+          toast.error(`Maximum substitution windows reached for this game (${windowsGameUsed}/${maxGame} used)`);
+          return { confirmed: 0, errors: ["Max windows reached for game"] };
+        }
+      }
+    }
+
     const subIds = pendingSubs.map((sub) => sub.subId);
 
-    // Confirm all pending subs sequentially to prevent state race conditions
+    // Confirm all pending subs in this batch with shared timestamp and period
     for (const id of subIds) {
-      await get().confirmSub(id);
+      await get().confirmSub(id, {
+        overrideTime: batchTime,
+        overridePeriod: batchPeriod,
+        isBreak: isBreakSub,
+      });
     }
 
     return { confirmed: subIds.length, errors: [] };
@@ -740,13 +860,14 @@ const useGameSubsStore = create<GameSubsState>()((set, get) => ({
         }),
       );
 
-      // Also clean up gameStore.pendingSubs
+      // Clean up gameStore.pendingSubs and gameStore.gameSubs
       const gameStore = useGameStore.getState();
-      if (gameStore.game?.pendingSubs) {
-        gameStore.updateGame({
-          pendingSubs: gameStore.game.pendingSubs.filter((s: any) => String(s.id) !== String(subId)),
-        });
-      }
+      const currentPending = gameStore.game?.pendingSubs || [];
+      const currentConfirmed = gameStore.game?.gameSubs || [];
+      gameStore.updateGame({
+        pendingSubs: currentPending.filter((s: any) => String(s.id) !== String(subId)),
+        gameSubs: currentConfirmed.filter((s: any) => String(s.id) !== String(subId)),
+      });
 
       console.log(`Cancelled sub ${subId}`);
     } catch (error) {

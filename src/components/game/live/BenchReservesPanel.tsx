@@ -159,7 +159,7 @@ export default function BenchReservesPanel(props: BenchReservesPanelProps) {
           <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
           <span>Game Changers (Bench Reserves) ({gameChangers.length})</span>
         </h3>
-        {hasSubWindowLimits && (
+        {(hasSubWindowLimits || windowsGameUsed > 0) && (
           <span
             className={`text-[9px] font-bold px-2 py-0.5 rounded border font-mono ${
               isMaxedOut
