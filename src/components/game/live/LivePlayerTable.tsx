@@ -157,6 +157,9 @@ export default function LivePlayerTable({
     storeGame?.status === "scheduled" ||
     (storeGame && storeStage === GAME_STAGES.BEFORE_START);
   const isBetweenPeriods = storeStage === GAME_STAGES.BETWEEN_PERIODS;
+  const targetPeriod = isBetweenPeriods
+    ? (storeGame?.currentPeriodIndex ?? 0) + 2
+    : (storeGame?.currentPeriodIndex ?? 0) + 1;
 
   return (
     <div className="border border-border/60 bg-background/25 rounded-lg p-1">
@@ -198,7 +201,14 @@ export default function LivePlayerTable({
             const isRedCarded = stats.redCards > 0 || stats.yellowCards >= 2;
 
             const eligibility = isBench
-              ? checkPlayerSubEligibility(player, gameSettings, currentPeriod, overridePlayerIds, storeGame?.gameSubs || [])
+              ? checkPlayerSubEligibility(
+                  player,
+                  gameSettings,
+                  targetPeriod,
+                  overridePlayerIds,
+                  storeGame?.gameSubs || [],
+                  isBetweenPeriods
+                )
               : { isEligible: true, reason: undefined };
 
             const isExhausted = isBench && !eligibility.isEligible;

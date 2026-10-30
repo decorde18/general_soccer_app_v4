@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Wifi, WifiOff, Menu, Zap } from "lucide-react";
+import { Wifi, WifiOff, Menu, Zap, Loader2 } from "lucide-react";
 import { formatSecondsToMmss } from "@/lib/utils/dateTimeUtils";
 import { formatTeamName } from "@/lib/utils/teamName";
 import useGameStore from "@/stores/gameStore";
@@ -54,6 +54,7 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
   const [clockMode, setClockMode] = useState<"period" | "match">("period");
   const [showEarlyEndConfirm, setShowEarlyEndConfirm] = useState(false);
   const [isEndingPeriod, setIsEndingPeriod] = useState(false);
+  const [isClockActionPending, setIsClockActionPending] = useState(false);
 
   // Local timer tick for smooth scoreboard clock
   const [storeGameTimeSeconds, setStoreGameTimeSeconds] = useState<number>(0);
@@ -190,6 +191,18 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
   };
 
   const onTogglePeriodClock = props.onTogglePeriodClock ?? handleDefaultToggleClock;
+
+  const handleClockButtonClick = async () => {
+    if (isClockActionPending || isEndingPeriod) return;
+    setIsClockActionPending(true);
+    try {
+      await onTogglePeriodClock();
+    } catch (err: any) {
+      toast.error("Clock action error: " + (err?.message || "Unknown error"));
+    } finally {
+      setIsClockActionPending(false);
+    }
+  };
 
   const currentPeriodNum = (game?.currentPeriodIndex ?? 0) + 1;
   const nextPeriodNum = currentStage === GAME_STAGES.BEFORE_START ? 1 : currentPeriodNum + 1;
@@ -368,11 +381,23 @@ export default function BroadcastScoreboard(props: BroadcastScoreboardProps) {
 
           {currentStage !== GAME_STAGES.END_GAME && (
             <button
-              onClick={onTogglePeriodClock}
-              disabled={isClockButtonDisabled || isEndingPeriod}
-              className="h-6 py-0 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-[10px] font-black shadow-xs disabled:opacity-50 transition-colors cursor-pointer uppercase tracking-wide"
+              onClick={handleClockButtonClick}
+              disabled={isClockButtonDisabled || isEndingPeriod || isClockActionPending}
+              className="h-6 py-0 px-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-800/60 text-white rounded text-[10px] font-black shadow-xs disabled:opacity-60 transition-colors cursor-pointer uppercase tracking-wide flex items-center gap-1.5"
             >
-              {getClockButtonText()}
+              {isClockActionPending ? (
+                <>
+                  <Loader2 size={11} className="animate-spin shrink-0" />
+                  <span>Updating...</span>
+                </>
+              ) : isEndingPeriod ? (
+                <>
+                  <Loader2 size={11} className="animate-spin shrink-0" />
+                  <span>Ending Period...</span>
+                </>
+              ) : (
+                getClockButtonText()
+              )}
             </button>
           )}
         </div>

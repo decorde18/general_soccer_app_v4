@@ -1,3 +1,33 @@
+### [2026-10-29 12:00] Clock Actions Disable State, Halftime Sub Eligibility, Game Scheduler Prefill Guards, PK Goal Recording Fix & Match Shift Durations Tab
+- **Type**: Bug Fix / Feature / UX Resilience
+- **Summary**:
+  1. **Clock Action Button Disabled & Spinner State (`BroadcastScoreboard.tsx`)**:
+     - Added `isClockActionPending` state and wrapped period clock toggling (`handleClockButtonClick`) in try/finally to prevent duplicate clicks.
+     - Disables button and displays inline spinner (`<Loader2 className="animate-spin" />`) with dynamic label (`"Updating..."` / `"Ending Period..."`) during clock changes (Start Match, Start/End Period, Resume Clock).
+  2. **Exhausted Subs Not Carrying Over to Halftime (`subRules.ts`, `LivePlayerTable.tsx`, `MajorEventModal.tsx`)**:
+     - Updated sub eligibility checking to recognize period breaks (`isPeriodBreak`). Break/halftime substitutions are exempt from sub window limits per half and game.
+     - When at halftime (`storeStage === GAME_STAGES.BETWEEN_PERIODS`), sub eligibility is evaluated for the upcoming period (`currentPeriodIndex + 2`), ensuring players who subbed out in Period 1 under `one_per_half` or NCAA rules are not marked "Exhausted" and can be queued for the second half.
+  3. **Game Scheduler Primary Team Prefilling Guard (`GameSchedulerModal.tsx`)**:
+     - Added `isLoadingOptions` and `isPrefillingDefaults` (`isPrefillingPrimaryTeam`) state to track initial data load and asynchronous latest game defaults resolution.
+     - Disables Primary Team dropdown, tab switching, and Next Step / Schedule Match buttons while defaults are prefilling, showing an inline pulsating loader (`"Prefilling team defaults..."`) to prevent race conditions.
+  4. **Penalty Kick Goal Direct Recording & Infinite Spinner Fix (`MajorEventModal.tsx`)**:
+     - Resolved the bug where selecting Penalty Kick Result = `"goal"` previously redirected to the Goal form with an un-reset `isSubmitting: true` flag, locking the form into an infinite spinning state.
+     - `handlePkSubmit` now directly logs both the penalty kick and goal event (optimistically updating match score and stores, and persisting to `/api/game_events_major`, `/api/game_events_goals`, and `/api/game_events_penalties`), immediately closing the modal with zero UI delay.
+  5. **Game Summary Shift Durations & Stints Tab (`PlayerShiftsTab.tsx`, `GameSummaryClient.tsx`)**:
+     - Added a dedicated 4th tab to Game Summary: **"Shift Durations & Stints"**.
+     - Features team-wide KPI cards (players used, total shifts, avg shift length, longest shift), role & player search filters, and an interactive **Moment-in-Time Match Clock Inspector** slider showing exact on-field and bench lineups with current stint/rest times at any chosen second.
+     - Renders an interactive visual Gantt timeline track per player with period markers, plus an expandable chronological breakdown of every on-field shift and bench recovery stint with exact start/end clocks and durations.
+- **Modified Files**:
+  - `src/components/game/live/BroadcastScoreboard.tsx`
+  - `src/lib/utils/subRules.ts`
+  - `src/components/game/live/LivePlayerTable.tsx`
+  - `src/components/game/live/MajorEventModal.tsx`
+  - `src/components/dashboard/GameSchedulerModal.tsx`
+  - `src/components/game/PlayerShiftsTab.tsx`
+  - `src/components/game/GameSummaryClient.tsx`
+  - `src/lib/utils/__tests__/subRules.test.ts`
+  - `updates.md`
+
 ### [2026-10-24 08:10] Substitution Windows Tracking, Batch Sync & Limit Restriction Enforcement
 - **Type**: Bug Fix / Feature / UX Resilience
 - **Summary**:

@@ -252,7 +252,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     (p) => p.fieldStatus === "onBench"
   );
 
-  const currentPeriodNum = (game?.currentPeriodIndex || 0) + 1;
+  const gameStage = useGameStore.getState().getGameStage();
+  const isPeriodBreak =
+    gameStage === useGameStore.getState().GAME_STAGES.BETWEEN_PERIODS ||
+    gameStage === useGameStore.getState().GAME_STAGES.BEFORE_START;
+  const currentPeriodNum = isPeriodBreak && gameStage === useGameStore.getState().GAME_STAGES.BETWEEN_PERIODS
+    ? (game?.currentPeriodIndex || 0) + 2
+    : (game?.currentPeriodIndex || 0) + 1;
 
   const scorerOptions = onFieldPlayers
     .filter((p) => String(p.id) !== goalAssistId)
@@ -286,7 +292,14 @@ export default function MajorEventModal(props: MajorEventModalProps) {
   // Player IN Options with Exhausted Filtering & Rule Override
   const subInOptions = benchPlayers
     .map((p) => {
-      const eligibility = checkPlayerSubEligibility(p, game?.settings, currentPeriodNum, new Set(), game?.gameSubs || []);
+      const eligibility = checkPlayerSubEligibility(
+        p,
+        game?.settings,
+        currentPeriodNum,
+        new Set(),
+        game?.gameSubs || [],
+        isPeriodBreak
+      );
       return { player: p, eligibility };
     })
     .filter(({ eligibility }) => allowExhaustedOverride || eligibility.isEligible)
@@ -997,22 +1010,6 @@ export default function MajorEventModal(props: MajorEventModalProps) {
     const isOpp = teamTarget === "opp";
     const taker = players.find((p) => String(p.id) === pkTakerId || String(p.playerGameId) === pkTakerId);
 
-    // 1. GOAL OUTCOME: Route to Goal modal pre-populated with PK Taker & Method
-    if (pkOutcome === "goal") {
-      if (!isOpp && taker) {
-        setGoalScorerId(String(taker.id));
-      } else if (isOpp && oppPkTakerJersey) {
-        setOppScorerJersey(oppPkTakerJersey);
-      }
-      setTeamTarget(teamTarget);
-      setSelectedMethods(new Set(["direct_free_kick"]));
-      setGoalNotes(pkNotes || "Penalty Kick Goal");
-      setEventType("goal");
-      toast.info("Penalty Kick Goal selected — Complete Goal details below.");
-      return;
-    }
-
-    // 2. SAVE OR MISS OUTCOME: True 0ms optimistic update and immediate return to match console
     try {
       const gameTimeSeconds = liveSeconds || useGameStore.getState().getGameTime();
       const ourTeamSeasonId = game.teamSeasonId || (game.isHome ? game.home_team_season_id : game.away_team_season_id);
@@ -1040,7 +1037,26 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         };
       }
 
-      // 1. Synchronously log penalty and major event to store (0ms UI latency)
+      // Goal event object when PK outcome is 'goal'
+      let goalEventObj: any = null;
+      if (pkOutcome === "goal") {
+        const tempGoalId = `temp_goal_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        goalEventObj = {
+          id: tempGoalId,
+          major_event_id: tempMajorId,
+          team_season_id: Number(teamSeasonVal),
+          scorer_player_game_id: takerPgId,
+          assist_player_game_id: null,
+          defending_gk_player_game_id: defendingGkPlayerGameId,
+          opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
+          is_own_goal: false,
+          goal_types: JSON.stringify(["penalty_kick"]),
+          game_time: gameTimeSeconds,
+          period: game.currentPeriodIndex + 1,
+        };
+      }
+
+      // 1. Synchronously log penalty, major event, and goal event to store (0ms UI latency)
       useGameStore.getState().addPenaltyEvent(
         {
           id: tempPkId,
@@ -1061,13 +1077,13 @@ export default function MajorEventModal(props: MajorEventModalProps) {
           start_time: Date.now(),
           end_time: stopClock ? null : gameTimeSeconds,
         } as any,
-        null,
+        goalEventObj,
         saveActionObj as any
       );
 
       // Also synchronously log shooter action if our player
       if (!isOpp && takerPgId) {
-        const actionType = pkOutcome === "saved" ? "shot" : "shot_off_target";
+        const actionType = pkOutcome === "saved" ? "shot" : (pkOutcome === "missed" ? "shot_off_target" : "shot");
         const tempActionId = `temp_act_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
         useGameStore.getState().addPlayerAction({
           id: tempActionId,
@@ -1090,16 +1106,20 @@ export default function MajorEventModal(props: MajorEventModalProps) {
         useGamePlayersStore.getState().players
       );
 
-      toast.success(`Penalty Kick (${pkOutcome.toUpperCase()}) recorded!`);
+      toast.success(
+        pkOutcome === "goal"
+          ? "Penalty Kick Goal recorded! ⚽"
+          : `Penalty Kick (${pkOutcome.toUpperCase()}) recorded!`
+      );
 
-      // Immediately return to match console without sub prompt interruptions or delay
+      // Immediately return to match console without delay
       onClose();
 
       // 2. Background Persistence (Non-blocking)
       (async () => {
         try {
           if (!isOpp && takerPgId) {
-            const actionType = pkOutcome === "saved" ? "shot" : "shot_off_target";
+            const actionType = pkOutcome === "saved" ? "shot" : (pkOutcome === "missed" ? "shot_off_target" : "shot");
             fetch("/api/game_events_player_actions", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1127,6 +1147,31 @@ export default function MajorEventModal(props: MajorEventModalProps) {
             }).catch((err) => console.error("Error persisting PK GK save action:", err));
           }
 
+          // If goal, persist goal record
+          let createdGoalId: number | null = null;
+          if (pkOutcome === "goal") {
+            try {
+              const goalRes = await fetch(`/api/game_events_goals`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  team_season_id: Number(teamSeasonVal),
+                  scorer_player_game_id: takerPgId,
+                  assist_player_game_id: null,
+                  defending_gk_player_game_id: defendingGkPlayerGameId,
+                  opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
+                  is_own_goal: false,
+                  goal_types: JSON.stringify(["penalty_kick"]),
+                }),
+              }).then((r) => r.json());
+              if (goalRes?.id) {
+                createdGoalId = Number(goalRes.id);
+              }
+            } catch (goalErr) {
+              console.error("Error persisting PK goal event:", goalErr);
+            }
+          }
+
           const majorRes = await fetch(`/api/game_events_major`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1151,6 +1196,7 @@ export default function MajorEventModal(props: MajorEventModalProps) {
                 shooter_player_game_id: takerPgId,
                 opponent_jersey_number: isOpp && oppPkTakerJersey ? Number(oppPkTakerJersey) : null,
                 outcome: pkOutcome,
+                goal_id: createdGoalId,
               }),
             });
           }
@@ -1160,6 +1206,8 @@ export default function MajorEventModal(props: MajorEventModalProps) {
       })();
     } catch (err: any) {
       toast.error("Failed to record penalty kick: " + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

@@ -191,4 +191,48 @@ describe("checkPlayerSubEligibility", () => {
     expect(calculateSubWindowsUsed(subsWithBreaks, 1)).toBe(1);
     expect(calculateSubWindowsUsed(subsWithBreaks, 2)).toBe(1);
   });
+
+  it("does not carry over 1st period exhaustion to halftime/period break (sub windows and re-entry)", () => {
+    const playerWithP1Out = createMockPlayer({
+      outs: [{ gameTime: 1200, subId: 1, gkSub: false, period: 1 }],
+    });
+
+    // In Period 1, player is exhausted under one_per_half
+    const p1Res = checkPlayerSubEligibility(
+      playerWithP1Out,
+      { ...baseSettings, reentryRule: "one_per_half" },
+      1,
+      new Set(),
+      [],
+      false
+    );
+    expect(p1Res.isEligible).toBe(false);
+
+    // At halftime targeting Period 2 with isPeriodBreak = true, player is eligible for the second half
+    const halftimeRes = checkPlayerSubEligibility(
+      playerWithP1Out,
+      { ...baseSettings, reentryRule: "one_per_half" },
+      2,
+      new Set(),
+      [],
+      true
+    );
+    expect(halftimeRes.isEligible).toBe(true);
+
+    // At halftime, even if game or half sub windows were maxed out in P1, halftime break subs are exempt
+    const maxedSubsP1 = [
+      { period: 1, sub_time: 300 },
+      { period: 1, sub_time: 600 },
+    ];
+    const windowExemptRes = checkPlayerSubEligibility(
+      playerWithP1Out,
+      { ...baseSettings, reentryRule: "unlimited", maxSubWindowsPerHalf: 2, maxSubWindowsPerGame: 2 },
+      2,
+      new Set(),
+      maxedSubsP1,
+      true // isPeriodBreak
+    );
+    expect(windowExemptRes.isEligible).toBe(true);
+  });
 });
+

@@ -16,6 +16,7 @@ import {
   Shield,
   Search,
   X,
+  Loader2,
 } from "lucide-react";
 import {
   createGame,
@@ -164,39 +165,54 @@ export default function GameSchedulerModal({
   // Inline Creation Sub-Modal State
   const [inlineModalType, setInlineModalType] = useState<InlineEntityType | null>(null);
 
+  // Loading & prefilling states
+  const [isLoadingOptions, setIsLoadingOptions] = useState<boolean>(true);
+  const [isPrefillingDefaults, setIsPrefillingDefaults] = useState<boolean>(false);
+  const isPrefillingPrimaryTeam = isLoadingOptions || isPrefillingDefaults;
+
   // Load scheduler options & venues on mount
   useEffect(() => {
+    setIsLoadingOptions(true);
     getVenueOptions().then(setVenues);
 
-    getSchedulerOptions().then((opts) => {
-      setSeasons(opts.seasons);
-      setClubs(opts.clubs);
-      setTeams(opts.teams);
-      setLeagueNodes(opts.leagueNodes);
-      setEnrollments(opts.enrollments);
-      setAgeGroups(opts.ageGroups);
-      setTimezones(opts.timezones);
+    getSchedulerOptions()
+      .then((opts) => {
+        setSeasons(opts.seasons);
+        setClubs(opts.clubs);
+        setTeams(opts.teams);
+        setLeagueNodes(opts.leagueNodes);
+        setEnrollments(opts.enrollments);
+        setAgeGroups(opts.ageGroups);
+        setTimezones(opts.timezones);
 
-      if (opts.seasons.length > 0) setSeasonId(opts.seasons[0].id);
-      if (defaultHomeTeamSeasonId) setMyTeamSeasonId(defaultHomeTeamSeasonId);
-    });
+        if (opts.seasons.length > 0) setSeasonId(opts.seasons[0].id);
+        if (defaultHomeTeamSeasonId) setMyTeamSeasonId(defaultHomeTeamSeasonId);
+      })
+      .finally(() => {
+        setIsLoadingOptions(false);
+      });
   }, [defaultHomeTeamSeasonId]);
 
   // Inherit match format, duration, venue defaults from primary team's latest game
   useEffect(() => {
     if (myTeamSeasonId) {
-      getLatestGameDefaults(Number(myTeamSeasonId)).then((defaults) => {
-        if (defaults) {
-          if (defaults.gameType) setGameType(defaults.gameType as any);
-          if (defaults.locationId) setLocationId(defaults.locationId);
-          if (defaults.sublocationId) setSublocationId(defaults.sublocationId);
-          setGameRules((prev) => ({
-            ...prev,
-            playersOnField: defaults.playersOnField || prev.playersOnField,
-            periodDuration: defaults.periodDuration ? defaults.periodDuration * 60 : prev.periodDuration,
-          }));
-        }
-      });
+      setIsPrefillingDefaults(true);
+      getLatestGameDefaults(Number(myTeamSeasonId))
+        .then((defaults) => {
+          if (defaults) {
+            if (defaults.gameType) setGameType(defaults.gameType as any);
+            if (defaults.locationId) setLocationId(defaults.locationId);
+            if (defaults.sublocationId) setSublocationId(defaults.sublocationId);
+            setGameRules((prev) => ({
+              ...prev,
+              playersOnField: defaults.playersOnField || prev.playersOnField,
+              periodDuration: defaults.periodDuration ? defaults.periodDuration * 60 : prev.periodDuration,
+            }));
+          }
+        })
+        .finally(() => {
+          setIsPrefillingDefaults(false);
+        });
     }
   }, [myTeamSeasonId]);
 
@@ -507,17 +523,27 @@ export default function GameSchedulerModal({
                   variant="primary"
                   size="sm"
                   onClick={handleNextTab}
+                  disabled={isPrefillingPrimaryTeam}
                   className="inline-flex items-center gap-1.5"
                 >
-                  <span>Next Step</span>
-                  <ArrowRight size={14} />
+                  {isPrefillingPrimaryTeam ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Loading Team...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Next Step</span>
+                      <ArrowRight size={14} />
+                    </>
+                  )}
                 </Button>
               ) : requiresOverride ? (
                 <Button
                   variant="danger"
                   size="sm"
                   onClick={() => handleSubmit(true)}
-                  disabled={isPending}
+                  disabled={isPending || isPrefillingPrimaryTeam}
                   className="inline-flex items-center gap-1.5"
                 >
                   <AlertTriangle size={14} />
@@ -528,7 +554,7 @@ export default function GameSchedulerModal({
                   variant="primary"
                   size="sm"
                   onClick={() => handleSubmit(false)}
-                  disabled={isPending}
+                  disabled={isPending || isPrefillingPrimaryTeam}
                   className="inline-flex items-center gap-1.5"
                 >
                   <CheckCircle size={15} />
@@ -545,6 +571,7 @@ export default function GameSchedulerModal({
             tabs={TABS}
             activeTab={activeTab}
             onTabChange={(t) => {
+              if (isPrefillingPrimaryTeam) return;
               if (activeTab === "teams" && t !== "teams" && !validateStep1()) return;
               if (activeTab === "competitions" && t !== "teams" && t !== "competitions" && !validateStep2()) return;
               setActiveTab(t);
@@ -582,18 +609,27 @@ export default function GameSchedulerModal({
 
               {/* Primary Team Selection & Home/Away Toggle */}
               <div className="p-3 bg-background/60 border border-border rounded-2xl space-y-2.5">
-                <label className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-1.5">
-                  <Shield size={14} className="text-primary" />
-                  <span>Primary Team Selection</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-1.5">
+                    <Shield size={14} className="text-primary" />
+                    <span>Primary Team Selection</span>
+                  </label>
+                  {isPrefillingPrimaryTeam && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary animate-pulse">
+                      <Loader2 size={12} className="animate-spin" />
+                      <span>{isLoadingOptions ? "Loading teams..." : "Prefilling team defaults..."}</span>
+                    </span>
+                  )}
+                </div>
 
                 <Select
                   value={myTeamSeasonId}
                   onChange={(e: any) => setMyTeamSeasonId(e.target.value ? Number(e.target.value) : "")}
                   options={teams.map((t) => ({ value: t.teamSeasonId, label: t.displayName }))}
-                  placeholder="Select Primary Team..."
+                  placeholder={isLoadingOptions ? "Loading teams..." : "Select Primary Team..."}
                   showPlaceholder={true}
                   width="full"
+                  disabled={isLoadingOptions}
                 />
 
                 {/* Home/Away Toggle Component directly under team selection */}

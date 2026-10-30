@@ -65,7 +65,8 @@ export function checkPlayerSubEligibility(
   settings?: GameSettings,
   currentPeriodNumber: number = 1,
   overridePlayerIds: Set<string | number> = new Set(),
-  teamSubs?: SubWindowMinimal[]
+  teamSubs?: SubWindowMinimal[],
+  isPeriodBreak: boolean = false
 ): SubEligibilityResult {
   const outs = player.outs || [];
   const outsCountTotal = outs.length;
@@ -102,10 +103,11 @@ export function checkPlayerSubEligibility(
   }
 
   // SUB WINDOW LIMIT CHECKS (Per Game & Per Half)
+  // Break substitutions (e.g. halftime) do not consume a window and are exempt from window limits
   const maxWindowsHalf = settings?.maxSubWindowsPerHalf;
   const maxWindowsGame = settings?.maxSubWindowsPerGame;
 
-  if (maxWindowsHalf && maxWindowsHalf > 0 && subWindowsCountPeriod >= maxWindowsHalf) {
+  if (!isPeriodBreak && maxWindowsHalf && maxWindowsHalf > 0 && subWindowsCountPeriod >= maxWindowsHalf) {
     return {
       isEligible: false,
       reason: `Max Sub Windows Reached for Half (${subWindowsCountPeriod}/${maxWindowsHalf} Used)`,
@@ -117,7 +119,7 @@ export function checkPlayerSubEligibility(
     };
   }
 
-  if (maxWindowsGame && maxWindowsGame > 0 && subWindowsCountTotal >= maxWindowsGame) {
+  if (!isPeriodBreak && maxWindowsGame && maxWindowsGame > 0 && subWindowsCountTotal >= maxWindowsGame) {
     return {
       isEligible: false,
       reason: `Max Sub Windows Reached for Game (${subWindowsCountTotal}/${maxWindowsGame} Used)`,

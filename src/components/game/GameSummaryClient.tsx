@@ -23,7 +23,9 @@ import {
   UserX,
   Ban,
   Bandage,
+  Timer,
 } from "lucide-react";
+import PlayerShiftsTab from "./PlayerShiftsTab";
 import { Card } from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -75,8 +77,8 @@ export default function GameSummaryClient() {
   const calculateAllGoalkeeperTime = useGamePlayerTimeStore((s) => s.calculateAllGoalkeeperTime);
   const isPlayerOnFieldAtTime = useGamePlayerTimeStore((s) => s.isPlayerOnFieldAtTime);
 
-  // Tab State: "boxscore" | "majorevents" | "playbyplay"
-  const [activeTab, setActiveTab] = useState<"boxscore" | "majorevents" | "playbyplay">("boxscore");
+  // Tab State: "boxscore" | "majorevents" | "playbyplay" | "shifts"
+  const [activeTab, setActiveTab] = useState<"boxscore" | "majorevents" | "playbyplay" | "shifts">("boxscore");
 
   // Selected Event Popup Modal State
   const [selectedEvent, setSelectedEvent] = useState<UnifiedPlayEvent | null>(null);
@@ -1227,6 +1229,18 @@ export default function GameSummaryClient() {
               {playByPlayEvents.length}
             </span>
           </button>
+
+          <button
+            onClick={() => setActiveTab("shifts")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer ${
+              activeTab === "shifts"
+                ? "bg-primary text-white shadow-xs"
+                : "bg-surface text-muted hover:text-text hover:bg-background/80"
+            }`}
+          >
+            <Timer size={15} />
+            <span>Shift Durations & Stints</span>
+          </button>
         </div>
       </div>
 
@@ -1877,6 +1891,11 @@ export default function GameSummaryClient() {
             </div>
           )}
         </div>
+      )}
+
+      {/* TAB 4: SHIFT DURATIONS & PLAYING STINTS VIEW */}
+      {activeTab === "shifts" && (
+        <PlayerShiftsTab game={game} players={players} />
       )}
 
       {/* EVENT DETAILS POPUP MODAL */}
