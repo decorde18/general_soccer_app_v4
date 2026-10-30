@@ -6,7 +6,7 @@ import { toast } from "sonner";
 export interface QueuedOfflineAction {
   id: string;
   timestamp: number;
-  type: "goal" | "discipline" | "substitution" | "player_action" | "team_event" | "period_change";
+  type: "goal" | "discipline" | "substitution" | "player_action" | "player_game" | "team_event" | "period_change";
   endpoint: string;
   method: "POST" | "PUT" | "DELETE";
   payload: any;
@@ -59,6 +59,34 @@ export function enqueueOfflineAction(
   }
 
   return newAction;
+}
+
+/**
+ * Persist an entity mutation either immediately via API if online, or queue for offline sync.
+ */
+export async function enqueueOfflineMutation(
+  table: string,
+  method: QueuedOfflineAction["method"],
+  payload: any
+): Promise<void> {
+  const isOnline = typeof navigator !== "undefined" ? (!isSimulatedOfflineMode() && navigator.onLine) : true;
+  const targetId = payload?.id;
+  const endpoint = targetId ? `${table}?id=${targetId}` : table;
+
+  if (isOnline) {
+    try {
+      const res = await fetch(`/api/${endpoint}`, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) return;
+    } catch (err) {
+      console.warn(`[enqueueOfflineMutation] Fetch failed for ${table}, saving to offline queue:`, err);
+    }
+  }
+
+  enqueueOfflineAction("player_game", endpoint, method, payload);
 }
 
 /**

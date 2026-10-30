@@ -86,7 +86,12 @@ export interface Player {
   // Time tracking
   goalkeeperTime: number;
   plusMinus: number;
+  onFieldTime?: number;
+  playing_time_seconds?: number;
+  plus_minus?: number;
 }
+
+export type GamePlayer = Player;
 
 /** Row shape from the `v_player_games` view (and the synthetic rows we build for newly-created players) */
 interface PlayerGameRow {
@@ -108,6 +113,8 @@ interface PlayerGameRow {
   home_away: "home" | "away";
   created_at: string | null;
   modified_at: string | null;
+  playing_time_seconds?: number | null;
+  plus_minus?: number | null;
 }
 
 /** Row shape from the `v_players` roster view */
@@ -250,6 +257,9 @@ export interface GamePlayersState {
     gameEventsGoals?: any[],
     gameEventsDiscipline?: any[],
   ) => void;
+  recalculateAllGameStatsAndTimes: (
+    finalMatchTimeSeconds?: number,
+  ) => Promise<void>;
 
   // Query helpers
   getPlayersByFieldStatus: (fieldStatus: FieldStatus) => Player[];
@@ -323,19 +333,80 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
     }
   },
 
+  recalculateAllGameStatsAndTimes: async (finalMatchTimeSeconds?: number) => {
+    try {
+      const { default: useGameStore } = await import("./gameStore");
+      const { default: useGamePlayerTimeStore } = await import("./gamePlayerTimeStore");
+
+      const game = useGameStore.getState().game;
+      const gameTime =
+        finalMatchTimeSeconds !== undefined
+          ? finalMatchTimeSeconds
+          : useGameStore.getState().getGameTime();
+
+      const timeStore = useGamePlayerTimeStore.getState();
+
+      if (game) {
+        get().recalculatePlayerStatsFromEvents(
+          game.gameEventsGoals || [],
+          game.gameEventsDiscipline || []
+        );
+      }
+
+      const gId = game ? (game.game_id || game.id) : null;
+      const pmMap = gId ? timeStore.calculateAllPlusMinus(gId) : {};
+      const gkTimeMap = gId ? timeStore.calculateAllGoalkeeperTime(gId, gameTime) : {};
+
+      set((state) => ({
+        players: state.players.map((p) => {
+          const onFieldSec = timeStore.calculateTotalTimeOnField(p, gameTime);
+          const pm = pmMap[p.id] ?? p.plusMinus ?? 0;
+          const gkSec = gkTimeMap[p.id] ?? p.goalkeeperTime ?? 0;
+
+          return {
+            ...p,
+            onFieldTime: onFieldSec,
+            playing_time_seconds: onFieldSec,
+            plusMinus: pm,
+            plus_minus: pm,
+            goalkeeperTime: gkSec,
+          };
+        }),
+      }));
+    } catch (err) {
+      console.error("Error in recalculateAllGameStatsAndTimes:", err);
+    }
+  },
+
   // ==================== INITIALIZATION ====================
 
   loadPlayers: async (gameId, teamSeasonId) => {
     set({ isLoading: true, error: null });
 
     try {
-      const existingAllInGame = (await apiFetch<PlayerGameRow[]>(
-        "v_player_games",
-        "GET",
-        null,
-        null,
-        { filters: { game_id: Number(gameId) } },
-      )) || [];
+      const [existingAllInGame, rawPlayerGames] = await Promise.all([
+        apiFetch<PlayerGameRow[]>(
+          "v_player_games",
+          "GET",
+          null,
+          null,
+          { filters: { game_id: Number(gameId) } },
+        ).then((r) => r || []),
+        apiFetch<any[]>(
+          "player_games",
+          "GET",
+          null,
+          null,
+          { filters: { game_id: Number(gameId) } },
+        ).catch(() => []),
+      ]);
+
+      const rawPgMap = new Map<number, any>();
+      (rawPlayerGames || []).forEach((r: any) => {
+        if (r && r.id != null) {
+          rawPgMap.set(Number(r.id), r);
+        }
+      });
 
       const teamPlayers =
         (await apiFetch<RosterPlayerRow[]>("v_players", "GET", null, null, {
@@ -356,6 +427,16 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
         const pgId = Number(pg.player_game_id);
         const pId = Number(pg.player_id);
         if (seenPlayerGameIds.has(pgId) || seenPlayerIds.has(pId)) return false;
+
+        const raw = rawPgMap.get(pgId);
+        if (raw) {
+          if (pg.playing_time_seconds == null && raw.playing_time_seconds != null) {
+            pg.playing_time_seconds = Number(raw.playing_time_seconds);
+          }
+          if (pg.plus_minus == null && raw.plus_minus != null) {
+            pg.plus_minus = Number(raw.plus_minus);
+          }
+        }
 
         const matchesTeam =
           Number(pg.team_id) === Number(teamSeasonId) ||
@@ -400,9 +481,6 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
         ...createdPlayers.map(
           (pg): PlayerGameRow => ({
             player_game_id: pg.playerGameId,
-            // FIX: `pg` is a `Player`, which has no `gameId` field (the original
-            // JS read `pg.gameId`, which was always undefined) - use the
-            // `gameId` this function was called with instead.
             game_id: gameId,
             player_id: pg.id,
             team_id: pg.teamId,
@@ -418,11 +496,10 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
             jersey_number: pg.jerseyNumber,
             primary_position: pg.position,
             home_away: pg.homeAway,
-            // FIX: `team_season_id` was listed twice in the original object
-            // literal - TypeScript rejects duplicate object keys outright
-            // (TS1117), so the second occurrence has been removed.
             created_at: null,
             modified_at: null,
+            playing_time_seconds: pg.playing_time_seconds ?? 0,
+            plus_minus: pg.plus_minus ?? 0,
           }),
         ),
       ];
@@ -570,9 +647,12 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
           foulsCommitted: playerStats?.fouls_committed || 0,
           foulsDrawn: playerStats?.fouls_drawn || 0,
 
-          // Time tracking (initialized to 0, calculated separately)
+          // Time tracking (initialized with frozen values if available, otherwise 0)
           goalkeeperTime: 0,
-          plusMinus: 0,
+          onFieldTime: pg.playing_time_seconds ?? 0,
+          plusMinus: pg.plus_minus ?? 0,
+          playing_time_seconds: pg.playing_time_seconds ?? 0,
+          plus_minus: pg.plus_minus ?? 0,
         };
 
         const fieldStatus = get().calculateFieldStatus(playerBase);
@@ -583,8 +663,18 @@ const useGamePlayersStore = create<GamePlayersState>()((set, get) => ({
       set({ players, isLoading: false });
 
       // Calculate plus/minus and goalkeeper time for all players after loading
-      get().calculateAndUpdatePlusMinus(gameId);
-      get().calculateAndUpdateGoalkeeperTime(gameId);
+      if (!isCompletedMatch) {
+        get().calculateAndUpdatePlusMinus(gameId);
+        get().calculateAndUpdateGoalkeeperTime(gameId);
+      } else {
+        const hasFrozenValues = players.some(
+          (p) => (p.playing_time_seconds ?? 0) > 0 || (p.plus_minus ?? 0) !== 0
+        );
+        if (!hasFrozenValues) {
+          get().calculateAndUpdatePlusMinus(gameId);
+          get().calculateAndUpdateGoalkeeperTime(gameId);
+        }
+      }
 
       return players;
     } catch (error) {

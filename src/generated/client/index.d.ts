@@ -32723,6 +32723,8 @@ export namespace Prisma {
     player_id: number | null
     team_season_id: number | null
     position_id: number | null
+    playing_time_seconds: number | null
+    plus_minus: number | null
   }
 
   export type Player_gamesSumAggregateOutputType = {
@@ -32731,6 +32733,8 @@ export namespace Prisma {
     player_id: number | null
     team_season_id: number | null
     position_id: number | null
+    playing_time_seconds: number | null
+    plus_minus: number | null
   }
 
   export type Player_gamesMinAggregateOutputType = {
@@ -32744,6 +32748,8 @@ export namespace Prisma {
     created_at: Date | null
     modified_at: Date | null
     is_guest: boolean | null
+    playing_time_seconds: number | null
+    plus_minus: number | null
   }
 
   export type Player_gamesMaxAggregateOutputType = {
@@ -32757,6 +32763,8 @@ export namespace Prisma {
     created_at: Date | null
     modified_at: Date | null
     is_guest: boolean | null
+    playing_time_seconds: number | null
+    plus_minus: number | null
   }
 
   export type Player_gamesCountAggregateOutputType = {
@@ -32770,6 +32778,8 @@ export namespace Prisma {
     created_at: number
     modified_at: number
     is_guest: number
+    playing_time_seconds: number
+    plus_minus: number
     _all: number
   }
 
@@ -32780,6 +32790,8 @@ export namespace Prisma {
     player_id?: true
     team_season_id?: true
     position_id?: true
+    playing_time_seconds?: true
+    plus_minus?: true
   }
 
   export type Player_gamesSumAggregateInputType = {
@@ -32788,6 +32800,8 @@ export namespace Prisma {
     player_id?: true
     team_season_id?: true
     position_id?: true
+    playing_time_seconds?: true
+    plus_minus?: true
   }
 
   export type Player_gamesMinAggregateInputType = {
@@ -32801,6 +32815,8 @@ export namespace Prisma {
     created_at?: true
     modified_at?: true
     is_guest?: true
+    playing_time_seconds?: true
+    plus_minus?: true
   }
 
   export type Player_gamesMaxAggregateInputType = {
@@ -32814,6 +32830,8 @@ export namespace Prisma {
     created_at?: true
     modified_at?: true
     is_guest?: true
+    playing_time_seconds?: true
+    plus_minus?: true
   }
 
   export type Player_gamesCountAggregateInputType = {
@@ -32827,6 +32845,8 @@ export namespace Prisma {
     created_at?: true
     modified_at?: true
     is_guest?: true
+    playing_time_seconds?: true
+    plus_minus?: true
     _all?: true
   }
 
@@ -32927,6 +32947,8 @@ export namespace Prisma {
     created_at: Date | null
     modified_at: Date | null
     is_guest: boolean | null
+    playing_time_seconds: number | null
+    plus_minus: number | null
     _count: Player_gamesCountAggregateOutputType | null
     _avg: Player_gamesAvgAggregateOutputType | null
     _sum: Player_gamesSumAggregateOutputType | null
@@ -32959,6 +32981,8 @@ export namespace Prisma {
     created_at?: boolean
     modified_at?: boolean
     is_guest?: boolean
+    playing_time_seconds?: boolean
+    plus_minus?: boolean
     game_events_discipline?: boolean | player_games$game_events_disciplineArgs<ExtArgs>
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: boolean | player_games$game_events_goals_game_events_goals_assist_player_game_idToplayer_gamesArgs<ExtArgs>
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: boolean | player_games$game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_gamesArgs<ExtArgs>
@@ -32986,6 +33010,8 @@ export namespace Prisma {
     created_at?: boolean
     modified_at?: boolean
     is_guest?: boolean
+    playing_time_seconds?: boolean
+    plus_minus?: boolean
   }
 
   export type player_gamesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -33031,6 +33057,8 @@ export namespace Prisma {
       created_at: Date | null
       modified_at: Date | null
       is_guest: boolean | null
+      playing_time_seconds: number | null
+      plus_minus: number | null
     }, ExtArgs["result"]["player_games"]>
     composites: {}
   }
@@ -33422,6 +33450,8 @@ export namespace Prisma {
     readonly created_at: FieldRef<"player_games", 'DateTime'>
     readonly modified_at: FieldRef<"player_games", 'DateTime'>
     readonly is_guest: FieldRef<"player_games", 'Boolean'>
+    readonly playing_time_seconds: FieldRef<"player_games", 'Int'>
+    readonly plus_minus: FieldRef<"player_games", 'Int'>
   }
     
 
@@ -56748,7 +56778,9 @@ export namespace Prisma {
     game_status: 'game_status',
     created_at: 'created_at',
     modified_at: 'modified_at',
-    is_guest: 'is_guest'
+    is_guest: 'is_guest',
+    playing_time_seconds: 'playing_time_seconds',
+    plus_minus: 'plus_minus'
   };
 
   export type Player_gamesScalarFieldEnum = (typeof Player_gamesScalarFieldEnum)[keyof typeof Player_gamesScalarFieldEnum]
@@ -59664,6 +59696,8 @@ export namespace Prisma {
     created_at?: DateTimeNullableFilter<"player_games"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"player_games"> | Date | string | null
     is_guest?: BoolNullableFilter<"player_games"> | boolean | null
+    playing_time_seconds?: IntNullableFilter<"player_games"> | number | null
+    plus_minus?: IntNullableFilter<"player_games"> | number | null
     game_events_discipline?: Game_events_disciplineListRelationFilter
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: Game_events_goalsListRelationFilter
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: Game_events_goalsListRelationFilter
@@ -59689,6 +59723,8 @@ export namespace Prisma {
     created_at?: SortOrderInput | SortOrder
     modified_at?: SortOrderInput | SortOrder
     is_guest?: SortOrderInput | SortOrder
+    playing_time_seconds?: SortOrderInput | SortOrder
+    plus_minus?: SortOrderInput | SortOrder
     game_events_discipline?: game_events_disciplineOrderByRelationAggregateInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsOrderByRelationAggregateInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsOrderByRelationAggregateInput
@@ -59718,6 +59754,8 @@ export namespace Prisma {
     created_at?: DateTimeNullableFilter<"player_games"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"player_games"> | Date | string | null
     is_guest?: BoolNullableFilter<"player_games"> | boolean | null
+    playing_time_seconds?: IntNullableFilter<"player_games"> | number | null
+    plus_minus?: IntNullableFilter<"player_games"> | number | null
     game_events_discipline?: Game_events_disciplineListRelationFilter
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: Game_events_goalsListRelationFilter
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: Game_events_goalsListRelationFilter
@@ -59743,6 +59781,8 @@ export namespace Prisma {
     created_at?: SortOrderInput | SortOrder
     modified_at?: SortOrderInput | SortOrder
     is_guest?: SortOrderInput | SortOrder
+    playing_time_seconds?: SortOrderInput | SortOrder
+    plus_minus?: SortOrderInput | SortOrder
     _count?: player_gamesCountOrderByAggregateInput
     _avg?: player_gamesAvgOrderByAggregateInput
     _max?: player_gamesMaxOrderByAggregateInput
@@ -59764,6 +59804,8 @@ export namespace Prisma {
     created_at?: DateTimeNullableWithAggregatesFilter<"player_games"> | Date | string | null
     modified_at?: DateTimeNullableWithAggregatesFilter<"player_games"> | Date | string | null
     is_guest?: BoolNullableWithAggregatesFilter<"player_games"> | boolean | null
+    playing_time_seconds?: IntNullableWithAggregatesFilter<"player_games"> | number | null
+    plus_minus?: IntNullableWithAggregatesFilter<"player_games"> | number | null
   }
 
   export type player_relationshipsWhereInput = {
@@ -64099,6 +64141,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -64124,6 +64168,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -64142,6 +64188,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -64167,6 +64215,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -64189,6 +64239,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
   }
 
   export type player_gamesUpdateManyMutationInput = {
@@ -64198,6 +64250,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type player_gamesUncheckedUpdateManyInput = {
@@ -64211,6 +64265,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type player_relationshipsCreateInput = {
@@ -68501,6 +68557,8 @@ export namespace Prisma {
     created_at?: SortOrder
     modified_at?: SortOrder
     is_guest?: SortOrder
+    playing_time_seconds?: SortOrder
+    plus_minus?: SortOrder
   }
 
   export type player_gamesAvgOrderByAggregateInput = {
@@ -68509,6 +68567,8 @@ export namespace Prisma {
     player_id?: SortOrder
     team_season_id?: SortOrder
     position_id?: SortOrder
+    playing_time_seconds?: SortOrder
+    plus_minus?: SortOrder
   }
 
   export type player_gamesMaxOrderByAggregateInput = {
@@ -68522,6 +68582,8 @@ export namespace Prisma {
     created_at?: SortOrder
     modified_at?: SortOrder
     is_guest?: SortOrder
+    playing_time_seconds?: SortOrder
+    plus_minus?: SortOrder
   }
 
   export type player_gamesMinOrderByAggregateInput = {
@@ -68535,6 +68597,8 @@ export namespace Prisma {
     created_at?: SortOrder
     modified_at?: SortOrder
     is_guest?: SortOrder
+    playing_time_seconds?: SortOrder
+    plus_minus?: SortOrder
   }
 
   export type player_gamesSumOrderByAggregateInput = {
@@ -68543,6 +68607,8 @@ export namespace Prisma {
     player_id?: SortOrder
     team_season_id?: SortOrder
     position_id?: SortOrder
+    playing_time_seconds?: SortOrder
+    plus_minus?: SortOrder
   }
 
   export type Enumplayer_games_game_statusWithAggregatesFilter<$PrismaModel = never> = {
@@ -77475,6 +77541,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesInput
@@ -77499,6 +77567,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesInput
@@ -77638,6 +77708,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesNestedInput
@@ -77662,6 +77734,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesNestedInput
@@ -77751,6 +77825,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesInput
@@ -77775,6 +77851,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesInput
@@ -77797,6 +77875,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesInput
@@ -77821,6 +77901,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesInput
@@ -77877,6 +77959,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -77901,6 +77985,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -78045,6 +78131,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesNestedInput
@@ -78069,6 +78157,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesNestedInput
@@ -78097,6 +78187,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesNestedInput
@@ -78121,6 +78213,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_scorer_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_scorer_player_game_idToplayer_gamesNestedInput
@@ -78189,6 +78283,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -78213,6 +78309,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -78761,6 +78859,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -78785,6 +78885,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -78873,6 +78975,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -78897,6 +79001,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -79076,6 +79182,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -79100,6 +79208,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -79206,6 +79316,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -79230,6 +79342,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -79393,6 +79507,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -79417,6 +79533,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -79530,6 +79648,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -79554,6 +79674,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -80477,6 +80599,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -80501,6 +80625,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -80523,6 +80649,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -80547,6 +80675,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -80654,6 +80784,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -80678,6 +80810,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -80706,6 +80840,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -80730,6 +80866,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -81327,6 +81465,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -81350,6 +81490,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -81904,6 +82046,8 @@ export namespace Prisma {
     created_at?: DateTimeNullableFilter<"player_games"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"player_games"> | Date | string | null
     is_guest?: BoolNullableFilter<"player_games"> | boolean | null
+    playing_time_seconds?: IntNullableFilter<"player_games"> | number | null
+    plus_minus?: IntNullableFilter<"player_games"> | number | null
   }
 
   export type gamesCreateWithoutGames_overtimesInput = {
@@ -83519,6 +83663,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -83542,6 +83688,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -87115,6 +87263,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -87138,6 +87288,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
     game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutPlayer_gamesInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedCreateNestedManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesInput
@@ -93877,6 +94029,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
   }
 
   export type game_events_majorUpdateWithoutGamesInput = {
@@ -94175,6 +94329,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -94198,6 +94354,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -94219,6 +94377,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type leaguesCreateManyGoverning_bodiesInput = {
@@ -95060,6 +95220,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
   }
 
   export type player_relationshipsCreateManyPeople_player_relationships_related_person_idTopeopleInput = {
@@ -95269,6 +95431,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -95292,6 +95456,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -95313,6 +95479,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type player_relationshipsUpdateWithoutPeople_player_relationships_related_person_idTopeopleInput = {
@@ -96736,6 +96904,8 @@ export namespace Prisma {
     created_at?: Date | string | null
     modified_at?: Date | string | null
     is_guest?: boolean | null
+    playing_time_seconds?: number | null
+    plus_minus?: number | null
   }
 
   export type player_teamsCreateManyTeam_seasonsInput = {
@@ -97294,6 +97464,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -97317,6 +97489,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
     game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutPlayer_gamesNestedInput
     game_events_goals_game_events_goals_assist_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_assist_player_game_idToplayer_gamesNestedInput
     game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games?: game_events_goalsUncheckedUpdateManyWithoutPlayer_games_game_events_goals_defending_gk_player_game_idToplayer_gamesNestedInput
@@ -97338,6 +97512,8 @@ export namespace Prisma {
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     is_guest?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    playing_time_seconds?: NullableIntFieldUpdateOperationsInput | number | null
+    plus_minus?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type player_teamsUpdateWithoutTeam_seasonsInput = {

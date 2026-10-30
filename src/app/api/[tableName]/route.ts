@@ -380,15 +380,20 @@ export async function PUT(req: Request, context: RouteContext) {
     return NextResponse.json({ error: `Table "${table}" is read-only` }, { status: 405 });
   }
 
-  const url = new URL(req.url);
-  const id = url.searchParams.get("id");
-  if (!id) return badRequest("Missing id parameter");
-
   let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
     return badRequest("Invalid JSON body");
+  }
+
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id") || (body?.id != null ? String(body.id) : null);
+  if (!id) return badRequest("Missing id parameter");
+
+  // Prevent primary key from being updated in SET clause
+  if ("id" in body) {
+    delete body.id;
   }
 
   if (table === "game_events_goals" && "goal_types" in body) {

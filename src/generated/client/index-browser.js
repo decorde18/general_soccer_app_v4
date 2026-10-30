@@ -465,7 +465,9 @@ exports.Prisma.Player_gamesScalarFieldEnum = {
   game_status: 'game_status',
   created_at: 'created_at',
   modified_at: 'modified_at',
-  is_guest: 'is_guest'
+  is_guest: 'is_guest',
+  playing_time_seconds: 'playing_time_seconds',
+  plus_minus: 'plus_minus'
 };
 
 exports.Prisma.Player_relationshipsScalarFieldEnum = {

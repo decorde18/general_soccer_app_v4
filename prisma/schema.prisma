@@ -538,6 +538,8 @@ model player_games {
   created_at                                                                       DateTime?                    @default(now()) @db.DateTime(0)
   modified_at                                                                      DateTime?                    @default(now()) @db.DateTime(0)
   is_guest                                                                         Boolean?                     @default(false)
+  playing_time_seconds                                                             Int?                         @default(0)
+  plus_minus                                                                       Int?                         @default(0)
   game_events_discipline                                                           game_events_discipline[]
   game_events_goals_game_events_goals_assist_player_game_idToplayer_games          game_events_goals[]          @relation("game_events_goals_assist_player_game_idToplayer_games")
   game_events_goals_game_events_goals_defending_gk_player_game_idToplayer_games    game_events_goals[]          @relation("game_events_goals_defending_gk_player_game_idToplayer_games")

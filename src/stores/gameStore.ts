@@ -7,6 +7,7 @@ import {
 } from "@/lib/utils/dateTimeUtils";
 import useGameSubsStore from "./gameSubsStore";
 import useGamePlayersStore from "./gamePlayersStore";
+import { enqueueOfflineMutation } from "@/lib/offline/offlineSync";
 import {
   GAME_STAGES,
   type Game,
@@ -1027,6 +1028,20 @@ const useGameStore = create<GameStoreState>((set, get) => {
           gameEventsMajor: (game.gameEventsMajor || []).map((s) =>
             s.end_time === null && s.clock_should_run === 0 ? { ...s, end_time: gameTime } : s
           ),
+        });
+
+        // 4. Freeze final stats and playing time on player_games
+        await useGamePlayersStore.getState().recalculateAllGameStatsAndTimes(gameTime);
+        const finalizedPlayers = useGamePlayersStore.getState().players;
+        finalizedPlayers.forEach((p) => {
+          const pgId = p.playerGameId || p.id;
+          if (pgId) {
+            enqueueOfflineMutation("player_games", "PUT", {
+              id: pgId,
+              playing_time_seconds: Math.round(p.onFieldTime || 0),
+              plus_minus: Math.round(p.plusMinus || 0),
+            });
+          }
         });
       } catch (error) {
         console.error("Error ending game:", error);

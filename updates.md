@@ -1,3 +1,30 @@
+### [2026-10-30 13:02] Schema Sync & Frozen Playing Time & Plus/Minus Persistence on Player Games
+- **Type**: Feature / Database Sync / Stat Freezing
+- **Summary**:
+  1. **Prisma Schema & Model Sync (`prisma/schema.prisma`)**:
+     - Added `playing_time_seconds Int? @default(0)` and `plus_minus Int? @default(0)` to the `player_games` model and regenerated the Prisma client (`npx prisma generate`).
+  2. **API PUT Support for ID in Payload & Column Cleanup (`route.ts`)**:
+     - Updated `/api/[tableName]` `PUT` handler to accept `id` in the request body (falling back to query param `?id=`) and stripped `body.id` from update columns to prevent invalid `SET id = ?` queries.
+  3. **Offline Sync & Mutation Queueing (`offlineSync.ts`)**:
+     - Added `"player_game"` to `QueuedOfflineAction["type"]` and exported `enqueueOfflineMutation` to handle immediate API persistence with fallback to local offline storage during connectivity losses.
+  4. **Player Game Hydration & Stat Finalization (`gamePlayersStore.ts`)**:
+     - Extended `Player` / `GamePlayer` and `PlayerGameRow` with `playing_time_seconds`, `plus_minus`, and `onFieldTime`.
+     - In `loadPlayers`, queried `player_games` alongside `v_player_games` to hydrate `onFieldTime` and `plusMinus` with frozen values immediately for completed matches, bypassing unnecessary sub-event re-simulations.
+     - Implemented `recalculateAllGameStatsAndTimes(finalMatchTimeSeconds)` to execute stat and time recalculation cascades across all players.
+  5. **Final Match Conclusion & Freezing (`gameStore.ts`)**:
+     - In `endGame()`, triggered `recalculateAllGameStatsAndTimes(gameTime)` and iterated over all squad members to persist their frozen match minutes and +/- to `player_games` via `enqueueOfflineMutation`.
+  6. **View Script Projection (`updateVPlayerGames.ts`)**:
+     - Projected `pg.playing_time_seconds` and `pg.plus_minus` in `v_player_games` view definition.
+- **Modified Files**:
+  - `prisma/schema.prisma`
+  - `src/generated/client/*`
+  - `src/app/api/[tableName]/route.ts`
+  - `src/lib/offline/offlineSync.ts`
+  - `src/stores/gamePlayersStore.ts`
+  - `src/stores/gameStore.ts`
+  - `src/scripts/updateVPlayerGames.ts`
+  - `updates.md`
+
 ### [2026-10-29 12:00] Clock Actions Disable State, Halftime Sub Eligibility, Game Scheduler Prefill Guards, PK Goal Recording Fix & Match Shift Durations Tab
 - **Type**: Bug Fix / Feature / UX Resilience
 - **Summary**:

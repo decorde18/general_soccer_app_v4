@@ -12,6 +12,8 @@ SELECT
   \`pg\`.\`started\` AS \`started\`,
   \`pg\`.\`game_status\` AS \`game_status\`,
   \`pg\`.\`is_guest\` AS \`is_guest\`,
+  \`pg\`.\`playing_time_seconds\` AS \`playing_time_seconds\`,
+  \`pg\`.\`plus_minus\` AS \`plus_minus\`,
   \`p\`.\`first_name\` AS \`first_name\`,
   \`p\`.\`last_name\` AS \`last_name\`,
   CONCAT(\`p\`.\`first_name\`, ' ', \`p\`.\`last_name\`) AS \`full_name\`,
