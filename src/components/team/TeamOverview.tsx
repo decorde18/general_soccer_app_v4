@@ -93,16 +93,24 @@ export default function TeamOverview({
   const totalGames = record ? record.wins + record.losses + record.draws : 0;
   const winningPct = totalGames > 0 ? (record!.wins + record!.draws / 2) / totalGames : 0;
   
-  // Sort stats to find top scorers and assist leaders
+  // Sort stats to find top scorers, assist leaders, minutes, and plus/minus
   const topScorers = [...stats]
     .filter(s => s.goals > 0)
     .sort((a, b) => b.goals - a.goals || b.assists - a.assists);
   const topAssisters = [...stats]
     .filter(s => s.assists > 0)
     .sort((a, b) => b.assists - a.assists || b.goals - a.goals);
+  const topMinutes = [...stats]
+    .filter(s => s.minutesPlayed > 0)
+    .sort((a, b) => b.minutesPlayed - a.minutesPlayed);
+  const topPlusMinus = [...stats]
+    .filter(s => s.plusMinus !== 0)
+    .sort((a, b) => b.plusMinus - a.plusMinus);
 
   const mainScorer = topScorers[0] || null;
   const mainAssister = topAssisters[0] || null;
+  const mainMinutes = topMinutes[0] || null;
+  const mainPlusMinus = topPlusMinus[0] || null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -453,6 +461,52 @@ export default function TeamOverview({
                 </div>
               ) : (
                 <p className="text-xs text-muted italic bg-background/50 p-3 rounded-xl border border-border/40 text-center">No assists recorded yet.</p>
+              )}
+            </div>
+
+            {/* Minutes Leader Card */}
+            <div>
+              <span className="text-xs font-bold text-muted uppercase tracking-wider block mb-2.5">Minutes Leader</span>
+              {mainMinutes ? (
+                <div className="flex items-center justify-between bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20 p-3 rounded-xl transition-all duration-200">
+                  <div>
+                    <h4 className="font-bold text-text text-sm sm:text-base">
+                      {mainMinutes.firstName} {mainMinutes.lastName}
+                    </h4>
+                    <span className="text-xs text-muted block mt-0.5">{mainMinutes.gamesPlayed} Matches Played ({mainMinutes.gamesStarted} Starts)</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-extrabold text-primary block">
+                      {mainMinutes.minutesPlayed}′
+                    </span>
+                    <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">Minutes</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted italic bg-background/50 p-3 rounded-xl border border-border/40 text-center">No minutes recorded yet.</p>
+              )}
+            </div>
+
+            {/* +/- Leader Card */}
+            <div>
+              <span className="text-xs font-bold text-muted uppercase tracking-wider block mb-2.5">+/- Net Leader</span>
+              {mainPlusMinus ? (
+                <div className="flex items-center justify-between bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 hover:border-emerald-500/20 p-3 rounded-xl transition-all duration-200">
+                  <div>
+                    <h4 className="font-bold text-text text-sm sm:text-base">
+                      {mainPlusMinus.firstName} {mainPlusMinus.lastName}
+                    </h4>
+                    <span className="text-xs text-muted block mt-0.5">{mainPlusMinus.gamesPlayed} Matches Played</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-extrabold text-emerald-400 block">
+                      {mainPlusMinus.plusMinus > 0 ? `+${mainPlusMinus.plusMinus}` : mainPlusMinus.plusMinus}
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">+/- Net</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted italic bg-background/50 p-3 rounded-xl border border-border/40 text-center">No +/- recorded yet.</p>
               )}
             </div>
 

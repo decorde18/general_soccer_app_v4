@@ -1593,6 +1593,16 @@ function calculatePlayerGameMinutes(pg: any): {
   const statusInPg = pg.game_status;
   const isStarted = pg.started || statusInPg === "starter" || statusInPg === "goalkeeper";
 
+  // Fast path: if frozen playing_time_seconds is recorded on player_games
+  if (pg.playing_time_seconds !== null && pg.playing_time_seconds !== undefined) {
+    const minutes = Math.round(Number(pg.playing_time_seconds) / 60);
+    const isPlayed = isStarted || statusInPg === "dressed" || minutes > 0;
+    // If plus_minus is also frozen on pg, skip sub timeline simulation completely
+    if (pg.plus_minus !== null && pg.plus_minus !== undefined) {
+      return { isPlayedGame: isPlayed, minutesPlayed: minutes, intervals: [] };
+    }
+  }
+
   const allSubs = game.game_subs || [];
   const subsIn = allSubs.filter((s: any) => s.in_player_id === pg.id || s.in_player_id === pg.player_id);
   const subsOut = allSubs.filter((s: any) => s.out_player_id === pg.id || s.out_player_id === pg.player_id);
@@ -1678,7 +1688,10 @@ function calculatePlayerGameMinutes(pg: any): {
     0
   );
 
-  const minutesPlayed = Math.round(activeSeconds / 60);
+  const minutesPlayed =
+    pg.playing_time_seconds !== null && pg.playing_time_seconds !== undefined
+      ? Math.round(Number(pg.playing_time_seconds) / 60)
+      : Math.round(activeSeconds / 60);
   return { isPlayedGame: true, minutesPlayed, intervals: shiftIntervals };
 }
 
@@ -1813,7 +1826,10 @@ async function getStatsForRoster(
           }
         }
 
-        if (game) {
+        // Prioritize frozen plus_minus from player_games
+        if (pg.plus_minus !== null && pg.plus_minus !== undefined) {
+          plusMinus += Number(pg.plus_minus);
+        } else if (game) {
           game.game_events_major?.forEach((major: any) => {
             major.game_events_goals?.forEach((goal: any) => {
               const goalTime = Number(major.game_time || 0);
@@ -1821,7 +1837,6 @@ async function getStatsForRoster(
                 (inv) => goalTime >= inv.start && goalTime <= inv.end
               );
               if (wasOnField) {
-                const isTeamGoal = goal.team_season_id === pg.team_season_id;
                 if (goal.team_season_id === pg.team_season_id) {
                   plusMinus += 1;
                 } else {
@@ -2125,7 +2140,10 @@ export async function getComprehensivePlayerStats(
       }
     }
 
-    if (game) {
+    // Prioritize frozen plus_minus from player_games
+    if (pg.plus_minus !== null && pg.plus_minus !== undefined) {
+      rec.plusMinus += Number(pg.plus_minus);
+    } else if (game) {
       game.game_events_major?.forEach((major: any) => {
         major.game_events_goals?.forEach((goal: any) => {
           const goalTime = Number(major.game_time || 0);
@@ -2133,7 +2151,6 @@ export async function getComprehensivePlayerStats(
             (inv) => goalTime >= inv.start && goalTime <= inv.end
           );
           if (wasOnField) {
-            const isTeamGoal = goal.team_season_id === pg.team_season_id;
             if (goal.team_season_id === pg.team_season_id) {
               rec.plusMinus += 1;
             } else {
@@ -3532,6 +3549,7 @@ export interface PlayerSeasonStat {
   saves: number;
   cleanSheets: number;
   minutesPlayed: number;
+  plusMinus: number;
 }
 
 export interface PlayerProfileData {
@@ -3554,6 +3572,7 @@ export interface PlayerProfileData {
     saves: number;
     cleanSheets: number;
     minutesPlayed: number;
+    plusMinus: number;
   };
 }
 
@@ -3621,9 +3640,10 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
     let shots = 0;
     let saves = 0;
     let cleanSheets = 0;
+    let plusMinus = 0;
 
     pgs.forEach((pg) => {
-      const { isPlayedGame, minutesPlayed: gameMins } = calculatePlayerGameMinutes(pg);
+      const { isPlayedGame, minutesPlayed: gameMins, intervals } = calculatePlayerGameMinutes(pg);
       if (!isPlayedGame) return;
 
       const status = pg.game_status;
@@ -3683,6 +3703,27 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
         }
       }
 
+      // Prioritize frozen plus_minus from player_games
+      if (pg.plus_minus !== null && pg.plus_minus !== undefined) {
+        plusMinus += Number(pg.plus_minus);
+      } else if (game) {
+        game.game_events_major?.forEach((major: any) => {
+          major.game_events_goals?.forEach((goal: any) => {
+            const goalTime = Number(major.game_time || 0);
+            const wasOnField = intervals.some(
+              (inv) => goalTime >= inv.start && goalTime <= inv.end
+            );
+            if (wasOnField) {
+              if (goal.team_season_id === pg.team_season_id) {
+                plusMinus += 1;
+              } else {
+                plusMinus -= 1;
+              }
+            }
+          });
+        });
+      }
+
       minutesPlayed += gameMins;
     });
 
@@ -3707,6 +3748,7 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
       saves,
       cleanSheets,
       minutesPlayed,
+      plusMinus,
     };
   });
 
@@ -3722,6 +3764,7 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
       saves: acc.saves + curr.saves,
       cleanSheets: acc.cleanSheets + curr.cleanSheets,
       minutesPlayed: acc.minutesPlayed + curr.minutesPlayed,
+      plusMinus: acc.plusMinus + curr.plusMinus,
     }),
     {
       gamesPlayed: 0,
@@ -3734,6 +3777,7 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
       saves: 0,
       cleanSheets: 0,
       minutesPlayed: 0,
+      plusMinus: 0,
     }
   );
 

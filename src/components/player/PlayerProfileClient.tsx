@@ -12,6 +12,7 @@ import {
   Clock,
   Target,
   Award,
+  TrendingUp,
 } from "lucide-react";
 import { PlayerProfileData } from "@/lib/data/queries";
 import Select from "@/components/ui/Select";
@@ -45,6 +46,7 @@ export default function PlayerProfileClient({
         saves: activeSeasonStat.saves,
         cleanSheets: activeSeasonStat.cleanSheets,
         minutesPlayed: activeSeasonStat.minutesPlayed,
+        plusMinus: activeSeasonStat.plusMinus,
       }
     : careerTotals;
 
@@ -103,7 +105,7 @@ export default function PlayerProfileClient({
       </div>
 
       {/* Primary Metrics Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
         <div className="rounded-xl border border-slate-700/80 bg-slate-800/70 p-4 backdrop-blur-sm shadow-md">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1">
             <Trophy className="h-3.5 w-3.5 text-amber-400" /> Goals
@@ -116,6 +118,15 @@ export default function PlayerProfileClient({
             <Target className="h-3.5 w-3.5 text-indigo-400" /> Assists
           </p>
           <p className="mt-2 text-3xl font-extrabold text-indigo-300">{displayStats.assists}</p>
+        </div>
+
+        <div className="rounded-xl border border-slate-700/80 bg-slate-800/70 p-4 backdrop-blur-sm shadow-md">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1">
+            <TrendingUp className="h-3.5 w-3.5 text-cyan-400" /> +/- Net
+          </p>
+          <p className="mt-2 text-3xl font-extrabold text-cyan-300">
+            {displayStats.plusMinus > 0 ? `+${displayStats.plusMinus}` : displayStats.plusMinus}
+          </p>
         </div>
 
         <div className="rounded-xl border border-slate-700/80 bg-slate-800/70 p-4 backdrop-blur-sm shadow-md">
@@ -183,6 +194,7 @@ export default function PlayerProfileClient({
                   <th className="px-6 py-3.5 text-center">GP (GS)</th>
                   <th className="px-6 py-3.5 text-center">Goals</th>
                   <th className="px-6 py-3.5 text-center">Assists</th>
+                  <th className="px-6 py-3.5 text-center">+/-</th>
                   <th className="px-6 py-3.5 text-center">Cards</th>
                   <th className="px-6 py-3.5 text-center">Minutes</th>
                 </tr>
@@ -220,6 +232,15 @@ export default function PlayerProfileClient({
                     </td>
                     <td className="px-6 py-4 text-center whitespace-nowrap font-semibold text-indigo-300 font-mono">
                       {stat.assists}
+                    </td>
+                    <td className="px-6 py-4 text-center whitespace-nowrap font-mono font-bold">
+                      {stat.plusMinus > 0 ? (
+                        <span className="text-emerald-400 font-semibold">+{stat.plusMinus}</span>
+                      ) : stat.plusMinus < 0 ? (
+                        <span className="text-rose-400 font-semibold">{stat.plusMinus}</span>
+                      ) : (
+                        <span className="text-slate-500">0</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-center whitespace-nowrap text-xs font-mono">
                       <span className="text-amber-400">{stat.yellowCards}Y</span> /{" "}

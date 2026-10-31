@@ -1,3 +1,44 @@
+### [2026-10-30 16:10] Current Season Game Finalization & Player Game Stats Freezing
+- **Type**: Database Finalization / Migration / Performance
+- **Summary**:
+  - Finalized and froze `playing_time_seconds` and `plus_minus` across all completed games in Season #2 (2026-2027) and Season #23 (2024-2025).
+  - Executed `finalizeCurrentSeasonGames.ts` using `calculateActivePlayerTimeOnField` and `getPlayerOnFieldIntervals` from `@/lib/utils/dateTimeUtils` to accurately compute playing time and net goal differential (+/-) based on starters, substitutions, period boundaries, stoppages, and goal event timestamps.
+  - Season #2 (2026-2027): Finalized 36 completed games with rosters, writing frozen values across 636 `player_games` records (466 with active playing minutes, 360 with net +/- impact).
+  - Implemented exponential backoff retries and batch raw SQL CASE updates to ensure resilient database writes without connection pool timeouts.
+- **Modified Files**:
+  - `src/scripts/finalizeCurrentSeasonGames.ts`
+  - `src/scripts/checkSeasonGames.ts`
+  - `updates.md`
+
+### [2026-10-30 15:05] Database Column Migration Applied: player_games & v_player_games
+- **Type**: Database Migration / Fix
+- **Summary**:
+  - Executed `ALTER TABLE player_games ADD COLUMN playing_time_seconds INT NULL DEFAULT 0, ADD COLUMN plus_minus INT NULL DEFAULT 0;` directly on the shared MySQL database.
+  - Rebuilt the `v_player_games` view in MySQL to project both `playing_time_seconds` and `plus_minus`.
+  - Verified column presence and type definitions on `player_games`.
+- **Modified Files**:
+  - `src/scripts/migratePlayerGamesColumns.ts`
+  - `src/scripts/updateVPlayerGames.ts`
+  - `updates.md`
+
+### [2026-10-30 14:43] Stats Queries & UI Tables Integration for Frozen Minutes and Plus/Minus
+- **Type**: Feature / Performance Optimization / Stats UI
+- **Summary**:
+  1. **Fast-Path Aggregation in Stats Queries (`queries.ts`)**:
+     - Updated `calculatePlayerGameMinutes` to read frozen `playing_time_seconds` and `plus_minus` directly from `player_games` records in $O(1)$ time, skipping heavy event-stream and sub interval re-simulations for finalized matches.
+     - In `getStatsForRoster` and `getComprehensivePlayerStats`, prioritized `pg.plus_minus` directly from `player_games`, falling back to dynamic interval simulation for legacy unfinalized games.
+  2. **Player Profile Career & Season +/- (`queries.ts`, `PlayerProfileClient.tsx`)**:
+     - Added `plusMinus` to `PlayerSeasonStat` and `PlayerProfileData["careerTotals"]`.
+     - In `getPlayerProfile`, aggregated +/- across matches per season and career totals.
+     - Added a dedicated `+/- Net` KPI metric card in the Primary Metrics Grid on [`PlayerProfileClient.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/player/PlayerProfileClient.tsx) and an interactive color-coded `+/-` column in the Season-by-Season Performance History table.
+  3. **Team Overview Leaders Panel (`TeamOverview.tsx`)**:
+     - Added Top Minutes Leader and Top +/- Net Leader cards alongside Top Scorer and Assist Leader in the team overview spotlight panel.
+- **Modified Files**:
+  - `src/lib/data/queries.ts`
+  - `src/components/player/PlayerProfileClient.tsx`
+  - `src/components/team/TeamOverview.tsx`
+  - `updates.md`
+
 ### [2026-10-30 13:02] Schema Sync & Frozen Playing Time & Plus/Minus Persistence on Player Games
 - **Type**: Feature / Database Sync / Stat Freezing
 - **Summary**:
