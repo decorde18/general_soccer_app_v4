@@ -1,3 +1,15 @@
+### [2026-10-31 13:17] All Historical Seasons Finalization & Player Game Stats Freezing
+- **Type**: Database Finalization / Multi-Season Migration
+- **Summary**:
+  - Processed and finalized playing time (`playing_time_seconds`) and plus/minus (`plus_minus`) across all completed games for all 22 historical seasons in the database (Seasons #1, #3–#23, spanning 2004–2005 to 2025–2026).
+  - Executed [`finalizePreviousSeasons.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/scripts/finalizePreviousSeasons.ts) utilizing batch raw SQL `CASE` updates and connection retry guards, finalizing 309 completed games with roster records and 10,262 `player_games` rows.
+  - Resolved period timestamps, period durations, substitutions, and goal events using shared utilities `calculateActivePlayerTimeOnField` and `getPlayerOnFieldIntervals` from `@/lib/utils/dateTimeUtils`.
+  - Audited full database state via `inspectAllSeasons.ts`: verified `PG = NULL: 0` across all 23 seasons, with active playing minutes frozen for all historical matches.
+- **Modified Files**:
+  - `src/scripts/finalizePreviousSeasons.ts`
+  - `src/scripts/inspectAllSeasons.ts`
+  - `updates.md`
+
 ### [2026-10-30 16:10] Current Season Game Finalization & Player Game Stats Freezing
 - **Type**: Database Finalization / Migration / Performance
 - **Summary**:
