@@ -1,3 +1,30 @@
+### [2026-10-31 14:31] Competition Link Integrity Hardening & Game Edit Race Condition Fix
+- **Type**: Bug Fix / Data Integrity / UI Hardening
+- **Summary**:
+  - Investigated the root cause of why Games #911, #915, #918, #1618, and #1619 missed their division link even though the user initially selected ECNL Regional League.
+  - Identified two distinct failure mechanisms:
+    1. **Edit Modal Overwrite Race Condition (`GameEditModal.tsx`)**: When adding Veo video recordings or match metadata, `getGameEditDetailsAction` ran asynchronously without a loading blocker. Submitting "Save Changes" before competition details resolved sent `competitionNodes: []`, causing `updateGame` to run `deleteMany` and delete all attached `game_league_nodes` and `game_standings_inclusions`.
+    2. **Default `seasonId` Desync (`GameSchedulerModal.tsx`)**: `seasonId` initialized to `1` (Season 2025–2026) before scheduler options loaded, causing `ensureLeagueNodeSeason` to look for division nodes in the wrong season year if submitted quickly.
+  - Hardened `updateGame` in [`game-actions.ts`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/lib/actions/game-actions.ts): empty `competitionNodes` payloads no longer wipe existing league links for league/tournament games, and auto-inference fallback checks mutual team enrollments.
+  - Updated [`GameEditModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/dashboard/GameEditModal.tsx) to bundle data loading with `Promise.all`, enforce `isLoadingDetails` on the "Save Changes" button, and omit `competitionNodes` from the payload unless explicit changes were made.
+  - Updated [`GameSchedulerModal.tsx`](file:///c:/Users/decor/Development/general_soccer_app_v4/src/components/dashboard/GameSchedulerModal.tsx) to auto-sync `seasonId` directly from the selected primary team's season.
+- **Modified Files**:
+  - `src/lib/actions/game-actions.ts`
+  - `src/components/dashboard/GameEditModal.tsx`
+  - `src/components/dashboard/GameSchedulerModal.tsx`
+  - `updates.md`
+
+### [2026-10-31 14:16] Team 120 ECNL Regional League Game Linkage & Auto-Inference
+- **Type**: Bug Fix / Data Integrity / Game Management
+- **Summary**:
+  - Investigated TeamSeason 120 (Tennessee Soccer Club 2013 Girls) and identified that 5 of their 9 completed ECNL Regional League games (Games #911, #915, #918, #1618, #1619) were entered without `game_league_nodes` and `game_standings_inclusions` records, causing competition-filtered stats on `/teams/120` to reflect only 4 matches instead of all 9.
+  - Linked all 5 missing league matches to division node `U13 Girls` (`league_node_seasons.id = 28`, `league_nodes.id = 48`), and linked tournament matches for NASA Tophat (#881, #882, #886) and ECNL St. Louis (#1620, #1621, #1622) to their respective competition division nodes.
+  - Verified Team 120's ECNL Regional League records now reflect all 9 games (7-0-2 record, 32 GF, 8 GA, 23 pts) and comprehensive player statistics correctly aggregate across all 9 matches.
+  - Added an auto-inference fallback to `createGameAction` in `game-actions.ts`: when creating a `league` fixture without an explicitly provided competition node, the system checks whether both participating teams share an active division enrollment and automatically attaches the fixture to that division node.
+- **Modified Files**:
+  - `src/lib/actions/game-actions.ts`
+  - `updates.md`
+
 ### [2026-10-31 13:17] All Historical Seasons Finalization & Player Game Stats Freezing
 - **Type**: Database Finalization / Multi-Season Migration
 - **Summary**:

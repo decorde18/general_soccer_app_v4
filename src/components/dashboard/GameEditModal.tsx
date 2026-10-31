@@ -109,44 +109,60 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(true);
 
   useEffect(() => {
-    getVenueOptions().then((data) => {
-      setVenues(data);
-      let locId = game.locationId;
-      if (!locId && game.locationName) {
-        const matched = data.find((v) => v.name.toLowerCase() === game.locationName?.toLowerCase());
-        if (matched) locId = matched.id;
-      }
-      if (locId) setSelectedLocationId(locId);
-      if (game.sublocationId) setSelectedSublocationId(game.sublocationId);
-    });
+    let isMounted = true;
+    setIsLoadingDetails(true);
 
-    getSchedulerOptions().then((data) => {
-      setLeagueNodes(data.leagueNodes || []);
-    });
-
-    getGameEditDetailsAction(game.id).then((details) => {
-      if (details && details.attachedCompetitions.length > 0) {
-        const primary = details.attachedCompetitions.find((c) => c.isPrimary) || details.attachedCompetitions[0];
-        if (primary) {
-          setPrimaryLeagueNodeId(primary.nodeId);
-          setPrimaryCountsForStandings(primary.countsForStandings);
+    Promise.all([
+      getVenueOptions(),
+      getSchedulerOptions(),
+      getGameEditDetailsAction(game.id),
+    ])
+      .then(([venueData, schedData, details]) => {
+        if (!isMounted) return;
+        setVenues(venueData);
+        let locId = game.locationId;
+        if (!locId && game.locationName) {
+          const matched = venueData.find((v) => v.name.toLowerCase() === game.locationName?.toLowerCase());
+          if (matched) locId = matched.id;
         }
+        if (locId) setSelectedLocationId(locId);
+        if (game.sublocationId) setSelectedSublocationId(game.sublocationId);
 
-        const additional = details.attachedCompetitions.filter((c) => c !== primary);
-        setAdditionalCompetitions(
-          additional.map((c) => ({
-            nodeId: c.nodeId,
-            isTournament: c.isTournament,
-            countsForStandings: c.countsForStandings,
-          }))
-        );
-      }
-      if (details?.videoLink) {
-        setVideoLink(details.videoLink);
-      }
-    });
+        setLeagueNodes(schedData.leagueNodes || []);
+
+        if (details && details.attachedCompetitions.length > 0) {
+          const primary = details.attachedCompetitions.find((c) => c.isPrimary) || details.attachedCompetitions[0];
+          if (primary) {
+            setPrimaryLeagueNodeId(primary.nodeId);
+            setPrimaryCountsForStandings(primary.countsForStandings);
+          }
+
+          const additional = details.attachedCompetitions.filter((c) => c !== primary);
+          setAdditionalCompetitions(
+            additional.map((c) => ({
+              nodeId: c.nodeId,
+              isTournament: c.isTournament,
+              countsForStandings: c.countsForStandings,
+            }))
+          );
+        }
+        if (details?.videoLink) {
+          setVideoLink(details.videoLink);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load game edit details:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingDetails(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [game]);
 
   const activeVenue = venues.find((v) => v.id === selectedLocationId);
@@ -157,6 +173,7 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
   }, [leagueNodes]);
 
   const handleSave = () => {
+    if (isLoadingDetails) return;
     setErrorMsg(null);
     startTransition(async () => {
       try {
@@ -184,7 +201,7 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
           }
         });
 
-        await updateGame(game.id, {
+        const updatePayload: any = {
           startDate,
           startTime: startTime || null,
           gameType,
@@ -194,8 +211,15 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
           periodDuration: durationNum * 60,
           videoLink: videoLink.trim() || null,
           notes: JSON.stringify({ playersOnField: Number(playersOnField) }),
-          competitionNodes: compNodes,
-        });
+        };
+
+        // Only include competitionNodes if explicit nodes were selected or match is friendly.
+        // Avoid sending empty array for league games so existing competition links are never wiped inadvertently.
+        if (compNodes.length > 0 || gameType === "friendly") {
+          updatePayload.competitionNodes = compNodes;
+        }
+
+        await updateGame(game.id, updatePayload);
 
         toast.success("Game updated successfully!");
         if (onSuccess) onSuccess();
@@ -646,8 +670,14 @@ export default function GameEditModal({ game, onClose, onSuccess }: GameEditModa
                 <Button variant="outline" size="sm" onClick={onClose}>
                   Close
                 </Button>
-                <Button variant="primary" size="sm" isLoading={isPending} onClick={handleSave}>
-                  Save Changes
+                <Button
+                  variant="primary"
+                  size="sm"
+                  isLoading={isPending || isLoadingDetails}
+                  disabled={isPending || isLoadingDetails}
+                  onClick={handleSave}
+                >
+                  {isLoadingDetails ? "Loading..." : "Save Changes"}
                 </Button>
               </div>
             </div>

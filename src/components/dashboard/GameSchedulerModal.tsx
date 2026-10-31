@@ -42,6 +42,7 @@ import { SYSTEM_DEFAULT_GAME_SETTINGS } from "@/lib/utils/gameRules";
 interface TeamOption {
   teamSeasonId: number;
   teamId: number;
+  seasonId?: number;
   clubId: number;
   clubName: string;
   teamName: string;
@@ -192,6 +193,16 @@ export default function GameSchedulerModal({
         setIsLoadingOptions(false);
       });
   }, [defaultHomeTeamSeasonId]);
+
+  // Auto-sync seasonId whenever primary team is selected
+  useEffect(() => {
+    if (myTeamSeasonId && teams.length > 0) {
+      const primaryTeam = teams.find((t) => t.teamSeasonId === Number(myTeamSeasonId));
+      if (primaryTeam?.seasonId) {
+        setSeasonId(primaryTeam.seasonId);
+      }
+    }
+  }, [myTeamSeasonId, teams]);
 
   // Inherit match format, duration, venue defaults from primary team's latest game
   useEffect(() => {

@@ -300,6 +300,44 @@ export async function createGame(data: CreateGameData) {
         }
       }
     }
+  } else if (data.gameType === "league" && data.homeTeamSeasonId && data.awayTeamSeasonId) {
+    // If no competition node was explicitly provided for a league game, check if both teams share an active league enrollment
+    const homeEnrollments = await prisma.team_league_enrollments.findMany({
+      where: { team_season_id: data.homeTeamSeasonId, is_active: true },
+      select: { league_node_season_id: true },
+    });
+    const homeLnsIds = homeEnrollments.map((e) => e.league_node_season_id);
+    if (homeLnsIds.length > 0) {
+      const mutualEnrollment = await prisma.team_league_enrollments.findFirst({
+        where: {
+          team_season_id: data.awayTeamSeasonId,
+          league_node_season_id: { in: homeLnsIds },
+          is_active: true,
+        },
+        include: {
+          league_node_seasons: true,
+        },
+      });
+      if (mutualEnrollment?.league_node_seasons) {
+        const lns = mutualEnrollment.league_node_seasons;
+        await prisma.game_league_nodes.create({
+          data: {
+            game_id: game.id,
+            league_node_id: lns.id,
+            is_primary: true,
+          },
+        });
+        if (lns.league_node_id) {
+          await prisma.game_standings_inclusions.create({
+            data: {
+              game_id: game.id,
+              league_node_id: lns.league_node_id,
+              counts_for_standings: true,
+            },
+          });
+        }
+      }
+    }
   }
 
   await ensureBothTeamsEnrolledInGameLeagueNodes(game.id);
@@ -358,39 +396,85 @@ export async function updateGame(
   });
 
   if (data.competitionNodes !== undefined) {
-    // Delete existing competition node associations
-    await prisma.game_league_nodes.deleteMany({ where: { game_id: gameId } });
-    await prisma.game_standings_inclusions.deleteMany({ where: { game_id: gameId } });
+    if (data.competitionNodes.length > 0) {
+      // Delete existing competition node associations
+      await prisma.game_league_nodes.deleteMany({ where: { game_id: gameId } });
+      await prisma.game_standings_inclusions.deleteMany({ where: { game_id: gameId } });
 
-    // Re-create updated competition node associations
-    for (const item of data.competitionNodes) {
-      if (!item.nodeId) continue;
-      const resolved = await ensureLeagueNodeSeason(item.nodeId, game.season_id);
-      if (resolved) {
-        const existingGln = await prisma.game_league_nodes.findFirst({
-          where: { game_id: gameId, league_node_id: resolved.nodeSeasonId },
-        });
-        if (!existingGln) {
-          await prisma.game_league_nodes.create({
-            data: {
-              game_id: gameId,
-              league_node_id: resolved.nodeSeasonId,
-              is_primary: item.isPrimary ?? true,
-            },
+      // Re-create updated competition node associations
+      for (const item of data.competitionNodes) {
+        if (!item.nodeId) continue;
+        const resolved = await ensureLeagueNodeSeason(item.nodeId, game.season_id);
+        if (resolved) {
+          const existingGln = await prisma.game_league_nodes.findFirst({
+            where: { game_id: gameId, league_node_id: resolved.nodeSeasonId },
           });
+          if (!existingGln) {
+            await prisma.game_league_nodes.create({
+              data: {
+                game_id: gameId,
+                league_node_id: resolved.nodeSeasonId,
+                is_primary: item.isPrimary ?? true,
+              },
+            });
+          }
+
+          const existingGsi = await prisma.game_standings_inclusions.findFirst({
+            where: { game_id: gameId, league_node_id: resolved.leagueNodeId },
+          });
+          if (!existingGsi) {
+            await prisma.game_standings_inclusions.create({
+              data: {
+                game_id: gameId,
+                league_node_id: resolved.leagueNodeId,
+                counts_for_standings: item.countsForStandings ?? true,
+              },
+            });
+          }
         }
-
-        const existingGsi = await prisma.game_standings_inclusions.findFirst({
-          where: { game_id: gameId, league_node_id: resolved.leagueNodeId },
+      }
+    } else {
+      // Empty competitionNodes was sent (e.g. metadata-only update or async form race condition).
+      // DO NOT wipe existing competition links for league/tournament games!
+      const existingGlnCount = await prisma.game_league_nodes.count({ where: { game_id: gameId } });
+      const targetGameType = data.gameType || game.game_type;
+      if (existingGlnCount === 0 && targetGameType === "league") {
+        // Auto-infer from mutual team enrollment
+        const homeEnrollments = await prisma.team_league_enrollments.findMany({
+          where: { team_season_id: game.home_team_season_id, is_active: true },
+          select: { league_node_season_id: true },
         });
-        if (!existingGsi) {
-          await prisma.game_standings_inclusions.create({
-            data: {
-              game_id: gameId,
-              league_node_id: resolved.leagueNodeId,
-              counts_for_standings: item.countsForStandings ?? true,
+        const homeLnsIds = homeEnrollments.map((e) => e.league_node_season_id);
+        if (homeLnsIds.length > 0) {
+          const mutualEnrollment = await prisma.team_league_enrollments.findFirst({
+            where: {
+              team_season_id: game.away_team_season_id,
+              league_node_season_id: { in: homeLnsIds },
+              is_active: true,
+            },
+            include: {
+              league_node_seasons: true,
             },
           });
+          if (mutualEnrollment?.league_node_seasons) {
+            const lns = mutualEnrollment.league_node_seasons;
+            await prisma.game_league_nodes.create({
+              data: {
+                game_id: game.id,
+                league_node_id: lns.id,
+                is_primary: true,
+              },
+            });
+            if (lns.league_node_id) {
+              await prisma.game_standings_inclusions.create({
+                data: {
+                  game_id: game.id,
+                  league_node_id: lns.league_node_id,
+                  counts_for_standings: true,
+                },
+              });
+            }
+          }
         }
       }
     }
@@ -607,6 +691,7 @@ export async function getSchedulerOptions() {
     return {
       teamSeasonId: ts.id,
       teamId: ts.team_id,
+      seasonId: ts.season_id,
       clubId: clubId,
       clubName: clubName,
       teamName: teamName,
