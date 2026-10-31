@@ -9,6 +9,7 @@ import {
   getPlayerStatsByTeamSeason,
   getTeamSeasonRecords,
   getLeaguesForTeamSeason,
+  getClubs,
 } from "@/lib/data/queries";
 import {
   getCustomFieldDefinitions,
@@ -23,6 +24,8 @@ import {
   getPlayerPairings,
 } from "@/lib/actions/groups-actions";
 import { getPlayerUnavailability } from "@/lib/actions/unavailability-actions";
+import { getTeamSeasonAwardsAndLetters } from "@/lib/actions/awards-actions";
+import { getUniformDataForTeamSeason } from "@/lib/actions/uniform-actions";
 
 import TeamPageClient from "@/components/team/TeamPageClient";
 import { Card } from "@/components/ui/Card";
@@ -114,6 +117,9 @@ export default async function TeamPage({ params }: PageProps) {
       groups,
       pairings,
       unavailabilities,
+      awardsAndLetters,
+      uniformData,
+      clubsList,
     ] = await Promise.all([
       getPlayersByTeamSeason(idNumber, { targetTeamSeasonIds: programTeamSeasonIds }),
       getTeamStaff(idNumber),
@@ -128,6 +134,9 @@ export default async function TeamPage({ params }: PageProps) {
       getTeamGroups(idNumber),
       getPlayerPairings(idNumber),
       getPlayerUnavailability(idNumber),
+      getTeamSeasonAwardsAndLetters(idNumber, programTeamSeasonIds),
+      getUniformDataForTeamSeason(idNumber, programTeamSeasonIds),
+      getClubs(),
     ]);
 
     const safePlayers = players || [];
@@ -217,6 +226,12 @@ export default async function TeamPage({ params }: PageProps) {
           groups={groups || []}
           pairings={pairings || []}
           unavailabilities={unavailabilities || []}
+          awards={awardsAndLetters?.awards || []}
+          letters={awardsAndLetters?.letters || []}
+          uniformKits={uniformData?.kits || []}
+          uniformSeasonKits={uniformData?.seasonKits || []}
+          uniformAssignments={uniformData?.assignments || []}
+          clubs={(clubsList || []).map((c) => ({ id: c.id, name: c.name }))}
           subTeams={subTeams}
           programTeamSeasonIds={programTeamSeasonIds}
         />

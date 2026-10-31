@@ -1,3 +1,40 @@
+### [2026-10-31 18:38] Legacy Feature Parity: Awards & Varsity Letters, Uniform Inventory, Schedule Helper, & Career Stats Scope Fix
+- **Type**: Feature / Data Migration / Bug Fix
+- **Summary**:
+  - **Career Stats Season-Independence Fix (`queries.ts`, `StatsCenterClient.tsx`)**: Fixed `getComprehensivePlayerStats` and `getComprehensiveTeamStats` so that when `scope === "career"`, `seasonId` is ignored, `teamSeasonId` resolves to the underlying `team_id` across all seasons, and team records aggregate all-time across seasons. Updated `StatsCenterClient.tsx` to disable the Season filter and show `"All Seasons (Career Totals)"` when viewing Career Stats.
+  - **Prisma Schema Extensions (`prisma/schema.prisma`)**: Added `player_season_letters`, `uniform_kits`, `uniform_jerseys`, `uniform_season_kits`, `uniform_player_assignments`, and `schedule_leads` models and relations.
+  - **Awards & High School Varsity Letterman System (`awards-actions.ts`, `TeamAwardsAndLetters.tsx`, `PlayerProfileClient.tsx`)**: Implemented server actions and UI for managing player honors (`awards`) and High School Varsity Letters (`player_season_letters`), including 1-click `Auto-Calculate Letters` replicating the legacy `Form_PlayerLetterWinners.vba` logic (Certificate for all participants, Graduation Year number patch for 1st-year program players, Varsity Letter + Jacket Patch + Sport Ball for 1st-year Varsity, and Chevron Bar for repeat Varsity letter winners). Added Awards & Varsity Letters display to `PlayerProfileClient.tsx`.
+  - **Uniform Inventory & Player Jersey Assignments (`uniform-actions.ts`, `TeamUniforms.tsx`)**: Implemented full kit inventory management (`uniform_kits`), batch jersey generation and lost-jersey tracking (`uniform_jerseys`), season squad kit links (`uniform_season_kits`), and player jersey check-out/return tracking (`uniform_player_assignments`).
+  - **Enhanced Schedule Helper (`scheduleHelper-actions.ts`, `ScheduleHelperModal.tsx`, `TeamSchedule.tsx`)**: Upgraded the legacy `scheduleHelper` table into an interactive Matchmaking & Non-District Opponent Planner that automatically calculates all-time head-to-head series records (W-L-D), checks the last meeting venue/date, recommends `"Home"` vs `"Away"` rotation, tracks 1–5 star likelihood and contact status, and provides 1-click promotion into the Game Scheduler.
+  - **Historical Data Migration (`scripts/migrate_accdb_and_legacy_extras.ts`)**: Migrated all legacy uniform kits, 304 jerseys, season squad kit assignments, player uniform assignments, schedule helper leads, and historical Varsity Letterman records across all seasons.
+- **Modified Files**:
+  - `prisma/schema.prisma`
+  - `src/lib/data/queries.ts`
+  - `src/components/stats/StatsCenterClient.tsx`
+  - `src/lib/actions/awards-actions.ts`
+  - `src/lib/actions/uniform-actions.ts`
+  - `src/lib/actions/scheduleHelper-actions.ts`
+  - `src/components/team/TeamAwardsAndLetters.tsx`
+  - `src/components/team/TeamUniforms.tsx`
+  - `src/components/team/ScheduleHelperModal.tsx`
+  - `src/components/team/TeamSchedule.tsx`
+  - `src/components/team/TeamPageClient.tsx`
+  - `src/app/(mainAppLayout)/teams/[teamSeasonId]/page.tsx`
+  - `src/components/player/PlayerProfileClient.tsx`
+  - `scripts/migrate_accdb_and_legacy_extras.ts`
+  - `todo.md`
+  - `updates.md`
+
+### [2026-10-31 17:17] Todo Roadmap Audit & Legacy Migration Status Reconciliation
+- **Type**: Configuration / Documentation
+- **Summary**:
+  - Audited [`todo.md`](file:///d:/Development/general_soccer_app_v4/todo.md) against completed migrations in `u676616277_hs_original.sql`, schema extensions in [`prisma/schema.prisma`](file:///d:/Development/general_soccer_app_v4/prisma/schema.prisma), and remaining historical tables from `IHS Girls Soccer - Most Recent.accdb`.
+  - Added **Step 29.8** and **Step 35** to [`todo.md`](file:///d:/Development/general_soccer_app_v4/todo.md) documenting the completed `playing_time_seconds` and `plus_minus` column migrations, $O(1)$ query integration, UI leaderboards, and batch finalization across all 23 seasons (10,262+ historical `player_games` rows).
+  - Removed stray root-cause debug notes from [`todo.md`](file:///d:/Development/general_soccer_app_v4/todo.md) and updated **Future Milestone (`F.1`–`F.6`)** and **Recommended Next Steps** checkboxes to accurately distinguish completed schema/UI foundations (`awards`, `performance_tests`/`player_performance_logs`, `game_events_penalties` shootouts, `plus_minus`) from pending `.accdb` data imports (`PlayerAwardsEarned`, `PlayerSeasonLetters`, `BeepResults`, `ShootoutTable`, `PastSeasonStats`, `PastStatsGameScores`).
+- **Modified Files**:
+  - `todo.md`
+  - `updates.md`
+
 ### [2026-10-31 14:31] Competition Link Integrity Hardening & Game Edit Race Condition Fix
 - **Type**: Bug Fix / Data Integrity / UI Hardening
 - **Summary**:

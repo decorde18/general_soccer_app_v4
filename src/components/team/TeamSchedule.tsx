@@ -9,6 +9,9 @@ import { useSession } from "next-auth/react";
 import QuickScoreModal from "@/components/dashboard/QuickScoreModal";
 import GameSchedulerModal from "@/components/dashboard/GameSchedulerModal";
 import GameEditModal from "@/components/dashboard/GameEditModal";
+import ScheduleHelperModal from "@/components/team/ScheduleHelperModal";
+import Button from "@/components/ui/Button";
+import { Wand2 } from "lucide-react";
 
 interface Game {
   id: number;
@@ -40,6 +43,9 @@ interface Game {
 
 interface TeamScheduleProps {
   teamSeasonId: number;
+  seasonId?: number;
+  seasonName?: string;
+  clubs?: { id: number; name: string }[];
   games: Game[];
   programTeamSeasonIds?: number[];
 }
@@ -91,6 +97,9 @@ function getGameSquad(
 
 export default function TeamSchedule({
   teamSeasonId,
+  seasonId,
+  seasonName,
+  clubs = [],
   games,
   programTeamSeasonIds = [],
 }: TeamScheduleProps) {
@@ -102,6 +111,7 @@ export default function TeamSchedule({
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [selectedLocationModal, setSelectedLocationModal] = useState<{ id: number | null; name?: string | null; subName?: string | null } | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isScheduleHelperOpen, setIsScheduleHelperOpen] = useState(false);
   const dividerRef = useRef<HTMLDivElement | null>(null);
 
   const canManage = Boolean(session?.user);
@@ -260,13 +270,25 @@ export default function TeamSchedule({
         {/* Venue Filter Toggle & Schedule Action */}
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3 w-full md:w-auto justify-between md:justify-end">
           {canManage && (
-            <button
-              onClick={() => setIsScheduleModalOpen(true)}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-sm transition-all flex-1 sm:flex-none"
-            >
-              <Plus size={15} />
-              <span>Schedule Match</span>
-            </button>
+            <div className="flex items-center gap-2 flex-1 sm:flex-none">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsScheduleHelperOpen(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all"
+              >
+                <Wand2 size={14} className="text-primary" />
+                <span>Schedule Helper</span>
+              </Button>
+              <button
+                onClick={() => setIsScheduleModalOpen(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-extrabold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-sm transition-all flex-1 sm:flex-none"
+              >
+                <Plus size={15} />
+                <span>Schedule Match</span>
+              </button>
+            </div>
           )}
 
           <div className="flex items-center gap-1.5 flex-1 sm:flex-none justify-end">
@@ -573,6 +595,22 @@ export default function TeamSchedule({
         <GameSchedulerModal
           defaultHomeTeamSeasonId={teamSeasonId}
           onClose={() => setIsScheduleModalOpen(false)}
+        />
+      )}
+
+      {/* SCHEDULE HELPER / MATCHMAKING WORKSHEET MODAL */}
+      {isScheduleHelperOpen && (
+        <ScheduleHelperModal
+          isOpen={isScheduleHelperOpen}
+          onClose={() => setIsScheduleHelperOpen(false)}
+          teamSeasonId={teamSeasonId}
+          seasonId={seasonId || games[0]?.seasonId || 1}
+          seasonName={seasonName || games[0]?.seasonName}
+          clubs={clubs}
+          onPromoteToGame={() => {
+            setIsScheduleHelperOpen(false);
+            setIsScheduleModalOpen(true);
+          }}
         />
       )}
     </div>

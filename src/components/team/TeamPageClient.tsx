@@ -24,6 +24,9 @@ import TeamRequirements from "./TeamRequirements";
 import TeamPerformance from "./TeamPerformance";
 import TeamGroups from "./TeamGroups";
 import TeamAvailability from "./TeamAvailability";
+import TeamAwardsAndLetters from "./TeamAwardsAndLetters";
+import TeamUniforms from "./TeamUniforms";
+import { Award, Shirt } from "lucide-react";
 
 import TabbedPanel, { type TabItem } from "@/components/ui/TabbedPanel";
 import Button from "@/components/ui/Button";
@@ -113,6 +116,12 @@ interface TeamPageClientProps {
   groups?: any[];
   pairings?: any[];
   unavailabilities?: any[];
+  awards?: any[];
+  letters?: any[];
+  uniformKits?: any[];
+  uniformSeasonKits?: any[];
+  uniformAssignments?: any[];
+  clubs?: { id: number; name: string }[];
 }
 
 export default function TeamPageClient({
@@ -132,6 +141,12 @@ export default function TeamPageClient({
   groups = [],
   pairings = [],
   unavailabilities = [],
+  awards = [],
+  letters = [],
+  uniformKits = [],
+  uniformSeasonKits = [],
+  uniformAssignments = [],
+  clubs = [],
 }: TeamPageClientProps) {
   type TabType =
     | "overview"
@@ -139,6 +154,8 @@ export default function TeamPageClient({
     | "roster"
     | "schedule"
     | "stats"
+    | "awards"
+    | "uniforms"
     | "requirements"
     | "performance"
     | "groups"
@@ -274,12 +291,14 @@ export default function TeamPageClient({
     { id: "overview", label: "Overview", icon: Activity },
     { id: "competitions", label: "Competitions", icon: Trophy },
     { id: "roster", label: "Roster", icon: Users },
-    { id: "requirements", label: "Requirements & Gear", icon: ClipboardList },
-    { id: "performance", label: "Fitness Logs", icon: Zap },
-    { id: "groups", label: "Groups & Sisters", icon: Users },
-    { id: "availability", label: "Conflicts", icon: CalendarOff },
     { id: "schedule", label: "Schedule", icon: Calendar },
     { id: "stats", label: "Stats", icon: Trophy },
+    { id: "awards", label: "Awards & Letters", icon: Award },
+    { id: "uniforms", label: "Uniforms", icon: Shirt },
+    { id: "performance", label: "Fitness Logs", icon: Zap },
+    { id: "requirements", label: "Requirements & Gear", icon: ClipboardList },
+    { id: "groups", label: "Groups & Sisters", icon: Users },
+    { id: "availability", label: "Conflicts", icon: CalendarOff },
   ];
 
   return (
@@ -414,6 +433,9 @@ export default function TeamPageClient({
         {activeTab === "schedule" && (
           <TeamSchedule
             teamSeasonId={activeTeamSeasonId}
+            seasonId={teamSeason.seasonId}
+            seasonName={teamSeason.seasonName}
+            clubs={clubs}
             games={filteredGames}
             programTeamSeasonIds={programTeamSeasonIds}
           />
@@ -424,6 +446,31 @@ export default function TeamPageClient({
             stats={stats}
             teamSeasonId={activeTeamSeasonId}
             leagueLinks={leagueLinks}
+          />
+        )}
+
+        {activeTab === "awards" && (
+          <TeamAwardsAndLetters
+            teamSeasonId={activeTeamSeasonId}
+            seasonId={teamSeason.seasonId}
+            seasonName={teamSeason.seasonName}
+            programTeamSeasonIds={programTeamSeasonIds}
+            players={filteredPlayers}
+            initialAwards={awards}
+            initialLetters={letters}
+          />
+        )}
+
+        {activeTab === "uniforms" && (
+          <TeamUniforms
+            teamSeasonId={activeTeamSeasonId}
+            seasonId={teamSeason.seasonId}
+            seasonName={teamSeason.seasonName}
+            clubId={teamSeason.clubId}
+            players={filteredPlayers}
+            initialKits={uniformKits}
+            initialSeasonKits={uniformSeasonKits}
+            initialAssignments={uniformAssignments}
           />
         )}
       </div>

@@ -72,6 +72,8 @@ model clubs {
   addresses                addresses?                 @relation(fields: [location_id], references: [id], map: "fk_clubs_location")
   teams                    teams[]
   custom_field_definitions custom_field_definitions[]
+  uniform_kits             uniform_kits[]
+  schedule_leads           schedule_leads[]
 
   @@index([location_id], map: "fk_clubs_location")
 }
@@ -523,6 +525,7 @@ model people {
   player_unavailability                                               player_unavailability[]
   event_attendance                                                    event_attendance[]
   awards                                                              awards[]
+  player_season_letters                                               player_season_letters[]
 }
 
 model player_games {
@@ -573,46 +576,50 @@ model player_relationships {
 }
 
 model player_teams {
-  id                 Int                  @id @default(autoincrement())
-  grade              String?              @db.VarChar(10)
-  status             player_teams_status? @default(interested)
-  alt_jersey_number  Int?
-  gk_number          Int?
-  player_id          Int
-  team_season_id     Int
-  jersey_number      Int?
-  created_at         DateTime?            @default(now()) @db.DateTime(0)
-  modified_at        DateTime?            @default(now()) @db.DateTime(0)
-  position           String?              @db.VarChar(50)
-  previous_school    String?              @db.VarChar(255)
-  lives_with_parents Boolean?             @default(true)
-  played_last_season Boolean?
-  earned_credits     Boolean?
-  enrolled_last_year Boolean?             @default(true)
-  captain            Boolean?             @default(false)
-  is_active          Boolean?             @default(true)
-  joined_date        DateTime?            @db.Date
-  left_date          DateTime?            @db.Date
-  people             people               @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_teams_person")
-  team_seasons       team_seasons         @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_teams_team_season")
+  id                         Int                          @id @default(autoincrement())
+  grade                      String?                      @db.VarChar(10)
+  status                     player_teams_status?         @default(interested)
+  alt_jersey_number          Int?
+  gk_number                  Int?
+  player_id                  Int
+  team_season_id             Int
+  jersey_number              Int?
+  created_at                 DateTime?                    @default(now()) @db.DateTime(0)
+  modified_at                DateTime?                    @default(now()) @db.DateTime(0)
+  position                   String?                      @db.VarChar(50)
+  previous_school            String?                      @db.VarChar(255)
+  lives_with_parents         Boolean?                     @default(true)
+  played_last_season         Boolean?
+  earned_credits             Boolean?
+  enrolled_last_year         Boolean?                     @default(true)
+  captain                    Boolean?                     @default(false)
+  is_active                  Boolean?                     @default(true)
+  joined_date                DateTime?                    @db.Date
+  left_date                  DateTime?                    @db.Date
+  people                     people                       @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_teams_person")
+  team_seasons               team_seasons                 @relation(fields: [team_season_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_player_teams_team_season")
+  uniform_player_assignments uniform_player_assignments[]
 
   @@index([player_id], map: "idx_player_teams_player")
   @@index([team_season_id], map: "idx_player_teams_team_season")
 }
 
 model seasons {
-  id                  Int                   @id @default(autoincrement())
-  season_name         String                @db.VarChar(50)
-  start_date          DateTime              @db.Date
-  end_date            DateTime              @db.Date
-  status              seasons_status        @default(upcoming)
-  created_at          DateTime?             @default(now()) @db.DateTime(0)
-  modified_at         DateTime?             @default(now()) @db.DateTime(0)
-  games               games[]
-  league_node_seasons league_node_seasons[]
-  team_seasons        team_seasons[]
-  season_age_groups   season_age_groups[]
-  awards              awards[]
+  id                    Int                     @id @default(autoincrement())
+  season_name           String                  @db.VarChar(50)
+  start_date            DateTime                @db.Date
+  end_date              DateTime                @db.Date
+  status                seasons_status          @default(upcoming)
+  created_at            DateTime?               @default(now()) @db.DateTime(0)
+  modified_at           DateTime?               @default(now()) @db.DateTime(0)
+  games                 games[]
+  league_node_seasons   league_node_seasons[]
+  team_seasons          team_seasons[]
+  season_age_groups     season_age_groups[]
+  awards                awards[]
+  player_season_letters player_season_letters[]
+  uniform_season_kits   uniform_season_kits[]
+  schedule_leads        schedule_leads[]
 }
 
 model season_age_groups {
@@ -678,6 +685,9 @@ model team_seasons {
   player_pairings                               player_pairings[]
   player_unavailability                         player_unavailability[]
   awards                                        awards[]
+  player_season_letters                         player_season_letters[]
+  uniform_season_kits                           uniform_season_kits[]
+  schedule_leads                                schedule_leads[]
 
   @@unique([team_id, season_id], map: "team_id")
   @@index([age_group], map: "fk_team_seasons_age_group")
@@ -1173,4 +1183,116 @@ model awards {
   @@index([team_season_id], map: "idx_awards_team_season")
   @@index([season_id], map: "idx_awards_season")
   @@index([category], map: "idx_awards_category")
+}
+
+model player_season_letters {
+  id                   Int           @id @default(autoincrement())
+  player_id            Int
+  season_id            Int
+  team_season_id       Int?
+  varsity_letter       Boolean       @default(false)
+  number_patch         Int?
+  certificate          Boolean       @default(false)
+  bar                  Boolean       @default(false)
+  ball                 Boolean       @default(false)
+  number_patch_needed  Boolean       @default(false)
+  varsity_patch_needed Boolean       @default(false)
+  notes                String?       @db.Text
+  created_at           DateTime?     @default(now()) @db.Timestamp(0)
+  modified_at          DateTime?     @default(now()) @db.Timestamp(0)
+  people               people        @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  seasons              seasons       @relation(fields: [season_id], references: [id], onDelete: Cascade)
+  team_seasons         team_seasons? @relation(fields: [team_season_id], references: [id], onDelete: SetNull)
+
+  @@unique([player_id, season_id], map: "uq_psl_player_season")
+  @@index([player_id], map: "idx_psl_player")
+  @@index([season_id], map: "idx_psl_season")
+  @@index([team_season_id], map: "idx_psl_team_season")
+}
+
+model uniform_kits {
+  id                  Int                   @id @default(autoincrement())
+  club_id             Int?
+  type                String                @db.VarChar(50) // 'Jersey', 'Shorts', 'GK Jersey', 'GK Short'
+  brand               String?               @db.VarChar(50)
+  style               String?               @db.VarChar(100)
+  color               String?               @db.VarChar(50)
+  year                Int?
+  is_active           Boolean               @default(true)
+  created_at          DateTime?             @default(now()) @db.Timestamp(0)
+  modified_at         DateTime?             @default(now()) @db.Timestamp(0)
+  clubs               clubs?                @relation(fields: [club_id], references: [id], onDelete: SetNull)
+  uniform_jerseys     uniform_jerseys[]
+  uniform_season_kits uniform_season_kits[]
+
+  @@index([club_id], map: "idx_uk_club")
+}
+
+model uniform_jerseys {
+  id                         Int                          @id @default(autoincrement())
+  uniform_kit_id             Int?
+  jersey_number              Int
+  size                       String?                      @db.VarChar(20)
+  is_lost                    Boolean                      @default(false)
+  notes                      String?                      @db.Text
+  created_at                 DateTime?                    @default(now()) @db.Timestamp(0)
+  modified_at                DateTime?                    @default(now()) @db.Timestamp(0)
+  uniform_kits               uniform_kits?                @relation(fields: [uniform_kit_id], references: [id], onDelete: Cascade)
+  uniform_player_assignments uniform_player_assignments[]
+
+  @@index([uniform_kit_id], map: "idx_uj_kit")
+  @@index([jersey_number], map: "idx_uj_number")
+}
+
+model uniform_season_kits {
+  id             Int           @id @default(autoincrement())
+  season_id      Int
+  team_season_id Int?
+  squad_level    String        @db.VarChar(50) // 'Varsity', 'JV', 'GK'
+  uniform_kit_id Int
+  created_at     DateTime?     @default(now()) @db.Timestamp(0)
+  modified_at    DateTime?     @default(now()) @db.Timestamp(0)
+  seasons        seasons       @relation(fields: [season_id], references: [id], onDelete: Cascade)
+  team_seasons   team_seasons? @relation(fields: [team_season_id], references: [id], onDelete: SetNull)
+  uniform_kits   uniform_kits  @relation(fields: [uniform_kit_id], references: [id], onDelete: Cascade)
+
+  @@index([season_id], map: "idx_usk_season")
+  @@index([team_season_id], map: "idx_usk_team_season")
+  @@index([uniform_kit_id], map: "idx_usk_kit")
+}
+
+model uniform_player_assignments {
+  id                Int             @id @default(autoincrement())
+  player_team_id    Int
+  uniform_jersey_id Int
+  assignment_type   String          @default("primary") @db.VarChar(50) // 'primary', 'secondary', 'match', 'gk'
+  returned          Boolean         @default(false)
+  created_at        DateTime?       @default(now()) @db.Timestamp(0)
+  modified_at       DateTime?       @default(now()) @db.Timestamp(0)
+  player_teams      player_teams    @relation(fields: [player_team_id], references: [id], onDelete: Cascade)
+  uniform_jerseys   uniform_jerseys @relation(fields: [uniform_jersey_id], references: [id], onDelete: Cascade)
+
+  @@index([player_team_id], map: "idx_upa_player_team")
+  @@index([uniform_jersey_id], map: "idx_upa_jersey")
+}
+
+model schedule_leads {
+  id                  Int           @id @default(autoincrement())
+  season_id           Int
+  team_season_id      Int?
+  opponent_club_id    Int
+  likelihood          String        @default("likely") @db.VarChar(50) // 'mandatory', 'likely', 'hopeful', 'unlikely', 'unnecessary'
+  status              String        @default("no contact") @db.VarChar(50) // 'scheduled', 'contacted', 'pending', 'unable', 'no contact'
+  preferred_home_away String?       @db.VarChar(20) // 'Home', 'Away', 'Either'
+  preferred_date      DateTime?     @db.Date
+  notes               String?       @db.Text
+  created_at          DateTime?     @default(now()) @db.Timestamp(0)
+  modified_at         DateTime?     @default(now()) @db.Timestamp(0)
+  seasons             seasons       @relation(fields: [season_id], references: [id], onDelete: Cascade)
+  team_seasons        team_seasons? @relation(fields: [team_season_id], references: [id], onDelete: SetNull)
+  opponent_club       clubs         @relation(fields: [opponent_club_id], references: [id], onDelete: Cascade)
+
+  @@index([season_id], map: "idx_sl_season")
+  @@index([team_season_id], map: "idx_sl_team_season")
+  @@index([opponent_club_id], map: "idx_sl_opponent_club")
 }
