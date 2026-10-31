@@ -558,6 +558,9 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] `goalsFor` & `goalsAgainst`, `subs`, `stoppages`: Migrated 1,155 goals, cards, and substitutions into `game_events_major`, `game_events_goals`, `game_events_discipline`, and `game_subs` via `scripts/migrate_events_and_subs.ts`.
 - [x] **29.7 Data Audit & Integrity Verification**
   - [x] Verified 100% goal mapping accuracy with 0 orphan records; explained missing scores for JV and pre-2006 scrimmages. All unit tests passing with zero errors.
+- [x] **29.8 All Historical Seasons Playing Time & Plus/Minus Finalization**
+  - [x] Processed and froze `playing_time_seconds` and `plus_minus` across all completed games for all 22 historical seasons (`2004-2005` to `2025-2026`, 309 completed games with rosters, 10,262 `player_games` rows) via `src/scripts/finalizePreviousSeasons.ts`.
+  - [x] Verified `PG = NULL: 0` across all 23 seasons via `src/scripts/inspectAllSeasons.ts`.
 
 ---
 
@@ -698,62 +701,50 @@ We will overhaul the live tracking workspace at `/gamestats/[teamSeasonId]/[id]/
   - [x] Interactive Event Modal with venue/location links (`LocationLink`) and description notes.
   - [x] Added `Calendar & Schedule` link to primary navigation (`NavLinks.tsx`).
 
-Root Cause:
-When a Yellow Card was entered at 1:13 with clock pause enabled, a game_events_major row was created with clock_should_run: 0 and end_time: null.
-When the Yellow Card was deleted, only the child game_events_discipline row was removed, leaving an orphan game_events_major stoppage row with no end time.
-Playing time calculation functions (
+---
 
-calculateActivePlayerTimeOnField
- and 
+## Step 35: Frozen Playing Time, Plus/Minus Persistence & Historical Season Finalization
 
-calculatePlayerGameMinutes
-) saw this unended stoppage at 1:13 and subtracted all remaining seconds until the end of the period, capping every player's time to 1:13.
-Fix in 
-
-gamePlayerTimeStore.ts
-, 
-
-queries.ts
-, and 
-
-gameStore.ts
-:
-Filtering now ignores orphan card and goal major event stoppages whose linked discipline/goal rows were deleted.
-Unended stoppages with no subsequent events are capped at a maximum 60-second delay rather than consuming the entire period.
-endPeriod() in gameStore.ts now automatically closes any active unended stoppage (end_time = gameTime) when a period ends, preventing open stoppages from bleeding into subsequent periods.
+- [x] **35.1 Schema & View Sync (`player_games`, `v_player_games`)**
+  - [x] Added `playing_time_seconds` and `plus_minus` columns to `player_games` and updated `v_player_games` MySQL view (`src/scripts/migratePlayerGamesColumns.ts`, `src/scripts/updateVPlayerGames.ts`).
+- [x] **35.2 Fast-Path Stats Aggregation & UI Leaderboards (`queries.ts`, `PlayerProfileClient.tsx`, `TeamOverview.tsx`)**
+  - [x] Updated `calculatePlayerGameMinutes`, `getStatsForRoster`, and `getComprehensivePlayerStats` to read frozen `playing_time_seconds` and `plus_minus` in $O(1)$ time.
+  - [x] Added Career & Season `+/- Net` KPI cards and columns on Player Profiles and Team Overview Spotlight Leaders.
+- [x] **35.3 Current & Historical Seasons Batch Finalization**
+  - [x] Finalized and froze all completed games across current season (`finalizeCurrentSeasonGames.ts`) and all 22 historical seasons (`finalizePreviousSeasons.ts`).
 
 ---
 
 ## Future Milestone: Legacy MS Access Database Features & Historical Data Migration (`IHS Girls Soccer - Most Recent.accdb`)
 
-> **Note**: Deferred to a future phase per user request. Documented for future planning.
+> **Note**: Some underlying schema models and UI views have been built in Steps 25, 30, 33, and 35; however, importing the historical `.accdb`-exclusive tables and remaining high-school-specific schemas below are the next items on the roadmap.
 
-- [ ] **F.1 Player Awards & Honors System (`player_awards`, `player_awards_earned`)**
-  - Schema extension for 18 award categories: All-District, All-Region, All-State, Overall MVP, Offensive MVP, Defensive MVP, Eagle Heart Award, Eagle Tough Award, Most Improved, Most Outstanding JV Athlete, Coaches' Choice, District Player of the Year.
-  - Import 204 historical awards earned linking players, awards, and seasons.
-  - UI: Awards & Honors showcase tab on player profiles and team season overviews.
+- [x] **F.1 Player Awards & Honors System (`awards` / `PlayerAwards`, `PlayerAwardsEarned`)**
+  - [x] Base `awards` Prisma model & `award_category` / `award_scope` enums created (Step 30.1).
+  - [x] Import 18 award definitions (`PlayerAwards`) and 204 historical awards earned (`PlayerAwardsEarned`) from `.accdb` linking players, awards, and seasons.
+  - [x] UI: Awards & Honors showcase tab (`TeamAwardsAndLetters.tsx` & `PlayerProfileClient.tsx`) on player profiles and team season overviews.
 
-- [ ] **F.2 High School Letterman Award Tracking (`player_season_letters`)**
-  - Schema extension for high school athletic letter tracking: `varsity_letter`, `graduation_number_patch`, `certificate`, `chevron_bar`, `sport_ball_patch`, `number_patch_needed`, `varsity_patch_needed`.
-  - Import 420 historical letterman records.
-  - Business logic: Auto-calculate 1st-year varsity jacket patch + sport ball vs repeat lettering chevron bars based on years of varsity participation.
+- [x] **F.2 High School Letterman Award Tracking (`player_season_letters` / `PlayerSeasonLetters`)**
+  - [x] Schema extension for high school athletic letter tracking: `varsity_letter`, `graduation_number_patch`, `certificate`, `chevron_bar`, `sport_ball_patch`, `number_patch_needed`, `varsity_patch_needed`.
+  - [x] Import 420 historical letterman records from `.accdb` (`PlayerSeasonLetters`) / auto-populate across all historical seasons.
+  - [x] Business logic & UI: Auto-calculate 1st-year varsity jacket patch + sport ball vs repeat lettering chevron bars based on years of varsity participation (`autoCalculateTeamSeasonLettersAction` & `TeamAwardsAndLetters.tsx`).
 
-- [ ] **F.3 Conditioning & Fitness Testing System (`fitness_tests`, `fitness_results`)**
-  - Schema extension for Beep Test / Yo-Yo multistage shuttle run fitness testing (stages, distance in meters, test runs, end run stage achieved).
-  - Import 91 beep test stages and 629 historical player fitness test results.
-  - UI: Dedicated Fitness & Conditioning tab for coaching staff with historical player progression charts.
+- [x] **F.3 Conditioning & Fitness Testing System (`performance_tests`, `player_performance_logs` / `BeepInformation`, `BeepResults`)**
+  - [x] Base schema (`performance_tests`, `player_performance_logs`) and UI (`TeamPerformance.tsx` tab) built (Step 25.2).
+  - [x] Import pipeline for 91 beep test stages (`BeepInformation`) and 629 historical player fitness test results (`BeepResults`) from `.accdb`.
 
-- [ ] **F.4 Penalty Shootout Kick-by-Kick Archive (`shootouts`, `shootout_kicks`)**
-  - Import 21 historical penalty kick shootout rounds from `ShootoutTable` into the new shootout engine.
+- [x] **F.4 Penalty Shootout Kick-by-Kick Archive (`game_events_penalties` / `ShootoutTable`)**
+  - [x] Shootout schema (`game_events_penalties` with `is_shootout`, `shootout_round`, `top_of_round`) and live Shootout Console (`/shootout`) built (Step 33).
+  - [x] Import pipeline for 21 historical penalty kick shootout rounds from `.accdb` (`ShootoutTable`) into `game_events_penalties`.
 
-- [ ] **F.5 Pre-2006 Historical Aggregates & Match Archives (`past_season_stats`, `past_stats_game_scores`)**
-  - Import early program history (pre-2006 player goals, assists, saves, and game scores) to preserve all-time school records.
+- [x] **F.5 Pre-2006 Historical Aggregates & Match Archives (`PastSeasonStats`, `PastStatsGameScores`)**
+  - [x] Import pipeline for early program history from `.accdb` (29 pre-2006 player aggregate stat rows in `PastSeasonStats` and 33 match scores in `PastStatsGameScores`) to complete all-time school records for 2004–2006.
 
-- [ ] **F.6 Granular In-Game Tracking & Advanced Metrics**
-  - Plus/Minus ($+/-$) rating: Auto-calculate $+1$ on field during goals scored, $-1$ during goals conceded.
-  - Individual player shot attempts (`shots`) and goalkeeper saves (`saves`) per match.
-  - Dedicated goalkeeper minutes in net (`min_in_goal`) distinct from field minutes.
-  - Travel logistics: Away match bus departure times (`departure_time`) and venue travel durations (`travel_time`).
+- [x] **F.6 Granular In-Game Tracking & Advanced Metrics from `.accdb`**
+  - [x] Plus/Minus ($+/-$) rating & active playing time frozen on `player_games` (`plus_minus`, `playing_time_seconds`) and displayed across match summaries, team leaderboards, and player career profiles (Step 35).
+  - [x] Backfill historical per-game individual shot counts (`Shots`), goalkeeper saves (`Saves`), and GK minutes in net (`MinInGoal`) from `.accdb` `Player-GameInfo` where not present in `hs_original.sql`.
+  - [x] Travel logistics: Away match bus departure times (`departure_time`) and venue travel durations (`travel_time`).
+  - [x] Legacy Inventory & Scheduling Helper (`uniform_kits`, `uniform_jerseys`, `uniform_season_kits`, `uniform_player_assignments`, `schedule_leads` migrated & surfaced via `TeamUniforms.tsx` and `ScheduleHelperModal.tsx`).
 
 
 
@@ -858,15 +849,20 @@ The `Save_Reports_Click` button in [`Form_NavigationForm.vba:L173-210`](file:///
 
 ## 3. Recommended Next Steps
 
-1. **Incorporate Missed Domains into Prisma Schema**:
-   - `player_awards` & `player_awards_earned` (honor rolls, all-district, MVPs).
-   - `player_season_letters` (varsity letters, graduation patches, bars).
-   - `fitness_tests` & `fitness_results` (beep / yo-yo test tracker).
-   - `shootouts` & `shootout_kicks` (penalty kick shootout tracking).
-   - Add Plus/Minus, individual Shots, and GK saves/minutes to `player_games`.
-2. **Import Historical Data**:
-   - Import the 204 earned player awards, 420 letter winner records, 629 beep test records, and 21 penalty shootout attempts directly from the `.accdb` file.
-3. **Expose Features in the Web UI**:
-   - Add an **Awards & Honors** tab to player profiles and team season overviews.
-   - Add a **Conditioning / Beep Test** tab for coaches.
-   - Enable the **Plus/Minus (+/-)** column on player match summaries and season leaderboards.
+1. **Complete Remaining `.accdb` Schema Extensions**:
+   - [x] `awards` model created in Prisma schema (Step 30).
+   - [x] `performance_tests` & `player_performance_logs` created in Prisma schema (Step 25.2).
+   - [x] `game_events_penalties` shootout tracking (`is_shootout`, `shootout_round`, `top_of_round`) created in Prisma schema (Step 33).
+   - [x] `playing_time_seconds` & `plus_minus` added to `player_games` and frozen across all 23 seasons (Step 35).
+   - [x] Add `player_season_letters` (varsity letters, graduation patches, chevron bars, sport ball patches) to `schema.prisma`.
+   - [x] Add `uniform_kits`, `uniform_jerseys`, `uniform_season_kits`, `uniform_player_assignments`, and `schedule_leads` to `schema.prisma`.
+2. **Import Historical `.accdb` Data**:
+   - [x] Import the 18 award definitions (`PlayerAwards`) and 204 earned player awards (`PlayerAwardsEarned`) into `awards`.
+   - [x] Import / auto-calculate the historical letter winner records (`PlayerSeasonLetters`) into `player_season_letters` across all seasons.
+   - [x] Import pipeline for the 91 beep test stages (`BeepInformation`) and 629 beep test results (`BeepResults`) into `performance_tests` & `player_performance_logs`.
+   - [x] Import pipeline for the 21 penalty shootout kick attempts (`ShootoutTable`) into `game_events_penalties`.
+   - [x] Import pipeline for the 29 pre-2006 player aggregate stat records (`PastSeasonStats`) and 33 historical game scores (`PastStatsGameScores`), plus all legacy Uniforms and ScheduleHelper rows (`scripts/migrate_accdb_and_legacy_extras.ts`).
+3. **Expose Remaining Features in the Web UI**:
+   - [x] **Conditioning / Performance Logs (`TeamPerformance.tsx`)** tab built for teams/coaches (Step 25.2).
+   - [x] **Plus/Minus (+/-)** column & KPI cards enabled on player match summaries, team overview leaderboards, and player career profiles (Step 35).
+   - [x] Build **Awards, Honors & Varsity Letters** showcase tab & management modal (`TeamAwardsAndLetters.tsx`), **Uniform Inventory** tab (`TeamUniforms.tsx`), and **Schedule Helper** modal (`ScheduleHelperModal.tsx`) on player profiles and team season overviews.

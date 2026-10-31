@@ -95,7 +95,7 @@ export default function StatsCenterClient({
     startTransition(async () => {
       const filterOpts = {
         scope,
-        seasonId: selectedSeasonId ? Number(selectedSeasonId) : undefined,
+        seasonId: scope === "career" ? undefined : selectedSeasonId ? Number(selectedSeasonId) : undefined,
         leagueId: selectedLeagueId ? Number(selectedLeagueId) : undefined,
         clubId: selectedClubId ? Number(selectedClubId) : undefined,
         teamSeasonId: selectedTeamId ? Number(selectedTeamId) : undefined,
@@ -281,10 +281,15 @@ export default function StatsCenterClient({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <Select
-              label="Season"
-              options={seasonOptions}
-              value={selectedSeasonId}
+              label={scope === "career" ? "Season (All-Time Career)" : "Season"}
+              options={
+                scope === "career"
+                  ? [{ value: "", label: "All Seasons (Career Totals)" }]
+                  : seasonOptions
+              }
+              value={scope === "career" ? "" : selectedSeasonId}
               onChange={(e: any) => setSelectedSeasonId(e.target?.value ?? e)}
+              disabled={scope === "career"}
               width="full"
             />
 

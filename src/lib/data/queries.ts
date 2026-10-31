@@ -1888,10 +1888,29 @@ export async function getComprehensivePlayerStats(
   const playerGameWhere: any = {};
 
   if (teamSeasonId) {
-    playerGameWhere.team_season_id = teamSeasonId;
+    if (scope === "career") {
+      // In career scope, resolve the underlying team_id across all seasons (not just this single season's teamSeasonId)
+      const targetTs = await prisma.team_seasons.findUnique({
+        where: { id: teamSeasonId },
+        select: { team_id: true },
+      });
+      if (targetTs) {
+        playerGameWhere.team_seasons = {
+          ...playerGameWhere.team_seasons,
+          team_id: targetTs.team_id,
+        };
+      } else {
+        playerGameWhere.team_season_id = teamSeasonId;
+      }
+    } else {
+      playerGameWhere.team_season_id = teamSeasonId;
+    }
   }
-  if (seasonId) {
-    playerGameWhere.team_seasons = { season_id: seasonId };
+  if (seasonId && scope !== "career") {
+    playerGameWhere.team_seasons = {
+      ...playerGameWhere.team_seasons,
+      season_id: seasonId,
+    };
   }
   if (clubId) {
     playerGameWhere.team_seasons = {
@@ -2181,7 +2200,7 @@ export async function getComprehensivePlayerStats(
 export async function getComprehensiveTeamStats(
   options: StatsFilterOptions = {},
 ): Promise<ComprehensiveTeamStats[]> {
-  const { seasonId, leagueId, leagueNodeSeasonId, teamSeasonId } = options;
+  const { seasonId, leagueId, leagueNodeSeasonId, teamSeasonId, clubId, scope } = options;
 
   let records: TeamSeasonRecord[] = [];
 
@@ -2192,6 +2211,7 @@ export async function getComprehensiveTeamStats(
         league_nodes: {
           league_id: leagueId,
         },
+        ...(seasonId && scope !== "career" ? { season_id: seasonId } : {}),
       },
       select: { id: true },
     });
@@ -2202,10 +2222,59 @@ export async function getComprehensiveTeamStats(
     }
   }
 
+  let effectiveTeamSeasonId = teamSeasonId;
+  let targetTeamId: number | undefined;
+
+  if (teamSeasonId && scope === "career") {
+    const ts = await prisma.team_seasons.findUnique({
+      where: { id: teamSeasonId },
+      select: { team_id: true },
+    });
+    if (ts) {
+      targetTeamId = ts.team_id;
+      effectiveTeamSeasonId = undefined;
+    }
+  }
+
   if (targetLnsId) {
-    records = await getTeamSeasonRecords(targetLnsId, teamSeasonId);
+    records = await getTeamSeasonRecords(targetLnsId, effectiveTeamSeasonId);
   } else {
-    records = await getTeamSeasonRecords(undefined, teamSeasonId);
+    records = await getTeamSeasonRecords(undefined, effectiveTeamSeasonId);
+  }
+
+  // Filter by seasonId (when scope !== "career"), clubId, or targetTeamId (when scope === "career")
+  if ((seasonId && scope !== "career") || clubId || targetTeamId) {
+    const matchingTs = await prisma.team_seasons.findMany({
+      where: {
+        ...(seasonId && scope !== "career" ? { season_id: seasonId } : {}),
+        ...(targetTeamId ? { team_id: targetTeamId } : {}),
+        ...(clubId ? { teams: { club_id: clubId } } : {}),
+      },
+      select: { id: true, team_id: true },
+    });
+    const allowedTsIds = new Set(matchingTs.map((t) => t.id));
+    records = records.filter((r) => allowedTsIds.has(r.teamSeasonId));
+  }
+
+  if (scope === "career") {
+    // Aggregate across all seasons by teamName + clubName so career team stats show all-time totals
+    const careerMap = new Map<string, TeamSeasonRecord>();
+    for (const r of records) {
+      const key = `${r.clubName}__${r.teamName}`;
+      if (!careerMap.has(key)) {
+        careerMap.set(key, { ...r });
+      } else {
+        const agg = careerMap.get(key)!;
+        agg.gamesPlayed = (agg.gamesPlayed || 0) + (r.gamesPlayed || 0);
+        agg.wins = (agg.wins || 0) + (r.wins || 0);
+        agg.losses = (agg.losses || 0) + (r.losses || 0);
+        agg.draws = (agg.draws || 0) + (r.draws || 0);
+        agg.points = (agg.points || 0) + (r.points || 0);
+        agg.goalsFor = (agg.goalsFor || 0) + (r.goalsFor || 0);
+        agg.goalsAgainst = (agg.goalsAgainst || 0) + (r.goalsAgainst || 0);
+      }
+    }
+    records = Array.from(careerMap.values());
   }
 
   return records.map((r) => {
@@ -3552,6 +3621,29 @@ export interface PlayerSeasonStat {
   plusMinus: number;
 }
 
+export interface PlayerAwardItem {
+  id: number;
+  title: string;
+  category: string;
+  organization: string | null;
+  year: number | null;
+  seasonName: string | null;
+  notes: string | null;
+}
+
+export interface PlayerLetterItem {
+  id: number;
+  seasonId: number;
+  seasonName: string;
+  varsityLetter: boolean;
+  numberPatch: number | null;
+  certificate: boolean;
+  bar: boolean;
+  ball: boolean;
+  numberPatchNeeded: boolean;
+  varsityPatchNeeded: boolean;
+}
+
 export interface PlayerProfileData {
   personId: number;
   firstName: string;
@@ -3561,6 +3653,8 @@ export interface PlayerProfileData {
   birthDate: string | null;
   gender: string | null;
   seasonStats: PlayerSeasonStat[];
+  awards?: PlayerAwardItem[];
+  letters?: PlayerLetterItem[];
   careerTotals: {
     gamesPlayed: number;
     gamesStarted: number;
@@ -3580,6 +3674,14 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
   const person = await prisma.people.findUnique({
     where: { id: personId },
     include: {
+      awards: {
+        include: { seasons: true },
+        orderBy: [{ year: "desc" }, { id: "desc" }],
+      },
+      player_season_letters: {
+        include: { seasons: true },
+        orderBy: [{ seasons: { start_date: "desc" } }, { id: "desc" }],
+      },
       player_teams: {
         include: {
           team_seasons: {
@@ -3790,6 +3892,27 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
     birthDate: toDateString(person.birth_date),
     gender: person.gender ?? null,
     seasonStats,
+    awards: (person.awards || []).map((a) => ({
+      id: a.id,
+      title: a.title,
+      category: a.category,
+      organization: a.organization ?? null,
+      year: a.year ?? null,
+      seasonName: a.seasons?.season_name ?? null,
+      notes: a.notes ?? null,
+    })),
+    letters: (person.player_season_letters || []).map((l) => ({
+      id: l.id,
+      seasonId: l.season_id,
+      seasonName: l.seasons?.season_name ?? "",
+      varsityLetter: Boolean(l.varsity_letter),
+      numberPatch: l.number_patch ?? null,
+      certificate: Boolean(l.certificate),
+      bar: Boolean(l.bar),
+      ball: Boolean(l.ball),
+      numberPatchNeeded: Boolean(l.number_patch_needed),
+      varsityPatchNeeded: Boolean(l.varsity_patch_needed),
+    })),
     careerTotals,
   };
 }

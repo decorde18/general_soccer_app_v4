@@ -26,7 +26,7 @@ export default function PlayerProfileClient({
 }: PlayerProfileClientProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>("all");
 
-  const { firstName, lastName, email, phone, seasonStats, careerTotals } = playerData;
+  const { firstName, lastName, email, phone, seasonStats, careerTotals, awards = [], letters = [] } = playerData;
 
   // Filter stats based on selected season
   const activeSeasonStat =
@@ -256,6 +256,99 @@ export default function PlayerProfileClient({
           </div>
         )}
       </div>
+
+      {/* Career Awards, Honors & Varsity Letters Showcase */}
+      {(awards.length > 0 || letters.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Honors & Awards */}
+          <div className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-800/80 shadow-xl backdrop-blur-md">
+            <div className="border-b border-slate-700/80 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-amber-400" />
+                Career Honors & Awards
+              </h2>
+              <span className="text-xs text-slate-400">{awards.length} honor(s)</span>
+            </div>
+            <div className="p-4 space-y-2.5">
+              {awards.length === 0 ? (
+                <p className="text-xs text-slate-400 py-4 text-center">No individual honors recorded.</p>
+              ) : (
+                awards.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-slate-900/60 border border-slate-700/60"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-white">{a.title}</p>
+                      <p className="text-xs text-slate-400">
+                        {a.organization || a.category.toUpperCase()}
+                        {a.notes ? ` • ${a.notes}` : ""}
+                      </p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-mono font-bold">
+                      {a.seasonName || a.year || "Honor"}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Varsity Letters & Patches */}
+          <div className="overflow-hidden rounded-xl border border-slate-700/80 bg-slate-800/80 shadow-xl backdrop-blur-md">
+            <div className="border-b border-slate-700/80 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <Award className="h-5 w-5 text-indigo-400" />
+                Varsity Letterman & Patch History
+              </h2>
+              <span className="text-xs text-slate-400">
+                {letters.filter((l) => l.varsityLetter).length} Varsity Letter(s)
+              </span>
+            </div>
+            <div className="p-4 space-y-2.5">
+              {letters.length === 0 ? (
+                <p className="text-xs text-slate-400 py-4 text-center">No letterman records logged.</p>
+              ) : (
+                letters.map((l) => (
+                  <div
+                    key={l.id}
+                    className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg bg-slate-900/60 border border-slate-700/60"
+                  >
+                    <span className="text-sm font-bold text-white">{l.seasonName}</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {l.varsityLetter && (
+                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-xs font-bold">
+                          ★ Varsity Letter
+                        </span>
+                      )}
+                      {l.certificate && (
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-semibold">
+                          Certificate
+                        </span>
+                      )}
+                      {l.numberPatch && (
+                        <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-xs font-mono font-bold">
+                          Class &apos;{String(l.numberPatch).slice(-2)}
+                        </span>
+                      )}
+                      {l.ball && (
+                        <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-xs font-semibold">
+                          ⚽ Ball Patch
+                        </span>
+                      )}
+                      {l.bar && (
+                        <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-xs font-semibold">
+                          ══ Chevron Bar
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

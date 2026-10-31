@@ -739,6 +739,81 @@ exports.Prisma.AwardsScalarFieldEnum = {
   modified_at: 'modified_at'
 };
 
+exports.Prisma.Player_season_lettersScalarFieldEnum = {
+  id: 'id',
+  player_id: 'player_id',
+  season_id: 'season_id',
+  team_season_id: 'team_season_id',
+  varsity_letter: 'varsity_letter',
+  number_patch: 'number_patch',
+  certificate: 'certificate',
+  bar: 'bar',
+  ball: 'ball',
+  number_patch_needed: 'number_patch_needed',
+  varsity_patch_needed: 'varsity_patch_needed',
+  notes: 'notes',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Uniform_kitsScalarFieldEnum = {
+  id: 'id',
+  club_id: 'club_id',
+  type: 'type',
+  brand: 'brand',
+  style: 'style',
+  color: 'color',
+  year: 'year',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Uniform_jerseysScalarFieldEnum = {
+  id: 'id',
+  uniform_kit_id: 'uniform_kit_id',
+  jersey_number: 'jersey_number',
+  size: 'size',
+  is_lost: 'is_lost',
+  notes: 'notes',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Uniform_season_kitsScalarFieldEnum = {
+  id: 'id',
+  season_id: 'season_id',
+  team_season_id: 'team_season_id',
+  squad_level: 'squad_level',
+  uniform_kit_id: 'uniform_kit_id',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Uniform_player_assignmentsScalarFieldEnum = {
+  id: 'id',
+  player_team_id: 'player_team_id',
+  uniform_jersey_id: 'uniform_jersey_id',
+  assignment_type: 'assignment_type',
+  returned: 'returned',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
+exports.Prisma.Schedule_leadsScalarFieldEnum = {
+  id: 'id',
+  season_id: 'season_id',
+  team_season_id: 'team_season_id',
+  opponent_club_id: 'opponent_club_id',
+  likelihood: 'likelihood',
+  status: 'status',
+  preferred_home_away: 'preferred_home_away',
+  preferred_date: 'preferred_date',
+  notes: 'notes',
+  created_at: 'created_at',
+  modified_at: 'modified_at'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -989,7 +1064,13 @@ exports.Prisma.ModelName = {
   player_pairings: 'player_pairings',
   player_unavailability: 'player_unavailability',
   event_attendance: 'event_attendance',
-  awards: 'awards'
+  awards: 'awards',
+  player_season_letters: 'player_season_letters',
+  uniform_kits: 'uniform_kits',
+  uniform_jerseys: 'uniform_jerseys',
+  uniform_season_kits: 'uniform_season_kits',
+  uniform_player_assignments: 'uniform_player_assignments',
+  schedule_leads: 'schedule_leads'
 };
 
 /**

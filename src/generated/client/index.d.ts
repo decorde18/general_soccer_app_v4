@@ -253,6 +253,36 @@ export type event_attendance = $Result.DefaultSelection<Prisma.$event_attendance
  * 
  */
 export type awards = $Result.DefaultSelection<Prisma.$awardsPayload>
+/**
+ * Model player_season_letters
+ * 
+ */
+export type player_season_letters = $Result.DefaultSelection<Prisma.$player_season_lettersPayload>
+/**
+ * Model uniform_kits
+ * 
+ */
+export type uniform_kits = $Result.DefaultSelection<Prisma.$uniform_kitsPayload>
+/**
+ * Model uniform_jerseys
+ * 
+ */
+export type uniform_jerseys = $Result.DefaultSelection<Prisma.$uniform_jerseysPayload>
+/**
+ * Model uniform_season_kits
+ * 
+ */
+export type uniform_season_kits = $Result.DefaultSelection<Prisma.$uniform_season_kitsPayload>
+/**
+ * Model uniform_player_assignments
+ * 
+ */
+export type uniform_player_assignments = $Result.DefaultSelection<Prisma.$uniform_player_assignmentsPayload>
+/**
+ * Model schedule_leads
+ * 
+ */
+export type schedule_leads = $Result.DefaultSelection<Prisma.$schedule_leadsPayload>
 
 /**
  * Enums
@@ -1190,6 +1220,66 @@ export class PrismaClient<
     * ```
     */
   get awards(): Prisma.awardsDelegate<ExtArgs>;
+
+  /**
+   * `prisma.player_season_letters`: Exposes CRUD operations for the **player_season_letters** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Player_season_letters
+    * const player_season_letters = await prisma.player_season_letters.findMany()
+    * ```
+    */
+  get player_season_letters(): Prisma.player_season_lettersDelegate<ExtArgs>;
+
+  /**
+   * `prisma.uniform_kits`: Exposes CRUD operations for the **uniform_kits** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Uniform_kits
+    * const uniform_kits = await prisma.uniform_kits.findMany()
+    * ```
+    */
+  get uniform_kits(): Prisma.uniform_kitsDelegate<ExtArgs>;
+
+  /**
+   * `prisma.uniform_jerseys`: Exposes CRUD operations for the **uniform_jerseys** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Uniform_jerseys
+    * const uniform_jerseys = await prisma.uniform_jerseys.findMany()
+    * ```
+    */
+  get uniform_jerseys(): Prisma.uniform_jerseysDelegate<ExtArgs>;
+
+  /**
+   * `prisma.uniform_season_kits`: Exposes CRUD operations for the **uniform_season_kits** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Uniform_season_kits
+    * const uniform_season_kits = await prisma.uniform_season_kits.findMany()
+    * ```
+    */
+  get uniform_season_kits(): Prisma.uniform_season_kitsDelegate<ExtArgs>;
+
+  /**
+   * `prisma.uniform_player_assignments`: Exposes CRUD operations for the **uniform_player_assignments** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Uniform_player_assignments
+    * const uniform_player_assignments = await prisma.uniform_player_assignments.findMany()
+    * ```
+    */
+  get uniform_player_assignments(): Prisma.uniform_player_assignmentsDelegate<ExtArgs>;
+
+  /**
+   * `prisma.schedule_leads`: Exposes CRUD operations for the **schedule_leads** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Schedule_leads
+    * const schedule_leads = await prisma.schedule_leads.findMany()
+    * ```
+    */
+  get schedule_leads(): Prisma.schedule_leadsDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -1678,7 +1768,13 @@ export namespace Prisma {
     player_pairings: 'player_pairings',
     player_unavailability: 'player_unavailability',
     event_attendance: 'event_attendance',
-    awards: 'awards'
+    awards: 'awards',
+    player_season_letters: 'player_season_letters',
+    uniform_kits: 'uniform_kits',
+    uniform_jerseys: 'uniform_jerseys',
+    uniform_season_kits: 'uniform_season_kits',
+    uniform_player_assignments: 'uniform_player_assignments',
+    schedule_leads: 'schedule_leads'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1694,7 +1790,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "addresses" | "age_groups" | "club_staff" | "clubs" | "event_types" | "events" | "game_events_discipline" | "game_events_goals" | "game_events_major" | "game_events_penalties" | "game_events_player_actions" | "game_events_team" | "game_league_nodes" | "game_periods" | "game_standings_inclusions" | "game_subs" | "games" | "games_overtimes" | "governing_bodies" | "league_node_seasons" | "league_nodes" | "leagues" | "locations" | "locations_sublocations" | "people" | "player_games" | "player_relationships" | "player_teams" | "seasons" | "season_age_groups" | "team_league_enrollments" | "team_seasons" | "team_staff" | "teams" | "user_favorites" | "user_preferences" | "user_team_seasons" | "users" | "custom_field_definitions" | "custom_field_values" | "performance_tests" | "player_performance_logs" | "team_groups" | "player_group_assignments" | "player_pairings" | "player_unavailability" | "event_attendance" | "awards"
+      modelProps: "addresses" | "age_groups" | "club_staff" | "clubs" | "event_types" | "events" | "game_events_discipline" | "game_events_goals" | "game_events_major" | "game_events_penalties" | "game_events_player_actions" | "game_events_team" | "game_league_nodes" | "game_periods" | "game_standings_inclusions" | "game_subs" | "games" | "games_overtimes" | "governing_bodies" | "league_node_seasons" | "league_nodes" | "leagues" | "locations" | "locations_sublocations" | "people" | "player_games" | "player_relationships" | "player_teams" | "seasons" | "season_age_groups" | "team_league_enrollments" | "team_seasons" | "team_staff" | "teams" | "user_favorites" | "user_preferences" | "user_team_seasons" | "users" | "custom_field_definitions" | "custom_field_values" | "performance_tests" | "player_performance_logs" | "team_groups" | "player_group_assignments" | "player_pairings" | "player_unavailability" | "event_attendance" | "awards" | "player_season_letters" | "uniform_kits" | "uniform_jerseys" | "uniform_season_kits" | "uniform_player_assignments" | "schedule_leads"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -4866,6 +4962,402 @@ export namespace Prisma {
           }
         }
       }
+      player_season_letters: {
+        payload: Prisma.$player_season_lettersPayload<ExtArgs>
+        fields: Prisma.player_season_lettersFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.player_season_lettersFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.player_season_lettersFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload>
+          }
+          findFirst: {
+            args: Prisma.player_season_lettersFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.player_season_lettersFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload>
+          }
+          findMany: {
+            args: Prisma.player_season_lettersFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload>[]
+          }
+          create: {
+            args: Prisma.player_season_lettersCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload>
+          }
+          createMany: {
+            args: Prisma.player_season_lettersCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.player_season_lettersDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload>
+          }
+          update: {
+            args: Prisma.player_season_lettersUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload>
+          }
+          deleteMany: {
+            args: Prisma.player_season_lettersDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.player_season_lettersUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.player_season_lettersUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$player_season_lettersPayload>
+          }
+          aggregate: {
+            args: Prisma.Player_season_lettersAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayer_season_letters>
+          }
+          groupBy: {
+            args: Prisma.player_season_lettersGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Player_season_lettersGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.player_season_lettersCountArgs<ExtArgs>
+            result: $Utils.Optional<Player_season_lettersCountAggregateOutputType> | number
+          }
+        }
+      }
+      uniform_kits: {
+        payload: Prisma.$uniform_kitsPayload<ExtArgs>
+        fields: Prisma.uniform_kitsFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.uniform_kitsFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.uniform_kitsFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload>
+          }
+          findFirst: {
+            args: Prisma.uniform_kitsFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.uniform_kitsFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload>
+          }
+          findMany: {
+            args: Prisma.uniform_kitsFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload>[]
+          }
+          create: {
+            args: Prisma.uniform_kitsCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload>
+          }
+          createMany: {
+            args: Prisma.uniform_kitsCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.uniform_kitsDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload>
+          }
+          update: {
+            args: Prisma.uniform_kitsUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload>
+          }
+          deleteMany: {
+            args: Prisma.uniform_kitsDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.uniform_kitsUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.uniform_kitsUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_kitsPayload>
+          }
+          aggregate: {
+            args: Prisma.Uniform_kitsAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUniform_kits>
+          }
+          groupBy: {
+            args: Prisma.uniform_kitsGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Uniform_kitsGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.uniform_kitsCountArgs<ExtArgs>
+            result: $Utils.Optional<Uniform_kitsCountAggregateOutputType> | number
+          }
+        }
+      }
+      uniform_jerseys: {
+        payload: Prisma.$uniform_jerseysPayload<ExtArgs>
+        fields: Prisma.uniform_jerseysFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.uniform_jerseysFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.uniform_jerseysFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload>
+          }
+          findFirst: {
+            args: Prisma.uniform_jerseysFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.uniform_jerseysFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload>
+          }
+          findMany: {
+            args: Prisma.uniform_jerseysFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload>[]
+          }
+          create: {
+            args: Prisma.uniform_jerseysCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload>
+          }
+          createMany: {
+            args: Prisma.uniform_jerseysCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.uniform_jerseysDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload>
+          }
+          update: {
+            args: Prisma.uniform_jerseysUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload>
+          }
+          deleteMany: {
+            args: Prisma.uniform_jerseysDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.uniform_jerseysUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.uniform_jerseysUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_jerseysPayload>
+          }
+          aggregate: {
+            args: Prisma.Uniform_jerseysAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUniform_jerseys>
+          }
+          groupBy: {
+            args: Prisma.uniform_jerseysGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Uniform_jerseysGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.uniform_jerseysCountArgs<ExtArgs>
+            result: $Utils.Optional<Uniform_jerseysCountAggregateOutputType> | number
+          }
+        }
+      }
+      uniform_season_kits: {
+        payload: Prisma.$uniform_season_kitsPayload<ExtArgs>
+        fields: Prisma.uniform_season_kitsFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.uniform_season_kitsFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.uniform_season_kitsFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload>
+          }
+          findFirst: {
+            args: Prisma.uniform_season_kitsFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.uniform_season_kitsFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload>
+          }
+          findMany: {
+            args: Prisma.uniform_season_kitsFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload>[]
+          }
+          create: {
+            args: Prisma.uniform_season_kitsCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload>
+          }
+          createMany: {
+            args: Prisma.uniform_season_kitsCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.uniform_season_kitsDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload>
+          }
+          update: {
+            args: Prisma.uniform_season_kitsUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload>
+          }
+          deleteMany: {
+            args: Prisma.uniform_season_kitsDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.uniform_season_kitsUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.uniform_season_kitsUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_season_kitsPayload>
+          }
+          aggregate: {
+            args: Prisma.Uniform_season_kitsAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUniform_season_kits>
+          }
+          groupBy: {
+            args: Prisma.uniform_season_kitsGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Uniform_season_kitsGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.uniform_season_kitsCountArgs<ExtArgs>
+            result: $Utils.Optional<Uniform_season_kitsCountAggregateOutputType> | number
+          }
+        }
+      }
+      uniform_player_assignments: {
+        payload: Prisma.$uniform_player_assignmentsPayload<ExtArgs>
+        fields: Prisma.uniform_player_assignmentsFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.uniform_player_assignmentsFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.uniform_player_assignmentsFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload>
+          }
+          findFirst: {
+            args: Prisma.uniform_player_assignmentsFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.uniform_player_assignmentsFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload>
+          }
+          findMany: {
+            args: Prisma.uniform_player_assignmentsFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload>[]
+          }
+          create: {
+            args: Prisma.uniform_player_assignmentsCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload>
+          }
+          createMany: {
+            args: Prisma.uniform_player_assignmentsCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.uniform_player_assignmentsDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload>
+          }
+          update: {
+            args: Prisma.uniform_player_assignmentsUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload>
+          }
+          deleteMany: {
+            args: Prisma.uniform_player_assignmentsDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.uniform_player_assignmentsUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.uniform_player_assignmentsUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$uniform_player_assignmentsPayload>
+          }
+          aggregate: {
+            args: Prisma.Uniform_player_assignmentsAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUniform_player_assignments>
+          }
+          groupBy: {
+            args: Prisma.uniform_player_assignmentsGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Uniform_player_assignmentsGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.uniform_player_assignmentsCountArgs<ExtArgs>
+            result: $Utils.Optional<Uniform_player_assignmentsCountAggregateOutputType> | number
+          }
+        }
+      }
+      schedule_leads: {
+        payload: Prisma.$schedule_leadsPayload<ExtArgs>
+        fields: Prisma.schedule_leadsFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.schedule_leadsFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.schedule_leadsFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload>
+          }
+          findFirst: {
+            args: Prisma.schedule_leadsFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.schedule_leadsFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload>
+          }
+          findMany: {
+            args: Prisma.schedule_leadsFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload>[]
+          }
+          create: {
+            args: Prisma.schedule_leadsCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload>
+          }
+          createMany: {
+            args: Prisma.schedule_leadsCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.schedule_leadsDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload>
+          }
+          update: {
+            args: Prisma.schedule_leadsUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload>
+          }
+          deleteMany: {
+            args: Prisma.schedule_leadsDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.schedule_leadsUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.schedule_leadsUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$schedule_leadsPayload>
+          }
+          aggregate: {
+            args: Prisma.Schedule_leadsAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSchedule_leads>
+          }
+          groupBy: {
+            args: Prisma.schedule_leadsGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Schedule_leadsGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.schedule_leadsCountArgs<ExtArgs>
+            result: $Utils.Optional<Schedule_leadsCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -5110,12 +5602,16 @@ export namespace Prisma {
     club_staff: number
     teams: number
     custom_field_definitions: number
+    uniform_kits: number
+    schedule_leads: number
   }
 
   export type ClubsCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     club_staff?: boolean | ClubsCountOutputTypeCountClub_staffArgs
     teams?: boolean | ClubsCountOutputTypeCountTeamsArgs
     custom_field_definitions?: boolean | ClubsCountOutputTypeCountCustom_field_definitionsArgs
+    uniform_kits?: boolean | ClubsCountOutputTypeCountUniform_kitsArgs
+    schedule_leads?: boolean | ClubsCountOutputTypeCountSchedule_leadsArgs
   }
 
   // Custom InputTypes
@@ -5148,6 +5644,20 @@ export namespace Prisma {
    */
   export type ClubsCountOutputTypeCountCustom_field_definitionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: custom_field_definitionsWhereInput
+  }
+
+  /**
+   * ClubsCountOutputType without action
+   */
+  export type ClubsCountOutputTypeCountUniform_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_kitsWhereInput
+  }
+
+  /**
+   * ClubsCountOutputType without action
+   */
+  export type ClubsCountOutputTypeCountSchedule_leadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: schedule_leadsWhereInput
   }
 
 
@@ -5684,6 +6194,7 @@ export namespace Prisma {
     player_unavailability: number
     event_attendance: number
     awards: number
+    player_season_letters: number
   }
 
   export type PeopleCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5703,6 +6214,7 @@ export namespace Prisma {
     player_unavailability?: boolean | PeopleCountOutputTypeCountPlayer_unavailabilityArgs
     event_attendance?: boolean | PeopleCountOutputTypeCountEvent_attendanceArgs
     awards?: boolean | PeopleCountOutputTypeCountAwardsArgs
+    player_season_letters?: boolean | PeopleCountOutputTypeCountPlayer_season_lettersArgs
   }
 
   // Custom InputTypes
@@ -5828,6 +6340,13 @@ export namespace Prisma {
     where?: awardsWhereInput
   }
 
+  /**
+   * PeopleCountOutputType without action
+   */
+  export type PeopleCountOutputTypeCountPlayer_season_lettersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: player_season_lettersWhereInput
+  }
+
 
   /**
    * Count Type Player_gamesCountOutputType
@@ -5933,6 +6452,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type Player_teamsCountOutputType
+   */
+
+  export type Player_teamsCountOutputType = {
+    uniform_player_assignments: number
+  }
+
+  export type Player_teamsCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    uniform_player_assignments?: boolean | Player_teamsCountOutputTypeCountUniform_player_assignmentsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * Player_teamsCountOutputType without action
+   */
+  export type Player_teamsCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player_teamsCountOutputType
+     */
+    select?: Player_teamsCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * Player_teamsCountOutputType without action
+   */
+  export type Player_teamsCountOutputTypeCountUniform_player_assignmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_player_assignmentsWhereInput
+  }
+
+
+  /**
    * Count Type SeasonsCountOutputType
    */
 
@@ -5942,6 +6492,9 @@ export namespace Prisma {
     team_seasons: number
     season_age_groups: number
     awards: number
+    player_season_letters: number
+    uniform_season_kits: number
+    schedule_leads: number
   }
 
   export type SeasonsCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5950,6 +6503,9 @@ export namespace Prisma {
     team_seasons?: boolean | SeasonsCountOutputTypeCountTeam_seasonsArgs
     season_age_groups?: boolean | SeasonsCountOutputTypeCountSeason_age_groupsArgs
     awards?: boolean | SeasonsCountOutputTypeCountAwardsArgs
+    player_season_letters?: boolean | SeasonsCountOutputTypeCountPlayer_season_lettersArgs
+    uniform_season_kits?: boolean | SeasonsCountOutputTypeCountUniform_season_kitsArgs
+    schedule_leads?: boolean | SeasonsCountOutputTypeCountSchedule_leadsArgs
   }
 
   // Custom InputTypes
@@ -5998,6 +6554,27 @@ export namespace Prisma {
     where?: awardsWhereInput
   }
 
+  /**
+   * SeasonsCountOutputType without action
+   */
+  export type SeasonsCountOutputTypeCountPlayer_season_lettersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: player_season_lettersWhereInput
+  }
+
+  /**
+   * SeasonsCountOutputType without action
+   */
+  export type SeasonsCountOutputTypeCountUniform_season_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_season_kitsWhereInput
+  }
+
+  /**
+   * SeasonsCountOutputType without action
+   */
+  export type SeasonsCountOutputTypeCountSchedule_leadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: schedule_leadsWhereInput
+  }
+
 
   /**
    * Count Type Team_seasonsCountOutputType
@@ -6025,6 +6602,9 @@ export namespace Prisma {
     player_pairings: number
     player_unavailability: number
     awards: number
+    player_season_letters: number
+    uniform_season_kits: number
+    schedule_leads: number
   }
 
   export type Team_seasonsCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6049,6 +6629,9 @@ export namespace Prisma {
     player_pairings?: boolean | Team_seasonsCountOutputTypeCountPlayer_pairingsArgs
     player_unavailability?: boolean | Team_seasonsCountOutputTypeCountPlayer_unavailabilityArgs
     awards?: boolean | Team_seasonsCountOutputTypeCountAwardsArgs
+    player_season_letters?: boolean | Team_seasonsCountOutputTypeCountPlayer_season_lettersArgs
+    uniform_season_kits?: boolean | Team_seasonsCountOutputTypeCountUniform_season_kitsArgs
+    schedule_leads?: boolean | Team_seasonsCountOutputTypeCountSchedule_leadsArgs
   }
 
   // Custom InputTypes
@@ -6209,6 +6792,27 @@ export namespace Prisma {
     where?: awardsWhereInput
   }
 
+  /**
+   * Team_seasonsCountOutputType without action
+   */
+  export type Team_seasonsCountOutputTypeCountPlayer_season_lettersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: player_season_lettersWhereInput
+  }
+
+  /**
+   * Team_seasonsCountOutputType without action
+   */
+  export type Team_seasonsCountOutputTypeCountUniform_season_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_season_kitsWhereInput
+  }
+
+  /**
+   * Team_seasonsCountOutputType without action
+   */
+  export type Team_seasonsCountOutputTypeCountSchedule_leadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: schedule_leadsWhereInput
+  }
+
 
   /**
    * Count Type TeamsCountOutputType
@@ -6362,6 +6966,77 @@ export namespace Prisma {
    */
   export type Player_unavailabilityCountOutputTypeCountEvent_attendanceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: event_attendanceWhereInput
+  }
+
+
+  /**
+   * Count Type Uniform_kitsCountOutputType
+   */
+
+  export type Uniform_kitsCountOutputType = {
+    uniform_jerseys: number
+    uniform_season_kits: number
+  }
+
+  export type Uniform_kitsCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    uniform_jerseys?: boolean | Uniform_kitsCountOutputTypeCountUniform_jerseysArgs
+    uniform_season_kits?: boolean | Uniform_kitsCountOutputTypeCountUniform_season_kitsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * Uniform_kitsCountOutputType without action
+   */
+  export type Uniform_kitsCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Uniform_kitsCountOutputType
+     */
+    select?: Uniform_kitsCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * Uniform_kitsCountOutputType without action
+   */
+  export type Uniform_kitsCountOutputTypeCountUniform_jerseysArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_jerseysWhereInput
+  }
+
+  /**
+   * Uniform_kitsCountOutputType without action
+   */
+  export type Uniform_kitsCountOutputTypeCountUniform_season_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_season_kitsWhereInput
+  }
+
+
+  /**
+   * Count Type Uniform_jerseysCountOutputType
+   */
+
+  export type Uniform_jerseysCountOutputType = {
+    uniform_player_assignments: number
+  }
+
+  export type Uniform_jerseysCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    uniform_player_assignments?: boolean | Uniform_jerseysCountOutputTypeCountUniform_player_assignmentsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * Uniform_jerseysCountOutputType without action
+   */
+  export type Uniform_jerseysCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Uniform_jerseysCountOutputType
+     */
+    select?: Uniform_jerseysCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * Uniform_jerseysCountOutputType without action
+   */
+  export type Uniform_jerseysCountOutputTypeCountUniform_player_assignmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_player_assignmentsWhereInput
   }
 
 
@@ -9629,6 +10304,8 @@ export namespace Prisma {
     addresses?: boolean | clubs$addressesArgs<ExtArgs>
     teams?: boolean | clubs$teamsArgs<ExtArgs>
     custom_field_definitions?: boolean | clubs$custom_field_definitionsArgs<ExtArgs>
+    uniform_kits?: boolean | clubs$uniform_kitsArgs<ExtArgs>
+    schedule_leads?: boolean | clubs$schedule_leadsArgs<ExtArgs>
     _count?: boolean | ClubsCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["clubs"]>
 
@@ -9653,6 +10330,8 @@ export namespace Prisma {
     addresses?: boolean | clubs$addressesArgs<ExtArgs>
     teams?: boolean | clubs$teamsArgs<ExtArgs>
     custom_field_definitions?: boolean | clubs$custom_field_definitionsArgs<ExtArgs>
+    uniform_kits?: boolean | clubs$uniform_kitsArgs<ExtArgs>
+    schedule_leads?: boolean | clubs$schedule_leadsArgs<ExtArgs>
     _count?: boolean | ClubsCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -9663,6 +10342,8 @@ export namespace Prisma {
       addresses: Prisma.$addressesPayload<ExtArgs> | null
       teams: Prisma.$teamsPayload<ExtArgs>[]
       custom_field_definitions: Prisma.$custom_field_definitionsPayload<ExtArgs>[]
+      uniform_kits: Prisma.$uniform_kitsPayload<ExtArgs>[]
+      schedule_leads: Prisma.$schedule_leadsPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -10021,6 +10702,8 @@ export namespace Prisma {
     addresses<T extends clubs$addressesArgs<ExtArgs> = {}>(args?: Subset<T, clubs$addressesArgs<ExtArgs>>): Prisma__addressesClient<$Result.GetResult<Prisma.$addressesPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     teams<T extends clubs$teamsArgs<ExtArgs> = {}>(args?: Subset<T, clubs$teamsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$teamsPayload<ExtArgs>, T, "findMany"> | Null>
     custom_field_definitions<T extends clubs$custom_field_definitionsArgs<ExtArgs> = {}>(args?: Subset<T, clubs$custom_field_definitionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$custom_field_definitionsPayload<ExtArgs>, T, "findMany"> | Null>
+    uniform_kits<T extends clubs$uniform_kitsArgs<ExtArgs> = {}>(args?: Subset<T, clubs$uniform_kitsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "findMany"> | Null>
+    schedule_leads<T extends clubs$schedule_leadsArgs<ExtArgs> = {}>(args?: Subset<T, clubs$schedule_leadsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10433,6 +11116,46 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: Custom_field_definitionsScalarFieldEnum | Custom_field_definitionsScalarFieldEnum[]
+  }
+
+  /**
+   * clubs.uniform_kits
+   */
+  export type clubs$uniform_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    where?: uniform_kitsWhereInput
+    orderBy?: uniform_kitsOrderByWithRelationInput | uniform_kitsOrderByWithRelationInput[]
+    cursor?: uniform_kitsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Uniform_kitsScalarFieldEnum | Uniform_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * clubs.schedule_leads
+   */
+  export type clubs$schedule_leadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    where?: schedule_leadsWhereInput
+    orderBy?: schedule_leadsOrderByWithRelationInput | schedule_leadsOrderByWithRelationInput[]
+    cursor?: schedule_leadsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Schedule_leadsScalarFieldEnum | Schedule_leadsScalarFieldEnum[]
   }
 
   /**
@@ -31546,6 +32269,7 @@ export namespace Prisma {
     player_unavailability?: boolean | people$player_unavailabilityArgs<ExtArgs>
     event_attendance?: boolean | people$event_attendanceArgs<ExtArgs>
     awards?: boolean | people$awardsArgs<ExtArgs>
+    player_season_letters?: boolean | people$player_season_lettersArgs<ExtArgs>
     _count?: boolean | PeopleCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["people"]>
 
@@ -31591,6 +32315,7 @@ export namespace Prisma {
     player_unavailability?: boolean | people$player_unavailabilityArgs<ExtArgs>
     event_attendance?: boolean | people$event_attendanceArgs<ExtArgs>
     awards?: boolean | people$awardsArgs<ExtArgs>
+    player_season_letters?: boolean | people$player_season_lettersArgs<ExtArgs>
     _count?: boolean | PeopleCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -31615,6 +32340,7 @@ export namespace Prisma {
       player_unavailability: Prisma.$player_unavailabilityPayload<ExtArgs>[]
       event_attendance: Prisma.$event_attendancePayload<ExtArgs>[]
       awards: Prisma.$awardsPayload<ExtArgs>[]
+      player_season_letters: Prisma.$player_season_lettersPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -31994,6 +32720,7 @@ export namespace Prisma {
     player_unavailability<T extends people$player_unavailabilityArgs<ExtArgs> = {}>(args?: Subset<T, people$player_unavailabilityArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$player_unavailabilityPayload<ExtArgs>, T, "findMany"> | Null>
     event_attendance<T extends people$event_attendanceArgs<ExtArgs> = {}>(args?: Subset<T, people$event_attendanceArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$event_attendancePayload<ExtArgs>, T, "findMany"> | Null>
     awards<T extends people$awardsArgs<ExtArgs> = {}>(args?: Subset<T, people$awardsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$awardsPayload<ExtArgs>, T, "findMany"> | Null>
+    player_season_letters<T extends people$player_season_lettersArgs<ExtArgs> = {}>(args?: Subset<T, people$player_season_lettersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -32688,6 +33415,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AwardsScalarFieldEnum | AwardsScalarFieldEnum[]
+  }
+
+  /**
+   * people.player_season_letters
+   */
+  export type people$player_season_lettersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    where?: player_season_lettersWhereInput
+    orderBy?: player_season_lettersOrderByWithRelationInput | player_season_lettersOrderByWithRelationInput[]
+    cursor?: player_season_lettersWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Player_season_lettersScalarFieldEnum | Player_season_lettersScalarFieldEnum[]
   }
 
   /**
@@ -35221,6 +35968,8 @@ export namespace Prisma {
     left_date?: boolean
     people?: boolean | peopleDefaultArgs<ExtArgs>
     team_seasons?: boolean | team_seasonsDefaultArgs<ExtArgs>
+    uniform_player_assignments?: boolean | player_teams$uniform_player_assignmentsArgs<ExtArgs>
+    _count?: boolean | Player_teamsCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["player_teams"]>
 
 
@@ -35250,6 +35999,8 @@ export namespace Prisma {
   export type player_teamsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     people?: boolean | peopleDefaultArgs<ExtArgs>
     team_seasons?: boolean | team_seasonsDefaultArgs<ExtArgs>
+    uniform_player_assignments?: boolean | player_teams$uniform_player_assignmentsArgs<ExtArgs>
+    _count?: boolean | Player_teamsCountOutputTypeDefaultArgs<ExtArgs>
   }
 
   export type $player_teamsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -35257,6 +36008,7 @@ export namespace Prisma {
     objects: {
       people: Prisma.$peoplePayload<ExtArgs>
       team_seasons: Prisma.$team_seasonsPayload<ExtArgs>
+      uniform_player_assignments: Prisma.$uniform_player_assignmentsPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -35621,6 +36373,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     people<T extends peopleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, peopleDefaultArgs<ExtArgs>>): Prisma__peopleClient<$Result.GetResult<Prisma.$peoplePayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     team_seasons<T extends team_seasonsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, team_seasonsDefaultArgs<ExtArgs>>): Prisma__team_seasonsClient<$Result.GetResult<Prisma.$team_seasonsPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    uniform_player_assignments<T extends player_teams$uniform_player_assignmentsArgs<ExtArgs> = {}>(args?: Subset<T, player_teams$uniform_player_assignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -35969,6 +36722,26 @@ export namespace Prisma {
   }
 
   /**
+   * player_teams.uniform_player_assignments
+   */
+  export type player_teams$uniform_player_assignmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    where?: uniform_player_assignmentsWhereInput
+    orderBy?: uniform_player_assignmentsOrderByWithRelationInput | uniform_player_assignmentsOrderByWithRelationInput[]
+    cursor?: uniform_player_assignmentsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Uniform_player_assignmentsScalarFieldEnum | Uniform_player_assignmentsScalarFieldEnum[]
+  }
+
+  /**
    * player_teams without action
    */
   export type player_teamsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -36202,6 +36975,9 @@ export namespace Prisma {
     team_seasons?: boolean | seasons$team_seasonsArgs<ExtArgs>
     season_age_groups?: boolean | seasons$season_age_groupsArgs<ExtArgs>
     awards?: boolean | seasons$awardsArgs<ExtArgs>
+    player_season_letters?: boolean | seasons$player_season_lettersArgs<ExtArgs>
+    uniform_season_kits?: boolean | seasons$uniform_season_kitsArgs<ExtArgs>
+    schedule_leads?: boolean | seasons$schedule_leadsArgs<ExtArgs>
     _count?: boolean | SeasonsCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["seasons"]>
 
@@ -36222,6 +36998,9 @@ export namespace Prisma {
     team_seasons?: boolean | seasons$team_seasonsArgs<ExtArgs>
     season_age_groups?: boolean | seasons$season_age_groupsArgs<ExtArgs>
     awards?: boolean | seasons$awardsArgs<ExtArgs>
+    player_season_letters?: boolean | seasons$player_season_lettersArgs<ExtArgs>
+    uniform_season_kits?: boolean | seasons$uniform_season_kitsArgs<ExtArgs>
+    schedule_leads?: boolean | seasons$schedule_leadsArgs<ExtArgs>
     _count?: boolean | SeasonsCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -36233,6 +37012,9 @@ export namespace Prisma {
       team_seasons: Prisma.$team_seasonsPayload<ExtArgs>[]
       season_age_groups: Prisma.$season_age_groupsPayload<ExtArgs>[]
       awards: Prisma.$awardsPayload<ExtArgs>[]
+      player_season_letters: Prisma.$player_season_lettersPayload<ExtArgs>[]
+      uniform_season_kits: Prisma.$uniform_season_kitsPayload<ExtArgs>[]
+      schedule_leads: Prisma.$schedule_leadsPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -36587,6 +37369,9 @@ export namespace Prisma {
     team_seasons<T extends seasons$team_seasonsArgs<ExtArgs> = {}>(args?: Subset<T, seasons$team_seasonsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$team_seasonsPayload<ExtArgs>, T, "findMany"> | Null>
     season_age_groups<T extends seasons$season_age_groupsArgs<ExtArgs> = {}>(args?: Subset<T, seasons$season_age_groupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$season_age_groupsPayload<ExtArgs>, T, "findMany"> | Null>
     awards<T extends seasons$awardsArgs<ExtArgs> = {}>(args?: Subset<T, seasons$awardsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$awardsPayload<ExtArgs>, T, "findMany"> | Null>
+    player_season_letters<T extends seasons$player_season_lettersArgs<ExtArgs> = {}>(args?: Subset<T, seasons$player_season_lettersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "findMany"> | Null>
+    uniform_season_kits<T extends seasons$uniform_season_kitsArgs<ExtArgs> = {}>(args?: Subset<T, seasons$uniform_season_kitsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "findMany"> | Null>
+    schedule_leads<T extends seasons$schedule_leadsArgs<ExtArgs> = {}>(args?: Subset<T, seasons$schedule_leadsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -37019,6 +37804,66 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AwardsScalarFieldEnum | AwardsScalarFieldEnum[]
+  }
+
+  /**
+   * seasons.player_season_letters
+   */
+  export type seasons$player_season_lettersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    where?: player_season_lettersWhereInput
+    orderBy?: player_season_lettersOrderByWithRelationInput | player_season_lettersOrderByWithRelationInput[]
+    cursor?: player_season_lettersWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Player_season_lettersScalarFieldEnum | Player_season_lettersScalarFieldEnum[]
+  }
+
+  /**
+   * seasons.uniform_season_kits
+   */
+  export type seasons$uniform_season_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    where?: uniform_season_kitsWhereInput
+    orderBy?: uniform_season_kitsOrderByWithRelationInput | uniform_season_kitsOrderByWithRelationInput[]
+    cursor?: uniform_season_kitsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Uniform_season_kitsScalarFieldEnum | Uniform_season_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * seasons.schedule_leads
+   */
+  export type seasons$schedule_leadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    where?: schedule_leadsWhereInput
+    orderBy?: schedule_leadsOrderByWithRelationInput | schedule_leadsOrderByWithRelationInput[]
+    cursor?: schedule_leadsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Schedule_leadsScalarFieldEnum | Schedule_leadsScalarFieldEnum[]
   }
 
   /**
@@ -39166,6 +40011,9 @@ export namespace Prisma {
     player_pairings?: boolean | team_seasons$player_pairingsArgs<ExtArgs>
     player_unavailability?: boolean | team_seasons$player_unavailabilityArgs<ExtArgs>
     awards?: boolean | team_seasons$awardsArgs<ExtArgs>
+    player_season_letters?: boolean | team_seasons$player_season_lettersArgs<ExtArgs>
+    uniform_season_kits?: boolean | team_seasons$uniform_season_kitsArgs<ExtArgs>
+    schedule_leads?: boolean | team_seasons$schedule_leadsArgs<ExtArgs>
     _count?: boolean | Team_seasonsCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["team_seasons"]>
 
@@ -39206,6 +40054,9 @@ export namespace Prisma {
     player_pairings?: boolean | team_seasons$player_pairingsArgs<ExtArgs>
     player_unavailability?: boolean | team_seasons$player_unavailabilityArgs<ExtArgs>
     awards?: boolean | team_seasons$awardsArgs<ExtArgs>
+    player_season_letters?: boolean | team_seasons$player_season_lettersArgs<ExtArgs>
+    uniform_season_kits?: boolean | team_seasons$uniform_season_kitsArgs<ExtArgs>
+    schedule_leads?: boolean | team_seasons$schedule_leadsArgs<ExtArgs>
     _count?: boolean | Team_seasonsCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -39236,6 +40087,9 @@ export namespace Prisma {
       player_pairings: Prisma.$player_pairingsPayload<ExtArgs>[]
       player_unavailability: Prisma.$player_unavailabilityPayload<ExtArgs>[]
       awards: Prisma.$awardsPayload<ExtArgs>[]
+      player_season_letters: Prisma.$player_season_lettersPayload<ExtArgs>[]
+      uniform_season_kits: Prisma.$uniform_season_kitsPayload<ExtArgs>[]
+      schedule_leads: Prisma.$schedule_leadsPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -39610,6 +40464,9 @@ export namespace Prisma {
     player_pairings<T extends team_seasons$player_pairingsArgs<ExtArgs> = {}>(args?: Subset<T, team_seasons$player_pairingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$player_pairingsPayload<ExtArgs>, T, "findMany"> | Null>
     player_unavailability<T extends team_seasons$player_unavailabilityArgs<ExtArgs> = {}>(args?: Subset<T, team_seasons$player_unavailabilityArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$player_unavailabilityPayload<ExtArgs>, T, "findMany"> | Null>
     awards<T extends team_seasons$awardsArgs<ExtArgs> = {}>(args?: Subset<T, team_seasons$awardsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$awardsPayload<ExtArgs>, T, "findMany"> | Null>
+    player_season_letters<T extends team_seasons$player_season_lettersArgs<ExtArgs> = {}>(args?: Subset<T, team_seasons$player_season_lettersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "findMany"> | Null>
+    uniform_season_kits<T extends team_seasons$uniform_season_kitsArgs<ExtArgs> = {}>(args?: Subset<T, team_seasons$uniform_season_kitsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "findMany"> | Null>
+    schedule_leads<T extends team_seasons$schedule_leadsArgs<ExtArgs> = {}>(args?: Subset<T, team_seasons$schedule_leadsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -40378,6 +41235,66 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AwardsScalarFieldEnum | AwardsScalarFieldEnum[]
+  }
+
+  /**
+   * team_seasons.player_season_letters
+   */
+  export type team_seasons$player_season_lettersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    where?: player_season_lettersWhereInput
+    orderBy?: player_season_lettersOrderByWithRelationInput | player_season_lettersOrderByWithRelationInput[]
+    cursor?: player_season_lettersWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Player_season_lettersScalarFieldEnum | Player_season_lettersScalarFieldEnum[]
+  }
+
+  /**
+   * team_seasons.uniform_season_kits
+   */
+  export type team_seasons$uniform_season_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    where?: uniform_season_kitsWhereInput
+    orderBy?: uniform_season_kitsOrderByWithRelationInput | uniform_season_kitsOrderByWithRelationInput[]
+    cursor?: uniform_season_kitsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Uniform_season_kitsScalarFieldEnum | Uniform_season_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * team_seasons.schedule_leads
+   */
+  export type team_seasons$schedule_leadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    where?: schedule_leadsWhereInput
+    orderBy?: schedule_leadsOrderByWithRelationInput | schedule_leadsOrderByWithRelationInput[]
+    cursor?: schedule_leadsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Schedule_leadsScalarFieldEnum | Schedule_leadsScalarFieldEnum[]
   }
 
   /**
@@ -56347,6 +57264,6024 @@ export namespace Prisma {
 
 
   /**
+   * Model player_season_letters
+   */
+
+  export type AggregatePlayer_season_letters = {
+    _count: Player_season_lettersCountAggregateOutputType | null
+    _avg: Player_season_lettersAvgAggregateOutputType | null
+    _sum: Player_season_lettersSumAggregateOutputType | null
+    _min: Player_season_lettersMinAggregateOutputType | null
+    _max: Player_season_lettersMaxAggregateOutputType | null
+  }
+
+  export type Player_season_lettersAvgAggregateOutputType = {
+    id: number | null
+    player_id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    number_patch: number | null
+  }
+
+  export type Player_season_lettersSumAggregateOutputType = {
+    id: number | null
+    player_id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    number_patch: number | null
+  }
+
+  export type Player_season_lettersMinAggregateOutputType = {
+    id: number | null
+    player_id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    varsity_letter: boolean | null
+    number_patch: number | null
+    certificate: boolean | null
+    bar: boolean | null
+    ball: boolean | null
+    number_patch_needed: boolean | null
+    varsity_patch_needed: boolean | null
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Player_season_lettersMaxAggregateOutputType = {
+    id: number | null
+    player_id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    varsity_letter: boolean | null
+    number_patch: number | null
+    certificate: boolean | null
+    bar: boolean | null
+    ball: boolean | null
+    number_patch_needed: boolean | null
+    varsity_patch_needed: boolean | null
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Player_season_lettersCountAggregateOutputType = {
+    id: number
+    player_id: number
+    season_id: number
+    team_season_id: number
+    varsity_letter: number
+    number_patch: number
+    certificate: number
+    bar: number
+    ball: number
+    number_patch_needed: number
+    varsity_patch_needed: number
+    notes: number
+    created_at: number
+    modified_at: number
+    _all: number
+  }
+
+
+  export type Player_season_lettersAvgAggregateInputType = {
+    id?: true
+    player_id?: true
+    season_id?: true
+    team_season_id?: true
+    number_patch?: true
+  }
+
+  export type Player_season_lettersSumAggregateInputType = {
+    id?: true
+    player_id?: true
+    season_id?: true
+    team_season_id?: true
+    number_patch?: true
+  }
+
+  export type Player_season_lettersMinAggregateInputType = {
+    id?: true
+    player_id?: true
+    season_id?: true
+    team_season_id?: true
+    varsity_letter?: true
+    number_patch?: true
+    certificate?: true
+    bar?: true
+    ball?: true
+    number_patch_needed?: true
+    varsity_patch_needed?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Player_season_lettersMaxAggregateInputType = {
+    id?: true
+    player_id?: true
+    season_id?: true
+    team_season_id?: true
+    varsity_letter?: true
+    number_patch?: true
+    certificate?: true
+    bar?: true
+    ball?: true
+    number_patch_needed?: true
+    varsity_patch_needed?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Player_season_lettersCountAggregateInputType = {
+    id?: true
+    player_id?: true
+    season_id?: true
+    team_season_id?: true
+    varsity_letter?: true
+    number_patch?: true
+    certificate?: true
+    bar?: true
+    ball?: true
+    number_patch_needed?: true
+    varsity_patch_needed?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+    _all?: true
+  }
+
+  export type Player_season_lettersAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which player_season_letters to aggregate.
+     */
+    where?: player_season_lettersWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of player_season_letters to fetch.
+     */
+    orderBy?: player_season_lettersOrderByWithRelationInput | player_season_lettersOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: player_season_lettersWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` player_season_letters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` player_season_letters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned player_season_letters
+    **/
+    _count?: true | Player_season_lettersCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Player_season_lettersAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Player_season_lettersSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Player_season_lettersMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Player_season_lettersMaxAggregateInputType
+  }
+
+  export type GetPlayer_season_lettersAggregateType<T extends Player_season_lettersAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayer_season_letters]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayer_season_letters[P]>
+      : GetScalarType<T[P], AggregatePlayer_season_letters[P]>
+  }
+
+
+
+
+  export type player_season_lettersGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: player_season_lettersWhereInput
+    orderBy?: player_season_lettersOrderByWithAggregationInput | player_season_lettersOrderByWithAggregationInput[]
+    by: Player_season_lettersScalarFieldEnum[] | Player_season_lettersScalarFieldEnum
+    having?: player_season_lettersScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Player_season_lettersCountAggregateInputType | true
+    _avg?: Player_season_lettersAvgAggregateInputType
+    _sum?: Player_season_lettersSumAggregateInputType
+    _min?: Player_season_lettersMinAggregateInputType
+    _max?: Player_season_lettersMaxAggregateInputType
+  }
+
+  export type Player_season_lettersGroupByOutputType = {
+    id: number
+    player_id: number
+    season_id: number
+    team_season_id: number | null
+    varsity_letter: boolean
+    number_patch: number | null
+    certificate: boolean
+    bar: boolean
+    ball: boolean
+    number_patch_needed: boolean
+    varsity_patch_needed: boolean
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+    _count: Player_season_lettersCountAggregateOutputType | null
+    _avg: Player_season_lettersAvgAggregateOutputType | null
+    _sum: Player_season_lettersSumAggregateOutputType | null
+    _min: Player_season_lettersMinAggregateOutputType | null
+    _max: Player_season_lettersMaxAggregateOutputType | null
+  }
+
+  type GetPlayer_season_lettersGroupByPayload<T extends player_season_lettersGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Player_season_lettersGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Player_season_lettersGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Player_season_lettersGroupByOutputType[P]>
+            : GetScalarType<T[P], Player_season_lettersGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type player_season_lettersSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    player_id?: boolean
+    season_id?: boolean
+    team_season_id?: boolean
+    varsity_letter?: boolean
+    number_patch?: boolean
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+    people?: boolean | peopleDefaultArgs<ExtArgs>
+    seasons?: boolean | seasonsDefaultArgs<ExtArgs>
+    team_seasons?: boolean | player_season_letters$team_seasonsArgs<ExtArgs>
+  }, ExtArgs["result"]["player_season_letters"]>
+
+
+  export type player_season_lettersSelectScalar = {
+    id?: boolean
+    player_id?: boolean
+    season_id?: boolean
+    team_season_id?: boolean
+    varsity_letter?: boolean
+    number_patch?: boolean
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+  }
+
+  export type player_season_lettersInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    people?: boolean | peopleDefaultArgs<ExtArgs>
+    seasons?: boolean | seasonsDefaultArgs<ExtArgs>
+    team_seasons?: boolean | player_season_letters$team_seasonsArgs<ExtArgs>
+  }
+
+  export type $player_season_lettersPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "player_season_letters"
+    objects: {
+      people: Prisma.$peoplePayload<ExtArgs>
+      seasons: Prisma.$seasonsPayload<ExtArgs>
+      team_seasons: Prisma.$team_seasonsPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      player_id: number
+      season_id: number
+      team_season_id: number | null
+      varsity_letter: boolean
+      number_patch: number | null
+      certificate: boolean
+      bar: boolean
+      ball: boolean
+      number_patch_needed: boolean
+      varsity_patch_needed: boolean
+      notes: string | null
+      created_at: Date | null
+      modified_at: Date | null
+    }, ExtArgs["result"]["player_season_letters"]>
+    composites: {}
+  }
+
+  type player_season_lettersGetPayload<S extends boolean | null | undefined | player_season_lettersDefaultArgs> = $Result.GetResult<Prisma.$player_season_lettersPayload, S>
+
+  type player_season_lettersCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<player_season_lettersFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: Player_season_lettersCountAggregateInputType | true
+    }
+
+  export interface player_season_lettersDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['player_season_letters'], meta: { name: 'player_season_letters' } }
+    /**
+     * Find zero or one Player_season_letters that matches the filter.
+     * @param {player_season_lettersFindUniqueArgs} args - Arguments to find a Player_season_letters
+     * @example
+     * // Get one Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends player_season_lettersFindUniqueArgs>(args: SelectSubset<T, player_season_lettersFindUniqueArgs<ExtArgs>>): Prisma__player_season_lettersClient<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Player_season_letters that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {player_season_lettersFindUniqueOrThrowArgs} args - Arguments to find a Player_season_letters
+     * @example
+     * // Get one Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends player_season_lettersFindUniqueOrThrowArgs>(args: SelectSubset<T, player_season_lettersFindUniqueOrThrowArgs<ExtArgs>>): Prisma__player_season_lettersClient<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Player_season_letters that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {player_season_lettersFindFirstArgs} args - Arguments to find a Player_season_letters
+     * @example
+     * // Get one Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends player_season_lettersFindFirstArgs>(args?: SelectSubset<T, player_season_lettersFindFirstArgs<ExtArgs>>): Prisma__player_season_lettersClient<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Player_season_letters that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {player_season_lettersFindFirstOrThrowArgs} args - Arguments to find a Player_season_letters
+     * @example
+     * // Get one Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends player_season_lettersFindFirstOrThrowArgs>(args?: SelectSubset<T, player_season_lettersFindFirstOrThrowArgs<ExtArgs>>): Prisma__player_season_lettersClient<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Player_season_letters that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {player_season_lettersFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.findMany()
+     * 
+     * // Get first 10 Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const player_season_lettersWithIdOnly = await prisma.player_season_letters.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends player_season_lettersFindManyArgs>(args?: SelectSubset<T, player_season_lettersFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Player_season_letters.
+     * @param {player_season_lettersCreateArgs} args - Arguments to create a Player_season_letters.
+     * @example
+     * // Create one Player_season_letters
+     * const Player_season_letters = await prisma.player_season_letters.create({
+     *   data: {
+     *     // ... data to create a Player_season_letters
+     *   }
+     * })
+     * 
+     */
+    create<T extends player_season_lettersCreateArgs>(args: SelectSubset<T, player_season_lettersCreateArgs<ExtArgs>>): Prisma__player_season_lettersClient<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Player_season_letters.
+     * @param {player_season_lettersCreateManyArgs} args - Arguments to create many Player_season_letters.
+     * @example
+     * // Create many Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends player_season_lettersCreateManyArgs>(args?: SelectSubset<T, player_season_lettersCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Player_season_letters.
+     * @param {player_season_lettersDeleteArgs} args - Arguments to delete one Player_season_letters.
+     * @example
+     * // Delete one Player_season_letters
+     * const Player_season_letters = await prisma.player_season_letters.delete({
+     *   where: {
+     *     // ... filter to delete one Player_season_letters
+     *   }
+     * })
+     * 
+     */
+    delete<T extends player_season_lettersDeleteArgs>(args: SelectSubset<T, player_season_lettersDeleteArgs<ExtArgs>>): Prisma__player_season_lettersClient<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Player_season_letters.
+     * @param {player_season_lettersUpdateArgs} args - Arguments to update one Player_season_letters.
+     * @example
+     * // Update one Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends player_season_lettersUpdateArgs>(args: SelectSubset<T, player_season_lettersUpdateArgs<ExtArgs>>): Prisma__player_season_lettersClient<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Player_season_letters.
+     * @param {player_season_lettersDeleteManyArgs} args - Arguments to filter Player_season_letters to delete.
+     * @example
+     * // Delete a few Player_season_letters
+     * const { count } = await prisma.player_season_letters.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends player_season_lettersDeleteManyArgs>(args?: SelectSubset<T, player_season_lettersDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Player_season_letters.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {player_season_lettersUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends player_season_lettersUpdateManyArgs>(args: SelectSubset<T, player_season_lettersUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Player_season_letters.
+     * @param {player_season_lettersUpsertArgs} args - Arguments to update or create a Player_season_letters.
+     * @example
+     * // Update or create a Player_season_letters
+     * const player_season_letters = await prisma.player_season_letters.upsert({
+     *   create: {
+     *     // ... data to create a Player_season_letters
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Player_season_letters we want to update
+     *   }
+     * })
+     */
+    upsert<T extends player_season_lettersUpsertArgs>(args: SelectSubset<T, player_season_lettersUpsertArgs<ExtArgs>>): Prisma__player_season_lettersClient<$Result.GetResult<Prisma.$player_season_lettersPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Player_season_letters.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {player_season_lettersCountArgs} args - Arguments to filter Player_season_letters to count.
+     * @example
+     * // Count the number of Player_season_letters
+     * const count = await prisma.player_season_letters.count({
+     *   where: {
+     *     // ... the filter for the Player_season_letters we want to count
+     *   }
+     * })
+    **/
+    count<T extends player_season_lettersCountArgs>(
+      args?: Subset<T, player_season_lettersCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Player_season_lettersCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Player_season_letters.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Player_season_lettersAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Player_season_lettersAggregateArgs>(args: Subset<T, Player_season_lettersAggregateArgs>): Prisma.PrismaPromise<GetPlayer_season_lettersAggregateType<T>>
+
+    /**
+     * Group by Player_season_letters.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {player_season_lettersGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends player_season_lettersGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: player_season_lettersGroupByArgs['orderBy'] }
+        : { orderBy?: player_season_lettersGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, player_season_lettersGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayer_season_lettersGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the player_season_letters model
+   */
+  readonly fields: player_season_lettersFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for player_season_letters.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__player_season_lettersClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    people<T extends peopleDefaultArgs<ExtArgs> = {}>(args?: Subset<T, peopleDefaultArgs<ExtArgs>>): Prisma__peopleClient<$Result.GetResult<Prisma.$peoplePayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    seasons<T extends seasonsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, seasonsDefaultArgs<ExtArgs>>): Prisma__seasonsClient<$Result.GetResult<Prisma.$seasonsPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    team_seasons<T extends player_season_letters$team_seasonsArgs<ExtArgs> = {}>(args?: Subset<T, player_season_letters$team_seasonsArgs<ExtArgs>>): Prisma__team_seasonsClient<$Result.GetResult<Prisma.$team_seasonsPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the player_season_letters model
+   */ 
+  interface player_season_lettersFieldRefs {
+    readonly id: FieldRef<"player_season_letters", 'Int'>
+    readonly player_id: FieldRef<"player_season_letters", 'Int'>
+    readonly season_id: FieldRef<"player_season_letters", 'Int'>
+    readonly team_season_id: FieldRef<"player_season_letters", 'Int'>
+    readonly varsity_letter: FieldRef<"player_season_letters", 'Boolean'>
+    readonly number_patch: FieldRef<"player_season_letters", 'Int'>
+    readonly certificate: FieldRef<"player_season_letters", 'Boolean'>
+    readonly bar: FieldRef<"player_season_letters", 'Boolean'>
+    readonly ball: FieldRef<"player_season_letters", 'Boolean'>
+    readonly number_patch_needed: FieldRef<"player_season_letters", 'Boolean'>
+    readonly varsity_patch_needed: FieldRef<"player_season_letters", 'Boolean'>
+    readonly notes: FieldRef<"player_season_letters", 'String'>
+    readonly created_at: FieldRef<"player_season_letters", 'DateTime'>
+    readonly modified_at: FieldRef<"player_season_letters", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * player_season_letters findUnique
+   */
+  export type player_season_lettersFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * Filter, which player_season_letters to fetch.
+     */
+    where: player_season_lettersWhereUniqueInput
+  }
+
+  /**
+   * player_season_letters findUniqueOrThrow
+   */
+  export type player_season_lettersFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * Filter, which player_season_letters to fetch.
+     */
+    where: player_season_lettersWhereUniqueInput
+  }
+
+  /**
+   * player_season_letters findFirst
+   */
+  export type player_season_lettersFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * Filter, which player_season_letters to fetch.
+     */
+    where?: player_season_lettersWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of player_season_letters to fetch.
+     */
+    orderBy?: player_season_lettersOrderByWithRelationInput | player_season_lettersOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for player_season_letters.
+     */
+    cursor?: player_season_lettersWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` player_season_letters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` player_season_letters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of player_season_letters.
+     */
+    distinct?: Player_season_lettersScalarFieldEnum | Player_season_lettersScalarFieldEnum[]
+  }
+
+  /**
+   * player_season_letters findFirstOrThrow
+   */
+  export type player_season_lettersFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * Filter, which player_season_letters to fetch.
+     */
+    where?: player_season_lettersWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of player_season_letters to fetch.
+     */
+    orderBy?: player_season_lettersOrderByWithRelationInput | player_season_lettersOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for player_season_letters.
+     */
+    cursor?: player_season_lettersWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` player_season_letters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` player_season_letters.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of player_season_letters.
+     */
+    distinct?: Player_season_lettersScalarFieldEnum | Player_season_lettersScalarFieldEnum[]
+  }
+
+  /**
+   * player_season_letters findMany
+   */
+  export type player_season_lettersFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * Filter, which player_season_letters to fetch.
+     */
+    where?: player_season_lettersWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of player_season_letters to fetch.
+     */
+    orderBy?: player_season_lettersOrderByWithRelationInput | player_season_lettersOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing player_season_letters.
+     */
+    cursor?: player_season_lettersWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` player_season_letters from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` player_season_letters.
+     */
+    skip?: number
+    distinct?: Player_season_lettersScalarFieldEnum | Player_season_lettersScalarFieldEnum[]
+  }
+
+  /**
+   * player_season_letters create
+   */
+  export type player_season_lettersCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * The data needed to create a player_season_letters.
+     */
+    data: XOR<player_season_lettersCreateInput, player_season_lettersUncheckedCreateInput>
+  }
+
+  /**
+   * player_season_letters createMany
+   */
+  export type player_season_lettersCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many player_season_letters.
+     */
+    data: player_season_lettersCreateManyInput | player_season_lettersCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * player_season_letters update
+   */
+  export type player_season_lettersUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * The data needed to update a player_season_letters.
+     */
+    data: XOR<player_season_lettersUpdateInput, player_season_lettersUncheckedUpdateInput>
+    /**
+     * Choose, which player_season_letters to update.
+     */
+    where: player_season_lettersWhereUniqueInput
+  }
+
+  /**
+   * player_season_letters updateMany
+   */
+  export type player_season_lettersUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update player_season_letters.
+     */
+    data: XOR<player_season_lettersUpdateManyMutationInput, player_season_lettersUncheckedUpdateManyInput>
+    /**
+     * Filter which player_season_letters to update
+     */
+    where?: player_season_lettersWhereInput
+  }
+
+  /**
+   * player_season_letters upsert
+   */
+  export type player_season_lettersUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * The filter to search for the player_season_letters to update in case it exists.
+     */
+    where: player_season_lettersWhereUniqueInput
+    /**
+     * In case the player_season_letters found by the `where` argument doesn't exist, create a new player_season_letters with this data.
+     */
+    create: XOR<player_season_lettersCreateInput, player_season_lettersUncheckedCreateInput>
+    /**
+     * In case the player_season_letters was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<player_season_lettersUpdateInput, player_season_lettersUncheckedUpdateInput>
+  }
+
+  /**
+   * player_season_letters delete
+   */
+  export type player_season_lettersDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+    /**
+     * Filter which player_season_letters to delete.
+     */
+    where: player_season_lettersWhereUniqueInput
+  }
+
+  /**
+   * player_season_letters deleteMany
+   */
+  export type player_season_lettersDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which player_season_letters to delete
+     */
+    where?: player_season_lettersWhereInput
+  }
+
+  /**
+   * player_season_letters.team_seasons
+   */
+  export type player_season_letters$team_seasonsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the team_seasons
+     */
+    select?: team_seasonsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: team_seasonsInclude<ExtArgs> | null
+    where?: team_seasonsWhereInput
+  }
+
+  /**
+   * player_season_letters without action
+   */
+  export type player_season_lettersDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the player_season_letters
+     */
+    select?: player_season_lettersSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: player_season_lettersInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model uniform_kits
+   */
+
+  export type AggregateUniform_kits = {
+    _count: Uniform_kitsCountAggregateOutputType | null
+    _avg: Uniform_kitsAvgAggregateOutputType | null
+    _sum: Uniform_kitsSumAggregateOutputType | null
+    _min: Uniform_kitsMinAggregateOutputType | null
+    _max: Uniform_kitsMaxAggregateOutputType | null
+  }
+
+  export type Uniform_kitsAvgAggregateOutputType = {
+    id: number | null
+    club_id: number | null
+    year: number | null
+  }
+
+  export type Uniform_kitsSumAggregateOutputType = {
+    id: number | null
+    club_id: number | null
+    year: number | null
+  }
+
+  export type Uniform_kitsMinAggregateOutputType = {
+    id: number | null
+    club_id: number | null
+    type: string | null
+    brand: string | null
+    style: string | null
+    color: string | null
+    year: number | null
+    is_active: boolean | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Uniform_kitsMaxAggregateOutputType = {
+    id: number | null
+    club_id: number | null
+    type: string | null
+    brand: string | null
+    style: string | null
+    color: string | null
+    year: number | null
+    is_active: boolean | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Uniform_kitsCountAggregateOutputType = {
+    id: number
+    club_id: number
+    type: number
+    brand: number
+    style: number
+    color: number
+    year: number
+    is_active: number
+    created_at: number
+    modified_at: number
+    _all: number
+  }
+
+
+  export type Uniform_kitsAvgAggregateInputType = {
+    id?: true
+    club_id?: true
+    year?: true
+  }
+
+  export type Uniform_kitsSumAggregateInputType = {
+    id?: true
+    club_id?: true
+    year?: true
+  }
+
+  export type Uniform_kitsMinAggregateInputType = {
+    id?: true
+    club_id?: true
+    type?: true
+    brand?: true
+    style?: true
+    color?: true
+    year?: true
+    is_active?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Uniform_kitsMaxAggregateInputType = {
+    id?: true
+    club_id?: true
+    type?: true
+    brand?: true
+    style?: true
+    color?: true
+    year?: true
+    is_active?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Uniform_kitsCountAggregateInputType = {
+    id?: true
+    club_id?: true
+    type?: true
+    brand?: true
+    style?: true
+    color?: true
+    year?: true
+    is_active?: true
+    created_at?: true
+    modified_at?: true
+    _all?: true
+  }
+
+  export type Uniform_kitsAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which uniform_kits to aggregate.
+     */
+    where?: uniform_kitsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_kits to fetch.
+     */
+    orderBy?: uniform_kitsOrderByWithRelationInput | uniform_kitsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: uniform_kitsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_kits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_kits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned uniform_kits
+    **/
+    _count?: true | Uniform_kitsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Uniform_kitsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Uniform_kitsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Uniform_kitsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Uniform_kitsMaxAggregateInputType
+  }
+
+  export type GetUniform_kitsAggregateType<T extends Uniform_kitsAggregateArgs> = {
+        [P in keyof T & keyof AggregateUniform_kits]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUniform_kits[P]>
+      : GetScalarType<T[P], AggregateUniform_kits[P]>
+  }
+
+
+
+
+  export type uniform_kitsGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_kitsWhereInput
+    orderBy?: uniform_kitsOrderByWithAggregationInput | uniform_kitsOrderByWithAggregationInput[]
+    by: Uniform_kitsScalarFieldEnum[] | Uniform_kitsScalarFieldEnum
+    having?: uniform_kitsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Uniform_kitsCountAggregateInputType | true
+    _avg?: Uniform_kitsAvgAggregateInputType
+    _sum?: Uniform_kitsSumAggregateInputType
+    _min?: Uniform_kitsMinAggregateInputType
+    _max?: Uniform_kitsMaxAggregateInputType
+  }
+
+  export type Uniform_kitsGroupByOutputType = {
+    id: number
+    club_id: number | null
+    type: string
+    brand: string | null
+    style: string | null
+    color: string | null
+    year: number | null
+    is_active: boolean
+    created_at: Date | null
+    modified_at: Date | null
+    _count: Uniform_kitsCountAggregateOutputType | null
+    _avg: Uniform_kitsAvgAggregateOutputType | null
+    _sum: Uniform_kitsSumAggregateOutputType | null
+    _min: Uniform_kitsMinAggregateOutputType | null
+    _max: Uniform_kitsMaxAggregateOutputType | null
+  }
+
+  type GetUniform_kitsGroupByPayload<T extends uniform_kitsGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Uniform_kitsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Uniform_kitsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Uniform_kitsGroupByOutputType[P]>
+            : GetScalarType<T[P], Uniform_kitsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type uniform_kitsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    club_id?: boolean
+    type?: boolean
+    brand?: boolean
+    style?: boolean
+    color?: boolean
+    year?: boolean
+    is_active?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+    clubs?: boolean | uniform_kits$clubsArgs<ExtArgs>
+    uniform_jerseys?: boolean | uniform_kits$uniform_jerseysArgs<ExtArgs>
+    uniform_season_kits?: boolean | uniform_kits$uniform_season_kitsArgs<ExtArgs>
+    _count?: boolean | Uniform_kitsCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["uniform_kits"]>
+
+
+  export type uniform_kitsSelectScalar = {
+    id?: boolean
+    club_id?: boolean
+    type?: boolean
+    brand?: boolean
+    style?: boolean
+    color?: boolean
+    year?: boolean
+    is_active?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+  }
+
+  export type uniform_kitsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    clubs?: boolean | uniform_kits$clubsArgs<ExtArgs>
+    uniform_jerseys?: boolean | uniform_kits$uniform_jerseysArgs<ExtArgs>
+    uniform_season_kits?: boolean | uniform_kits$uniform_season_kitsArgs<ExtArgs>
+    _count?: boolean | Uniform_kitsCountOutputTypeDefaultArgs<ExtArgs>
+  }
+
+  export type $uniform_kitsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "uniform_kits"
+    objects: {
+      clubs: Prisma.$clubsPayload<ExtArgs> | null
+      uniform_jerseys: Prisma.$uniform_jerseysPayload<ExtArgs>[]
+      uniform_season_kits: Prisma.$uniform_season_kitsPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      club_id: number | null
+      type: string
+      brand: string | null
+      style: string | null
+      color: string | null
+      year: number | null
+      is_active: boolean
+      created_at: Date | null
+      modified_at: Date | null
+    }, ExtArgs["result"]["uniform_kits"]>
+    composites: {}
+  }
+
+  type uniform_kitsGetPayload<S extends boolean | null | undefined | uniform_kitsDefaultArgs> = $Result.GetResult<Prisma.$uniform_kitsPayload, S>
+
+  type uniform_kitsCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<uniform_kitsFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: Uniform_kitsCountAggregateInputType | true
+    }
+
+  export interface uniform_kitsDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['uniform_kits'], meta: { name: 'uniform_kits' } }
+    /**
+     * Find zero or one Uniform_kits that matches the filter.
+     * @param {uniform_kitsFindUniqueArgs} args - Arguments to find a Uniform_kits
+     * @example
+     * // Get one Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends uniform_kitsFindUniqueArgs>(args: SelectSubset<T, uniform_kitsFindUniqueArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Uniform_kits that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {uniform_kitsFindUniqueOrThrowArgs} args - Arguments to find a Uniform_kits
+     * @example
+     * // Get one Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends uniform_kitsFindUniqueOrThrowArgs>(args: SelectSubset<T, uniform_kitsFindUniqueOrThrowArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Uniform_kits that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_kitsFindFirstArgs} args - Arguments to find a Uniform_kits
+     * @example
+     * // Get one Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends uniform_kitsFindFirstArgs>(args?: SelectSubset<T, uniform_kitsFindFirstArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Uniform_kits that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_kitsFindFirstOrThrowArgs} args - Arguments to find a Uniform_kits
+     * @example
+     * // Get one Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends uniform_kitsFindFirstOrThrowArgs>(args?: SelectSubset<T, uniform_kitsFindFirstOrThrowArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Uniform_kits that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_kitsFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.findMany()
+     * 
+     * // Get first 10 Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const uniform_kitsWithIdOnly = await prisma.uniform_kits.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends uniform_kitsFindManyArgs>(args?: SelectSubset<T, uniform_kitsFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Uniform_kits.
+     * @param {uniform_kitsCreateArgs} args - Arguments to create a Uniform_kits.
+     * @example
+     * // Create one Uniform_kits
+     * const Uniform_kits = await prisma.uniform_kits.create({
+     *   data: {
+     *     // ... data to create a Uniform_kits
+     *   }
+     * })
+     * 
+     */
+    create<T extends uniform_kitsCreateArgs>(args: SelectSubset<T, uniform_kitsCreateArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Uniform_kits.
+     * @param {uniform_kitsCreateManyArgs} args - Arguments to create many Uniform_kits.
+     * @example
+     * // Create many Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends uniform_kitsCreateManyArgs>(args?: SelectSubset<T, uniform_kitsCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Uniform_kits.
+     * @param {uniform_kitsDeleteArgs} args - Arguments to delete one Uniform_kits.
+     * @example
+     * // Delete one Uniform_kits
+     * const Uniform_kits = await prisma.uniform_kits.delete({
+     *   where: {
+     *     // ... filter to delete one Uniform_kits
+     *   }
+     * })
+     * 
+     */
+    delete<T extends uniform_kitsDeleteArgs>(args: SelectSubset<T, uniform_kitsDeleteArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Uniform_kits.
+     * @param {uniform_kitsUpdateArgs} args - Arguments to update one Uniform_kits.
+     * @example
+     * // Update one Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends uniform_kitsUpdateArgs>(args: SelectSubset<T, uniform_kitsUpdateArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Uniform_kits.
+     * @param {uniform_kitsDeleteManyArgs} args - Arguments to filter Uniform_kits to delete.
+     * @example
+     * // Delete a few Uniform_kits
+     * const { count } = await prisma.uniform_kits.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends uniform_kitsDeleteManyArgs>(args?: SelectSubset<T, uniform_kitsDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Uniform_kits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_kitsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends uniform_kitsUpdateManyArgs>(args: SelectSubset<T, uniform_kitsUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Uniform_kits.
+     * @param {uniform_kitsUpsertArgs} args - Arguments to update or create a Uniform_kits.
+     * @example
+     * // Update or create a Uniform_kits
+     * const uniform_kits = await prisma.uniform_kits.upsert({
+     *   create: {
+     *     // ... data to create a Uniform_kits
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Uniform_kits we want to update
+     *   }
+     * })
+     */
+    upsert<T extends uniform_kitsUpsertArgs>(args: SelectSubset<T, uniform_kitsUpsertArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Uniform_kits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_kitsCountArgs} args - Arguments to filter Uniform_kits to count.
+     * @example
+     * // Count the number of Uniform_kits
+     * const count = await prisma.uniform_kits.count({
+     *   where: {
+     *     // ... the filter for the Uniform_kits we want to count
+     *   }
+     * })
+    **/
+    count<T extends uniform_kitsCountArgs>(
+      args?: Subset<T, uniform_kitsCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Uniform_kitsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Uniform_kits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Uniform_kitsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Uniform_kitsAggregateArgs>(args: Subset<T, Uniform_kitsAggregateArgs>): Prisma.PrismaPromise<GetUniform_kitsAggregateType<T>>
+
+    /**
+     * Group by Uniform_kits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_kitsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends uniform_kitsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: uniform_kitsGroupByArgs['orderBy'] }
+        : { orderBy?: uniform_kitsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, uniform_kitsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUniform_kitsGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the uniform_kits model
+   */
+  readonly fields: uniform_kitsFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for uniform_kits.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__uniform_kitsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    clubs<T extends uniform_kits$clubsArgs<ExtArgs> = {}>(args?: Subset<T, uniform_kits$clubsArgs<ExtArgs>>): Prisma__clubsClient<$Result.GetResult<Prisma.$clubsPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    uniform_jerseys<T extends uniform_kits$uniform_jerseysArgs<ExtArgs> = {}>(args?: Subset<T, uniform_kits$uniform_jerseysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "findMany"> | Null>
+    uniform_season_kits<T extends uniform_kits$uniform_season_kitsArgs<ExtArgs> = {}>(args?: Subset<T, uniform_kits$uniform_season_kitsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the uniform_kits model
+   */ 
+  interface uniform_kitsFieldRefs {
+    readonly id: FieldRef<"uniform_kits", 'Int'>
+    readonly club_id: FieldRef<"uniform_kits", 'Int'>
+    readonly type: FieldRef<"uniform_kits", 'String'>
+    readonly brand: FieldRef<"uniform_kits", 'String'>
+    readonly style: FieldRef<"uniform_kits", 'String'>
+    readonly color: FieldRef<"uniform_kits", 'String'>
+    readonly year: FieldRef<"uniform_kits", 'Int'>
+    readonly is_active: FieldRef<"uniform_kits", 'Boolean'>
+    readonly created_at: FieldRef<"uniform_kits", 'DateTime'>
+    readonly modified_at: FieldRef<"uniform_kits", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * uniform_kits findUnique
+   */
+  export type uniform_kitsFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_kits to fetch.
+     */
+    where: uniform_kitsWhereUniqueInput
+  }
+
+  /**
+   * uniform_kits findUniqueOrThrow
+   */
+  export type uniform_kitsFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_kits to fetch.
+     */
+    where: uniform_kitsWhereUniqueInput
+  }
+
+  /**
+   * uniform_kits findFirst
+   */
+  export type uniform_kitsFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_kits to fetch.
+     */
+    where?: uniform_kitsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_kits to fetch.
+     */
+    orderBy?: uniform_kitsOrderByWithRelationInput | uniform_kitsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for uniform_kits.
+     */
+    cursor?: uniform_kitsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_kits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_kits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of uniform_kits.
+     */
+    distinct?: Uniform_kitsScalarFieldEnum | Uniform_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_kits findFirstOrThrow
+   */
+  export type uniform_kitsFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_kits to fetch.
+     */
+    where?: uniform_kitsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_kits to fetch.
+     */
+    orderBy?: uniform_kitsOrderByWithRelationInput | uniform_kitsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for uniform_kits.
+     */
+    cursor?: uniform_kitsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_kits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_kits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of uniform_kits.
+     */
+    distinct?: Uniform_kitsScalarFieldEnum | Uniform_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_kits findMany
+   */
+  export type uniform_kitsFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_kits to fetch.
+     */
+    where?: uniform_kitsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_kits to fetch.
+     */
+    orderBy?: uniform_kitsOrderByWithRelationInput | uniform_kitsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing uniform_kits.
+     */
+    cursor?: uniform_kitsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_kits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_kits.
+     */
+    skip?: number
+    distinct?: Uniform_kitsScalarFieldEnum | Uniform_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_kits create
+   */
+  export type uniform_kitsCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * The data needed to create a uniform_kits.
+     */
+    data: XOR<uniform_kitsCreateInput, uniform_kitsUncheckedCreateInput>
+  }
+
+  /**
+   * uniform_kits createMany
+   */
+  export type uniform_kitsCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many uniform_kits.
+     */
+    data: uniform_kitsCreateManyInput | uniform_kitsCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * uniform_kits update
+   */
+  export type uniform_kitsUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * The data needed to update a uniform_kits.
+     */
+    data: XOR<uniform_kitsUpdateInput, uniform_kitsUncheckedUpdateInput>
+    /**
+     * Choose, which uniform_kits to update.
+     */
+    where: uniform_kitsWhereUniqueInput
+  }
+
+  /**
+   * uniform_kits updateMany
+   */
+  export type uniform_kitsUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update uniform_kits.
+     */
+    data: XOR<uniform_kitsUpdateManyMutationInput, uniform_kitsUncheckedUpdateManyInput>
+    /**
+     * Filter which uniform_kits to update
+     */
+    where?: uniform_kitsWhereInput
+  }
+
+  /**
+   * uniform_kits upsert
+   */
+  export type uniform_kitsUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * The filter to search for the uniform_kits to update in case it exists.
+     */
+    where: uniform_kitsWhereUniqueInput
+    /**
+     * In case the uniform_kits found by the `where` argument doesn't exist, create a new uniform_kits with this data.
+     */
+    create: XOR<uniform_kitsCreateInput, uniform_kitsUncheckedCreateInput>
+    /**
+     * In case the uniform_kits was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<uniform_kitsUpdateInput, uniform_kitsUncheckedUpdateInput>
+  }
+
+  /**
+   * uniform_kits delete
+   */
+  export type uniform_kitsDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    /**
+     * Filter which uniform_kits to delete.
+     */
+    where: uniform_kitsWhereUniqueInput
+  }
+
+  /**
+   * uniform_kits deleteMany
+   */
+  export type uniform_kitsDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which uniform_kits to delete
+     */
+    where?: uniform_kitsWhereInput
+  }
+
+  /**
+   * uniform_kits.clubs
+   */
+  export type uniform_kits$clubsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the clubs
+     */
+    select?: clubsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: clubsInclude<ExtArgs> | null
+    where?: clubsWhereInput
+  }
+
+  /**
+   * uniform_kits.uniform_jerseys
+   */
+  export type uniform_kits$uniform_jerseysArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    where?: uniform_jerseysWhereInput
+    orderBy?: uniform_jerseysOrderByWithRelationInput | uniform_jerseysOrderByWithRelationInput[]
+    cursor?: uniform_jerseysWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Uniform_jerseysScalarFieldEnum | Uniform_jerseysScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_kits.uniform_season_kits
+   */
+  export type uniform_kits$uniform_season_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    where?: uniform_season_kitsWhereInput
+    orderBy?: uniform_season_kitsOrderByWithRelationInput | uniform_season_kitsOrderByWithRelationInput[]
+    cursor?: uniform_season_kitsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Uniform_season_kitsScalarFieldEnum | Uniform_season_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_kits without action
+   */
+  export type uniform_kitsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model uniform_jerseys
+   */
+
+  export type AggregateUniform_jerseys = {
+    _count: Uniform_jerseysCountAggregateOutputType | null
+    _avg: Uniform_jerseysAvgAggregateOutputType | null
+    _sum: Uniform_jerseysSumAggregateOutputType | null
+    _min: Uniform_jerseysMinAggregateOutputType | null
+    _max: Uniform_jerseysMaxAggregateOutputType | null
+  }
+
+  export type Uniform_jerseysAvgAggregateOutputType = {
+    id: number | null
+    uniform_kit_id: number | null
+    jersey_number: number | null
+  }
+
+  export type Uniform_jerseysSumAggregateOutputType = {
+    id: number | null
+    uniform_kit_id: number | null
+    jersey_number: number | null
+  }
+
+  export type Uniform_jerseysMinAggregateOutputType = {
+    id: number | null
+    uniform_kit_id: number | null
+    jersey_number: number | null
+    size: string | null
+    is_lost: boolean | null
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Uniform_jerseysMaxAggregateOutputType = {
+    id: number | null
+    uniform_kit_id: number | null
+    jersey_number: number | null
+    size: string | null
+    is_lost: boolean | null
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Uniform_jerseysCountAggregateOutputType = {
+    id: number
+    uniform_kit_id: number
+    jersey_number: number
+    size: number
+    is_lost: number
+    notes: number
+    created_at: number
+    modified_at: number
+    _all: number
+  }
+
+
+  export type Uniform_jerseysAvgAggregateInputType = {
+    id?: true
+    uniform_kit_id?: true
+    jersey_number?: true
+  }
+
+  export type Uniform_jerseysSumAggregateInputType = {
+    id?: true
+    uniform_kit_id?: true
+    jersey_number?: true
+  }
+
+  export type Uniform_jerseysMinAggregateInputType = {
+    id?: true
+    uniform_kit_id?: true
+    jersey_number?: true
+    size?: true
+    is_lost?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Uniform_jerseysMaxAggregateInputType = {
+    id?: true
+    uniform_kit_id?: true
+    jersey_number?: true
+    size?: true
+    is_lost?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Uniform_jerseysCountAggregateInputType = {
+    id?: true
+    uniform_kit_id?: true
+    jersey_number?: true
+    size?: true
+    is_lost?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+    _all?: true
+  }
+
+  export type Uniform_jerseysAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which uniform_jerseys to aggregate.
+     */
+    where?: uniform_jerseysWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_jerseys to fetch.
+     */
+    orderBy?: uniform_jerseysOrderByWithRelationInput | uniform_jerseysOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: uniform_jerseysWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_jerseys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_jerseys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned uniform_jerseys
+    **/
+    _count?: true | Uniform_jerseysCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Uniform_jerseysAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Uniform_jerseysSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Uniform_jerseysMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Uniform_jerseysMaxAggregateInputType
+  }
+
+  export type GetUniform_jerseysAggregateType<T extends Uniform_jerseysAggregateArgs> = {
+        [P in keyof T & keyof AggregateUniform_jerseys]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUniform_jerseys[P]>
+      : GetScalarType<T[P], AggregateUniform_jerseys[P]>
+  }
+
+
+
+
+  export type uniform_jerseysGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_jerseysWhereInput
+    orderBy?: uniform_jerseysOrderByWithAggregationInput | uniform_jerseysOrderByWithAggregationInput[]
+    by: Uniform_jerseysScalarFieldEnum[] | Uniform_jerseysScalarFieldEnum
+    having?: uniform_jerseysScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Uniform_jerseysCountAggregateInputType | true
+    _avg?: Uniform_jerseysAvgAggregateInputType
+    _sum?: Uniform_jerseysSumAggregateInputType
+    _min?: Uniform_jerseysMinAggregateInputType
+    _max?: Uniform_jerseysMaxAggregateInputType
+  }
+
+  export type Uniform_jerseysGroupByOutputType = {
+    id: number
+    uniform_kit_id: number | null
+    jersey_number: number
+    size: string | null
+    is_lost: boolean
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+    _count: Uniform_jerseysCountAggregateOutputType | null
+    _avg: Uniform_jerseysAvgAggregateOutputType | null
+    _sum: Uniform_jerseysSumAggregateOutputType | null
+    _min: Uniform_jerseysMinAggregateOutputType | null
+    _max: Uniform_jerseysMaxAggregateOutputType | null
+  }
+
+  type GetUniform_jerseysGroupByPayload<T extends uniform_jerseysGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Uniform_jerseysGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Uniform_jerseysGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Uniform_jerseysGroupByOutputType[P]>
+            : GetScalarType<T[P], Uniform_jerseysGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type uniform_jerseysSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    uniform_kit_id?: boolean
+    jersey_number?: boolean
+    size?: boolean
+    is_lost?: boolean
+    notes?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+    uniform_kits?: boolean | uniform_jerseys$uniform_kitsArgs<ExtArgs>
+    uniform_player_assignments?: boolean | uniform_jerseys$uniform_player_assignmentsArgs<ExtArgs>
+    _count?: boolean | Uniform_jerseysCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["uniform_jerseys"]>
+
+
+  export type uniform_jerseysSelectScalar = {
+    id?: boolean
+    uniform_kit_id?: boolean
+    jersey_number?: boolean
+    size?: boolean
+    is_lost?: boolean
+    notes?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+  }
+
+  export type uniform_jerseysInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    uniform_kits?: boolean | uniform_jerseys$uniform_kitsArgs<ExtArgs>
+    uniform_player_assignments?: boolean | uniform_jerseys$uniform_player_assignmentsArgs<ExtArgs>
+    _count?: boolean | Uniform_jerseysCountOutputTypeDefaultArgs<ExtArgs>
+  }
+
+  export type $uniform_jerseysPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "uniform_jerseys"
+    objects: {
+      uniform_kits: Prisma.$uniform_kitsPayload<ExtArgs> | null
+      uniform_player_assignments: Prisma.$uniform_player_assignmentsPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      uniform_kit_id: number | null
+      jersey_number: number
+      size: string | null
+      is_lost: boolean
+      notes: string | null
+      created_at: Date | null
+      modified_at: Date | null
+    }, ExtArgs["result"]["uniform_jerseys"]>
+    composites: {}
+  }
+
+  type uniform_jerseysGetPayload<S extends boolean | null | undefined | uniform_jerseysDefaultArgs> = $Result.GetResult<Prisma.$uniform_jerseysPayload, S>
+
+  type uniform_jerseysCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<uniform_jerseysFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: Uniform_jerseysCountAggregateInputType | true
+    }
+
+  export interface uniform_jerseysDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['uniform_jerseys'], meta: { name: 'uniform_jerseys' } }
+    /**
+     * Find zero or one Uniform_jerseys that matches the filter.
+     * @param {uniform_jerseysFindUniqueArgs} args - Arguments to find a Uniform_jerseys
+     * @example
+     * // Get one Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends uniform_jerseysFindUniqueArgs>(args: SelectSubset<T, uniform_jerseysFindUniqueArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Uniform_jerseys that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {uniform_jerseysFindUniqueOrThrowArgs} args - Arguments to find a Uniform_jerseys
+     * @example
+     * // Get one Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends uniform_jerseysFindUniqueOrThrowArgs>(args: SelectSubset<T, uniform_jerseysFindUniqueOrThrowArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Uniform_jerseys that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_jerseysFindFirstArgs} args - Arguments to find a Uniform_jerseys
+     * @example
+     * // Get one Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends uniform_jerseysFindFirstArgs>(args?: SelectSubset<T, uniform_jerseysFindFirstArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Uniform_jerseys that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_jerseysFindFirstOrThrowArgs} args - Arguments to find a Uniform_jerseys
+     * @example
+     * // Get one Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends uniform_jerseysFindFirstOrThrowArgs>(args?: SelectSubset<T, uniform_jerseysFindFirstOrThrowArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Uniform_jerseys that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_jerseysFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.findMany()
+     * 
+     * // Get first 10 Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const uniform_jerseysWithIdOnly = await prisma.uniform_jerseys.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends uniform_jerseysFindManyArgs>(args?: SelectSubset<T, uniform_jerseysFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Uniform_jerseys.
+     * @param {uniform_jerseysCreateArgs} args - Arguments to create a Uniform_jerseys.
+     * @example
+     * // Create one Uniform_jerseys
+     * const Uniform_jerseys = await prisma.uniform_jerseys.create({
+     *   data: {
+     *     // ... data to create a Uniform_jerseys
+     *   }
+     * })
+     * 
+     */
+    create<T extends uniform_jerseysCreateArgs>(args: SelectSubset<T, uniform_jerseysCreateArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Uniform_jerseys.
+     * @param {uniform_jerseysCreateManyArgs} args - Arguments to create many Uniform_jerseys.
+     * @example
+     * // Create many Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends uniform_jerseysCreateManyArgs>(args?: SelectSubset<T, uniform_jerseysCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Uniform_jerseys.
+     * @param {uniform_jerseysDeleteArgs} args - Arguments to delete one Uniform_jerseys.
+     * @example
+     * // Delete one Uniform_jerseys
+     * const Uniform_jerseys = await prisma.uniform_jerseys.delete({
+     *   where: {
+     *     // ... filter to delete one Uniform_jerseys
+     *   }
+     * })
+     * 
+     */
+    delete<T extends uniform_jerseysDeleteArgs>(args: SelectSubset<T, uniform_jerseysDeleteArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Uniform_jerseys.
+     * @param {uniform_jerseysUpdateArgs} args - Arguments to update one Uniform_jerseys.
+     * @example
+     * // Update one Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends uniform_jerseysUpdateArgs>(args: SelectSubset<T, uniform_jerseysUpdateArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Uniform_jerseys.
+     * @param {uniform_jerseysDeleteManyArgs} args - Arguments to filter Uniform_jerseys to delete.
+     * @example
+     * // Delete a few Uniform_jerseys
+     * const { count } = await prisma.uniform_jerseys.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends uniform_jerseysDeleteManyArgs>(args?: SelectSubset<T, uniform_jerseysDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Uniform_jerseys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_jerseysUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends uniform_jerseysUpdateManyArgs>(args: SelectSubset<T, uniform_jerseysUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Uniform_jerseys.
+     * @param {uniform_jerseysUpsertArgs} args - Arguments to update or create a Uniform_jerseys.
+     * @example
+     * // Update or create a Uniform_jerseys
+     * const uniform_jerseys = await prisma.uniform_jerseys.upsert({
+     *   create: {
+     *     // ... data to create a Uniform_jerseys
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Uniform_jerseys we want to update
+     *   }
+     * })
+     */
+    upsert<T extends uniform_jerseysUpsertArgs>(args: SelectSubset<T, uniform_jerseysUpsertArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Uniform_jerseys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_jerseysCountArgs} args - Arguments to filter Uniform_jerseys to count.
+     * @example
+     * // Count the number of Uniform_jerseys
+     * const count = await prisma.uniform_jerseys.count({
+     *   where: {
+     *     // ... the filter for the Uniform_jerseys we want to count
+     *   }
+     * })
+    **/
+    count<T extends uniform_jerseysCountArgs>(
+      args?: Subset<T, uniform_jerseysCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Uniform_jerseysCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Uniform_jerseys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Uniform_jerseysAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Uniform_jerseysAggregateArgs>(args: Subset<T, Uniform_jerseysAggregateArgs>): Prisma.PrismaPromise<GetUniform_jerseysAggregateType<T>>
+
+    /**
+     * Group by Uniform_jerseys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_jerseysGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends uniform_jerseysGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: uniform_jerseysGroupByArgs['orderBy'] }
+        : { orderBy?: uniform_jerseysGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, uniform_jerseysGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUniform_jerseysGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the uniform_jerseys model
+   */
+  readonly fields: uniform_jerseysFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for uniform_jerseys.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__uniform_jerseysClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    uniform_kits<T extends uniform_jerseys$uniform_kitsArgs<ExtArgs> = {}>(args?: Subset<T, uniform_jerseys$uniform_kitsArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    uniform_player_assignments<T extends uniform_jerseys$uniform_player_assignmentsArgs<ExtArgs> = {}>(args?: Subset<T, uniform_jerseys$uniform_player_assignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the uniform_jerseys model
+   */ 
+  interface uniform_jerseysFieldRefs {
+    readonly id: FieldRef<"uniform_jerseys", 'Int'>
+    readonly uniform_kit_id: FieldRef<"uniform_jerseys", 'Int'>
+    readonly jersey_number: FieldRef<"uniform_jerseys", 'Int'>
+    readonly size: FieldRef<"uniform_jerseys", 'String'>
+    readonly is_lost: FieldRef<"uniform_jerseys", 'Boolean'>
+    readonly notes: FieldRef<"uniform_jerseys", 'String'>
+    readonly created_at: FieldRef<"uniform_jerseys", 'DateTime'>
+    readonly modified_at: FieldRef<"uniform_jerseys", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * uniform_jerseys findUnique
+   */
+  export type uniform_jerseysFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_jerseys to fetch.
+     */
+    where: uniform_jerseysWhereUniqueInput
+  }
+
+  /**
+   * uniform_jerseys findUniqueOrThrow
+   */
+  export type uniform_jerseysFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_jerseys to fetch.
+     */
+    where: uniform_jerseysWhereUniqueInput
+  }
+
+  /**
+   * uniform_jerseys findFirst
+   */
+  export type uniform_jerseysFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_jerseys to fetch.
+     */
+    where?: uniform_jerseysWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_jerseys to fetch.
+     */
+    orderBy?: uniform_jerseysOrderByWithRelationInput | uniform_jerseysOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for uniform_jerseys.
+     */
+    cursor?: uniform_jerseysWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_jerseys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_jerseys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of uniform_jerseys.
+     */
+    distinct?: Uniform_jerseysScalarFieldEnum | Uniform_jerseysScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_jerseys findFirstOrThrow
+   */
+  export type uniform_jerseysFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_jerseys to fetch.
+     */
+    where?: uniform_jerseysWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_jerseys to fetch.
+     */
+    orderBy?: uniform_jerseysOrderByWithRelationInput | uniform_jerseysOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for uniform_jerseys.
+     */
+    cursor?: uniform_jerseysWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_jerseys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_jerseys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of uniform_jerseys.
+     */
+    distinct?: Uniform_jerseysScalarFieldEnum | Uniform_jerseysScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_jerseys findMany
+   */
+  export type uniform_jerseysFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_jerseys to fetch.
+     */
+    where?: uniform_jerseysWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_jerseys to fetch.
+     */
+    orderBy?: uniform_jerseysOrderByWithRelationInput | uniform_jerseysOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing uniform_jerseys.
+     */
+    cursor?: uniform_jerseysWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_jerseys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_jerseys.
+     */
+    skip?: number
+    distinct?: Uniform_jerseysScalarFieldEnum | Uniform_jerseysScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_jerseys create
+   */
+  export type uniform_jerseysCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * The data needed to create a uniform_jerseys.
+     */
+    data: XOR<uniform_jerseysCreateInput, uniform_jerseysUncheckedCreateInput>
+  }
+
+  /**
+   * uniform_jerseys createMany
+   */
+  export type uniform_jerseysCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many uniform_jerseys.
+     */
+    data: uniform_jerseysCreateManyInput | uniform_jerseysCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * uniform_jerseys update
+   */
+  export type uniform_jerseysUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * The data needed to update a uniform_jerseys.
+     */
+    data: XOR<uniform_jerseysUpdateInput, uniform_jerseysUncheckedUpdateInput>
+    /**
+     * Choose, which uniform_jerseys to update.
+     */
+    where: uniform_jerseysWhereUniqueInput
+  }
+
+  /**
+   * uniform_jerseys updateMany
+   */
+  export type uniform_jerseysUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update uniform_jerseys.
+     */
+    data: XOR<uniform_jerseysUpdateManyMutationInput, uniform_jerseysUncheckedUpdateManyInput>
+    /**
+     * Filter which uniform_jerseys to update
+     */
+    where?: uniform_jerseysWhereInput
+  }
+
+  /**
+   * uniform_jerseys upsert
+   */
+  export type uniform_jerseysUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * The filter to search for the uniform_jerseys to update in case it exists.
+     */
+    where: uniform_jerseysWhereUniqueInput
+    /**
+     * In case the uniform_jerseys found by the `where` argument doesn't exist, create a new uniform_jerseys with this data.
+     */
+    create: XOR<uniform_jerseysCreateInput, uniform_jerseysUncheckedCreateInput>
+    /**
+     * In case the uniform_jerseys was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<uniform_jerseysUpdateInput, uniform_jerseysUncheckedUpdateInput>
+  }
+
+  /**
+   * uniform_jerseys delete
+   */
+  export type uniform_jerseysDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+    /**
+     * Filter which uniform_jerseys to delete.
+     */
+    where: uniform_jerseysWhereUniqueInput
+  }
+
+  /**
+   * uniform_jerseys deleteMany
+   */
+  export type uniform_jerseysDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which uniform_jerseys to delete
+     */
+    where?: uniform_jerseysWhereInput
+  }
+
+  /**
+   * uniform_jerseys.uniform_kits
+   */
+  export type uniform_jerseys$uniform_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_kits
+     */
+    select?: uniform_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_kitsInclude<ExtArgs> | null
+    where?: uniform_kitsWhereInput
+  }
+
+  /**
+   * uniform_jerseys.uniform_player_assignments
+   */
+  export type uniform_jerseys$uniform_player_assignmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    where?: uniform_player_assignmentsWhereInput
+    orderBy?: uniform_player_assignmentsOrderByWithRelationInput | uniform_player_assignmentsOrderByWithRelationInput[]
+    cursor?: uniform_player_assignmentsWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: Uniform_player_assignmentsScalarFieldEnum | Uniform_player_assignmentsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_jerseys without action
+   */
+  export type uniform_jerseysDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_jerseys
+     */
+    select?: uniform_jerseysSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_jerseysInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model uniform_season_kits
+   */
+
+  export type AggregateUniform_season_kits = {
+    _count: Uniform_season_kitsCountAggregateOutputType | null
+    _avg: Uniform_season_kitsAvgAggregateOutputType | null
+    _sum: Uniform_season_kitsSumAggregateOutputType | null
+    _min: Uniform_season_kitsMinAggregateOutputType | null
+    _max: Uniform_season_kitsMaxAggregateOutputType | null
+  }
+
+  export type Uniform_season_kitsAvgAggregateOutputType = {
+    id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    uniform_kit_id: number | null
+  }
+
+  export type Uniform_season_kitsSumAggregateOutputType = {
+    id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    uniform_kit_id: number | null
+  }
+
+  export type Uniform_season_kitsMinAggregateOutputType = {
+    id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    squad_level: string | null
+    uniform_kit_id: number | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Uniform_season_kitsMaxAggregateOutputType = {
+    id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    squad_level: string | null
+    uniform_kit_id: number | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Uniform_season_kitsCountAggregateOutputType = {
+    id: number
+    season_id: number
+    team_season_id: number
+    squad_level: number
+    uniform_kit_id: number
+    created_at: number
+    modified_at: number
+    _all: number
+  }
+
+
+  export type Uniform_season_kitsAvgAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    uniform_kit_id?: true
+  }
+
+  export type Uniform_season_kitsSumAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    uniform_kit_id?: true
+  }
+
+  export type Uniform_season_kitsMinAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    squad_level?: true
+    uniform_kit_id?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Uniform_season_kitsMaxAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    squad_level?: true
+    uniform_kit_id?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Uniform_season_kitsCountAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    squad_level?: true
+    uniform_kit_id?: true
+    created_at?: true
+    modified_at?: true
+    _all?: true
+  }
+
+  export type Uniform_season_kitsAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which uniform_season_kits to aggregate.
+     */
+    where?: uniform_season_kitsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_season_kits to fetch.
+     */
+    orderBy?: uniform_season_kitsOrderByWithRelationInput | uniform_season_kitsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: uniform_season_kitsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_season_kits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_season_kits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned uniform_season_kits
+    **/
+    _count?: true | Uniform_season_kitsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Uniform_season_kitsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Uniform_season_kitsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Uniform_season_kitsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Uniform_season_kitsMaxAggregateInputType
+  }
+
+  export type GetUniform_season_kitsAggregateType<T extends Uniform_season_kitsAggregateArgs> = {
+        [P in keyof T & keyof AggregateUniform_season_kits]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUniform_season_kits[P]>
+      : GetScalarType<T[P], AggregateUniform_season_kits[P]>
+  }
+
+
+
+
+  export type uniform_season_kitsGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_season_kitsWhereInput
+    orderBy?: uniform_season_kitsOrderByWithAggregationInput | uniform_season_kitsOrderByWithAggregationInput[]
+    by: Uniform_season_kitsScalarFieldEnum[] | Uniform_season_kitsScalarFieldEnum
+    having?: uniform_season_kitsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Uniform_season_kitsCountAggregateInputType | true
+    _avg?: Uniform_season_kitsAvgAggregateInputType
+    _sum?: Uniform_season_kitsSumAggregateInputType
+    _min?: Uniform_season_kitsMinAggregateInputType
+    _max?: Uniform_season_kitsMaxAggregateInputType
+  }
+
+  export type Uniform_season_kitsGroupByOutputType = {
+    id: number
+    season_id: number
+    team_season_id: number | null
+    squad_level: string
+    uniform_kit_id: number
+    created_at: Date | null
+    modified_at: Date | null
+    _count: Uniform_season_kitsCountAggregateOutputType | null
+    _avg: Uniform_season_kitsAvgAggregateOutputType | null
+    _sum: Uniform_season_kitsSumAggregateOutputType | null
+    _min: Uniform_season_kitsMinAggregateOutputType | null
+    _max: Uniform_season_kitsMaxAggregateOutputType | null
+  }
+
+  type GetUniform_season_kitsGroupByPayload<T extends uniform_season_kitsGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Uniform_season_kitsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Uniform_season_kitsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Uniform_season_kitsGroupByOutputType[P]>
+            : GetScalarType<T[P], Uniform_season_kitsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type uniform_season_kitsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    season_id?: boolean
+    team_season_id?: boolean
+    squad_level?: boolean
+    uniform_kit_id?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+    seasons?: boolean | seasonsDefaultArgs<ExtArgs>
+    team_seasons?: boolean | uniform_season_kits$team_seasonsArgs<ExtArgs>
+    uniform_kits?: boolean | uniform_kitsDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["uniform_season_kits"]>
+
+
+  export type uniform_season_kitsSelectScalar = {
+    id?: boolean
+    season_id?: boolean
+    team_season_id?: boolean
+    squad_level?: boolean
+    uniform_kit_id?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+  }
+
+  export type uniform_season_kitsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    seasons?: boolean | seasonsDefaultArgs<ExtArgs>
+    team_seasons?: boolean | uniform_season_kits$team_seasonsArgs<ExtArgs>
+    uniform_kits?: boolean | uniform_kitsDefaultArgs<ExtArgs>
+  }
+
+  export type $uniform_season_kitsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "uniform_season_kits"
+    objects: {
+      seasons: Prisma.$seasonsPayload<ExtArgs>
+      team_seasons: Prisma.$team_seasonsPayload<ExtArgs> | null
+      uniform_kits: Prisma.$uniform_kitsPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      season_id: number
+      team_season_id: number | null
+      squad_level: string
+      uniform_kit_id: number
+      created_at: Date | null
+      modified_at: Date | null
+    }, ExtArgs["result"]["uniform_season_kits"]>
+    composites: {}
+  }
+
+  type uniform_season_kitsGetPayload<S extends boolean | null | undefined | uniform_season_kitsDefaultArgs> = $Result.GetResult<Prisma.$uniform_season_kitsPayload, S>
+
+  type uniform_season_kitsCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<uniform_season_kitsFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: Uniform_season_kitsCountAggregateInputType | true
+    }
+
+  export interface uniform_season_kitsDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['uniform_season_kits'], meta: { name: 'uniform_season_kits' } }
+    /**
+     * Find zero or one Uniform_season_kits that matches the filter.
+     * @param {uniform_season_kitsFindUniqueArgs} args - Arguments to find a Uniform_season_kits
+     * @example
+     * // Get one Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends uniform_season_kitsFindUniqueArgs>(args: SelectSubset<T, uniform_season_kitsFindUniqueArgs<ExtArgs>>): Prisma__uniform_season_kitsClient<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Uniform_season_kits that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {uniform_season_kitsFindUniqueOrThrowArgs} args - Arguments to find a Uniform_season_kits
+     * @example
+     * // Get one Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends uniform_season_kitsFindUniqueOrThrowArgs>(args: SelectSubset<T, uniform_season_kitsFindUniqueOrThrowArgs<ExtArgs>>): Prisma__uniform_season_kitsClient<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Uniform_season_kits that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_season_kitsFindFirstArgs} args - Arguments to find a Uniform_season_kits
+     * @example
+     * // Get one Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends uniform_season_kitsFindFirstArgs>(args?: SelectSubset<T, uniform_season_kitsFindFirstArgs<ExtArgs>>): Prisma__uniform_season_kitsClient<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Uniform_season_kits that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_season_kitsFindFirstOrThrowArgs} args - Arguments to find a Uniform_season_kits
+     * @example
+     * // Get one Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends uniform_season_kitsFindFirstOrThrowArgs>(args?: SelectSubset<T, uniform_season_kitsFindFirstOrThrowArgs<ExtArgs>>): Prisma__uniform_season_kitsClient<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Uniform_season_kits that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_season_kitsFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.findMany()
+     * 
+     * // Get first 10 Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const uniform_season_kitsWithIdOnly = await prisma.uniform_season_kits.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends uniform_season_kitsFindManyArgs>(args?: SelectSubset<T, uniform_season_kitsFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Uniform_season_kits.
+     * @param {uniform_season_kitsCreateArgs} args - Arguments to create a Uniform_season_kits.
+     * @example
+     * // Create one Uniform_season_kits
+     * const Uniform_season_kits = await prisma.uniform_season_kits.create({
+     *   data: {
+     *     // ... data to create a Uniform_season_kits
+     *   }
+     * })
+     * 
+     */
+    create<T extends uniform_season_kitsCreateArgs>(args: SelectSubset<T, uniform_season_kitsCreateArgs<ExtArgs>>): Prisma__uniform_season_kitsClient<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Uniform_season_kits.
+     * @param {uniform_season_kitsCreateManyArgs} args - Arguments to create many Uniform_season_kits.
+     * @example
+     * // Create many Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends uniform_season_kitsCreateManyArgs>(args?: SelectSubset<T, uniform_season_kitsCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Uniform_season_kits.
+     * @param {uniform_season_kitsDeleteArgs} args - Arguments to delete one Uniform_season_kits.
+     * @example
+     * // Delete one Uniform_season_kits
+     * const Uniform_season_kits = await prisma.uniform_season_kits.delete({
+     *   where: {
+     *     // ... filter to delete one Uniform_season_kits
+     *   }
+     * })
+     * 
+     */
+    delete<T extends uniform_season_kitsDeleteArgs>(args: SelectSubset<T, uniform_season_kitsDeleteArgs<ExtArgs>>): Prisma__uniform_season_kitsClient<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Uniform_season_kits.
+     * @param {uniform_season_kitsUpdateArgs} args - Arguments to update one Uniform_season_kits.
+     * @example
+     * // Update one Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends uniform_season_kitsUpdateArgs>(args: SelectSubset<T, uniform_season_kitsUpdateArgs<ExtArgs>>): Prisma__uniform_season_kitsClient<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Uniform_season_kits.
+     * @param {uniform_season_kitsDeleteManyArgs} args - Arguments to filter Uniform_season_kits to delete.
+     * @example
+     * // Delete a few Uniform_season_kits
+     * const { count } = await prisma.uniform_season_kits.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends uniform_season_kitsDeleteManyArgs>(args?: SelectSubset<T, uniform_season_kitsDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Uniform_season_kits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_season_kitsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends uniform_season_kitsUpdateManyArgs>(args: SelectSubset<T, uniform_season_kitsUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Uniform_season_kits.
+     * @param {uniform_season_kitsUpsertArgs} args - Arguments to update or create a Uniform_season_kits.
+     * @example
+     * // Update or create a Uniform_season_kits
+     * const uniform_season_kits = await prisma.uniform_season_kits.upsert({
+     *   create: {
+     *     // ... data to create a Uniform_season_kits
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Uniform_season_kits we want to update
+     *   }
+     * })
+     */
+    upsert<T extends uniform_season_kitsUpsertArgs>(args: SelectSubset<T, uniform_season_kitsUpsertArgs<ExtArgs>>): Prisma__uniform_season_kitsClient<$Result.GetResult<Prisma.$uniform_season_kitsPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Uniform_season_kits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_season_kitsCountArgs} args - Arguments to filter Uniform_season_kits to count.
+     * @example
+     * // Count the number of Uniform_season_kits
+     * const count = await prisma.uniform_season_kits.count({
+     *   where: {
+     *     // ... the filter for the Uniform_season_kits we want to count
+     *   }
+     * })
+    **/
+    count<T extends uniform_season_kitsCountArgs>(
+      args?: Subset<T, uniform_season_kitsCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Uniform_season_kitsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Uniform_season_kits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Uniform_season_kitsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Uniform_season_kitsAggregateArgs>(args: Subset<T, Uniform_season_kitsAggregateArgs>): Prisma.PrismaPromise<GetUniform_season_kitsAggregateType<T>>
+
+    /**
+     * Group by Uniform_season_kits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_season_kitsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends uniform_season_kitsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: uniform_season_kitsGroupByArgs['orderBy'] }
+        : { orderBy?: uniform_season_kitsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, uniform_season_kitsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUniform_season_kitsGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the uniform_season_kits model
+   */
+  readonly fields: uniform_season_kitsFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for uniform_season_kits.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__uniform_season_kitsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    seasons<T extends seasonsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, seasonsDefaultArgs<ExtArgs>>): Prisma__seasonsClient<$Result.GetResult<Prisma.$seasonsPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    team_seasons<T extends uniform_season_kits$team_seasonsArgs<ExtArgs> = {}>(args?: Subset<T, uniform_season_kits$team_seasonsArgs<ExtArgs>>): Prisma__team_seasonsClient<$Result.GetResult<Prisma.$team_seasonsPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    uniform_kits<T extends uniform_kitsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, uniform_kitsDefaultArgs<ExtArgs>>): Prisma__uniform_kitsClient<$Result.GetResult<Prisma.$uniform_kitsPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the uniform_season_kits model
+   */ 
+  interface uniform_season_kitsFieldRefs {
+    readonly id: FieldRef<"uniform_season_kits", 'Int'>
+    readonly season_id: FieldRef<"uniform_season_kits", 'Int'>
+    readonly team_season_id: FieldRef<"uniform_season_kits", 'Int'>
+    readonly squad_level: FieldRef<"uniform_season_kits", 'String'>
+    readonly uniform_kit_id: FieldRef<"uniform_season_kits", 'Int'>
+    readonly created_at: FieldRef<"uniform_season_kits", 'DateTime'>
+    readonly modified_at: FieldRef<"uniform_season_kits", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * uniform_season_kits findUnique
+   */
+  export type uniform_season_kitsFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_season_kits to fetch.
+     */
+    where: uniform_season_kitsWhereUniqueInput
+  }
+
+  /**
+   * uniform_season_kits findUniqueOrThrow
+   */
+  export type uniform_season_kitsFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_season_kits to fetch.
+     */
+    where: uniform_season_kitsWhereUniqueInput
+  }
+
+  /**
+   * uniform_season_kits findFirst
+   */
+  export type uniform_season_kitsFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_season_kits to fetch.
+     */
+    where?: uniform_season_kitsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_season_kits to fetch.
+     */
+    orderBy?: uniform_season_kitsOrderByWithRelationInput | uniform_season_kitsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for uniform_season_kits.
+     */
+    cursor?: uniform_season_kitsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_season_kits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_season_kits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of uniform_season_kits.
+     */
+    distinct?: Uniform_season_kitsScalarFieldEnum | Uniform_season_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_season_kits findFirstOrThrow
+   */
+  export type uniform_season_kitsFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_season_kits to fetch.
+     */
+    where?: uniform_season_kitsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_season_kits to fetch.
+     */
+    orderBy?: uniform_season_kitsOrderByWithRelationInput | uniform_season_kitsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for uniform_season_kits.
+     */
+    cursor?: uniform_season_kitsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_season_kits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_season_kits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of uniform_season_kits.
+     */
+    distinct?: Uniform_season_kitsScalarFieldEnum | Uniform_season_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_season_kits findMany
+   */
+  export type uniform_season_kitsFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_season_kits to fetch.
+     */
+    where?: uniform_season_kitsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_season_kits to fetch.
+     */
+    orderBy?: uniform_season_kitsOrderByWithRelationInput | uniform_season_kitsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing uniform_season_kits.
+     */
+    cursor?: uniform_season_kitsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_season_kits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_season_kits.
+     */
+    skip?: number
+    distinct?: Uniform_season_kitsScalarFieldEnum | Uniform_season_kitsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_season_kits create
+   */
+  export type uniform_season_kitsCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * The data needed to create a uniform_season_kits.
+     */
+    data: XOR<uniform_season_kitsCreateInput, uniform_season_kitsUncheckedCreateInput>
+  }
+
+  /**
+   * uniform_season_kits createMany
+   */
+  export type uniform_season_kitsCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many uniform_season_kits.
+     */
+    data: uniform_season_kitsCreateManyInput | uniform_season_kitsCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * uniform_season_kits update
+   */
+  export type uniform_season_kitsUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * The data needed to update a uniform_season_kits.
+     */
+    data: XOR<uniform_season_kitsUpdateInput, uniform_season_kitsUncheckedUpdateInput>
+    /**
+     * Choose, which uniform_season_kits to update.
+     */
+    where: uniform_season_kitsWhereUniqueInput
+  }
+
+  /**
+   * uniform_season_kits updateMany
+   */
+  export type uniform_season_kitsUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update uniform_season_kits.
+     */
+    data: XOR<uniform_season_kitsUpdateManyMutationInput, uniform_season_kitsUncheckedUpdateManyInput>
+    /**
+     * Filter which uniform_season_kits to update
+     */
+    where?: uniform_season_kitsWhereInput
+  }
+
+  /**
+   * uniform_season_kits upsert
+   */
+  export type uniform_season_kitsUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * The filter to search for the uniform_season_kits to update in case it exists.
+     */
+    where: uniform_season_kitsWhereUniqueInput
+    /**
+     * In case the uniform_season_kits found by the `where` argument doesn't exist, create a new uniform_season_kits with this data.
+     */
+    create: XOR<uniform_season_kitsCreateInput, uniform_season_kitsUncheckedCreateInput>
+    /**
+     * In case the uniform_season_kits was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<uniform_season_kitsUpdateInput, uniform_season_kitsUncheckedUpdateInput>
+  }
+
+  /**
+   * uniform_season_kits delete
+   */
+  export type uniform_season_kitsDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+    /**
+     * Filter which uniform_season_kits to delete.
+     */
+    where: uniform_season_kitsWhereUniqueInput
+  }
+
+  /**
+   * uniform_season_kits deleteMany
+   */
+  export type uniform_season_kitsDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which uniform_season_kits to delete
+     */
+    where?: uniform_season_kitsWhereInput
+  }
+
+  /**
+   * uniform_season_kits.team_seasons
+   */
+  export type uniform_season_kits$team_seasonsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the team_seasons
+     */
+    select?: team_seasonsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: team_seasonsInclude<ExtArgs> | null
+    where?: team_seasonsWhereInput
+  }
+
+  /**
+   * uniform_season_kits without action
+   */
+  export type uniform_season_kitsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_season_kits
+     */
+    select?: uniform_season_kitsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_season_kitsInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model uniform_player_assignments
+   */
+
+  export type AggregateUniform_player_assignments = {
+    _count: Uniform_player_assignmentsCountAggregateOutputType | null
+    _avg: Uniform_player_assignmentsAvgAggregateOutputType | null
+    _sum: Uniform_player_assignmentsSumAggregateOutputType | null
+    _min: Uniform_player_assignmentsMinAggregateOutputType | null
+    _max: Uniform_player_assignmentsMaxAggregateOutputType | null
+  }
+
+  export type Uniform_player_assignmentsAvgAggregateOutputType = {
+    id: number | null
+    player_team_id: number | null
+    uniform_jersey_id: number | null
+  }
+
+  export type Uniform_player_assignmentsSumAggregateOutputType = {
+    id: number | null
+    player_team_id: number | null
+    uniform_jersey_id: number | null
+  }
+
+  export type Uniform_player_assignmentsMinAggregateOutputType = {
+    id: number | null
+    player_team_id: number | null
+    uniform_jersey_id: number | null
+    assignment_type: string | null
+    returned: boolean | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Uniform_player_assignmentsMaxAggregateOutputType = {
+    id: number | null
+    player_team_id: number | null
+    uniform_jersey_id: number | null
+    assignment_type: string | null
+    returned: boolean | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Uniform_player_assignmentsCountAggregateOutputType = {
+    id: number
+    player_team_id: number
+    uniform_jersey_id: number
+    assignment_type: number
+    returned: number
+    created_at: number
+    modified_at: number
+    _all: number
+  }
+
+
+  export type Uniform_player_assignmentsAvgAggregateInputType = {
+    id?: true
+    player_team_id?: true
+    uniform_jersey_id?: true
+  }
+
+  export type Uniform_player_assignmentsSumAggregateInputType = {
+    id?: true
+    player_team_id?: true
+    uniform_jersey_id?: true
+  }
+
+  export type Uniform_player_assignmentsMinAggregateInputType = {
+    id?: true
+    player_team_id?: true
+    uniform_jersey_id?: true
+    assignment_type?: true
+    returned?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Uniform_player_assignmentsMaxAggregateInputType = {
+    id?: true
+    player_team_id?: true
+    uniform_jersey_id?: true
+    assignment_type?: true
+    returned?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Uniform_player_assignmentsCountAggregateInputType = {
+    id?: true
+    player_team_id?: true
+    uniform_jersey_id?: true
+    assignment_type?: true
+    returned?: true
+    created_at?: true
+    modified_at?: true
+    _all?: true
+  }
+
+  export type Uniform_player_assignmentsAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which uniform_player_assignments to aggregate.
+     */
+    where?: uniform_player_assignmentsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_player_assignments to fetch.
+     */
+    orderBy?: uniform_player_assignmentsOrderByWithRelationInput | uniform_player_assignmentsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: uniform_player_assignmentsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_player_assignments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_player_assignments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned uniform_player_assignments
+    **/
+    _count?: true | Uniform_player_assignmentsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Uniform_player_assignmentsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Uniform_player_assignmentsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Uniform_player_assignmentsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Uniform_player_assignmentsMaxAggregateInputType
+  }
+
+  export type GetUniform_player_assignmentsAggregateType<T extends Uniform_player_assignmentsAggregateArgs> = {
+        [P in keyof T & keyof AggregateUniform_player_assignments]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUniform_player_assignments[P]>
+      : GetScalarType<T[P], AggregateUniform_player_assignments[P]>
+  }
+
+
+
+
+  export type uniform_player_assignmentsGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: uniform_player_assignmentsWhereInput
+    orderBy?: uniform_player_assignmentsOrderByWithAggregationInput | uniform_player_assignmentsOrderByWithAggregationInput[]
+    by: Uniform_player_assignmentsScalarFieldEnum[] | Uniform_player_assignmentsScalarFieldEnum
+    having?: uniform_player_assignmentsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Uniform_player_assignmentsCountAggregateInputType | true
+    _avg?: Uniform_player_assignmentsAvgAggregateInputType
+    _sum?: Uniform_player_assignmentsSumAggregateInputType
+    _min?: Uniform_player_assignmentsMinAggregateInputType
+    _max?: Uniform_player_assignmentsMaxAggregateInputType
+  }
+
+  export type Uniform_player_assignmentsGroupByOutputType = {
+    id: number
+    player_team_id: number
+    uniform_jersey_id: number
+    assignment_type: string
+    returned: boolean
+    created_at: Date | null
+    modified_at: Date | null
+    _count: Uniform_player_assignmentsCountAggregateOutputType | null
+    _avg: Uniform_player_assignmentsAvgAggregateOutputType | null
+    _sum: Uniform_player_assignmentsSumAggregateOutputType | null
+    _min: Uniform_player_assignmentsMinAggregateOutputType | null
+    _max: Uniform_player_assignmentsMaxAggregateOutputType | null
+  }
+
+  type GetUniform_player_assignmentsGroupByPayload<T extends uniform_player_assignmentsGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Uniform_player_assignmentsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Uniform_player_assignmentsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Uniform_player_assignmentsGroupByOutputType[P]>
+            : GetScalarType<T[P], Uniform_player_assignmentsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type uniform_player_assignmentsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    player_team_id?: boolean
+    uniform_jersey_id?: boolean
+    assignment_type?: boolean
+    returned?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+    player_teams?: boolean | player_teamsDefaultArgs<ExtArgs>
+    uniform_jerseys?: boolean | uniform_jerseysDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["uniform_player_assignments"]>
+
+
+  export type uniform_player_assignmentsSelectScalar = {
+    id?: boolean
+    player_team_id?: boolean
+    uniform_jersey_id?: boolean
+    assignment_type?: boolean
+    returned?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+  }
+
+  export type uniform_player_assignmentsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player_teams?: boolean | player_teamsDefaultArgs<ExtArgs>
+    uniform_jerseys?: boolean | uniform_jerseysDefaultArgs<ExtArgs>
+  }
+
+  export type $uniform_player_assignmentsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "uniform_player_assignments"
+    objects: {
+      player_teams: Prisma.$player_teamsPayload<ExtArgs>
+      uniform_jerseys: Prisma.$uniform_jerseysPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      player_team_id: number
+      uniform_jersey_id: number
+      assignment_type: string
+      returned: boolean
+      created_at: Date | null
+      modified_at: Date | null
+    }, ExtArgs["result"]["uniform_player_assignments"]>
+    composites: {}
+  }
+
+  type uniform_player_assignmentsGetPayload<S extends boolean | null | undefined | uniform_player_assignmentsDefaultArgs> = $Result.GetResult<Prisma.$uniform_player_assignmentsPayload, S>
+
+  type uniform_player_assignmentsCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<uniform_player_assignmentsFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: Uniform_player_assignmentsCountAggregateInputType | true
+    }
+
+  export interface uniform_player_assignmentsDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['uniform_player_assignments'], meta: { name: 'uniform_player_assignments' } }
+    /**
+     * Find zero or one Uniform_player_assignments that matches the filter.
+     * @param {uniform_player_assignmentsFindUniqueArgs} args - Arguments to find a Uniform_player_assignments
+     * @example
+     * // Get one Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends uniform_player_assignmentsFindUniqueArgs>(args: SelectSubset<T, uniform_player_assignmentsFindUniqueArgs<ExtArgs>>): Prisma__uniform_player_assignmentsClient<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Uniform_player_assignments that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {uniform_player_assignmentsFindUniqueOrThrowArgs} args - Arguments to find a Uniform_player_assignments
+     * @example
+     * // Get one Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends uniform_player_assignmentsFindUniqueOrThrowArgs>(args: SelectSubset<T, uniform_player_assignmentsFindUniqueOrThrowArgs<ExtArgs>>): Prisma__uniform_player_assignmentsClient<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Uniform_player_assignments that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_player_assignmentsFindFirstArgs} args - Arguments to find a Uniform_player_assignments
+     * @example
+     * // Get one Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends uniform_player_assignmentsFindFirstArgs>(args?: SelectSubset<T, uniform_player_assignmentsFindFirstArgs<ExtArgs>>): Prisma__uniform_player_assignmentsClient<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Uniform_player_assignments that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_player_assignmentsFindFirstOrThrowArgs} args - Arguments to find a Uniform_player_assignments
+     * @example
+     * // Get one Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends uniform_player_assignmentsFindFirstOrThrowArgs>(args?: SelectSubset<T, uniform_player_assignmentsFindFirstOrThrowArgs<ExtArgs>>): Prisma__uniform_player_assignmentsClient<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Uniform_player_assignments that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_player_assignmentsFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.findMany()
+     * 
+     * // Get first 10 Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const uniform_player_assignmentsWithIdOnly = await prisma.uniform_player_assignments.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends uniform_player_assignmentsFindManyArgs>(args?: SelectSubset<T, uniform_player_assignmentsFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Uniform_player_assignments.
+     * @param {uniform_player_assignmentsCreateArgs} args - Arguments to create a Uniform_player_assignments.
+     * @example
+     * // Create one Uniform_player_assignments
+     * const Uniform_player_assignments = await prisma.uniform_player_assignments.create({
+     *   data: {
+     *     // ... data to create a Uniform_player_assignments
+     *   }
+     * })
+     * 
+     */
+    create<T extends uniform_player_assignmentsCreateArgs>(args: SelectSubset<T, uniform_player_assignmentsCreateArgs<ExtArgs>>): Prisma__uniform_player_assignmentsClient<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Uniform_player_assignments.
+     * @param {uniform_player_assignmentsCreateManyArgs} args - Arguments to create many Uniform_player_assignments.
+     * @example
+     * // Create many Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends uniform_player_assignmentsCreateManyArgs>(args?: SelectSubset<T, uniform_player_assignmentsCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Uniform_player_assignments.
+     * @param {uniform_player_assignmentsDeleteArgs} args - Arguments to delete one Uniform_player_assignments.
+     * @example
+     * // Delete one Uniform_player_assignments
+     * const Uniform_player_assignments = await prisma.uniform_player_assignments.delete({
+     *   where: {
+     *     // ... filter to delete one Uniform_player_assignments
+     *   }
+     * })
+     * 
+     */
+    delete<T extends uniform_player_assignmentsDeleteArgs>(args: SelectSubset<T, uniform_player_assignmentsDeleteArgs<ExtArgs>>): Prisma__uniform_player_assignmentsClient<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Uniform_player_assignments.
+     * @param {uniform_player_assignmentsUpdateArgs} args - Arguments to update one Uniform_player_assignments.
+     * @example
+     * // Update one Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends uniform_player_assignmentsUpdateArgs>(args: SelectSubset<T, uniform_player_assignmentsUpdateArgs<ExtArgs>>): Prisma__uniform_player_assignmentsClient<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Uniform_player_assignments.
+     * @param {uniform_player_assignmentsDeleteManyArgs} args - Arguments to filter Uniform_player_assignments to delete.
+     * @example
+     * // Delete a few Uniform_player_assignments
+     * const { count } = await prisma.uniform_player_assignments.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends uniform_player_assignmentsDeleteManyArgs>(args?: SelectSubset<T, uniform_player_assignmentsDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Uniform_player_assignments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_player_assignmentsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends uniform_player_assignmentsUpdateManyArgs>(args: SelectSubset<T, uniform_player_assignmentsUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Uniform_player_assignments.
+     * @param {uniform_player_assignmentsUpsertArgs} args - Arguments to update or create a Uniform_player_assignments.
+     * @example
+     * // Update or create a Uniform_player_assignments
+     * const uniform_player_assignments = await prisma.uniform_player_assignments.upsert({
+     *   create: {
+     *     // ... data to create a Uniform_player_assignments
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Uniform_player_assignments we want to update
+     *   }
+     * })
+     */
+    upsert<T extends uniform_player_assignmentsUpsertArgs>(args: SelectSubset<T, uniform_player_assignmentsUpsertArgs<ExtArgs>>): Prisma__uniform_player_assignmentsClient<$Result.GetResult<Prisma.$uniform_player_assignmentsPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Uniform_player_assignments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_player_assignmentsCountArgs} args - Arguments to filter Uniform_player_assignments to count.
+     * @example
+     * // Count the number of Uniform_player_assignments
+     * const count = await prisma.uniform_player_assignments.count({
+     *   where: {
+     *     // ... the filter for the Uniform_player_assignments we want to count
+     *   }
+     * })
+    **/
+    count<T extends uniform_player_assignmentsCountArgs>(
+      args?: Subset<T, uniform_player_assignmentsCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Uniform_player_assignmentsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Uniform_player_assignments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Uniform_player_assignmentsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Uniform_player_assignmentsAggregateArgs>(args: Subset<T, Uniform_player_assignmentsAggregateArgs>): Prisma.PrismaPromise<GetUniform_player_assignmentsAggregateType<T>>
+
+    /**
+     * Group by Uniform_player_assignments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {uniform_player_assignmentsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends uniform_player_assignmentsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: uniform_player_assignmentsGroupByArgs['orderBy'] }
+        : { orderBy?: uniform_player_assignmentsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, uniform_player_assignmentsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUniform_player_assignmentsGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the uniform_player_assignments model
+   */
+  readonly fields: uniform_player_assignmentsFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for uniform_player_assignments.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__uniform_player_assignmentsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    player_teams<T extends player_teamsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, player_teamsDefaultArgs<ExtArgs>>): Prisma__player_teamsClient<$Result.GetResult<Prisma.$player_teamsPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    uniform_jerseys<T extends uniform_jerseysDefaultArgs<ExtArgs> = {}>(args?: Subset<T, uniform_jerseysDefaultArgs<ExtArgs>>): Prisma__uniform_jerseysClient<$Result.GetResult<Prisma.$uniform_jerseysPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the uniform_player_assignments model
+   */ 
+  interface uniform_player_assignmentsFieldRefs {
+    readonly id: FieldRef<"uniform_player_assignments", 'Int'>
+    readonly player_team_id: FieldRef<"uniform_player_assignments", 'Int'>
+    readonly uniform_jersey_id: FieldRef<"uniform_player_assignments", 'Int'>
+    readonly assignment_type: FieldRef<"uniform_player_assignments", 'String'>
+    readonly returned: FieldRef<"uniform_player_assignments", 'Boolean'>
+    readonly created_at: FieldRef<"uniform_player_assignments", 'DateTime'>
+    readonly modified_at: FieldRef<"uniform_player_assignments", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * uniform_player_assignments findUnique
+   */
+  export type uniform_player_assignmentsFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_player_assignments to fetch.
+     */
+    where: uniform_player_assignmentsWhereUniqueInput
+  }
+
+  /**
+   * uniform_player_assignments findUniqueOrThrow
+   */
+  export type uniform_player_assignmentsFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_player_assignments to fetch.
+     */
+    where: uniform_player_assignmentsWhereUniqueInput
+  }
+
+  /**
+   * uniform_player_assignments findFirst
+   */
+  export type uniform_player_assignmentsFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_player_assignments to fetch.
+     */
+    where?: uniform_player_assignmentsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_player_assignments to fetch.
+     */
+    orderBy?: uniform_player_assignmentsOrderByWithRelationInput | uniform_player_assignmentsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for uniform_player_assignments.
+     */
+    cursor?: uniform_player_assignmentsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_player_assignments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_player_assignments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of uniform_player_assignments.
+     */
+    distinct?: Uniform_player_assignmentsScalarFieldEnum | Uniform_player_assignmentsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_player_assignments findFirstOrThrow
+   */
+  export type uniform_player_assignmentsFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_player_assignments to fetch.
+     */
+    where?: uniform_player_assignmentsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_player_assignments to fetch.
+     */
+    orderBy?: uniform_player_assignmentsOrderByWithRelationInput | uniform_player_assignmentsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for uniform_player_assignments.
+     */
+    cursor?: uniform_player_assignmentsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_player_assignments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_player_assignments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of uniform_player_assignments.
+     */
+    distinct?: Uniform_player_assignmentsScalarFieldEnum | Uniform_player_assignmentsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_player_assignments findMany
+   */
+  export type uniform_player_assignmentsFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * Filter, which uniform_player_assignments to fetch.
+     */
+    where?: uniform_player_assignmentsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of uniform_player_assignments to fetch.
+     */
+    orderBy?: uniform_player_assignmentsOrderByWithRelationInput | uniform_player_assignmentsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing uniform_player_assignments.
+     */
+    cursor?: uniform_player_assignmentsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` uniform_player_assignments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` uniform_player_assignments.
+     */
+    skip?: number
+    distinct?: Uniform_player_assignmentsScalarFieldEnum | Uniform_player_assignmentsScalarFieldEnum[]
+  }
+
+  /**
+   * uniform_player_assignments create
+   */
+  export type uniform_player_assignmentsCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * The data needed to create a uniform_player_assignments.
+     */
+    data: XOR<uniform_player_assignmentsCreateInput, uniform_player_assignmentsUncheckedCreateInput>
+  }
+
+  /**
+   * uniform_player_assignments createMany
+   */
+  export type uniform_player_assignmentsCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many uniform_player_assignments.
+     */
+    data: uniform_player_assignmentsCreateManyInput | uniform_player_assignmentsCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * uniform_player_assignments update
+   */
+  export type uniform_player_assignmentsUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * The data needed to update a uniform_player_assignments.
+     */
+    data: XOR<uniform_player_assignmentsUpdateInput, uniform_player_assignmentsUncheckedUpdateInput>
+    /**
+     * Choose, which uniform_player_assignments to update.
+     */
+    where: uniform_player_assignmentsWhereUniqueInput
+  }
+
+  /**
+   * uniform_player_assignments updateMany
+   */
+  export type uniform_player_assignmentsUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update uniform_player_assignments.
+     */
+    data: XOR<uniform_player_assignmentsUpdateManyMutationInput, uniform_player_assignmentsUncheckedUpdateManyInput>
+    /**
+     * Filter which uniform_player_assignments to update
+     */
+    where?: uniform_player_assignmentsWhereInput
+  }
+
+  /**
+   * uniform_player_assignments upsert
+   */
+  export type uniform_player_assignmentsUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * The filter to search for the uniform_player_assignments to update in case it exists.
+     */
+    where: uniform_player_assignmentsWhereUniqueInput
+    /**
+     * In case the uniform_player_assignments found by the `where` argument doesn't exist, create a new uniform_player_assignments with this data.
+     */
+    create: XOR<uniform_player_assignmentsCreateInput, uniform_player_assignmentsUncheckedCreateInput>
+    /**
+     * In case the uniform_player_assignments was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<uniform_player_assignmentsUpdateInput, uniform_player_assignmentsUncheckedUpdateInput>
+  }
+
+  /**
+   * uniform_player_assignments delete
+   */
+  export type uniform_player_assignmentsDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+    /**
+     * Filter which uniform_player_assignments to delete.
+     */
+    where: uniform_player_assignmentsWhereUniqueInput
+  }
+
+  /**
+   * uniform_player_assignments deleteMany
+   */
+  export type uniform_player_assignmentsDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which uniform_player_assignments to delete
+     */
+    where?: uniform_player_assignmentsWhereInput
+  }
+
+  /**
+   * uniform_player_assignments without action
+   */
+  export type uniform_player_assignmentsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the uniform_player_assignments
+     */
+    select?: uniform_player_assignmentsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: uniform_player_assignmentsInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model schedule_leads
+   */
+
+  export type AggregateSchedule_leads = {
+    _count: Schedule_leadsCountAggregateOutputType | null
+    _avg: Schedule_leadsAvgAggregateOutputType | null
+    _sum: Schedule_leadsSumAggregateOutputType | null
+    _min: Schedule_leadsMinAggregateOutputType | null
+    _max: Schedule_leadsMaxAggregateOutputType | null
+  }
+
+  export type Schedule_leadsAvgAggregateOutputType = {
+    id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    opponent_club_id: number | null
+  }
+
+  export type Schedule_leadsSumAggregateOutputType = {
+    id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    opponent_club_id: number | null
+  }
+
+  export type Schedule_leadsMinAggregateOutputType = {
+    id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    opponent_club_id: number | null
+    likelihood: string | null
+    status: string | null
+    preferred_home_away: string | null
+    preferred_date: Date | null
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Schedule_leadsMaxAggregateOutputType = {
+    id: number | null
+    season_id: number | null
+    team_season_id: number | null
+    opponent_club_id: number | null
+    likelihood: string | null
+    status: string | null
+    preferred_home_away: string | null
+    preferred_date: Date | null
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+  }
+
+  export type Schedule_leadsCountAggregateOutputType = {
+    id: number
+    season_id: number
+    team_season_id: number
+    opponent_club_id: number
+    likelihood: number
+    status: number
+    preferred_home_away: number
+    preferred_date: number
+    notes: number
+    created_at: number
+    modified_at: number
+    _all: number
+  }
+
+
+  export type Schedule_leadsAvgAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    opponent_club_id?: true
+  }
+
+  export type Schedule_leadsSumAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    opponent_club_id?: true
+  }
+
+  export type Schedule_leadsMinAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    opponent_club_id?: true
+    likelihood?: true
+    status?: true
+    preferred_home_away?: true
+    preferred_date?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Schedule_leadsMaxAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    opponent_club_id?: true
+    likelihood?: true
+    status?: true
+    preferred_home_away?: true
+    preferred_date?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+  }
+
+  export type Schedule_leadsCountAggregateInputType = {
+    id?: true
+    season_id?: true
+    team_season_id?: true
+    opponent_club_id?: true
+    likelihood?: true
+    status?: true
+    preferred_home_away?: true
+    preferred_date?: true
+    notes?: true
+    created_at?: true
+    modified_at?: true
+    _all?: true
+  }
+
+  export type Schedule_leadsAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which schedule_leads to aggregate.
+     */
+    where?: schedule_leadsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of schedule_leads to fetch.
+     */
+    orderBy?: schedule_leadsOrderByWithRelationInput | schedule_leadsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: schedule_leadsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` schedule_leads from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` schedule_leads.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned schedule_leads
+    **/
+    _count?: true | Schedule_leadsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Schedule_leadsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Schedule_leadsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Schedule_leadsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Schedule_leadsMaxAggregateInputType
+  }
+
+  export type GetSchedule_leadsAggregateType<T extends Schedule_leadsAggregateArgs> = {
+        [P in keyof T & keyof AggregateSchedule_leads]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSchedule_leads[P]>
+      : GetScalarType<T[P], AggregateSchedule_leads[P]>
+  }
+
+
+
+
+  export type schedule_leadsGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: schedule_leadsWhereInput
+    orderBy?: schedule_leadsOrderByWithAggregationInput | schedule_leadsOrderByWithAggregationInput[]
+    by: Schedule_leadsScalarFieldEnum[] | Schedule_leadsScalarFieldEnum
+    having?: schedule_leadsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Schedule_leadsCountAggregateInputType | true
+    _avg?: Schedule_leadsAvgAggregateInputType
+    _sum?: Schedule_leadsSumAggregateInputType
+    _min?: Schedule_leadsMinAggregateInputType
+    _max?: Schedule_leadsMaxAggregateInputType
+  }
+
+  export type Schedule_leadsGroupByOutputType = {
+    id: number
+    season_id: number
+    team_season_id: number | null
+    opponent_club_id: number
+    likelihood: string
+    status: string
+    preferred_home_away: string | null
+    preferred_date: Date | null
+    notes: string | null
+    created_at: Date | null
+    modified_at: Date | null
+    _count: Schedule_leadsCountAggregateOutputType | null
+    _avg: Schedule_leadsAvgAggregateOutputType | null
+    _sum: Schedule_leadsSumAggregateOutputType | null
+    _min: Schedule_leadsMinAggregateOutputType | null
+    _max: Schedule_leadsMaxAggregateOutputType | null
+  }
+
+  type GetSchedule_leadsGroupByPayload<T extends schedule_leadsGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Schedule_leadsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Schedule_leadsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Schedule_leadsGroupByOutputType[P]>
+            : GetScalarType<T[P], Schedule_leadsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type schedule_leadsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    season_id?: boolean
+    team_season_id?: boolean
+    opponent_club_id?: boolean
+    likelihood?: boolean
+    status?: boolean
+    preferred_home_away?: boolean
+    preferred_date?: boolean
+    notes?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+    seasons?: boolean | seasonsDefaultArgs<ExtArgs>
+    team_seasons?: boolean | schedule_leads$team_seasonsArgs<ExtArgs>
+    opponent_club?: boolean | clubsDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["schedule_leads"]>
+
+
+  export type schedule_leadsSelectScalar = {
+    id?: boolean
+    season_id?: boolean
+    team_season_id?: boolean
+    opponent_club_id?: boolean
+    likelihood?: boolean
+    status?: boolean
+    preferred_home_away?: boolean
+    preferred_date?: boolean
+    notes?: boolean
+    created_at?: boolean
+    modified_at?: boolean
+  }
+
+  export type schedule_leadsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    seasons?: boolean | seasonsDefaultArgs<ExtArgs>
+    team_seasons?: boolean | schedule_leads$team_seasonsArgs<ExtArgs>
+    opponent_club?: boolean | clubsDefaultArgs<ExtArgs>
+  }
+
+  export type $schedule_leadsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "schedule_leads"
+    objects: {
+      seasons: Prisma.$seasonsPayload<ExtArgs>
+      team_seasons: Prisma.$team_seasonsPayload<ExtArgs> | null
+      opponent_club: Prisma.$clubsPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      season_id: number
+      team_season_id: number | null
+      opponent_club_id: number
+      likelihood: string
+      status: string
+      preferred_home_away: string | null
+      preferred_date: Date | null
+      notes: string | null
+      created_at: Date | null
+      modified_at: Date | null
+    }, ExtArgs["result"]["schedule_leads"]>
+    composites: {}
+  }
+
+  type schedule_leadsGetPayload<S extends boolean | null | undefined | schedule_leadsDefaultArgs> = $Result.GetResult<Prisma.$schedule_leadsPayload, S>
+
+  type schedule_leadsCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<schedule_leadsFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: Schedule_leadsCountAggregateInputType | true
+    }
+
+  export interface schedule_leadsDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['schedule_leads'], meta: { name: 'schedule_leads' } }
+    /**
+     * Find zero or one Schedule_leads that matches the filter.
+     * @param {schedule_leadsFindUniqueArgs} args - Arguments to find a Schedule_leads
+     * @example
+     * // Get one Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends schedule_leadsFindUniqueArgs>(args: SelectSubset<T, schedule_leadsFindUniqueArgs<ExtArgs>>): Prisma__schedule_leadsClient<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Schedule_leads that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {schedule_leadsFindUniqueOrThrowArgs} args - Arguments to find a Schedule_leads
+     * @example
+     * // Get one Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends schedule_leadsFindUniqueOrThrowArgs>(args: SelectSubset<T, schedule_leadsFindUniqueOrThrowArgs<ExtArgs>>): Prisma__schedule_leadsClient<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Schedule_leads that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {schedule_leadsFindFirstArgs} args - Arguments to find a Schedule_leads
+     * @example
+     * // Get one Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends schedule_leadsFindFirstArgs>(args?: SelectSubset<T, schedule_leadsFindFirstArgs<ExtArgs>>): Prisma__schedule_leadsClient<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Schedule_leads that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {schedule_leadsFindFirstOrThrowArgs} args - Arguments to find a Schedule_leads
+     * @example
+     * // Get one Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends schedule_leadsFindFirstOrThrowArgs>(args?: SelectSubset<T, schedule_leadsFindFirstOrThrowArgs<ExtArgs>>): Prisma__schedule_leadsClient<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Schedule_leads that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {schedule_leadsFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.findMany()
+     * 
+     * // Get first 10 Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const schedule_leadsWithIdOnly = await prisma.schedule_leads.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends schedule_leadsFindManyArgs>(args?: SelectSubset<T, schedule_leadsFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Schedule_leads.
+     * @param {schedule_leadsCreateArgs} args - Arguments to create a Schedule_leads.
+     * @example
+     * // Create one Schedule_leads
+     * const Schedule_leads = await prisma.schedule_leads.create({
+     *   data: {
+     *     // ... data to create a Schedule_leads
+     *   }
+     * })
+     * 
+     */
+    create<T extends schedule_leadsCreateArgs>(args: SelectSubset<T, schedule_leadsCreateArgs<ExtArgs>>): Prisma__schedule_leadsClient<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Schedule_leads.
+     * @param {schedule_leadsCreateManyArgs} args - Arguments to create many Schedule_leads.
+     * @example
+     * // Create many Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends schedule_leadsCreateManyArgs>(args?: SelectSubset<T, schedule_leadsCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Schedule_leads.
+     * @param {schedule_leadsDeleteArgs} args - Arguments to delete one Schedule_leads.
+     * @example
+     * // Delete one Schedule_leads
+     * const Schedule_leads = await prisma.schedule_leads.delete({
+     *   where: {
+     *     // ... filter to delete one Schedule_leads
+     *   }
+     * })
+     * 
+     */
+    delete<T extends schedule_leadsDeleteArgs>(args: SelectSubset<T, schedule_leadsDeleteArgs<ExtArgs>>): Prisma__schedule_leadsClient<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Schedule_leads.
+     * @param {schedule_leadsUpdateArgs} args - Arguments to update one Schedule_leads.
+     * @example
+     * // Update one Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends schedule_leadsUpdateArgs>(args: SelectSubset<T, schedule_leadsUpdateArgs<ExtArgs>>): Prisma__schedule_leadsClient<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Schedule_leads.
+     * @param {schedule_leadsDeleteManyArgs} args - Arguments to filter Schedule_leads to delete.
+     * @example
+     * // Delete a few Schedule_leads
+     * const { count } = await prisma.schedule_leads.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends schedule_leadsDeleteManyArgs>(args?: SelectSubset<T, schedule_leadsDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Schedule_leads.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {schedule_leadsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends schedule_leadsUpdateManyArgs>(args: SelectSubset<T, schedule_leadsUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Schedule_leads.
+     * @param {schedule_leadsUpsertArgs} args - Arguments to update or create a Schedule_leads.
+     * @example
+     * // Update or create a Schedule_leads
+     * const schedule_leads = await prisma.schedule_leads.upsert({
+     *   create: {
+     *     // ... data to create a Schedule_leads
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Schedule_leads we want to update
+     *   }
+     * })
+     */
+    upsert<T extends schedule_leadsUpsertArgs>(args: SelectSubset<T, schedule_leadsUpsertArgs<ExtArgs>>): Prisma__schedule_leadsClient<$Result.GetResult<Prisma.$schedule_leadsPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Schedule_leads.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {schedule_leadsCountArgs} args - Arguments to filter Schedule_leads to count.
+     * @example
+     * // Count the number of Schedule_leads
+     * const count = await prisma.schedule_leads.count({
+     *   where: {
+     *     // ... the filter for the Schedule_leads we want to count
+     *   }
+     * })
+    **/
+    count<T extends schedule_leadsCountArgs>(
+      args?: Subset<T, schedule_leadsCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Schedule_leadsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Schedule_leads.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Schedule_leadsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Schedule_leadsAggregateArgs>(args: Subset<T, Schedule_leadsAggregateArgs>): Prisma.PrismaPromise<GetSchedule_leadsAggregateType<T>>
+
+    /**
+     * Group by Schedule_leads.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {schedule_leadsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends schedule_leadsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: schedule_leadsGroupByArgs['orderBy'] }
+        : { orderBy?: schedule_leadsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, schedule_leadsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSchedule_leadsGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the schedule_leads model
+   */
+  readonly fields: schedule_leadsFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for schedule_leads.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__schedule_leadsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    seasons<T extends seasonsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, seasonsDefaultArgs<ExtArgs>>): Prisma__seasonsClient<$Result.GetResult<Prisma.$seasonsPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    team_seasons<T extends schedule_leads$team_seasonsArgs<ExtArgs> = {}>(args?: Subset<T, schedule_leads$team_seasonsArgs<ExtArgs>>): Prisma__team_seasonsClient<$Result.GetResult<Prisma.$team_seasonsPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    opponent_club<T extends clubsDefaultArgs<ExtArgs> = {}>(args?: Subset<T, clubsDefaultArgs<ExtArgs>>): Prisma__clubsClient<$Result.GetResult<Prisma.$clubsPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the schedule_leads model
+   */ 
+  interface schedule_leadsFieldRefs {
+    readonly id: FieldRef<"schedule_leads", 'Int'>
+    readonly season_id: FieldRef<"schedule_leads", 'Int'>
+    readonly team_season_id: FieldRef<"schedule_leads", 'Int'>
+    readonly opponent_club_id: FieldRef<"schedule_leads", 'Int'>
+    readonly likelihood: FieldRef<"schedule_leads", 'String'>
+    readonly status: FieldRef<"schedule_leads", 'String'>
+    readonly preferred_home_away: FieldRef<"schedule_leads", 'String'>
+    readonly preferred_date: FieldRef<"schedule_leads", 'DateTime'>
+    readonly notes: FieldRef<"schedule_leads", 'String'>
+    readonly created_at: FieldRef<"schedule_leads", 'DateTime'>
+    readonly modified_at: FieldRef<"schedule_leads", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * schedule_leads findUnique
+   */
+  export type schedule_leadsFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * Filter, which schedule_leads to fetch.
+     */
+    where: schedule_leadsWhereUniqueInput
+  }
+
+  /**
+   * schedule_leads findUniqueOrThrow
+   */
+  export type schedule_leadsFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * Filter, which schedule_leads to fetch.
+     */
+    where: schedule_leadsWhereUniqueInput
+  }
+
+  /**
+   * schedule_leads findFirst
+   */
+  export type schedule_leadsFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * Filter, which schedule_leads to fetch.
+     */
+    where?: schedule_leadsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of schedule_leads to fetch.
+     */
+    orderBy?: schedule_leadsOrderByWithRelationInput | schedule_leadsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for schedule_leads.
+     */
+    cursor?: schedule_leadsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` schedule_leads from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` schedule_leads.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of schedule_leads.
+     */
+    distinct?: Schedule_leadsScalarFieldEnum | Schedule_leadsScalarFieldEnum[]
+  }
+
+  /**
+   * schedule_leads findFirstOrThrow
+   */
+  export type schedule_leadsFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * Filter, which schedule_leads to fetch.
+     */
+    where?: schedule_leadsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of schedule_leads to fetch.
+     */
+    orderBy?: schedule_leadsOrderByWithRelationInput | schedule_leadsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for schedule_leads.
+     */
+    cursor?: schedule_leadsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` schedule_leads from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` schedule_leads.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of schedule_leads.
+     */
+    distinct?: Schedule_leadsScalarFieldEnum | Schedule_leadsScalarFieldEnum[]
+  }
+
+  /**
+   * schedule_leads findMany
+   */
+  export type schedule_leadsFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * Filter, which schedule_leads to fetch.
+     */
+    where?: schedule_leadsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of schedule_leads to fetch.
+     */
+    orderBy?: schedule_leadsOrderByWithRelationInput | schedule_leadsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing schedule_leads.
+     */
+    cursor?: schedule_leadsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` schedule_leads from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` schedule_leads.
+     */
+    skip?: number
+    distinct?: Schedule_leadsScalarFieldEnum | Schedule_leadsScalarFieldEnum[]
+  }
+
+  /**
+   * schedule_leads create
+   */
+  export type schedule_leadsCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * The data needed to create a schedule_leads.
+     */
+    data: XOR<schedule_leadsCreateInput, schedule_leadsUncheckedCreateInput>
+  }
+
+  /**
+   * schedule_leads createMany
+   */
+  export type schedule_leadsCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many schedule_leads.
+     */
+    data: schedule_leadsCreateManyInput | schedule_leadsCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * schedule_leads update
+   */
+  export type schedule_leadsUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * The data needed to update a schedule_leads.
+     */
+    data: XOR<schedule_leadsUpdateInput, schedule_leadsUncheckedUpdateInput>
+    /**
+     * Choose, which schedule_leads to update.
+     */
+    where: schedule_leadsWhereUniqueInput
+  }
+
+  /**
+   * schedule_leads updateMany
+   */
+  export type schedule_leadsUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update schedule_leads.
+     */
+    data: XOR<schedule_leadsUpdateManyMutationInput, schedule_leadsUncheckedUpdateManyInput>
+    /**
+     * Filter which schedule_leads to update
+     */
+    where?: schedule_leadsWhereInput
+  }
+
+  /**
+   * schedule_leads upsert
+   */
+  export type schedule_leadsUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * The filter to search for the schedule_leads to update in case it exists.
+     */
+    where: schedule_leadsWhereUniqueInput
+    /**
+     * In case the schedule_leads found by the `where` argument doesn't exist, create a new schedule_leads with this data.
+     */
+    create: XOR<schedule_leadsCreateInput, schedule_leadsUncheckedCreateInput>
+    /**
+     * In case the schedule_leads was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<schedule_leadsUpdateInput, schedule_leadsUncheckedUpdateInput>
+  }
+
+  /**
+   * schedule_leads delete
+   */
+  export type schedule_leadsDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+    /**
+     * Filter which schedule_leads to delete.
+     */
+    where: schedule_leadsWhereUniqueInput
+  }
+
+  /**
+   * schedule_leads deleteMany
+   */
+  export type schedule_leadsDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which schedule_leads to delete
+     */
+    where?: schedule_leadsWhereInput
+  }
+
+  /**
+   * schedule_leads.team_seasons
+   */
+  export type schedule_leads$team_seasonsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the team_seasons
+     */
+    select?: team_seasonsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: team_seasonsInclude<ExtArgs> | null
+    where?: team_seasonsWhereInput
+  }
+
+  /**
+   * schedule_leads without action
+   */
+  export type schedule_leadsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the schedule_leads
+     */
+    select?: schedule_leadsSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: schedule_leadsInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -57121,6 +64056,99 @@ export namespace Prisma {
   export type AwardsScalarFieldEnum = (typeof AwardsScalarFieldEnum)[keyof typeof AwardsScalarFieldEnum]
 
 
+  export const Player_season_lettersScalarFieldEnum: {
+    id: 'id',
+    player_id: 'player_id',
+    season_id: 'season_id',
+    team_season_id: 'team_season_id',
+    varsity_letter: 'varsity_letter',
+    number_patch: 'number_patch',
+    certificate: 'certificate',
+    bar: 'bar',
+    ball: 'ball',
+    number_patch_needed: 'number_patch_needed',
+    varsity_patch_needed: 'varsity_patch_needed',
+    notes: 'notes',
+    created_at: 'created_at',
+    modified_at: 'modified_at'
+  };
+
+  export type Player_season_lettersScalarFieldEnum = (typeof Player_season_lettersScalarFieldEnum)[keyof typeof Player_season_lettersScalarFieldEnum]
+
+
+  export const Uniform_kitsScalarFieldEnum: {
+    id: 'id',
+    club_id: 'club_id',
+    type: 'type',
+    brand: 'brand',
+    style: 'style',
+    color: 'color',
+    year: 'year',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    modified_at: 'modified_at'
+  };
+
+  export type Uniform_kitsScalarFieldEnum = (typeof Uniform_kitsScalarFieldEnum)[keyof typeof Uniform_kitsScalarFieldEnum]
+
+
+  export const Uniform_jerseysScalarFieldEnum: {
+    id: 'id',
+    uniform_kit_id: 'uniform_kit_id',
+    jersey_number: 'jersey_number',
+    size: 'size',
+    is_lost: 'is_lost',
+    notes: 'notes',
+    created_at: 'created_at',
+    modified_at: 'modified_at'
+  };
+
+  export type Uniform_jerseysScalarFieldEnum = (typeof Uniform_jerseysScalarFieldEnum)[keyof typeof Uniform_jerseysScalarFieldEnum]
+
+
+  export const Uniform_season_kitsScalarFieldEnum: {
+    id: 'id',
+    season_id: 'season_id',
+    team_season_id: 'team_season_id',
+    squad_level: 'squad_level',
+    uniform_kit_id: 'uniform_kit_id',
+    created_at: 'created_at',
+    modified_at: 'modified_at'
+  };
+
+  export type Uniform_season_kitsScalarFieldEnum = (typeof Uniform_season_kitsScalarFieldEnum)[keyof typeof Uniform_season_kitsScalarFieldEnum]
+
+
+  export const Uniform_player_assignmentsScalarFieldEnum: {
+    id: 'id',
+    player_team_id: 'player_team_id',
+    uniform_jersey_id: 'uniform_jersey_id',
+    assignment_type: 'assignment_type',
+    returned: 'returned',
+    created_at: 'created_at',
+    modified_at: 'modified_at'
+  };
+
+  export type Uniform_player_assignmentsScalarFieldEnum = (typeof Uniform_player_assignmentsScalarFieldEnum)[keyof typeof Uniform_player_assignmentsScalarFieldEnum]
+
+
+  export const Schedule_leadsScalarFieldEnum: {
+    id: 'id',
+    season_id: 'season_id',
+    team_season_id: 'team_season_id',
+    opponent_club_id: 'opponent_club_id',
+    likelihood: 'likelihood',
+    status: 'status',
+    preferred_home_away: 'preferred_home_away',
+    preferred_date: 'preferred_date',
+    notes: 'notes',
+    created_at: 'created_at',
+    modified_at: 'modified_at'
+  };
+
+  export type Schedule_leadsScalarFieldEnum = (typeof Schedule_leadsScalarFieldEnum)[keyof typeof Schedule_leadsScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -57624,6 +64652,8 @@ export namespace Prisma {
     addresses?: XOR<AddressesNullableRelationFilter, addressesWhereInput> | null
     teams?: TeamsListRelationFilter
     custom_field_definitions?: Custom_field_definitionsListRelationFilter
+    uniform_kits?: Uniform_kitsListRelationFilter
+    schedule_leads?: Schedule_leadsListRelationFilter
   }
 
   export type clubsOrderByWithRelationInput = {
@@ -57643,6 +64673,8 @@ export namespace Prisma {
     addresses?: addressesOrderByWithRelationInput
     teams?: teamsOrderByRelationAggregateInput
     custom_field_definitions?: custom_field_definitionsOrderByRelationAggregateInput
+    uniform_kits?: uniform_kitsOrderByRelationAggregateInput
+    schedule_leads?: schedule_leadsOrderByRelationAggregateInput
   }
 
   export type clubsWhereUniqueInput = Prisma.AtLeast<{
@@ -57665,6 +64697,8 @@ export namespace Prisma {
     addresses?: XOR<AddressesNullableRelationFilter, addressesWhereInput> | null
     teams?: TeamsListRelationFilter
     custom_field_definitions?: Custom_field_definitionsListRelationFilter
+    uniform_kits?: Uniform_kitsListRelationFilter
+    schedule_leads?: Schedule_leadsListRelationFilter
   }, "id">
 
   export type clubsOrderByWithAggregationInput = {
@@ -59545,6 +66579,7 @@ export namespace Prisma {
     player_unavailability?: Player_unavailabilityListRelationFilter
     event_attendance?: Event_attendanceListRelationFilter
     awards?: AwardsListRelationFilter
+    player_season_letters?: Player_season_lettersListRelationFilter
   }
 
   export type peopleOrderByWithRelationInput = {
@@ -59585,6 +66620,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityOrderByRelationAggregateInput
     event_attendance?: event_attendanceOrderByRelationAggregateInput
     awards?: awardsOrderByRelationAggregateInput
+    player_season_letters?: player_season_lettersOrderByRelationAggregateInput
   }
 
   export type peopleWhereUniqueInput = Prisma.AtLeast<{
@@ -59628,6 +66664,7 @@ export namespace Prisma {
     player_unavailability?: Player_unavailabilityListRelationFilter
     event_attendance?: Event_attendanceListRelationFilter
     awards?: AwardsListRelationFilter
+    player_season_letters?: Player_season_lettersListRelationFilter
   }, "id">
 
   export type peopleOrderByWithAggregationInput = {
@@ -59900,6 +66937,7 @@ export namespace Prisma {
     left_date?: DateTimeNullableFilter<"player_teams"> | Date | string | null
     people?: XOR<PeopleRelationFilter, peopleWhereInput>
     team_seasons?: XOR<Team_seasonsRelationFilter, team_seasonsWhereInput>
+    uniform_player_assignments?: Uniform_player_assignmentsListRelationFilter
   }
 
   export type player_teamsOrderByWithRelationInput = {
@@ -59925,6 +66963,7 @@ export namespace Prisma {
     left_date?: SortOrderInput | SortOrder
     people?: peopleOrderByWithRelationInput
     team_seasons?: team_seasonsOrderByWithRelationInput
+    uniform_player_assignments?: uniform_player_assignmentsOrderByRelationAggregateInput
   }
 
   export type player_teamsWhereUniqueInput = Prisma.AtLeast<{
@@ -59953,6 +66992,7 @@ export namespace Prisma {
     left_date?: DateTimeNullableFilter<"player_teams"> | Date | string | null
     people?: XOR<PeopleRelationFilter, peopleWhereInput>
     team_seasons?: XOR<Team_seasonsRelationFilter, team_seasonsWhereInput>
+    uniform_player_assignments?: Uniform_player_assignmentsListRelationFilter
   }, "id">
 
   export type player_teamsOrderByWithAggregationInput = {
@@ -60025,6 +67065,9 @@ export namespace Prisma {
     team_seasons?: Team_seasonsListRelationFilter
     season_age_groups?: Season_age_groupsListRelationFilter
     awards?: AwardsListRelationFilter
+    player_season_letters?: Player_season_lettersListRelationFilter
+    uniform_season_kits?: Uniform_season_kitsListRelationFilter
+    schedule_leads?: Schedule_leadsListRelationFilter
   }
 
   export type seasonsOrderByWithRelationInput = {
@@ -60040,6 +67083,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsOrderByRelationAggregateInput
     season_age_groups?: season_age_groupsOrderByRelationAggregateInput
     awards?: awardsOrderByRelationAggregateInput
+    player_season_letters?: player_season_lettersOrderByRelationAggregateInput
+    uniform_season_kits?: uniform_season_kitsOrderByRelationAggregateInput
+    schedule_leads?: schedule_leadsOrderByRelationAggregateInput
   }
 
   export type seasonsWhereUniqueInput = Prisma.AtLeast<{
@@ -60058,6 +67104,9 @@ export namespace Prisma {
     team_seasons?: Team_seasonsListRelationFilter
     season_age_groups?: Season_age_groupsListRelationFilter
     awards?: AwardsListRelationFilter
+    player_season_letters?: Player_season_lettersListRelationFilter
+    uniform_season_kits?: Uniform_season_kitsListRelationFilter
+    schedule_leads?: Schedule_leadsListRelationFilter
   }, "id">
 
   export type seasonsOrderByWithAggregationInput = {
@@ -60256,6 +67305,9 @@ export namespace Prisma {
     player_pairings?: Player_pairingsListRelationFilter
     player_unavailability?: Player_unavailabilityListRelationFilter
     awards?: AwardsListRelationFilter
+    player_season_letters?: Player_season_lettersListRelationFilter
+    uniform_season_kits?: Uniform_season_kitsListRelationFilter
+    schedule_leads?: Schedule_leadsListRelationFilter
   }
 
   export type team_seasonsOrderByWithRelationInput = {
@@ -60291,6 +67343,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsOrderByRelationAggregateInput
     player_unavailability?: player_unavailabilityOrderByRelationAggregateInput
     awards?: awardsOrderByRelationAggregateInput
+    player_season_letters?: player_season_lettersOrderByRelationAggregateInput
+    uniform_season_kits?: uniform_season_kitsOrderByRelationAggregateInput
+    schedule_leads?: schedule_leadsOrderByRelationAggregateInput
   }
 
   export type team_seasonsWhereUniqueInput = Prisma.AtLeast<{
@@ -60330,6 +67385,9 @@ export namespace Prisma {
     player_pairings?: Player_pairingsListRelationFilter
     player_unavailability?: Player_unavailabilityListRelationFilter
     awards?: AwardsListRelationFilter
+    player_season_letters?: Player_season_lettersListRelationFilter
+    uniform_season_kits?: Uniform_season_kitsListRelationFilter
+    schedule_leads?: Schedule_leadsListRelationFilter
   }, "id" | "team_id_season_id">
 
   export type team_seasonsOrderByWithAggregationInput = {
@@ -61701,6 +68759,514 @@ export namespace Prisma {
     modified_at?: DateTimeNullableWithAggregatesFilter<"awards"> | Date | string | null
   }
 
+  export type player_season_lettersWhereInput = {
+    AND?: player_season_lettersWhereInput | player_season_lettersWhereInput[]
+    OR?: player_season_lettersWhereInput[]
+    NOT?: player_season_lettersWhereInput | player_season_lettersWhereInput[]
+    id?: IntFilter<"player_season_letters"> | number
+    player_id?: IntFilter<"player_season_letters"> | number
+    season_id?: IntFilter<"player_season_letters"> | number
+    team_season_id?: IntNullableFilter<"player_season_letters"> | number | null
+    varsity_letter?: BoolFilter<"player_season_letters"> | boolean
+    number_patch?: IntNullableFilter<"player_season_letters"> | number | null
+    certificate?: BoolFilter<"player_season_letters"> | boolean
+    bar?: BoolFilter<"player_season_letters"> | boolean
+    ball?: BoolFilter<"player_season_letters"> | boolean
+    number_patch_needed?: BoolFilter<"player_season_letters"> | boolean
+    varsity_patch_needed?: BoolFilter<"player_season_letters"> | boolean
+    notes?: StringNullableFilter<"player_season_letters"> | string | null
+    created_at?: DateTimeNullableFilter<"player_season_letters"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"player_season_letters"> | Date | string | null
+    people?: XOR<PeopleRelationFilter, peopleWhereInput>
+    seasons?: XOR<SeasonsRelationFilter, seasonsWhereInput>
+    team_seasons?: XOR<Team_seasonsNullableRelationFilter, team_seasonsWhereInput> | null
+  }
+
+  export type player_season_lettersOrderByWithRelationInput = {
+    id?: SortOrder
+    player_id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrderInput | SortOrder
+    varsity_letter?: SortOrder
+    number_patch?: SortOrderInput | SortOrder
+    certificate?: SortOrder
+    bar?: SortOrder
+    ball?: SortOrder
+    number_patch_needed?: SortOrder
+    varsity_patch_needed?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    people?: peopleOrderByWithRelationInput
+    seasons?: seasonsOrderByWithRelationInput
+    team_seasons?: team_seasonsOrderByWithRelationInput
+  }
+
+  export type player_season_lettersWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    player_id_season_id?: player_season_lettersPlayer_idSeason_idCompoundUniqueInput
+    AND?: player_season_lettersWhereInput | player_season_lettersWhereInput[]
+    OR?: player_season_lettersWhereInput[]
+    NOT?: player_season_lettersWhereInput | player_season_lettersWhereInput[]
+    player_id?: IntFilter<"player_season_letters"> | number
+    season_id?: IntFilter<"player_season_letters"> | number
+    team_season_id?: IntNullableFilter<"player_season_letters"> | number | null
+    varsity_letter?: BoolFilter<"player_season_letters"> | boolean
+    number_patch?: IntNullableFilter<"player_season_letters"> | number | null
+    certificate?: BoolFilter<"player_season_letters"> | boolean
+    bar?: BoolFilter<"player_season_letters"> | boolean
+    ball?: BoolFilter<"player_season_letters"> | boolean
+    number_patch_needed?: BoolFilter<"player_season_letters"> | boolean
+    varsity_patch_needed?: BoolFilter<"player_season_letters"> | boolean
+    notes?: StringNullableFilter<"player_season_letters"> | string | null
+    created_at?: DateTimeNullableFilter<"player_season_letters"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"player_season_letters"> | Date | string | null
+    people?: XOR<PeopleRelationFilter, peopleWhereInput>
+    seasons?: XOR<SeasonsRelationFilter, seasonsWhereInput>
+    team_seasons?: XOR<Team_seasonsNullableRelationFilter, team_seasonsWhereInput> | null
+  }, "id" | "player_id_season_id">
+
+  export type player_season_lettersOrderByWithAggregationInput = {
+    id?: SortOrder
+    player_id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrderInput | SortOrder
+    varsity_letter?: SortOrder
+    number_patch?: SortOrderInput | SortOrder
+    certificate?: SortOrder
+    bar?: SortOrder
+    ball?: SortOrder
+    number_patch_needed?: SortOrder
+    varsity_patch_needed?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    _count?: player_season_lettersCountOrderByAggregateInput
+    _avg?: player_season_lettersAvgOrderByAggregateInput
+    _max?: player_season_lettersMaxOrderByAggregateInput
+    _min?: player_season_lettersMinOrderByAggregateInput
+    _sum?: player_season_lettersSumOrderByAggregateInput
+  }
+
+  export type player_season_lettersScalarWhereWithAggregatesInput = {
+    AND?: player_season_lettersScalarWhereWithAggregatesInput | player_season_lettersScalarWhereWithAggregatesInput[]
+    OR?: player_season_lettersScalarWhereWithAggregatesInput[]
+    NOT?: player_season_lettersScalarWhereWithAggregatesInput | player_season_lettersScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"player_season_letters"> | number
+    player_id?: IntWithAggregatesFilter<"player_season_letters"> | number
+    season_id?: IntWithAggregatesFilter<"player_season_letters"> | number
+    team_season_id?: IntNullableWithAggregatesFilter<"player_season_letters"> | number | null
+    varsity_letter?: BoolWithAggregatesFilter<"player_season_letters"> | boolean
+    number_patch?: IntNullableWithAggregatesFilter<"player_season_letters"> | number | null
+    certificate?: BoolWithAggregatesFilter<"player_season_letters"> | boolean
+    bar?: BoolWithAggregatesFilter<"player_season_letters"> | boolean
+    ball?: BoolWithAggregatesFilter<"player_season_letters"> | boolean
+    number_patch_needed?: BoolWithAggregatesFilter<"player_season_letters"> | boolean
+    varsity_patch_needed?: BoolWithAggregatesFilter<"player_season_letters"> | boolean
+    notes?: StringNullableWithAggregatesFilter<"player_season_letters"> | string | null
+    created_at?: DateTimeNullableWithAggregatesFilter<"player_season_letters"> | Date | string | null
+    modified_at?: DateTimeNullableWithAggregatesFilter<"player_season_letters"> | Date | string | null
+  }
+
+  export type uniform_kitsWhereInput = {
+    AND?: uniform_kitsWhereInput | uniform_kitsWhereInput[]
+    OR?: uniform_kitsWhereInput[]
+    NOT?: uniform_kitsWhereInput | uniform_kitsWhereInput[]
+    id?: IntFilter<"uniform_kits"> | number
+    club_id?: IntNullableFilter<"uniform_kits"> | number | null
+    type?: StringFilter<"uniform_kits"> | string
+    brand?: StringNullableFilter<"uniform_kits"> | string | null
+    style?: StringNullableFilter<"uniform_kits"> | string | null
+    color?: StringNullableFilter<"uniform_kits"> | string | null
+    year?: IntNullableFilter<"uniform_kits"> | number | null
+    is_active?: BoolFilter<"uniform_kits"> | boolean
+    created_at?: DateTimeNullableFilter<"uniform_kits"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_kits"> | Date | string | null
+    clubs?: XOR<ClubsNullableRelationFilter, clubsWhereInput> | null
+    uniform_jerseys?: Uniform_jerseysListRelationFilter
+    uniform_season_kits?: Uniform_season_kitsListRelationFilter
+  }
+
+  export type uniform_kitsOrderByWithRelationInput = {
+    id?: SortOrder
+    club_id?: SortOrderInput | SortOrder
+    type?: SortOrder
+    brand?: SortOrderInput | SortOrder
+    style?: SortOrderInput | SortOrder
+    color?: SortOrderInput | SortOrder
+    year?: SortOrderInput | SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    clubs?: clubsOrderByWithRelationInput
+    uniform_jerseys?: uniform_jerseysOrderByRelationAggregateInput
+    uniform_season_kits?: uniform_season_kitsOrderByRelationAggregateInput
+  }
+
+  export type uniform_kitsWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: uniform_kitsWhereInput | uniform_kitsWhereInput[]
+    OR?: uniform_kitsWhereInput[]
+    NOT?: uniform_kitsWhereInput | uniform_kitsWhereInput[]
+    club_id?: IntNullableFilter<"uniform_kits"> | number | null
+    type?: StringFilter<"uniform_kits"> | string
+    brand?: StringNullableFilter<"uniform_kits"> | string | null
+    style?: StringNullableFilter<"uniform_kits"> | string | null
+    color?: StringNullableFilter<"uniform_kits"> | string | null
+    year?: IntNullableFilter<"uniform_kits"> | number | null
+    is_active?: BoolFilter<"uniform_kits"> | boolean
+    created_at?: DateTimeNullableFilter<"uniform_kits"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_kits"> | Date | string | null
+    clubs?: XOR<ClubsNullableRelationFilter, clubsWhereInput> | null
+    uniform_jerseys?: Uniform_jerseysListRelationFilter
+    uniform_season_kits?: Uniform_season_kitsListRelationFilter
+  }, "id">
+
+  export type uniform_kitsOrderByWithAggregationInput = {
+    id?: SortOrder
+    club_id?: SortOrderInput | SortOrder
+    type?: SortOrder
+    brand?: SortOrderInput | SortOrder
+    style?: SortOrderInput | SortOrder
+    color?: SortOrderInput | SortOrder
+    year?: SortOrderInput | SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    _count?: uniform_kitsCountOrderByAggregateInput
+    _avg?: uniform_kitsAvgOrderByAggregateInput
+    _max?: uniform_kitsMaxOrderByAggregateInput
+    _min?: uniform_kitsMinOrderByAggregateInput
+    _sum?: uniform_kitsSumOrderByAggregateInput
+  }
+
+  export type uniform_kitsScalarWhereWithAggregatesInput = {
+    AND?: uniform_kitsScalarWhereWithAggregatesInput | uniform_kitsScalarWhereWithAggregatesInput[]
+    OR?: uniform_kitsScalarWhereWithAggregatesInput[]
+    NOT?: uniform_kitsScalarWhereWithAggregatesInput | uniform_kitsScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"uniform_kits"> | number
+    club_id?: IntNullableWithAggregatesFilter<"uniform_kits"> | number | null
+    type?: StringWithAggregatesFilter<"uniform_kits"> | string
+    brand?: StringNullableWithAggregatesFilter<"uniform_kits"> | string | null
+    style?: StringNullableWithAggregatesFilter<"uniform_kits"> | string | null
+    color?: StringNullableWithAggregatesFilter<"uniform_kits"> | string | null
+    year?: IntNullableWithAggregatesFilter<"uniform_kits"> | number | null
+    is_active?: BoolWithAggregatesFilter<"uniform_kits"> | boolean
+    created_at?: DateTimeNullableWithAggregatesFilter<"uniform_kits"> | Date | string | null
+    modified_at?: DateTimeNullableWithAggregatesFilter<"uniform_kits"> | Date | string | null
+  }
+
+  export type uniform_jerseysWhereInput = {
+    AND?: uniform_jerseysWhereInput | uniform_jerseysWhereInput[]
+    OR?: uniform_jerseysWhereInput[]
+    NOT?: uniform_jerseysWhereInput | uniform_jerseysWhereInput[]
+    id?: IntFilter<"uniform_jerseys"> | number
+    uniform_kit_id?: IntNullableFilter<"uniform_jerseys"> | number | null
+    jersey_number?: IntFilter<"uniform_jerseys"> | number
+    size?: StringNullableFilter<"uniform_jerseys"> | string | null
+    is_lost?: BoolFilter<"uniform_jerseys"> | boolean
+    notes?: StringNullableFilter<"uniform_jerseys"> | string | null
+    created_at?: DateTimeNullableFilter<"uniform_jerseys"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_jerseys"> | Date | string | null
+    uniform_kits?: XOR<Uniform_kitsNullableRelationFilter, uniform_kitsWhereInput> | null
+    uniform_player_assignments?: Uniform_player_assignmentsListRelationFilter
+  }
+
+  export type uniform_jerseysOrderByWithRelationInput = {
+    id?: SortOrder
+    uniform_kit_id?: SortOrderInput | SortOrder
+    jersey_number?: SortOrder
+    size?: SortOrderInput | SortOrder
+    is_lost?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    uniform_kits?: uniform_kitsOrderByWithRelationInput
+    uniform_player_assignments?: uniform_player_assignmentsOrderByRelationAggregateInput
+  }
+
+  export type uniform_jerseysWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: uniform_jerseysWhereInput | uniform_jerseysWhereInput[]
+    OR?: uniform_jerseysWhereInput[]
+    NOT?: uniform_jerseysWhereInput | uniform_jerseysWhereInput[]
+    uniform_kit_id?: IntNullableFilter<"uniform_jerseys"> | number | null
+    jersey_number?: IntFilter<"uniform_jerseys"> | number
+    size?: StringNullableFilter<"uniform_jerseys"> | string | null
+    is_lost?: BoolFilter<"uniform_jerseys"> | boolean
+    notes?: StringNullableFilter<"uniform_jerseys"> | string | null
+    created_at?: DateTimeNullableFilter<"uniform_jerseys"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_jerseys"> | Date | string | null
+    uniform_kits?: XOR<Uniform_kitsNullableRelationFilter, uniform_kitsWhereInput> | null
+    uniform_player_assignments?: Uniform_player_assignmentsListRelationFilter
+  }, "id">
+
+  export type uniform_jerseysOrderByWithAggregationInput = {
+    id?: SortOrder
+    uniform_kit_id?: SortOrderInput | SortOrder
+    jersey_number?: SortOrder
+    size?: SortOrderInput | SortOrder
+    is_lost?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    _count?: uniform_jerseysCountOrderByAggregateInput
+    _avg?: uniform_jerseysAvgOrderByAggregateInput
+    _max?: uniform_jerseysMaxOrderByAggregateInput
+    _min?: uniform_jerseysMinOrderByAggregateInput
+    _sum?: uniform_jerseysSumOrderByAggregateInput
+  }
+
+  export type uniform_jerseysScalarWhereWithAggregatesInput = {
+    AND?: uniform_jerseysScalarWhereWithAggregatesInput | uniform_jerseysScalarWhereWithAggregatesInput[]
+    OR?: uniform_jerseysScalarWhereWithAggregatesInput[]
+    NOT?: uniform_jerseysScalarWhereWithAggregatesInput | uniform_jerseysScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"uniform_jerseys"> | number
+    uniform_kit_id?: IntNullableWithAggregatesFilter<"uniform_jerseys"> | number | null
+    jersey_number?: IntWithAggregatesFilter<"uniform_jerseys"> | number
+    size?: StringNullableWithAggregatesFilter<"uniform_jerseys"> | string | null
+    is_lost?: BoolWithAggregatesFilter<"uniform_jerseys"> | boolean
+    notes?: StringNullableWithAggregatesFilter<"uniform_jerseys"> | string | null
+    created_at?: DateTimeNullableWithAggregatesFilter<"uniform_jerseys"> | Date | string | null
+    modified_at?: DateTimeNullableWithAggregatesFilter<"uniform_jerseys"> | Date | string | null
+  }
+
+  export type uniform_season_kitsWhereInput = {
+    AND?: uniform_season_kitsWhereInput | uniform_season_kitsWhereInput[]
+    OR?: uniform_season_kitsWhereInput[]
+    NOT?: uniform_season_kitsWhereInput | uniform_season_kitsWhereInput[]
+    id?: IntFilter<"uniform_season_kits"> | number
+    season_id?: IntFilter<"uniform_season_kits"> | number
+    team_season_id?: IntNullableFilter<"uniform_season_kits"> | number | null
+    squad_level?: StringFilter<"uniform_season_kits"> | string
+    uniform_kit_id?: IntFilter<"uniform_season_kits"> | number
+    created_at?: DateTimeNullableFilter<"uniform_season_kits"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_season_kits"> | Date | string | null
+    seasons?: XOR<SeasonsRelationFilter, seasonsWhereInput>
+    team_seasons?: XOR<Team_seasonsNullableRelationFilter, team_seasonsWhereInput> | null
+    uniform_kits?: XOR<Uniform_kitsRelationFilter, uniform_kitsWhereInput>
+  }
+
+  export type uniform_season_kitsOrderByWithRelationInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrderInput | SortOrder
+    squad_level?: SortOrder
+    uniform_kit_id?: SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    seasons?: seasonsOrderByWithRelationInput
+    team_seasons?: team_seasonsOrderByWithRelationInput
+    uniform_kits?: uniform_kitsOrderByWithRelationInput
+  }
+
+  export type uniform_season_kitsWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: uniform_season_kitsWhereInput | uniform_season_kitsWhereInput[]
+    OR?: uniform_season_kitsWhereInput[]
+    NOT?: uniform_season_kitsWhereInput | uniform_season_kitsWhereInput[]
+    season_id?: IntFilter<"uniform_season_kits"> | number
+    team_season_id?: IntNullableFilter<"uniform_season_kits"> | number | null
+    squad_level?: StringFilter<"uniform_season_kits"> | string
+    uniform_kit_id?: IntFilter<"uniform_season_kits"> | number
+    created_at?: DateTimeNullableFilter<"uniform_season_kits"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_season_kits"> | Date | string | null
+    seasons?: XOR<SeasonsRelationFilter, seasonsWhereInput>
+    team_seasons?: XOR<Team_seasonsNullableRelationFilter, team_seasonsWhereInput> | null
+    uniform_kits?: XOR<Uniform_kitsRelationFilter, uniform_kitsWhereInput>
+  }, "id">
+
+  export type uniform_season_kitsOrderByWithAggregationInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrderInput | SortOrder
+    squad_level?: SortOrder
+    uniform_kit_id?: SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    _count?: uniform_season_kitsCountOrderByAggregateInput
+    _avg?: uniform_season_kitsAvgOrderByAggregateInput
+    _max?: uniform_season_kitsMaxOrderByAggregateInput
+    _min?: uniform_season_kitsMinOrderByAggregateInput
+    _sum?: uniform_season_kitsSumOrderByAggregateInput
+  }
+
+  export type uniform_season_kitsScalarWhereWithAggregatesInput = {
+    AND?: uniform_season_kitsScalarWhereWithAggregatesInput | uniform_season_kitsScalarWhereWithAggregatesInput[]
+    OR?: uniform_season_kitsScalarWhereWithAggregatesInput[]
+    NOT?: uniform_season_kitsScalarWhereWithAggregatesInput | uniform_season_kitsScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"uniform_season_kits"> | number
+    season_id?: IntWithAggregatesFilter<"uniform_season_kits"> | number
+    team_season_id?: IntNullableWithAggregatesFilter<"uniform_season_kits"> | number | null
+    squad_level?: StringWithAggregatesFilter<"uniform_season_kits"> | string
+    uniform_kit_id?: IntWithAggregatesFilter<"uniform_season_kits"> | number
+    created_at?: DateTimeNullableWithAggregatesFilter<"uniform_season_kits"> | Date | string | null
+    modified_at?: DateTimeNullableWithAggregatesFilter<"uniform_season_kits"> | Date | string | null
+  }
+
+  export type uniform_player_assignmentsWhereInput = {
+    AND?: uniform_player_assignmentsWhereInput | uniform_player_assignmentsWhereInput[]
+    OR?: uniform_player_assignmentsWhereInput[]
+    NOT?: uniform_player_assignmentsWhereInput | uniform_player_assignmentsWhereInput[]
+    id?: IntFilter<"uniform_player_assignments"> | number
+    player_team_id?: IntFilter<"uniform_player_assignments"> | number
+    uniform_jersey_id?: IntFilter<"uniform_player_assignments"> | number
+    assignment_type?: StringFilter<"uniform_player_assignments"> | string
+    returned?: BoolFilter<"uniform_player_assignments"> | boolean
+    created_at?: DateTimeNullableFilter<"uniform_player_assignments"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_player_assignments"> | Date | string | null
+    player_teams?: XOR<Player_teamsRelationFilter, player_teamsWhereInput>
+    uniform_jerseys?: XOR<Uniform_jerseysRelationFilter, uniform_jerseysWhereInput>
+  }
+
+  export type uniform_player_assignmentsOrderByWithRelationInput = {
+    id?: SortOrder
+    player_team_id?: SortOrder
+    uniform_jersey_id?: SortOrder
+    assignment_type?: SortOrder
+    returned?: SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    player_teams?: player_teamsOrderByWithRelationInput
+    uniform_jerseys?: uniform_jerseysOrderByWithRelationInput
+  }
+
+  export type uniform_player_assignmentsWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: uniform_player_assignmentsWhereInput | uniform_player_assignmentsWhereInput[]
+    OR?: uniform_player_assignmentsWhereInput[]
+    NOT?: uniform_player_assignmentsWhereInput | uniform_player_assignmentsWhereInput[]
+    player_team_id?: IntFilter<"uniform_player_assignments"> | number
+    uniform_jersey_id?: IntFilter<"uniform_player_assignments"> | number
+    assignment_type?: StringFilter<"uniform_player_assignments"> | string
+    returned?: BoolFilter<"uniform_player_assignments"> | boolean
+    created_at?: DateTimeNullableFilter<"uniform_player_assignments"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_player_assignments"> | Date | string | null
+    player_teams?: XOR<Player_teamsRelationFilter, player_teamsWhereInput>
+    uniform_jerseys?: XOR<Uniform_jerseysRelationFilter, uniform_jerseysWhereInput>
+  }, "id">
+
+  export type uniform_player_assignmentsOrderByWithAggregationInput = {
+    id?: SortOrder
+    player_team_id?: SortOrder
+    uniform_jersey_id?: SortOrder
+    assignment_type?: SortOrder
+    returned?: SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    _count?: uniform_player_assignmentsCountOrderByAggregateInput
+    _avg?: uniform_player_assignmentsAvgOrderByAggregateInput
+    _max?: uniform_player_assignmentsMaxOrderByAggregateInput
+    _min?: uniform_player_assignmentsMinOrderByAggregateInput
+    _sum?: uniform_player_assignmentsSumOrderByAggregateInput
+  }
+
+  export type uniform_player_assignmentsScalarWhereWithAggregatesInput = {
+    AND?: uniform_player_assignmentsScalarWhereWithAggregatesInput | uniform_player_assignmentsScalarWhereWithAggregatesInput[]
+    OR?: uniform_player_assignmentsScalarWhereWithAggregatesInput[]
+    NOT?: uniform_player_assignmentsScalarWhereWithAggregatesInput | uniform_player_assignmentsScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"uniform_player_assignments"> | number
+    player_team_id?: IntWithAggregatesFilter<"uniform_player_assignments"> | number
+    uniform_jersey_id?: IntWithAggregatesFilter<"uniform_player_assignments"> | number
+    assignment_type?: StringWithAggregatesFilter<"uniform_player_assignments"> | string
+    returned?: BoolWithAggregatesFilter<"uniform_player_assignments"> | boolean
+    created_at?: DateTimeNullableWithAggregatesFilter<"uniform_player_assignments"> | Date | string | null
+    modified_at?: DateTimeNullableWithAggregatesFilter<"uniform_player_assignments"> | Date | string | null
+  }
+
+  export type schedule_leadsWhereInput = {
+    AND?: schedule_leadsWhereInput | schedule_leadsWhereInput[]
+    OR?: schedule_leadsWhereInput[]
+    NOT?: schedule_leadsWhereInput | schedule_leadsWhereInput[]
+    id?: IntFilter<"schedule_leads"> | number
+    season_id?: IntFilter<"schedule_leads"> | number
+    team_season_id?: IntNullableFilter<"schedule_leads"> | number | null
+    opponent_club_id?: IntFilter<"schedule_leads"> | number
+    likelihood?: StringFilter<"schedule_leads"> | string
+    status?: StringFilter<"schedule_leads"> | string
+    preferred_home_away?: StringNullableFilter<"schedule_leads"> | string | null
+    preferred_date?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
+    notes?: StringNullableFilter<"schedule_leads"> | string | null
+    created_at?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
+    seasons?: XOR<SeasonsRelationFilter, seasonsWhereInput>
+    team_seasons?: XOR<Team_seasonsNullableRelationFilter, team_seasonsWhereInput> | null
+    opponent_club?: XOR<ClubsRelationFilter, clubsWhereInput>
+  }
+
+  export type schedule_leadsOrderByWithRelationInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrderInput | SortOrder
+    opponent_club_id?: SortOrder
+    likelihood?: SortOrder
+    status?: SortOrder
+    preferred_home_away?: SortOrderInput | SortOrder
+    preferred_date?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    seasons?: seasonsOrderByWithRelationInput
+    team_seasons?: team_seasonsOrderByWithRelationInput
+    opponent_club?: clubsOrderByWithRelationInput
+  }
+
+  export type schedule_leadsWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: schedule_leadsWhereInput | schedule_leadsWhereInput[]
+    OR?: schedule_leadsWhereInput[]
+    NOT?: schedule_leadsWhereInput | schedule_leadsWhereInput[]
+    season_id?: IntFilter<"schedule_leads"> | number
+    team_season_id?: IntNullableFilter<"schedule_leads"> | number | null
+    opponent_club_id?: IntFilter<"schedule_leads"> | number
+    likelihood?: StringFilter<"schedule_leads"> | string
+    status?: StringFilter<"schedule_leads"> | string
+    preferred_home_away?: StringNullableFilter<"schedule_leads"> | string | null
+    preferred_date?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
+    notes?: StringNullableFilter<"schedule_leads"> | string | null
+    created_at?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
+    seasons?: XOR<SeasonsRelationFilter, seasonsWhereInput>
+    team_seasons?: XOR<Team_seasonsNullableRelationFilter, team_seasonsWhereInput> | null
+    opponent_club?: XOR<ClubsRelationFilter, clubsWhereInput>
+  }, "id">
+
+  export type schedule_leadsOrderByWithAggregationInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrderInput | SortOrder
+    opponent_club_id?: SortOrder
+    likelihood?: SortOrder
+    status?: SortOrder
+    preferred_home_away?: SortOrderInput | SortOrder
+    preferred_date?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    created_at?: SortOrderInput | SortOrder
+    modified_at?: SortOrderInput | SortOrder
+    _count?: schedule_leadsCountOrderByAggregateInput
+    _avg?: schedule_leadsAvgOrderByAggregateInput
+    _max?: schedule_leadsMaxOrderByAggregateInput
+    _min?: schedule_leadsMinOrderByAggregateInput
+    _sum?: schedule_leadsSumOrderByAggregateInput
+  }
+
+  export type schedule_leadsScalarWhereWithAggregatesInput = {
+    AND?: schedule_leadsScalarWhereWithAggregatesInput | schedule_leadsScalarWhereWithAggregatesInput[]
+    OR?: schedule_leadsScalarWhereWithAggregatesInput[]
+    NOT?: schedule_leadsScalarWhereWithAggregatesInput | schedule_leadsScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"schedule_leads"> | number
+    season_id?: IntWithAggregatesFilter<"schedule_leads"> | number
+    team_season_id?: IntNullableWithAggregatesFilter<"schedule_leads"> | number | null
+    opponent_club_id?: IntWithAggregatesFilter<"schedule_leads"> | number
+    likelihood?: StringWithAggregatesFilter<"schedule_leads"> | string
+    status?: StringWithAggregatesFilter<"schedule_leads"> | string
+    preferred_home_away?: StringNullableWithAggregatesFilter<"schedule_leads"> | string | null
+    preferred_date?: DateTimeNullableWithAggregatesFilter<"schedule_leads"> | Date | string | null
+    notes?: StringNullableWithAggregatesFilter<"schedule_leads"> | string | null
+    created_at?: DateTimeNullableWithAggregatesFilter<"schedule_leads"> | Date | string | null
+    modified_at?: DateTimeNullableWithAggregatesFilter<"schedule_leads"> | Date | string | null
+  }
+
   export type addressesCreateInput = {
     address_line1?: string | null
     address_line2?: string | null
@@ -61980,6 +69546,8 @@ export namespace Prisma {
     addresses?: addressesCreateNestedOneWithoutClubsInput
     teams?: teamsCreateNestedManyWithoutClubsInput
     custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsUncheckedCreateInput = {
@@ -61998,6 +69566,8 @@ export namespace Prisma {
     club_staff?: club_staffUncheckedCreateNestedManyWithoutClubsInput
     teams?: teamsUncheckedCreateNestedManyWithoutClubsInput
     custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsUncheckedCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsUpdateInput = {
@@ -62015,6 +69585,8 @@ export namespace Prisma {
     addresses?: addressesUpdateOneWithoutClubsNestedInput
     teams?: teamsUpdateManyWithoutClubsNestedInput
     custom_field_definitions?: custom_field_definitionsUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type clubsUncheckedUpdateInput = {
@@ -62033,6 +69605,8 @@ export namespace Prisma {
     club_staff?: club_staffUncheckedUpdateManyWithoutClubsNestedInput
     teams?: teamsUncheckedUpdateManyWithoutClubsNestedInput
     custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUncheckedUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type clubsCreateManyInput = {
@@ -63948,6 +71522,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateInput = {
@@ -63988,6 +71563,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUpdateInput = {
@@ -64027,6 +71603,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateInput = {
@@ -64067,6 +71644,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleCreateManyInput = {
@@ -64347,6 +71925,7 @@ export namespace Prisma {
     left_date?: Date | string | null
     people: peopleCreateNestedOneWithoutPlayer_teamsInput
     team_seasons: team_seasonsCreateNestedOneWithoutPlayer_teamsInput
+    uniform_player_assignments?: uniform_player_assignmentsCreateNestedManyWithoutPlayer_teamsInput
   }
 
   export type player_teamsUncheckedCreateInput = {
@@ -64370,6 +71949,7 @@ export namespace Prisma {
     is_active?: boolean | null
     joined_date?: Date | string | null
     left_date?: Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedCreateNestedManyWithoutPlayer_teamsInput
   }
 
   export type player_teamsUpdateInput = {
@@ -64392,6 +71972,7 @@ export namespace Prisma {
     left_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     people?: peopleUpdateOneRequiredWithoutPlayer_teamsNestedInput
     team_seasons?: team_seasonsUpdateOneRequiredWithoutPlayer_teamsNestedInput
+    uniform_player_assignments?: uniform_player_assignmentsUpdateManyWithoutPlayer_teamsNestedInput
   }
 
   export type player_teamsUncheckedUpdateInput = {
@@ -64415,6 +71996,7 @@ export namespace Prisma {
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
     joined_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     left_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedUpdateManyWithoutPlayer_teamsNestedInput
   }
 
   export type player_teamsCreateManyInput = {
@@ -64495,6 +72077,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsCreateNestedManyWithoutSeasonsInput
     awards?: awardsCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsUncheckedCreateInput = {
@@ -64510,6 +72095,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsUncheckedCreateNestedManyWithoutSeasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsUpdateInput = {
@@ -64524,6 +72112,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutSeasonsNestedInput
   }
 
   export type seasonsUncheckedUpdateInput = {
@@ -64539,6 +72130,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUncheckedUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput
   }
 
   export type seasonsCreateManyInput = {
@@ -64715,6 +72309,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateInput = {
@@ -64747,6 +72344,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUpdateInput = {
@@ -64778,6 +72378,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateInput = {
@@ -64810,6 +72413,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsCreateManyInput = {
@@ -66167,6 +73773,512 @@ export namespace Prisma {
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type player_season_lettersCreateInput = {
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    people: peopleCreateNestedOneWithoutPlayer_season_lettersInput
+    seasons: seasonsCreateNestedOneWithoutPlayer_season_lettersInput
+    team_seasons?: team_seasonsCreateNestedOneWithoutPlayer_season_lettersInput
+  }
+
+  export type player_season_lettersUncheckedCreateInput = {
+    id?: number
+    player_id: number
+    season_id: number
+    team_season_id?: number | null
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type player_season_lettersUpdateInput = {
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    people?: peopleUpdateOneRequiredWithoutPlayer_season_lettersNestedInput
+    seasons?: seasonsUpdateOneRequiredWithoutPlayer_season_lettersNestedInput
+    team_seasons?: team_seasonsUpdateOneWithoutPlayer_season_lettersNestedInput
+  }
+
+  export type player_season_lettersUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type player_season_lettersCreateManyInput = {
+    id?: number
+    player_id: number
+    season_id: number
+    team_season_id?: number | null
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type player_season_lettersUpdateManyMutationInput = {
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type player_season_lettersUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_kitsCreateInput = {
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    clubs?: clubsCreateNestedOneWithoutUniform_kitsInput
+    uniform_jerseys?: uniform_jerseysCreateNestedManyWithoutUniform_kitsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutUniform_kitsInput
+  }
+
+  export type uniform_kitsUncheckedCreateInput = {
+    id?: number
+    club_id?: number | null
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_jerseys?: uniform_jerseysUncheckedCreateNestedManyWithoutUniform_kitsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutUniform_kitsInput
+  }
+
+  export type uniform_kitsUpdateInput = {
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    clubs?: clubsUpdateOneWithoutUniform_kitsNestedInput
+    uniform_jerseys?: uniform_jerseysUpdateManyWithoutUniform_kitsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutUniform_kitsNestedInput
+  }
+
+  export type uniform_kitsUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    club_id?: NullableIntFieldUpdateOperationsInput | number | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_jerseys?: uniform_jerseysUncheckedUpdateManyWithoutUniform_kitsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutUniform_kitsNestedInput
+  }
+
+  export type uniform_kitsCreateManyInput = {
+    id?: number
+    club_id?: number | null
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_kitsUpdateManyMutationInput = {
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_kitsUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    club_id?: NullableIntFieldUpdateOperationsInput | number | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_jerseysCreateInput = {
+    jersey_number: number
+    size?: string | null
+    is_lost?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_kits?: uniform_kitsCreateNestedOneWithoutUniform_jerseysInput
+    uniform_player_assignments?: uniform_player_assignmentsCreateNestedManyWithoutUniform_jerseysInput
+  }
+
+  export type uniform_jerseysUncheckedCreateInput = {
+    id?: number
+    uniform_kit_id?: number | null
+    jersey_number: number
+    size?: string | null
+    is_lost?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedCreateNestedManyWithoutUniform_jerseysInput
+  }
+
+  export type uniform_jerseysUpdateInput = {
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_kits?: uniform_kitsUpdateOneWithoutUniform_jerseysNestedInput
+    uniform_player_assignments?: uniform_player_assignmentsUpdateManyWithoutUniform_jerseysNestedInput
+  }
+
+  export type uniform_jerseysUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uniform_kit_id?: NullableIntFieldUpdateOperationsInput | number | null
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedUpdateManyWithoutUniform_jerseysNestedInput
+  }
+
+  export type uniform_jerseysCreateManyInput = {
+    id?: number
+    uniform_kit_id?: number | null
+    jersey_number: number
+    size?: string | null
+    is_lost?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_jerseysUpdateManyMutationInput = {
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_jerseysUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uniform_kit_id?: NullableIntFieldUpdateOperationsInput | number | null
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsCreateInput = {
+    squad_level: string
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    seasons: seasonsCreateNestedOneWithoutUniform_season_kitsInput
+    team_seasons?: team_seasonsCreateNestedOneWithoutUniform_season_kitsInput
+    uniform_kits: uniform_kitsCreateNestedOneWithoutUniform_season_kitsInput
+  }
+
+  export type uniform_season_kitsUncheckedCreateInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    squad_level: string
+    uniform_kit_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_season_kitsUpdateInput = {
+    squad_level?: StringFieldUpdateOperationsInput | string
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    seasons?: seasonsUpdateOneRequiredWithoutUniform_season_kitsNestedInput
+    team_seasons?: team_seasonsUpdateOneWithoutUniform_season_kitsNestedInput
+    uniform_kits?: uniform_kitsUpdateOneRequiredWithoutUniform_season_kitsNestedInput
+  }
+
+  export type uniform_season_kitsUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    squad_level?: StringFieldUpdateOperationsInput | string
+    uniform_kit_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsCreateManyInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    squad_level: string
+    uniform_kit_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_season_kitsUpdateManyMutationInput = {
+    squad_level?: StringFieldUpdateOperationsInput | string
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    squad_level?: StringFieldUpdateOperationsInput | string
+    uniform_kit_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_player_assignmentsCreateInput = {
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    player_teams: player_teamsCreateNestedOneWithoutUniform_player_assignmentsInput
+    uniform_jerseys: uniform_jerseysCreateNestedOneWithoutUniform_player_assignmentsInput
+  }
+
+  export type uniform_player_assignmentsUncheckedCreateInput = {
+    id?: number
+    player_team_id: number
+    uniform_jersey_id: number
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_player_assignmentsUpdateInput = {
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    player_teams?: player_teamsUpdateOneRequiredWithoutUniform_player_assignmentsNestedInput
+    uniform_jerseys?: uniform_jerseysUpdateOneRequiredWithoutUniform_player_assignmentsNestedInput
+  }
+
+  export type uniform_player_assignmentsUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_team_id?: IntFieldUpdateOperationsInput | number
+    uniform_jersey_id?: IntFieldUpdateOperationsInput | number
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_player_assignmentsCreateManyInput = {
+    id?: number
+    player_team_id: number
+    uniform_jersey_id: number
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_player_assignmentsUpdateManyMutationInput = {
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_player_assignmentsUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_team_id?: IntFieldUpdateOperationsInput | number
+    uniform_jersey_id?: IntFieldUpdateOperationsInput | number
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsCreateInput = {
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    seasons: seasonsCreateNestedOneWithoutSchedule_leadsInput
+    team_seasons?: team_seasonsCreateNestedOneWithoutSchedule_leadsInput
+    opponent_club: clubsCreateNestedOneWithoutSchedule_leadsInput
+  }
+
+  export type schedule_leadsUncheckedCreateInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    opponent_club_id: number
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type schedule_leadsUpdateInput = {
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    seasons?: seasonsUpdateOneRequiredWithoutSchedule_leadsNestedInput
+    team_seasons?: team_seasonsUpdateOneWithoutSchedule_leadsNestedInput
+    opponent_club?: clubsUpdateOneRequiredWithoutSchedule_leadsNestedInput
+  }
+
+  export type schedule_leadsUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    opponent_club_id?: IntFieldUpdateOperationsInput | number
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsCreateManyInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    opponent_club_id: number
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type schedule_leadsUpdateManyMutationInput = {
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    opponent_club_id?: IntFieldUpdateOperationsInput | number
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -66577,6 +74689,18 @@ export namespace Prisma {
     none?: custom_field_definitionsWhereInput
   }
 
+  export type Uniform_kitsListRelationFilter = {
+    every?: uniform_kitsWhereInput
+    some?: uniform_kitsWhereInput
+    none?: uniform_kitsWhereInput
+  }
+
+  export type Schedule_leadsListRelationFilter = {
+    every?: schedule_leadsWhereInput
+    some?: schedule_leadsWhereInput
+    none?: schedule_leadsWhereInput
+  }
+
   export type club_staffOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -66586,6 +74710,14 @@ export namespace Prisma {
   }
 
   export type custom_field_definitionsOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type uniform_kitsOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type schedule_leadsOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -68397,6 +76529,12 @@ export namespace Prisma {
     none?: player_pairingsWhereInput
   }
 
+  export type Player_season_lettersListRelationFilter = {
+    every?: player_season_lettersWhereInput
+    some?: player_season_lettersWhereInput
+    none?: player_season_lettersWhereInput
+  }
+
   export type player_relationshipsOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -68430,6 +76568,10 @@ export namespace Prisma {
   }
 
   export type player_pairingsOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type player_season_lettersOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -68689,6 +76831,16 @@ export namespace Prisma {
     not?: NestedEnumplayer_teams_statusNullableFilter<$PrismaModel> | $Enums.player_teams_status | null
   }
 
+  export type Uniform_player_assignmentsListRelationFilter = {
+    every?: uniform_player_assignmentsWhereInput
+    some?: uniform_player_assignmentsWhereInput
+    none?: uniform_player_assignmentsWhereInput
+  }
+
+  export type uniform_player_assignmentsOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type player_teamsCountOrderByAggregateInput = {
     id?: SortOrder
     grade?: SortOrder
@@ -68791,6 +76943,16 @@ export namespace Prisma {
     in?: $Enums.seasons_status[]
     notIn?: $Enums.seasons_status[]
     not?: NestedEnumseasons_statusFilter<$PrismaModel> | $Enums.seasons_status
+  }
+
+  export type Uniform_season_kitsListRelationFilter = {
+    every?: uniform_season_kitsWhereInput
+    some?: uniform_season_kitsWhereInput
+    none?: uniform_season_kitsWhereInput
+  }
+
+  export type uniform_season_kitsOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type seasonsCountOrderByAggregateInput = {
@@ -70044,6 +78206,346 @@ export namespace Prisma {
     _max?: NestedEnumaward_scopeFilter<$PrismaModel>
   }
 
+  export type player_season_lettersPlayer_idSeason_idCompoundUniqueInput = {
+    player_id: number
+    season_id: number
+  }
+
+  export type player_season_lettersCountOrderByAggregateInput = {
+    id?: SortOrder
+    player_id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    varsity_letter?: SortOrder
+    number_patch?: SortOrder
+    certificate?: SortOrder
+    bar?: SortOrder
+    ball?: SortOrder
+    number_patch_needed?: SortOrder
+    varsity_patch_needed?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type player_season_lettersAvgOrderByAggregateInput = {
+    id?: SortOrder
+    player_id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    number_patch?: SortOrder
+  }
+
+  export type player_season_lettersMaxOrderByAggregateInput = {
+    id?: SortOrder
+    player_id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    varsity_letter?: SortOrder
+    number_patch?: SortOrder
+    certificate?: SortOrder
+    bar?: SortOrder
+    ball?: SortOrder
+    number_patch_needed?: SortOrder
+    varsity_patch_needed?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type player_season_lettersMinOrderByAggregateInput = {
+    id?: SortOrder
+    player_id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    varsity_letter?: SortOrder
+    number_patch?: SortOrder
+    certificate?: SortOrder
+    bar?: SortOrder
+    ball?: SortOrder
+    number_patch_needed?: SortOrder
+    varsity_patch_needed?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type player_season_lettersSumOrderByAggregateInput = {
+    id?: SortOrder
+    player_id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    number_patch?: SortOrder
+  }
+
+  export type Uniform_jerseysListRelationFilter = {
+    every?: uniform_jerseysWhereInput
+    some?: uniform_jerseysWhereInput
+    none?: uniform_jerseysWhereInput
+  }
+
+  export type uniform_jerseysOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type uniform_kitsCountOrderByAggregateInput = {
+    id?: SortOrder
+    club_id?: SortOrder
+    type?: SortOrder
+    brand?: SortOrder
+    style?: SortOrder
+    color?: SortOrder
+    year?: SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_kitsAvgOrderByAggregateInput = {
+    id?: SortOrder
+    club_id?: SortOrder
+    year?: SortOrder
+  }
+
+  export type uniform_kitsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    club_id?: SortOrder
+    type?: SortOrder
+    brand?: SortOrder
+    style?: SortOrder
+    color?: SortOrder
+    year?: SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_kitsMinOrderByAggregateInput = {
+    id?: SortOrder
+    club_id?: SortOrder
+    type?: SortOrder
+    brand?: SortOrder
+    style?: SortOrder
+    color?: SortOrder
+    year?: SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_kitsSumOrderByAggregateInput = {
+    id?: SortOrder
+    club_id?: SortOrder
+    year?: SortOrder
+  }
+
+  export type Uniform_kitsNullableRelationFilter = {
+    is?: uniform_kitsWhereInput | null
+    isNot?: uniform_kitsWhereInput | null
+  }
+
+  export type uniform_jerseysCountOrderByAggregateInput = {
+    id?: SortOrder
+    uniform_kit_id?: SortOrder
+    jersey_number?: SortOrder
+    size?: SortOrder
+    is_lost?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_jerseysAvgOrderByAggregateInput = {
+    id?: SortOrder
+    uniform_kit_id?: SortOrder
+    jersey_number?: SortOrder
+  }
+
+  export type uniform_jerseysMaxOrderByAggregateInput = {
+    id?: SortOrder
+    uniform_kit_id?: SortOrder
+    jersey_number?: SortOrder
+    size?: SortOrder
+    is_lost?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_jerseysMinOrderByAggregateInput = {
+    id?: SortOrder
+    uniform_kit_id?: SortOrder
+    jersey_number?: SortOrder
+    size?: SortOrder
+    is_lost?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_jerseysSumOrderByAggregateInput = {
+    id?: SortOrder
+    uniform_kit_id?: SortOrder
+    jersey_number?: SortOrder
+  }
+
+  export type Uniform_kitsRelationFilter = {
+    is?: uniform_kitsWhereInput
+    isNot?: uniform_kitsWhereInput
+  }
+
+  export type uniform_season_kitsCountOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    squad_level?: SortOrder
+    uniform_kit_id?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_season_kitsAvgOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    uniform_kit_id?: SortOrder
+  }
+
+  export type uniform_season_kitsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    squad_level?: SortOrder
+    uniform_kit_id?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_season_kitsMinOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    squad_level?: SortOrder
+    uniform_kit_id?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_season_kitsSumOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    uniform_kit_id?: SortOrder
+  }
+
+  export type Player_teamsRelationFilter = {
+    is?: player_teamsWhereInput
+    isNot?: player_teamsWhereInput
+  }
+
+  export type Uniform_jerseysRelationFilter = {
+    is?: uniform_jerseysWhereInput
+    isNot?: uniform_jerseysWhereInput
+  }
+
+  export type uniform_player_assignmentsCountOrderByAggregateInput = {
+    id?: SortOrder
+    player_team_id?: SortOrder
+    uniform_jersey_id?: SortOrder
+    assignment_type?: SortOrder
+    returned?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_player_assignmentsAvgOrderByAggregateInput = {
+    id?: SortOrder
+    player_team_id?: SortOrder
+    uniform_jersey_id?: SortOrder
+  }
+
+  export type uniform_player_assignmentsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    player_team_id?: SortOrder
+    uniform_jersey_id?: SortOrder
+    assignment_type?: SortOrder
+    returned?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_player_assignmentsMinOrderByAggregateInput = {
+    id?: SortOrder
+    player_team_id?: SortOrder
+    uniform_jersey_id?: SortOrder
+    assignment_type?: SortOrder
+    returned?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type uniform_player_assignmentsSumOrderByAggregateInput = {
+    id?: SortOrder
+    player_team_id?: SortOrder
+    uniform_jersey_id?: SortOrder
+  }
+
+  export type schedule_leadsCountOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    opponent_club_id?: SortOrder
+    likelihood?: SortOrder
+    status?: SortOrder
+    preferred_home_away?: SortOrder
+    preferred_date?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type schedule_leadsAvgOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    opponent_club_id?: SortOrder
+  }
+
+  export type schedule_leadsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    opponent_club_id?: SortOrder
+    likelihood?: SortOrder
+    status?: SortOrder
+    preferred_home_away?: SortOrder
+    preferred_date?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type schedule_leadsMinOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    opponent_club_id?: SortOrder
+    likelihood?: SortOrder
+    status?: SortOrder
+    preferred_home_away?: SortOrder
+    preferred_date?: SortOrder
+    notes?: SortOrder
+    created_at?: SortOrder
+    modified_at?: SortOrder
+  }
+
+  export type schedule_leadsSumOrderByAggregateInput = {
+    id?: SortOrder
+    season_id?: SortOrder
+    team_season_id?: SortOrder
+    opponent_club_id?: SortOrder
+  }
+
   export type clubsCreateNestedManyWithoutAddressesInput = {
     create?: XOR<clubsCreateWithoutAddressesInput, clubsUncheckedCreateWithoutAddressesInput> | clubsCreateWithoutAddressesInput[] | clubsUncheckedCreateWithoutAddressesInput[]
     connectOrCreate?: clubsCreateOrConnectWithoutAddressesInput | clubsCreateOrConnectWithoutAddressesInput[]
@@ -70303,6 +78805,20 @@ export namespace Prisma {
     connect?: custom_field_definitionsWhereUniqueInput | custom_field_definitionsWhereUniqueInput[]
   }
 
+  export type uniform_kitsCreateNestedManyWithoutClubsInput = {
+    create?: XOR<uniform_kitsCreateWithoutClubsInput, uniform_kitsUncheckedCreateWithoutClubsInput> | uniform_kitsCreateWithoutClubsInput[] | uniform_kitsUncheckedCreateWithoutClubsInput[]
+    connectOrCreate?: uniform_kitsCreateOrConnectWithoutClubsInput | uniform_kitsCreateOrConnectWithoutClubsInput[]
+    createMany?: uniform_kitsCreateManyClubsInputEnvelope
+    connect?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+  }
+
+  export type schedule_leadsCreateNestedManyWithoutOpponent_clubInput = {
+    create?: XOR<schedule_leadsCreateWithoutOpponent_clubInput, schedule_leadsUncheckedCreateWithoutOpponent_clubInput> | schedule_leadsCreateWithoutOpponent_clubInput[] | schedule_leadsUncheckedCreateWithoutOpponent_clubInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutOpponent_clubInput | schedule_leadsCreateOrConnectWithoutOpponent_clubInput[]
+    createMany?: schedule_leadsCreateManyOpponent_clubInputEnvelope
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+  }
+
   export type club_staffUncheckedCreateNestedManyWithoutClubsInput = {
     create?: XOR<club_staffCreateWithoutClubsInput, club_staffUncheckedCreateWithoutClubsInput> | club_staffCreateWithoutClubsInput[] | club_staffUncheckedCreateWithoutClubsInput[]
     connectOrCreate?: club_staffCreateOrConnectWithoutClubsInput | club_staffCreateOrConnectWithoutClubsInput[]
@@ -70322,6 +78838,20 @@ export namespace Prisma {
     connectOrCreate?: custom_field_definitionsCreateOrConnectWithoutClubsInput | custom_field_definitionsCreateOrConnectWithoutClubsInput[]
     createMany?: custom_field_definitionsCreateManyClubsInputEnvelope
     connect?: custom_field_definitionsWhereUniqueInput | custom_field_definitionsWhereUniqueInput[]
+  }
+
+  export type uniform_kitsUncheckedCreateNestedManyWithoutClubsInput = {
+    create?: XOR<uniform_kitsCreateWithoutClubsInput, uniform_kitsUncheckedCreateWithoutClubsInput> | uniform_kitsCreateWithoutClubsInput[] | uniform_kitsUncheckedCreateWithoutClubsInput[]
+    connectOrCreate?: uniform_kitsCreateOrConnectWithoutClubsInput | uniform_kitsCreateOrConnectWithoutClubsInput[]
+    createMany?: uniform_kitsCreateManyClubsInputEnvelope
+    connect?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+  }
+
+  export type schedule_leadsUncheckedCreateNestedManyWithoutOpponent_clubInput = {
+    create?: XOR<schedule_leadsCreateWithoutOpponent_clubInput, schedule_leadsUncheckedCreateWithoutOpponent_clubInput> | schedule_leadsCreateWithoutOpponent_clubInput[] | schedule_leadsUncheckedCreateWithoutOpponent_clubInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutOpponent_clubInput | schedule_leadsCreateOrConnectWithoutOpponent_clubInput[]
+    createMany?: schedule_leadsCreateManyOpponent_clubInputEnvelope
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
   }
 
   export type BoolFieldUpdateOperationsInput = {
@@ -70384,6 +78914,34 @@ export namespace Prisma {
     deleteMany?: custom_field_definitionsScalarWhereInput | custom_field_definitionsScalarWhereInput[]
   }
 
+  export type uniform_kitsUpdateManyWithoutClubsNestedInput = {
+    create?: XOR<uniform_kitsCreateWithoutClubsInput, uniform_kitsUncheckedCreateWithoutClubsInput> | uniform_kitsCreateWithoutClubsInput[] | uniform_kitsUncheckedCreateWithoutClubsInput[]
+    connectOrCreate?: uniform_kitsCreateOrConnectWithoutClubsInput | uniform_kitsCreateOrConnectWithoutClubsInput[]
+    upsert?: uniform_kitsUpsertWithWhereUniqueWithoutClubsInput | uniform_kitsUpsertWithWhereUniqueWithoutClubsInput[]
+    createMany?: uniform_kitsCreateManyClubsInputEnvelope
+    set?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+    disconnect?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+    delete?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+    connect?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+    update?: uniform_kitsUpdateWithWhereUniqueWithoutClubsInput | uniform_kitsUpdateWithWhereUniqueWithoutClubsInput[]
+    updateMany?: uniform_kitsUpdateManyWithWhereWithoutClubsInput | uniform_kitsUpdateManyWithWhereWithoutClubsInput[]
+    deleteMany?: uniform_kitsScalarWhereInput | uniform_kitsScalarWhereInput[]
+  }
+
+  export type schedule_leadsUpdateManyWithoutOpponent_clubNestedInput = {
+    create?: XOR<schedule_leadsCreateWithoutOpponent_clubInput, schedule_leadsUncheckedCreateWithoutOpponent_clubInput> | schedule_leadsCreateWithoutOpponent_clubInput[] | schedule_leadsUncheckedCreateWithoutOpponent_clubInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutOpponent_clubInput | schedule_leadsCreateOrConnectWithoutOpponent_clubInput[]
+    upsert?: schedule_leadsUpsertWithWhereUniqueWithoutOpponent_clubInput | schedule_leadsUpsertWithWhereUniqueWithoutOpponent_clubInput[]
+    createMany?: schedule_leadsCreateManyOpponent_clubInputEnvelope
+    set?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    disconnect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    delete?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    update?: schedule_leadsUpdateWithWhereUniqueWithoutOpponent_clubInput | schedule_leadsUpdateWithWhereUniqueWithoutOpponent_clubInput[]
+    updateMany?: schedule_leadsUpdateManyWithWhereWithoutOpponent_clubInput | schedule_leadsUpdateManyWithWhereWithoutOpponent_clubInput[]
+    deleteMany?: schedule_leadsScalarWhereInput | schedule_leadsScalarWhereInput[]
+  }
+
   export type club_staffUncheckedUpdateManyWithoutClubsNestedInput = {
     create?: XOR<club_staffCreateWithoutClubsInput, club_staffUncheckedCreateWithoutClubsInput> | club_staffCreateWithoutClubsInput[] | club_staffUncheckedCreateWithoutClubsInput[]
     connectOrCreate?: club_staffCreateOrConnectWithoutClubsInput | club_staffCreateOrConnectWithoutClubsInput[]
@@ -70424,6 +78982,34 @@ export namespace Prisma {
     update?: custom_field_definitionsUpdateWithWhereUniqueWithoutClubsInput | custom_field_definitionsUpdateWithWhereUniqueWithoutClubsInput[]
     updateMany?: custom_field_definitionsUpdateManyWithWhereWithoutClubsInput | custom_field_definitionsUpdateManyWithWhereWithoutClubsInput[]
     deleteMany?: custom_field_definitionsScalarWhereInput | custom_field_definitionsScalarWhereInput[]
+  }
+
+  export type uniform_kitsUncheckedUpdateManyWithoutClubsNestedInput = {
+    create?: XOR<uniform_kitsCreateWithoutClubsInput, uniform_kitsUncheckedCreateWithoutClubsInput> | uniform_kitsCreateWithoutClubsInput[] | uniform_kitsUncheckedCreateWithoutClubsInput[]
+    connectOrCreate?: uniform_kitsCreateOrConnectWithoutClubsInput | uniform_kitsCreateOrConnectWithoutClubsInput[]
+    upsert?: uniform_kitsUpsertWithWhereUniqueWithoutClubsInput | uniform_kitsUpsertWithWhereUniqueWithoutClubsInput[]
+    createMany?: uniform_kitsCreateManyClubsInputEnvelope
+    set?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+    disconnect?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+    delete?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+    connect?: uniform_kitsWhereUniqueInput | uniform_kitsWhereUniqueInput[]
+    update?: uniform_kitsUpdateWithWhereUniqueWithoutClubsInput | uniform_kitsUpdateWithWhereUniqueWithoutClubsInput[]
+    updateMany?: uniform_kitsUpdateManyWithWhereWithoutClubsInput | uniform_kitsUpdateManyWithWhereWithoutClubsInput[]
+    deleteMany?: uniform_kitsScalarWhereInput | uniform_kitsScalarWhereInput[]
+  }
+
+  export type schedule_leadsUncheckedUpdateManyWithoutOpponent_clubNestedInput = {
+    create?: XOR<schedule_leadsCreateWithoutOpponent_clubInput, schedule_leadsUncheckedCreateWithoutOpponent_clubInput> | schedule_leadsCreateWithoutOpponent_clubInput[] | schedule_leadsUncheckedCreateWithoutOpponent_clubInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutOpponent_clubInput | schedule_leadsCreateOrConnectWithoutOpponent_clubInput[]
+    upsert?: schedule_leadsUpsertWithWhereUniqueWithoutOpponent_clubInput | schedule_leadsUpsertWithWhereUniqueWithoutOpponent_clubInput[]
+    createMany?: schedule_leadsCreateManyOpponent_clubInputEnvelope
+    set?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    disconnect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    delete?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    update?: schedule_leadsUpdateWithWhereUniqueWithoutOpponent_clubInput | schedule_leadsUpdateWithWhereUniqueWithoutOpponent_clubInput[]
+    updateMany?: schedule_leadsUpdateManyWithWhereWithoutOpponent_clubInput | schedule_leadsUpdateManyWithWhereWithoutOpponent_clubInput[]
+    deleteMany?: schedule_leadsScalarWhereInput | schedule_leadsScalarWhereInput[]
   }
 
   export type eventsCreateNestedManyWithoutEvent_typesInput = {
@@ -72502,6 +81088,13 @@ export namespace Prisma {
     connect?: awardsWhereUniqueInput | awardsWhereUniqueInput[]
   }
 
+  export type player_season_lettersCreateNestedManyWithoutPeopleInput = {
+    create?: XOR<player_season_lettersCreateWithoutPeopleInput, player_season_lettersUncheckedCreateWithoutPeopleInput> | player_season_lettersCreateWithoutPeopleInput[] | player_season_lettersUncheckedCreateWithoutPeopleInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutPeopleInput | player_season_lettersCreateOrConnectWithoutPeopleInput[]
+    createMany?: player_season_lettersCreateManyPeopleInputEnvelope
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+  }
+
   export type club_staffUncheckedCreateNestedManyWithoutPeopleInput = {
     create?: XOR<club_staffCreateWithoutPeopleInput, club_staffUncheckedCreateWithoutPeopleInput> | club_staffCreateWithoutPeopleInput[] | club_staffUncheckedCreateWithoutPeopleInput[]
     connectOrCreate?: club_staffCreateOrConnectWithoutPeopleInput | club_staffCreateOrConnectWithoutPeopleInput[]
@@ -72624,6 +81217,13 @@ export namespace Prisma {
     connectOrCreate?: awardsCreateOrConnectWithoutPeopleInput | awardsCreateOrConnectWithoutPeopleInput[]
     createMany?: awardsCreateManyPeopleInputEnvelope
     connect?: awardsWhereUniqueInput | awardsWhereUniqueInput[]
+  }
+
+  export type player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput = {
+    create?: XOR<player_season_lettersCreateWithoutPeopleInput, player_season_lettersUncheckedCreateWithoutPeopleInput> | player_season_lettersCreateWithoutPeopleInput[] | player_season_lettersUncheckedCreateWithoutPeopleInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutPeopleInput | player_season_lettersCreateOrConnectWithoutPeopleInput[]
+    createMany?: player_season_lettersCreateManyPeopleInputEnvelope
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
   }
 
   export type club_staffUpdateManyWithoutPeopleNestedInput = {
@@ -72870,6 +81470,20 @@ export namespace Prisma {
     deleteMany?: awardsScalarWhereInput | awardsScalarWhereInput[]
   }
 
+  export type player_season_lettersUpdateManyWithoutPeopleNestedInput = {
+    create?: XOR<player_season_lettersCreateWithoutPeopleInput, player_season_lettersUncheckedCreateWithoutPeopleInput> | player_season_lettersCreateWithoutPeopleInput[] | player_season_lettersUncheckedCreateWithoutPeopleInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutPeopleInput | player_season_lettersCreateOrConnectWithoutPeopleInput[]
+    upsert?: player_season_lettersUpsertWithWhereUniqueWithoutPeopleInput | player_season_lettersUpsertWithWhereUniqueWithoutPeopleInput[]
+    createMany?: player_season_lettersCreateManyPeopleInputEnvelope
+    set?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    disconnect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    delete?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    update?: player_season_lettersUpdateWithWhereUniqueWithoutPeopleInput | player_season_lettersUpdateWithWhereUniqueWithoutPeopleInput[]
+    updateMany?: player_season_lettersUpdateManyWithWhereWithoutPeopleInput | player_season_lettersUpdateManyWithWhereWithoutPeopleInput[]
+    deleteMany?: player_season_lettersScalarWhereInput | player_season_lettersScalarWhereInput[]
+  }
+
   export type club_staffUncheckedUpdateManyWithoutPeopleNestedInput = {
     create?: XOR<club_staffCreateWithoutPeopleInput, club_staffUncheckedCreateWithoutPeopleInput> | club_staffCreateWithoutPeopleInput[] | club_staffUncheckedCreateWithoutPeopleInput[]
     connectOrCreate?: club_staffCreateOrConnectWithoutPeopleInput | club_staffCreateOrConnectWithoutPeopleInput[]
@@ -73112,6 +81726,20 @@ export namespace Prisma {
     update?: awardsUpdateWithWhereUniqueWithoutPeopleInput | awardsUpdateWithWhereUniqueWithoutPeopleInput[]
     updateMany?: awardsUpdateManyWithWhereWithoutPeopleInput | awardsUpdateManyWithWhereWithoutPeopleInput[]
     deleteMany?: awardsScalarWhereInput | awardsScalarWhereInput[]
+  }
+
+  export type player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput = {
+    create?: XOR<player_season_lettersCreateWithoutPeopleInput, player_season_lettersUncheckedCreateWithoutPeopleInput> | player_season_lettersCreateWithoutPeopleInput[] | player_season_lettersUncheckedCreateWithoutPeopleInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutPeopleInput | player_season_lettersCreateOrConnectWithoutPeopleInput[]
+    upsert?: player_season_lettersUpsertWithWhereUniqueWithoutPeopleInput | player_season_lettersUpsertWithWhereUniqueWithoutPeopleInput[]
+    createMany?: player_season_lettersCreateManyPeopleInputEnvelope
+    set?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    disconnect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    delete?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    update?: player_season_lettersUpdateWithWhereUniqueWithoutPeopleInput | player_season_lettersUpdateWithWhereUniqueWithoutPeopleInput[]
+    updateMany?: player_season_lettersUpdateManyWithWhereWithoutPeopleInput | player_season_lettersUpdateManyWithWhereWithoutPeopleInput[]
+    deleteMany?: player_season_lettersScalarWhereInput | player_season_lettersScalarWhereInput[]
   }
 
   export type game_events_disciplineCreateNestedManyWithoutPlayer_gamesInput = {
@@ -73582,6 +82210,20 @@ export namespace Prisma {
     connect?: team_seasonsWhereUniqueInput
   }
 
+  export type uniform_player_assignmentsCreateNestedManyWithoutPlayer_teamsInput = {
+    create?: XOR<uniform_player_assignmentsCreateWithoutPlayer_teamsInput, uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput> | uniform_player_assignmentsCreateWithoutPlayer_teamsInput[] | uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput[]
+    connectOrCreate?: uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput | uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput[]
+    createMany?: uniform_player_assignmentsCreateManyPlayer_teamsInputEnvelope
+    connect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+  }
+
+  export type uniform_player_assignmentsUncheckedCreateNestedManyWithoutPlayer_teamsInput = {
+    create?: XOR<uniform_player_assignmentsCreateWithoutPlayer_teamsInput, uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput> | uniform_player_assignmentsCreateWithoutPlayer_teamsInput[] | uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput[]
+    connectOrCreate?: uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput | uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput[]
+    createMany?: uniform_player_assignmentsCreateManyPlayer_teamsInputEnvelope
+    connect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+  }
+
   export type NullableEnumplayer_teams_statusFieldUpdateOperationsInput = {
     set?: $Enums.player_teams_status | null
   }
@@ -73600,6 +82242,34 @@ export namespace Prisma {
     upsert?: team_seasonsUpsertWithoutPlayer_teamsInput
     connect?: team_seasonsWhereUniqueInput
     update?: XOR<XOR<team_seasonsUpdateToOneWithWhereWithoutPlayer_teamsInput, team_seasonsUpdateWithoutPlayer_teamsInput>, team_seasonsUncheckedUpdateWithoutPlayer_teamsInput>
+  }
+
+  export type uniform_player_assignmentsUpdateManyWithoutPlayer_teamsNestedInput = {
+    create?: XOR<uniform_player_assignmentsCreateWithoutPlayer_teamsInput, uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput> | uniform_player_assignmentsCreateWithoutPlayer_teamsInput[] | uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput[]
+    connectOrCreate?: uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput | uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput[]
+    upsert?: uniform_player_assignmentsUpsertWithWhereUniqueWithoutPlayer_teamsInput | uniform_player_assignmentsUpsertWithWhereUniqueWithoutPlayer_teamsInput[]
+    createMany?: uniform_player_assignmentsCreateManyPlayer_teamsInputEnvelope
+    set?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    disconnect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    delete?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    connect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    update?: uniform_player_assignmentsUpdateWithWhereUniqueWithoutPlayer_teamsInput | uniform_player_assignmentsUpdateWithWhereUniqueWithoutPlayer_teamsInput[]
+    updateMany?: uniform_player_assignmentsUpdateManyWithWhereWithoutPlayer_teamsInput | uniform_player_assignmentsUpdateManyWithWhereWithoutPlayer_teamsInput[]
+    deleteMany?: uniform_player_assignmentsScalarWhereInput | uniform_player_assignmentsScalarWhereInput[]
+  }
+
+  export type uniform_player_assignmentsUncheckedUpdateManyWithoutPlayer_teamsNestedInput = {
+    create?: XOR<uniform_player_assignmentsCreateWithoutPlayer_teamsInput, uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput> | uniform_player_assignmentsCreateWithoutPlayer_teamsInput[] | uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput[]
+    connectOrCreate?: uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput | uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput[]
+    upsert?: uniform_player_assignmentsUpsertWithWhereUniqueWithoutPlayer_teamsInput | uniform_player_assignmentsUpsertWithWhereUniqueWithoutPlayer_teamsInput[]
+    createMany?: uniform_player_assignmentsCreateManyPlayer_teamsInputEnvelope
+    set?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    disconnect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    delete?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    connect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    update?: uniform_player_assignmentsUpdateWithWhereUniqueWithoutPlayer_teamsInput | uniform_player_assignmentsUpdateWithWhereUniqueWithoutPlayer_teamsInput[]
+    updateMany?: uniform_player_assignmentsUpdateManyWithWhereWithoutPlayer_teamsInput | uniform_player_assignmentsUpdateManyWithWhereWithoutPlayer_teamsInput[]
+    deleteMany?: uniform_player_assignmentsScalarWhereInput | uniform_player_assignmentsScalarWhereInput[]
   }
 
   export type gamesCreateNestedManyWithoutSeasonsInput = {
@@ -73637,6 +82307,27 @@ export namespace Prisma {
     connect?: awardsWhereUniqueInput | awardsWhereUniqueInput[]
   }
 
+  export type player_season_lettersCreateNestedManyWithoutSeasonsInput = {
+    create?: XOR<player_season_lettersCreateWithoutSeasonsInput, player_season_lettersUncheckedCreateWithoutSeasonsInput> | player_season_lettersCreateWithoutSeasonsInput[] | player_season_lettersUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutSeasonsInput | player_season_lettersCreateOrConnectWithoutSeasonsInput[]
+    createMany?: player_season_lettersCreateManySeasonsInputEnvelope
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+  }
+
+  export type uniform_season_kitsCreateNestedManyWithoutSeasonsInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutSeasonsInput, uniform_season_kitsUncheckedCreateWithoutSeasonsInput> | uniform_season_kitsCreateWithoutSeasonsInput[] | uniform_season_kitsUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutSeasonsInput | uniform_season_kitsCreateOrConnectWithoutSeasonsInput[]
+    createMany?: uniform_season_kitsCreateManySeasonsInputEnvelope
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+  }
+
+  export type schedule_leadsCreateNestedManyWithoutSeasonsInput = {
+    create?: XOR<schedule_leadsCreateWithoutSeasonsInput, schedule_leadsUncheckedCreateWithoutSeasonsInput> | schedule_leadsCreateWithoutSeasonsInput[] | schedule_leadsUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutSeasonsInput | schedule_leadsCreateOrConnectWithoutSeasonsInput[]
+    createMany?: schedule_leadsCreateManySeasonsInputEnvelope
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+  }
+
   export type gamesUncheckedCreateNestedManyWithoutSeasonsInput = {
     create?: XOR<gamesCreateWithoutSeasonsInput, gamesUncheckedCreateWithoutSeasonsInput> | gamesCreateWithoutSeasonsInput[] | gamesUncheckedCreateWithoutSeasonsInput[]
     connectOrCreate?: gamesCreateOrConnectWithoutSeasonsInput | gamesCreateOrConnectWithoutSeasonsInput[]
@@ -73670,6 +82361,27 @@ export namespace Prisma {
     connectOrCreate?: awardsCreateOrConnectWithoutSeasonsInput | awardsCreateOrConnectWithoutSeasonsInput[]
     createMany?: awardsCreateManySeasonsInputEnvelope
     connect?: awardsWhereUniqueInput | awardsWhereUniqueInput[]
+  }
+
+  export type player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput = {
+    create?: XOR<player_season_lettersCreateWithoutSeasonsInput, player_season_lettersUncheckedCreateWithoutSeasonsInput> | player_season_lettersCreateWithoutSeasonsInput[] | player_season_lettersUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutSeasonsInput | player_season_lettersCreateOrConnectWithoutSeasonsInput[]
+    createMany?: player_season_lettersCreateManySeasonsInputEnvelope
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+  }
+
+  export type uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutSeasonsInput, uniform_season_kitsUncheckedCreateWithoutSeasonsInput> | uniform_season_kitsCreateWithoutSeasonsInput[] | uniform_season_kitsUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutSeasonsInput | uniform_season_kitsCreateOrConnectWithoutSeasonsInput[]
+    createMany?: uniform_season_kitsCreateManySeasonsInputEnvelope
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+  }
+
+  export type schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput = {
+    create?: XOR<schedule_leadsCreateWithoutSeasonsInput, schedule_leadsUncheckedCreateWithoutSeasonsInput> | schedule_leadsCreateWithoutSeasonsInput[] | schedule_leadsUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutSeasonsInput | schedule_leadsCreateOrConnectWithoutSeasonsInput[]
+    createMany?: schedule_leadsCreateManySeasonsInputEnvelope
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
   }
 
   export type Enumseasons_statusFieldUpdateOperationsInput = {
@@ -73746,6 +82458,48 @@ export namespace Prisma {
     deleteMany?: awardsScalarWhereInput | awardsScalarWhereInput[]
   }
 
+  export type player_season_lettersUpdateManyWithoutSeasonsNestedInput = {
+    create?: XOR<player_season_lettersCreateWithoutSeasonsInput, player_season_lettersUncheckedCreateWithoutSeasonsInput> | player_season_lettersCreateWithoutSeasonsInput[] | player_season_lettersUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutSeasonsInput | player_season_lettersCreateOrConnectWithoutSeasonsInput[]
+    upsert?: player_season_lettersUpsertWithWhereUniqueWithoutSeasonsInput | player_season_lettersUpsertWithWhereUniqueWithoutSeasonsInput[]
+    createMany?: player_season_lettersCreateManySeasonsInputEnvelope
+    set?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    disconnect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    delete?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    update?: player_season_lettersUpdateWithWhereUniqueWithoutSeasonsInput | player_season_lettersUpdateWithWhereUniqueWithoutSeasonsInput[]
+    updateMany?: player_season_lettersUpdateManyWithWhereWithoutSeasonsInput | player_season_lettersUpdateManyWithWhereWithoutSeasonsInput[]
+    deleteMany?: player_season_lettersScalarWhereInput | player_season_lettersScalarWhereInput[]
+  }
+
+  export type uniform_season_kitsUpdateManyWithoutSeasonsNestedInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutSeasonsInput, uniform_season_kitsUncheckedCreateWithoutSeasonsInput> | uniform_season_kitsCreateWithoutSeasonsInput[] | uniform_season_kitsUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutSeasonsInput | uniform_season_kitsCreateOrConnectWithoutSeasonsInput[]
+    upsert?: uniform_season_kitsUpsertWithWhereUniqueWithoutSeasonsInput | uniform_season_kitsUpsertWithWhereUniqueWithoutSeasonsInput[]
+    createMany?: uniform_season_kitsCreateManySeasonsInputEnvelope
+    set?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    disconnect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    delete?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    update?: uniform_season_kitsUpdateWithWhereUniqueWithoutSeasonsInput | uniform_season_kitsUpdateWithWhereUniqueWithoutSeasonsInput[]
+    updateMany?: uniform_season_kitsUpdateManyWithWhereWithoutSeasonsInput | uniform_season_kitsUpdateManyWithWhereWithoutSeasonsInput[]
+    deleteMany?: uniform_season_kitsScalarWhereInput | uniform_season_kitsScalarWhereInput[]
+  }
+
+  export type schedule_leadsUpdateManyWithoutSeasonsNestedInput = {
+    create?: XOR<schedule_leadsCreateWithoutSeasonsInput, schedule_leadsUncheckedCreateWithoutSeasonsInput> | schedule_leadsCreateWithoutSeasonsInput[] | schedule_leadsUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutSeasonsInput | schedule_leadsCreateOrConnectWithoutSeasonsInput[]
+    upsert?: schedule_leadsUpsertWithWhereUniqueWithoutSeasonsInput | schedule_leadsUpsertWithWhereUniqueWithoutSeasonsInput[]
+    createMany?: schedule_leadsCreateManySeasonsInputEnvelope
+    set?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    disconnect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    delete?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    update?: schedule_leadsUpdateWithWhereUniqueWithoutSeasonsInput | schedule_leadsUpdateWithWhereUniqueWithoutSeasonsInput[]
+    updateMany?: schedule_leadsUpdateManyWithWhereWithoutSeasonsInput | schedule_leadsUpdateManyWithWhereWithoutSeasonsInput[]
+    deleteMany?: schedule_leadsScalarWhereInput | schedule_leadsScalarWhereInput[]
+  }
+
   export type gamesUncheckedUpdateManyWithoutSeasonsNestedInput = {
     create?: XOR<gamesCreateWithoutSeasonsInput, gamesUncheckedCreateWithoutSeasonsInput> | gamesCreateWithoutSeasonsInput[] | gamesUncheckedCreateWithoutSeasonsInput[]
     connectOrCreate?: gamesCreateOrConnectWithoutSeasonsInput | gamesCreateOrConnectWithoutSeasonsInput[]
@@ -73814,6 +82568,48 @@ export namespace Prisma {
     update?: awardsUpdateWithWhereUniqueWithoutSeasonsInput | awardsUpdateWithWhereUniqueWithoutSeasonsInput[]
     updateMany?: awardsUpdateManyWithWhereWithoutSeasonsInput | awardsUpdateManyWithWhereWithoutSeasonsInput[]
     deleteMany?: awardsScalarWhereInput | awardsScalarWhereInput[]
+  }
+
+  export type player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput = {
+    create?: XOR<player_season_lettersCreateWithoutSeasonsInput, player_season_lettersUncheckedCreateWithoutSeasonsInput> | player_season_lettersCreateWithoutSeasonsInput[] | player_season_lettersUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutSeasonsInput | player_season_lettersCreateOrConnectWithoutSeasonsInput[]
+    upsert?: player_season_lettersUpsertWithWhereUniqueWithoutSeasonsInput | player_season_lettersUpsertWithWhereUniqueWithoutSeasonsInput[]
+    createMany?: player_season_lettersCreateManySeasonsInputEnvelope
+    set?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    disconnect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    delete?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    update?: player_season_lettersUpdateWithWhereUniqueWithoutSeasonsInput | player_season_lettersUpdateWithWhereUniqueWithoutSeasonsInput[]
+    updateMany?: player_season_lettersUpdateManyWithWhereWithoutSeasonsInput | player_season_lettersUpdateManyWithWhereWithoutSeasonsInput[]
+    deleteMany?: player_season_lettersScalarWhereInput | player_season_lettersScalarWhereInput[]
+  }
+
+  export type uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutSeasonsInput, uniform_season_kitsUncheckedCreateWithoutSeasonsInput> | uniform_season_kitsCreateWithoutSeasonsInput[] | uniform_season_kitsUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutSeasonsInput | uniform_season_kitsCreateOrConnectWithoutSeasonsInput[]
+    upsert?: uniform_season_kitsUpsertWithWhereUniqueWithoutSeasonsInput | uniform_season_kitsUpsertWithWhereUniqueWithoutSeasonsInput[]
+    createMany?: uniform_season_kitsCreateManySeasonsInputEnvelope
+    set?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    disconnect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    delete?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    update?: uniform_season_kitsUpdateWithWhereUniqueWithoutSeasonsInput | uniform_season_kitsUpdateWithWhereUniqueWithoutSeasonsInput[]
+    updateMany?: uniform_season_kitsUpdateManyWithWhereWithoutSeasonsInput | uniform_season_kitsUpdateManyWithWhereWithoutSeasonsInput[]
+    deleteMany?: uniform_season_kitsScalarWhereInput | uniform_season_kitsScalarWhereInput[]
+  }
+
+  export type schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput = {
+    create?: XOR<schedule_leadsCreateWithoutSeasonsInput, schedule_leadsUncheckedCreateWithoutSeasonsInput> | schedule_leadsCreateWithoutSeasonsInput[] | schedule_leadsUncheckedCreateWithoutSeasonsInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutSeasonsInput | schedule_leadsCreateOrConnectWithoutSeasonsInput[]
+    upsert?: schedule_leadsUpsertWithWhereUniqueWithoutSeasonsInput | schedule_leadsUpsertWithWhereUniqueWithoutSeasonsInput[]
+    createMany?: schedule_leadsCreateManySeasonsInputEnvelope
+    set?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    disconnect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    delete?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    update?: schedule_leadsUpdateWithWhereUniqueWithoutSeasonsInput | schedule_leadsUpdateWithWhereUniqueWithoutSeasonsInput[]
+    updateMany?: schedule_leadsUpdateManyWithWhereWithoutSeasonsInput | schedule_leadsUpdateManyWithWhereWithoutSeasonsInput[]
+    deleteMany?: schedule_leadsScalarWhereInput | schedule_leadsScalarWhereInput[]
   }
 
   export type seasonsCreateNestedOneWithoutSeason_age_groupsInput = {
@@ -74037,6 +82833,27 @@ export namespace Prisma {
     connect?: awardsWhereUniqueInput | awardsWhereUniqueInput[]
   }
 
+  export type player_season_lettersCreateNestedManyWithoutTeam_seasonsInput = {
+    create?: XOR<player_season_lettersCreateWithoutTeam_seasonsInput, player_season_lettersUncheckedCreateWithoutTeam_seasonsInput> | player_season_lettersCreateWithoutTeam_seasonsInput[] | player_season_lettersUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutTeam_seasonsInput | player_season_lettersCreateOrConnectWithoutTeam_seasonsInput[]
+    createMany?: player_season_lettersCreateManyTeam_seasonsInputEnvelope
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+  }
+
+  export type uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutTeam_seasonsInput, uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput> | uniform_season_kitsCreateWithoutTeam_seasonsInput[] | uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput | uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput[]
+    createMany?: uniform_season_kitsCreateManyTeam_seasonsInputEnvelope
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+  }
+
+  export type schedule_leadsCreateNestedManyWithoutTeam_seasonsInput = {
+    create?: XOR<schedule_leadsCreateWithoutTeam_seasonsInput, schedule_leadsUncheckedCreateWithoutTeam_seasonsInput> | schedule_leadsCreateWithoutTeam_seasonsInput[] | schedule_leadsUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutTeam_seasonsInput | schedule_leadsCreateOrConnectWithoutTeam_seasonsInput[]
+    createMany?: schedule_leadsCreateManyTeam_seasonsInputEnvelope
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+  }
+
   export type eventsUncheckedCreateNestedManyWithoutTeam_seasonsInput = {
     create?: XOR<eventsCreateWithoutTeam_seasonsInput, eventsUncheckedCreateWithoutTeam_seasonsInput> | eventsCreateWithoutTeam_seasonsInput[] | eventsUncheckedCreateWithoutTeam_seasonsInput[]
     connectOrCreate?: eventsCreateOrConnectWithoutTeam_seasonsInput | eventsCreateOrConnectWithoutTeam_seasonsInput[]
@@ -74182,6 +82999,27 @@ export namespace Prisma {
     connectOrCreate?: awardsCreateOrConnectWithoutTeam_seasonsInput | awardsCreateOrConnectWithoutTeam_seasonsInput[]
     createMany?: awardsCreateManyTeam_seasonsInputEnvelope
     connect?: awardsWhereUniqueInput | awardsWhereUniqueInput[]
+  }
+
+  export type player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput = {
+    create?: XOR<player_season_lettersCreateWithoutTeam_seasonsInput, player_season_lettersUncheckedCreateWithoutTeam_seasonsInput> | player_season_lettersCreateWithoutTeam_seasonsInput[] | player_season_lettersUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutTeam_seasonsInput | player_season_lettersCreateOrConnectWithoutTeam_seasonsInput[]
+    createMany?: player_season_lettersCreateManyTeam_seasonsInputEnvelope
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+  }
+
+  export type uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutTeam_seasonsInput, uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput> | uniform_season_kitsCreateWithoutTeam_seasonsInput[] | uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput | uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput[]
+    createMany?: uniform_season_kitsCreateManyTeam_seasonsInputEnvelope
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+  }
+
+  export type schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput = {
+    create?: XOR<schedule_leadsCreateWithoutTeam_seasonsInput, schedule_leadsUncheckedCreateWithoutTeam_seasonsInput> | schedule_leadsCreateWithoutTeam_seasonsInput[] | schedule_leadsUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutTeam_seasonsInput | schedule_leadsCreateOrConnectWithoutTeam_seasonsInput[]
+    createMany?: schedule_leadsCreateManyTeam_seasonsInputEnvelope
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
   }
 
   export type eventsUpdateManyWithoutTeam_seasonsNestedInput = {
@@ -74504,6 +83342,48 @@ export namespace Prisma {
     deleteMany?: awardsScalarWhereInput | awardsScalarWhereInput[]
   }
 
+  export type player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput = {
+    create?: XOR<player_season_lettersCreateWithoutTeam_seasonsInput, player_season_lettersUncheckedCreateWithoutTeam_seasonsInput> | player_season_lettersCreateWithoutTeam_seasonsInput[] | player_season_lettersUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutTeam_seasonsInput | player_season_lettersCreateOrConnectWithoutTeam_seasonsInput[]
+    upsert?: player_season_lettersUpsertWithWhereUniqueWithoutTeam_seasonsInput | player_season_lettersUpsertWithWhereUniqueWithoutTeam_seasonsInput[]
+    createMany?: player_season_lettersCreateManyTeam_seasonsInputEnvelope
+    set?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    disconnect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    delete?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    update?: player_season_lettersUpdateWithWhereUniqueWithoutTeam_seasonsInput | player_season_lettersUpdateWithWhereUniqueWithoutTeam_seasonsInput[]
+    updateMany?: player_season_lettersUpdateManyWithWhereWithoutTeam_seasonsInput | player_season_lettersUpdateManyWithWhereWithoutTeam_seasonsInput[]
+    deleteMany?: player_season_lettersScalarWhereInput | player_season_lettersScalarWhereInput[]
+  }
+
+  export type uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutTeam_seasonsInput, uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput> | uniform_season_kitsCreateWithoutTeam_seasonsInput[] | uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput | uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput[]
+    upsert?: uniform_season_kitsUpsertWithWhereUniqueWithoutTeam_seasonsInput | uniform_season_kitsUpsertWithWhereUniqueWithoutTeam_seasonsInput[]
+    createMany?: uniform_season_kitsCreateManyTeam_seasonsInputEnvelope
+    set?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    disconnect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    delete?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    update?: uniform_season_kitsUpdateWithWhereUniqueWithoutTeam_seasonsInput | uniform_season_kitsUpdateWithWhereUniqueWithoutTeam_seasonsInput[]
+    updateMany?: uniform_season_kitsUpdateManyWithWhereWithoutTeam_seasonsInput | uniform_season_kitsUpdateManyWithWhereWithoutTeam_seasonsInput[]
+    deleteMany?: uniform_season_kitsScalarWhereInput | uniform_season_kitsScalarWhereInput[]
+  }
+
+  export type schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput = {
+    create?: XOR<schedule_leadsCreateWithoutTeam_seasonsInput, schedule_leadsUncheckedCreateWithoutTeam_seasonsInput> | schedule_leadsCreateWithoutTeam_seasonsInput[] | schedule_leadsUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutTeam_seasonsInput | schedule_leadsCreateOrConnectWithoutTeam_seasonsInput[]
+    upsert?: schedule_leadsUpsertWithWhereUniqueWithoutTeam_seasonsInput | schedule_leadsUpsertWithWhereUniqueWithoutTeam_seasonsInput[]
+    createMany?: schedule_leadsCreateManyTeam_seasonsInputEnvelope
+    set?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    disconnect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    delete?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    update?: schedule_leadsUpdateWithWhereUniqueWithoutTeam_seasonsInput | schedule_leadsUpdateWithWhereUniqueWithoutTeam_seasonsInput[]
+    updateMany?: schedule_leadsUpdateManyWithWhereWithoutTeam_seasonsInput | schedule_leadsUpdateManyWithWhereWithoutTeam_seasonsInput[]
+    deleteMany?: schedule_leadsScalarWhereInput | schedule_leadsScalarWhereInput[]
+  }
+
   export type eventsUncheckedUpdateManyWithoutTeam_seasonsNestedInput = {
     create?: XOR<eventsCreateWithoutTeam_seasonsInput, eventsUncheckedCreateWithoutTeam_seasonsInput> | eventsCreateWithoutTeam_seasonsInput[] | eventsUncheckedCreateWithoutTeam_seasonsInput[]
     connectOrCreate?: eventsCreateOrConnectWithoutTeam_seasonsInput | eventsCreateOrConnectWithoutTeam_seasonsInput[]
@@ -74796,6 +83676,48 @@ export namespace Prisma {
     update?: awardsUpdateWithWhereUniqueWithoutTeam_seasonsInput | awardsUpdateWithWhereUniqueWithoutTeam_seasonsInput[]
     updateMany?: awardsUpdateManyWithWhereWithoutTeam_seasonsInput | awardsUpdateManyWithWhereWithoutTeam_seasonsInput[]
     deleteMany?: awardsScalarWhereInput | awardsScalarWhereInput[]
+  }
+
+  export type player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput = {
+    create?: XOR<player_season_lettersCreateWithoutTeam_seasonsInput, player_season_lettersUncheckedCreateWithoutTeam_seasonsInput> | player_season_lettersCreateWithoutTeam_seasonsInput[] | player_season_lettersUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: player_season_lettersCreateOrConnectWithoutTeam_seasonsInput | player_season_lettersCreateOrConnectWithoutTeam_seasonsInput[]
+    upsert?: player_season_lettersUpsertWithWhereUniqueWithoutTeam_seasonsInput | player_season_lettersUpsertWithWhereUniqueWithoutTeam_seasonsInput[]
+    createMany?: player_season_lettersCreateManyTeam_seasonsInputEnvelope
+    set?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    disconnect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    delete?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    connect?: player_season_lettersWhereUniqueInput | player_season_lettersWhereUniqueInput[]
+    update?: player_season_lettersUpdateWithWhereUniqueWithoutTeam_seasonsInput | player_season_lettersUpdateWithWhereUniqueWithoutTeam_seasonsInput[]
+    updateMany?: player_season_lettersUpdateManyWithWhereWithoutTeam_seasonsInput | player_season_lettersUpdateManyWithWhereWithoutTeam_seasonsInput[]
+    deleteMany?: player_season_lettersScalarWhereInput | player_season_lettersScalarWhereInput[]
+  }
+
+  export type uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutTeam_seasonsInput, uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput> | uniform_season_kitsCreateWithoutTeam_seasonsInput[] | uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput | uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput[]
+    upsert?: uniform_season_kitsUpsertWithWhereUniqueWithoutTeam_seasonsInput | uniform_season_kitsUpsertWithWhereUniqueWithoutTeam_seasonsInput[]
+    createMany?: uniform_season_kitsCreateManyTeam_seasonsInputEnvelope
+    set?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    disconnect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    delete?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    update?: uniform_season_kitsUpdateWithWhereUniqueWithoutTeam_seasonsInput | uniform_season_kitsUpdateWithWhereUniqueWithoutTeam_seasonsInput[]
+    updateMany?: uniform_season_kitsUpdateManyWithWhereWithoutTeam_seasonsInput | uniform_season_kitsUpdateManyWithWhereWithoutTeam_seasonsInput[]
+    deleteMany?: uniform_season_kitsScalarWhereInput | uniform_season_kitsScalarWhereInput[]
+  }
+
+  export type schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput = {
+    create?: XOR<schedule_leadsCreateWithoutTeam_seasonsInput, schedule_leadsUncheckedCreateWithoutTeam_seasonsInput> | schedule_leadsCreateWithoutTeam_seasonsInput[] | schedule_leadsUncheckedCreateWithoutTeam_seasonsInput[]
+    connectOrCreate?: schedule_leadsCreateOrConnectWithoutTeam_seasonsInput | schedule_leadsCreateOrConnectWithoutTeam_seasonsInput[]
+    upsert?: schedule_leadsUpsertWithWhereUniqueWithoutTeam_seasonsInput | schedule_leadsUpsertWithWhereUniqueWithoutTeam_seasonsInput[]
+    createMany?: schedule_leadsCreateManyTeam_seasonsInputEnvelope
+    set?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    disconnect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    delete?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    connect?: schedule_leadsWhereUniqueInput | schedule_leadsWhereUniqueInput[]
+    update?: schedule_leadsUpdateWithWhereUniqueWithoutTeam_seasonsInput | schedule_leadsUpdateWithWhereUniqueWithoutTeam_seasonsInput[]
+    updateMany?: schedule_leadsUpdateManyWithWhereWithoutTeam_seasonsInput | schedule_leadsUpdateManyWithWhereWithoutTeam_seasonsInput[]
+    deleteMany?: schedule_leadsScalarWhereInput | schedule_leadsScalarWhereInput[]
   }
 
   export type peopleCreateNestedOneWithoutTeam_staffInput = {
@@ -75560,6 +84482,324 @@ export namespace Prisma {
     update?: XOR<XOR<governing_bodiesUpdateToOneWithWhereWithoutAwardsInput, governing_bodiesUpdateWithoutAwardsInput>, governing_bodiesUncheckedUpdateWithoutAwardsInput>
   }
 
+  export type peopleCreateNestedOneWithoutPlayer_season_lettersInput = {
+    create?: XOR<peopleCreateWithoutPlayer_season_lettersInput, peopleUncheckedCreateWithoutPlayer_season_lettersInput>
+    connectOrCreate?: peopleCreateOrConnectWithoutPlayer_season_lettersInput
+    connect?: peopleWhereUniqueInput
+  }
+
+  export type seasonsCreateNestedOneWithoutPlayer_season_lettersInput = {
+    create?: XOR<seasonsCreateWithoutPlayer_season_lettersInput, seasonsUncheckedCreateWithoutPlayer_season_lettersInput>
+    connectOrCreate?: seasonsCreateOrConnectWithoutPlayer_season_lettersInput
+    connect?: seasonsWhereUniqueInput
+  }
+
+  export type team_seasonsCreateNestedOneWithoutPlayer_season_lettersInput = {
+    create?: XOR<team_seasonsCreateWithoutPlayer_season_lettersInput, team_seasonsUncheckedCreateWithoutPlayer_season_lettersInput>
+    connectOrCreate?: team_seasonsCreateOrConnectWithoutPlayer_season_lettersInput
+    connect?: team_seasonsWhereUniqueInput
+  }
+
+  export type peopleUpdateOneRequiredWithoutPlayer_season_lettersNestedInput = {
+    create?: XOR<peopleCreateWithoutPlayer_season_lettersInput, peopleUncheckedCreateWithoutPlayer_season_lettersInput>
+    connectOrCreate?: peopleCreateOrConnectWithoutPlayer_season_lettersInput
+    upsert?: peopleUpsertWithoutPlayer_season_lettersInput
+    connect?: peopleWhereUniqueInput
+    update?: XOR<XOR<peopleUpdateToOneWithWhereWithoutPlayer_season_lettersInput, peopleUpdateWithoutPlayer_season_lettersInput>, peopleUncheckedUpdateWithoutPlayer_season_lettersInput>
+  }
+
+  export type seasonsUpdateOneRequiredWithoutPlayer_season_lettersNestedInput = {
+    create?: XOR<seasonsCreateWithoutPlayer_season_lettersInput, seasonsUncheckedCreateWithoutPlayer_season_lettersInput>
+    connectOrCreate?: seasonsCreateOrConnectWithoutPlayer_season_lettersInput
+    upsert?: seasonsUpsertWithoutPlayer_season_lettersInput
+    connect?: seasonsWhereUniqueInput
+    update?: XOR<XOR<seasonsUpdateToOneWithWhereWithoutPlayer_season_lettersInput, seasonsUpdateWithoutPlayer_season_lettersInput>, seasonsUncheckedUpdateWithoutPlayer_season_lettersInput>
+  }
+
+  export type team_seasonsUpdateOneWithoutPlayer_season_lettersNestedInput = {
+    create?: XOR<team_seasonsCreateWithoutPlayer_season_lettersInput, team_seasonsUncheckedCreateWithoutPlayer_season_lettersInput>
+    connectOrCreate?: team_seasonsCreateOrConnectWithoutPlayer_season_lettersInput
+    upsert?: team_seasonsUpsertWithoutPlayer_season_lettersInput
+    disconnect?: team_seasonsWhereInput | boolean
+    delete?: team_seasonsWhereInput | boolean
+    connect?: team_seasonsWhereUniqueInput
+    update?: XOR<XOR<team_seasonsUpdateToOneWithWhereWithoutPlayer_season_lettersInput, team_seasonsUpdateWithoutPlayer_season_lettersInput>, team_seasonsUncheckedUpdateWithoutPlayer_season_lettersInput>
+  }
+
+  export type clubsCreateNestedOneWithoutUniform_kitsInput = {
+    create?: XOR<clubsCreateWithoutUniform_kitsInput, clubsUncheckedCreateWithoutUniform_kitsInput>
+    connectOrCreate?: clubsCreateOrConnectWithoutUniform_kitsInput
+    connect?: clubsWhereUniqueInput
+  }
+
+  export type uniform_jerseysCreateNestedManyWithoutUniform_kitsInput = {
+    create?: XOR<uniform_jerseysCreateWithoutUniform_kitsInput, uniform_jerseysUncheckedCreateWithoutUniform_kitsInput> | uniform_jerseysCreateWithoutUniform_kitsInput[] | uniform_jerseysUncheckedCreateWithoutUniform_kitsInput[]
+    connectOrCreate?: uniform_jerseysCreateOrConnectWithoutUniform_kitsInput | uniform_jerseysCreateOrConnectWithoutUniform_kitsInput[]
+    createMany?: uniform_jerseysCreateManyUniform_kitsInputEnvelope
+    connect?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+  }
+
+  export type uniform_season_kitsCreateNestedManyWithoutUniform_kitsInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutUniform_kitsInput, uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput> | uniform_season_kitsCreateWithoutUniform_kitsInput[] | uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput | uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput[]
+    createMany?: uniform_season_kitsCreateManyUniform_kitsInputEnvelope
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+  }
+
+  export type uniform_jerseysUncheckedCreateNestedManyWithoutUniform_kitsInput = {
+    create?: XOR<uniform_jerseysCreateWithoutUniform_kitsInput, uniform_jerseysUncheckedCreateWithoutUniform_kitsInput> | uniform_jerseysCreateWithoutUniform_kitsInput[] | uniform_jerseysUncheckedCreateWithoutUniform_kitsInput[]
+    connectOrCreate?: uniform_jerseysCreateOrConnectWithoutUniform_kitsInput | uniform_jerseysCreateOrConnectWithoutUniform_kitsInput[]
+    createMany?: uniform_jerseysCreateManyUniform_kitsInputEnvelope
+    connect?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+  }
+
+  export type uniform_season_kitsUncheckedCreateNestedManyWithoutUniform_kitsInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutUniform_kitsInput, uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput> | uniform_season_kitsCreateWithoutUniform_kitsInput[] | uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput | uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput[]
+    createMany?: uniform_season_kitsCreateManyUniform_kitsInputEnvelope
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+  }
+
+  export type clubsUpdateOneWithoutUniform_kitsNestedInput = {
+    create?: XOR<clubsCreateWithoutUniform_kitsInput, clubsUncheckedCreateWithoutUniform_kitsInput>
+    connectOrCreate?: clubsCreateOrConnectWithoutUniform_kitsInput
+    upsert?: clubsUpsertWithoutUniform_kitsInput
+    disconnect?: clubsWhereInput | boolean
+    delete?: clubsWhereInput | boolean
+    connect?: clubsWhereUniqueInput
+    update?: XOR<XOR<clubsUpdateToOneWithWhereWithoutUniform_kitsInput, clubsUpdateWithoutUniform_kitsInput>, clubsUncheckedUpdateWithoutUniform_kitsInput>
+  }
+
+  export type uniform_jerseysUpdateManyWithoutUniform_kitsNestedInput = {
+    create?: XOR<uniform_jerseysCreateWithoutUniform_kitsInput, uniform_jerseysUncheckedCreateWithoutUniform_kitsInput> | uniform_jerseysCreateWithoutUniform_kitsInput[] | uniform_jerseysUncheckedCreateWithoutUniform_kitsInput[]
+    connectOrCreate?: uniform_jerseysCreateOrConnectWithoutUniform_kitsInput | uniform_jerseysCreateOrConnectWithoutUniform_kitsInput[]
+    upsert?: uniform_jerseysUpsertWithWhereUniqueWithoutUniform_kitsInput | uniform_jerseysUpsertWithWhereUniqueWithoutUniform_kitsInput[]
+    createMany?: uniform_jerseysCreateManyUniform_kitsInputEnvelope
+    set?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+    disconnect?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+    delete?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+    connect?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+    update?: uniform_jerseysUpdateWithWhereUniqueWithoutUniform_kitsInput | uniform_jerseysUpdateWithWhereUniqueWithoutUniform_kitsInput[]
+    updateMany?: uniform_jerseysUpdateManyWithWhereWithoutUniform_kitsInput | uniform_jerseysUpdateManyWithWhereWithoutUniform_kitsInput[]
+    deleteMany?: uniform_jerseysScalarWhereInput | uniform_jerseysScalarWhereInput[]
+  }
+
+  export type uniform_season_kitsUpdateManyWithoutUniform_kitsNestedInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutUniform_kitsInput, uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput> | uniform_season_kitsCreateWithoutUniform_kitsInput[] | uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput | uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput[]
+    upsert?: uniform_season_kitsUpsertWithWhereUniqueWithoutUniform_kitsInput | uniform_season_kitsUpsertWithWhereUniqueWithoutUniform_kitsInput[]
+    createMany?: uniform_season_kitsCreateManyUniform_kitsInputEnvelope
+    set?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    disconnect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    delete?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    update?: uniform_season_kitsUpdateWithWhereUniqueWithoutUniform_kitsInput | uniform_season_kitsUpdateWithWhereUniqueWithoutUniform_kitsInput[]
+    updateMany?: uniform_season_kitsUpdateManyWithWhereWithoutUniform_kitsInput | uniform_season_kitsUpdateManyWithWhereWithoutUniform_kitsInput[]
+    deleteMany?: uniform_season_kitsScalarWhereInput | uniform_season_kitsScalarWhereInput[]
+  }
+
+  export type uniform_jerseysUncheckedUpdateManyWithoutUniform_kitsNestedInput = {
+    create?: XOR<uniform_jerseysCreateWithoutUniform_kitsInput, uniform_jerseysUncheckedCreateWithoutUniform_kitsInput> | uniform_jerseysCreateWithoutUniform_kitsInput[] | uniform_jerseysUncheckedCreateWithoutUniform_kitsInput[]
+    connectOrCreate?: uniform_jerseysCreateOrConnectWithoutUniform_kitsInput | uniform_jerseysCreateOrConnectWithoutUniform_kitsInput[]
+    upsert?: uniform_jerseysUpsertWithWhereUniqueWithoutUniform_kitsInput | uniform_jerseysUpsertWithWhereUniqueWithoutUniform_kitsInput[]
+    createMany?: uniform_jerseysCreateManyUniform_kitsInputEnvelope
+    set?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+    disconnect?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+    delete?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+    connect?: uniform_jerseysWhereUniqueInput | uniform_jerseysWhereUniqueInput[]
+    update?: uniform_jerseysUpdateWithWhereUniqueWithoutUniform_kitsInput | uniform_jerseysUpdateWithWhereUniqueWithoutUniform_kitsInput[]
+    updateMany?: uniform_jerseysUpdateManyWithWhereWithoutUniform_kitsInput | uniform_jerseysUpdateManyWithWhereWithoutUniform_kitsInput[]
+    deleteMany?: uniform_jerseysScalarWhereInput | uniform_jerseysScalarWhereInput[]
+  }
+
+  export type uniform_season_kitsUncheckedUpdateManyWithoutUniform_kitsNestedInput = {
+    create?: XOR<uniform_season_kitsCreateWithoutUniform_kitsInput, uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput> | uniform_season_kitsCreateWithoutUniform_kitsInput[] | uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput[]
+    connectOrCreate?: uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput | uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput[]
+    upsert?: uniform_season_kitsUpsertWithWhereUniqueWithoutUniform_kitsInput | uniform_season_kitsUpsertWithWhereUniqueWithoutUniform_kitsInput[]
+    createMany?: uniform_season_kitsCreateManyUniform_kitsInputEnvelope
+    set?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    disconnect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    delete?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    connect?: uniform_season_kitsWhereUniqueInput | uniform_season_kitsWhereUniqueInput[]
+    update?: uniform_season_kitsUpdateWithWhereUniqueWithoutUniform_kitsInput | uniform_season_kitsUpdateWithWhereUniqueWithoutUniform_kitsInput[]
+    updateMany?: uniform_season_kitsUpdateManyWithWhereWithoutUniform_kitsInput | uniform_season_kitsUpdateManyWithWhereWithoutUniform_kitsInput[]
+    deleteMany?: uniform_season_kitsScalarWhereInput | uniform_season_kitsScalarWhereInput[]
+  }
+
+  export type uniform_kitsCreateNestedOneWithoutUniform_jerseysInput = {
+    create?: XOR<uniform_kitsCreateWithoutUniform_jerseysInput, uniform_kitsUncheckedCreateWithoutUniform_jerseysInput>
+    connectOrCreate?: uniform_kitsCreateOrConnectWithoutUniform_jerseysInput
+    connect?: uniform_kitsWhereUniqueInput
+  }
+
+  export type uniform_player_assignmentsCreateNestedManyWithoutUniform_jerseysInput = {
+    create?: XOR<uniform_player_assignmentsCreateWithoutUniform_jerseysInput, uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput> | uniform_player_assignmentsCreateWithoutUniform_jerseysInput[] | uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput[]
+    connectOrCreate?: uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput | uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput[]
+    createMany?: uniform_player_assignmentsCreateManyUniform_jerseysInputEnvelope
+    connect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+  }
+
+  export type uniform_player_assignmentsUncheckedCreateNestedManyWithoutUniform_jerseysInput = {
+    create?: XOR<uniform_player_assignmentsCreateWithoutUniform_jerseysInput, uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput> | uniform_player_assignmentsCreateWithoutUniform_jerseysInput[] | uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput[]
+    connectOrCreate?: uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput | uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput[]
+    createMany?: uniform_player_assignmentsCreateManyUniform_jerseysInputEnvelope
+    connect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+  }
+
+  export type uniform_kitsUpdateOneWithoutUniform_jerseysNestedInput = {
+    create?: XOR<uniform_kitsCreateWithoutUniform_jerseysInput, uniform_kitsUncheckedCreateWithoutUniform_jerseysInput>
+    connectOrCreate?: uniform_kitsCreateOrConnectWithoutUniform_jerseysInput
+    upsert?: uniform_kitsUpsertWithoutUniform_jerseysInput
+    disconnect?: uniform_kitsWhereInput | boolean
+    delete?: uniform_kitsWhereInput | boolean
+    connect?: uniform_kitsWhereUniqueInput
+    update?: XOR<XOR<uniform_kitsUpdateToOneWithWhereWithoutUniform_jerseysInput, uniform_kitsUpdateWithoutUniform_jerseysInput>, uniform_kitsUncheckedUpdateWithoutUniform_jerseysInput>
+  }
+
+  export type uniform_player_assignmentsUpdateManyWithoutUniform_jerseysNestedInput = {
+    create?: XOR<uniform_player_assignmentsCreateWithoutUniform_jerseysInput, uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput> | uniform_player_assignmentsCreateWithoutUniform_jerseysInput[] | uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput[]
+    connectOrCreate?: uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput | uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput[]
+    upsert?: uniform_player_assignmentsUpsertWithWhereUniqueWithoutUniform_jerseysInput | uniform_player_assignmentsUpsertWithWhereUniqueWithoutUniform_jerseysInput[]
+    createMany?: uniform_player_assignmentsCreateManyUniform_jerseysInputEnvelope
+    set?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    disconnect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    delete?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    connect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    update?: uniform_player_assignmentsUpdateWithWhereUniqueWithoutUniform_jerseysInput | uniform_player_assignmentsUpdateWithWhereUniqueWithoutUniform_jerseysInput[]
+    updateMany?: uniform_player_assignmentsUpdateManyWithWhereWithoutUniform_jerseysInput | uniform_player_assignmentsUpdateManyWithWhereWithoutUniform_jerseysInput[]
+    deleteMany?: uniform_player_assignmentsScalarWhereInput | uniform_player_assignmentsScalarWhereInput[]
+  }
+
+  export type uniform_player_assignmentsUncheckedUpdateManyWithoutUniform_jerseysNestedInput = {
+    create?: XOR<uniform_player_assignmentsCreateWithoutUniform_jerseysInput, uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput> | uniform_player_assignmentsCreateWithoutUniform_jerseysInput[] | uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput[]
+    connectOrCreate?: uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput | uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput[]
+    upsert?: uniform_player_assignmentsUpsertWithWhereUniqueWithoutUniform_jerseysInput | uniform_player_assignmentsUpsertWithWhereUniqueWithoutUniform_jerseysInput[]
+    createMany?: uniform_player_assignmentsCreateManyUniform_jerseysInputEnvelope
+    set?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    disconnect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    delete?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    connect?: uniform_player_assignmentsWhereUniqueInput | uniform_player_assignmentsWhereUniqueInput[]
+    update?: uniform_player_assignmentsUpdateWithWhereUniqueWithoutUniform_jerseysInput | uniform_player_assignmentsUpdateWithWhereUniqueWithoutUniform_jerseysInput[]
+    updateMany?: uniform_player_assignmentsUpdateManyWithWhereWithoutUniform_jerseysInput | uniform_player_assignmentsUpdateManyWithWhereWithoutUniform_jerseysInput[]
+    deleteMany?: uniform_player_assignmentsScalarWhereInput | uniform_player_assignmentsScalarWhereInput[]
+  }
+
+  export type seasonsCreateNestedOneWithoutUniform_season_kitsInput = {
+    create?: XOR<seasonsCreateWithoutUniform_season_kitsInput, seasonsUncheckedCreateWithoutUniform_season_kitsInput>
+    connectOrCreate?: seasonsCreateOrConnectWithoutUniform_season_kitsInput
+    connect?: seasonsWhereUniqueInput
+  }
+
+  export type team_seasonsCreateNestedOneWithoutUniform_season_kitsInput = {
+    create?: XOR<team_seasonsCreateWithoutUniform_season_kitsInput, team_seasonsUncheckedCreateWithoutUniform_season_kitsInput>
+    connectOrCreate?: team_seasonsCreateOrConnectWithoutUniform_season_kitsInput
+    connect?: team_seasonsWhereUniqueInput
+  }
+
+  export type uniform_kitsCreateNestedOneWithoutUniform_season_kitsInput = {
+    create?: XOR<uniform_kitsCreateWithoutUniform_season_kitsInput, uniform_kitsUncheckedCreateWithoutUniform_season_kitsInput>
+    connectOrCreate?: uniform_kitsCreateOrConnectWithoutUniform_season_kitsInput
+    connect?: uniform_kitsWhereUniqueInput
+  }
+
+  export type seasonsUpdateOneRequiredWithoutUniform_season_kitsNestedInput = {
+    create?: XOR<seasonsCreateWithoutUniform_season_kitsInput, seasonsUncheckedCreateWithoutUniform_season_kitsInput>
+    connectOrCreate?: seasonsCreateOrConnectWithoutUniform_season_kitsInput
+    upsert?: seasonsUpsertWithoutUniform_season_kitsInput
+    connect?: seasonsWhereUniqueInput
+    update?: XOR<XOR<seasonsUpdateToOneWithWhereWithoutUniform_season_kitsInput, seasonsUpdateWithoutUniform_season_kitsInput>, seasonsUncheckedUpdateWithoutUniform_season_kitsInput>
+  }
+
+  export type team_seasonsUpdateOneWithoutUniform_season_kitsNestedInput = {
+    create?: XOR<team_seasonsCreateWithoutUniform_season_kitsInput, team_seasonsUncheckedCreateWithoutUniform_season_kitsInput>
+    connectOrCreate?: team_seasonsCreateOrConnectWithoutUniform_season_kitsInput
+    upsert?: team_seasonsUpsertWithoutUniform_season_kitsInput
+    disconnect?: team_seasonsWhereInput | boolean
+    delete?: team_seasonsWhereInput | boolean
+    connect?: team_seasonsWhereUniqueInput
+    update?: XOR<XOR<team_seasonsUpdateToOneWithWhereWithoutUniform_season_kitsInput, team_seasonsUpdateWithoutUniform_season_kitsInput>, team_seasonsUncheckedUpdateWithoutUniform_season_kitsInput>
+  }
+
+  export type uniform_kitsUpdateOneRequiredWithoutUniform_season_kitsNestedInput = {
+    create?: XOR<uniform_kitsCreateWithoutUniform_season_kitsInput, uniform_kitsUncheckedCreateWithoutUniform_season_kitsInput>
+    connectOrCreate?: uniform_kitsCreateOrConnectWithoutUniform_season_kitsInput
+    upsert?: uniform_kitsUpsertWithoutUniform_season_kitsInput
+    connect?: uniform_kitsWhereUniqueInput
+    update?: XOR<XOR<uniform_kitsUpdateToOneWithWhereWithoutUniform_season_kitsInput, uniform_kitsUpdateWithoutUniform_season_kitsInput>, uniform_kitsUncheckedUpdateWithoutUniform_season_kitsInput>
+  }
+
+  export type player_teamsCreateNestedOneWithoutUniform_player_assignmentsInput = {
+    create?: XOR<player_teamsCreateWithoutUniform_player_assignmentsInput, player_teamsUncheckedCreateWithoutUniform_player_assignmentsInput>
+    connectOrCreate?: player_teamsCreateOrConnectWithoutUniform_player_assignmentsInput
+    connect?: player_teamsWhereUniqueInput
+  }
+
+  export type uniform_jerseysCreateNestedOneWithoutUniform_player_assignmentsInput = {
+    create?: XOR<uniform_jerseysCreateWithoutUniform_player_assignmentsInput, uniform_jerseysUncheckedCreateWithoutUniform_player_assignmentsInput>
+    connectOrCreate?: uniform_jerseysCreateOrConnectWithoutUniform_player_assignmentsInput
+    connect?: uniform_jerseysWhereUniqueInput
+  }
+
+  export type player_teamsUpdateOneRequiredWithoutUniform_player_assignmentsNestedInput = {
+    create?: XOR<player_teamsCreateWithoutUniform_player_assignmentsInput, player_teamsUncheckedCreateWithoutUniform_player_assignmentsInput>
+    connectOrCreate?: player_teamsCreateOrConnectWithoutUniform_player_assignmentsInput
+    upsert?: player_teamsUpsertWithoutUniform_player_assignmentsInput
+    connect?: player_teamsWhereUniqueInput
+    update?: XOR<XOR<player_teamsUpdateToOneWithWhereWithoutUniform_player_assignmentsInput, player_teamsUpdateWithoutUniform_player_assignmentsInput>, player_teamsUncheckedUpdateWithoutUniform_player_assignmentsInput>
+  }
+
+  export type uniform_jerseysUpdateOneRequiredWithoutUniform_player_assignmentsNestedInput = {
+    create?: XOR<uniform_jerseysCreateWithoutUniform_player_assignmentsInput, uniform_jerseysUncheckedCreateWithoutUniform_player_assignmentsInput>
+    connectOrCreate?: uniform_jerseysCreateOrConnectWithoutUniform_player_assignmentsInput
+    upsert?: uniform_jerseysUpsertWithoutUniform_player_assignmentsInput
+    connect?: uniform_jerseysWhereUniqueInput
+    update?: XOR<XOR<uniform_jerseysUpdateToOneWithWhereWithoutUniform_player_assignmentsInput, uniform_jerseysUpdateWithoutUniform_player_assignmentsInput>, uniform_jerseysUncheckedUpdateWithoutUniform_player_assignmentsInput>
+  }
+
+  export type seasonsCreateNestedOneWithoutSchedule_leadsInput = {
+    create?: XOR<seasonsCreateWithoutSchedule_leadsInput, seasonsUncheckedCreateWithoutSchedule_leadsInput>
+    connectOrCreate?: seasonsCreateOrConnectWithoutSchedule_leadsInput
+    connect?: seasonsWhereUniqueInput
+  }
+
+  export type team_seasonsCreateNestedOneWithoutSchedule_leadsInput = {
+    create?: XOR<team_seasonsCreateWithoutSchedule_leadsInput, team_seasonsUncheckedCreateWithoutSchedule_leadsInput>
+    connectOrCreate?: team_seasonsCreateOrConnectWithoutSchedule_leadsInput
+    connect?: team_seasonsWhereUniqueInput
+  }
+
+  export type clubsCreateNestedOneWithoutSchedule_leadsInput = {
+    create?: XOR<clubsCreateWithoutSchedule_leadsInput, clubsUncheckedCreateWithoutSchedule_leadsInput>
+    connectOrCreate?: clubsCreateOrConnectWithoutSchedule_leadsInput
+    connect?: clubsWhereUniqueInput
+  }
+
+  export type seasonsUpdateOneRequiredWithoutSchedule_leadsNestedInput = {
+    create?: XOR<seasonsCreateWithoutSchedule_leadsInput, seasonsUncheckedCreateWithoutSchedule_leadsInput>
+    connectOrCreate?: seasonsCreateOrConnectWithoutSchedule_leadsInput
+    upsert?: seasonsUpsertWithoutSchedule_leadsInput
+    connect?: seasonsWhereUniqueInput
+    update?: XOR<XOR<seasonsUpdateToOneWithWhereWithoutSchedule_leadsInput, seasonsUpdateWithoutSchedule_leadsInput>, seasonsUncheckedUpdateWithoutSchedule_leadsInput>
+  }
+
+  export type team_seasonsUpdateOneWithoutSchedule_leadsNestedInput = {
+    create?: XOR<team_seasonsCreateWithoutSchedule_leadsInput, team_seasonsUncheckedCreateWithoutSchedule_leadsInput>
+    connectOrCreate?: team_seasonsCreateOrConnectWithoutSchedule_leadsInput
+    upsert?: team_seasonsUpsertWithoutSchedule_leadsInput
+    disconnect?: team_seasonsWhereInput | boolean
+    delete?: team_seasonsWhereInput | boolean
+    connect?: team_seasonsWhereUniqueInput
+    update?: XOR<XOR<team_seasonsUpdateToOneWithWhereWithoutSchedule_leadsInput, team_seasonsUpdateWithoutSchedule_leadsInput>, team_seasonsUncheckedUpdateWithoutSchedule_leadsInput>
+  }
+
+  export type clubsUpdateOneRequiredWithoutSchedule_leadsNestedInput = {
+    create?: XOR<clubsCreateWithoutSchedule_leadsInput, clubsUncheckedCreateWithoutSchedule_leadsInput>
+    connectOrCreate?: clubsCreateOrConnectWithoutSchedule_leadsInput
+    upsert?: clubsUpsertWithoutSchedule_leadsInput
+    connect?: clubsWhereUniqueInput
+    update?: XOR<XOR<clubsUpdateToOneWithWhereWithoutSchedule_leadsInput, clubsUpdateWithoutSchedule_leadsInput>, clubsUncheckedUpdateWithoutSchedule_leadsInput>
+  }
+
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[]
@@ -76237,6 +85477,8 @@ export namespace Prisma {
     club_staff?: club_staffCreateNestedManyWithoutClubsInput
     teams?: teamsCreateNestedManyWithoutClubsInput
     custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsUncheckedCreateWithoutAddressesInput = {
@@ -76254,6 +85496,8 @@ export namespace Prisma {
     club_staff?: club_staffUncheckedCreateNestedManyWithoutClubsInput
     teams?: teamsUncheckedCreateNestedManyWithoutClubsInput
     custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsUncheckedCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsCreateOrConnectWithoutAddressesInput = {
@@ -76387,6 +85631,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutAge_groupsInput = {
@@ -76418,6 +85665,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutAge_groupsInput = {
@@ -76546,6 +85796,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutClub_staffInput = {
@@ -76585,6 +85836,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutClub_staffInput = {
@@ -76606,6 +85858,8 @@ export namespace Prisma {
     addresses?: addressesCreateNestedOneWithoutClubsInput
     teams?: teamsCreateNestedManyWithoutClubsInput
     custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsUncheckedCreateWithoutClub_staffInput = {
@@ -76623,6 +85877,8 @@ export namespace Prisma {
     location_id?: number | null
     teams?: teamsUncheckedCreateNestedManyWithoutClubsInput
     custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsUncheckedCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsCreateOrConnectWithoutClub_staffInput = {
@@ -76677,6 +85933,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutClub_staffInput = {
@@ -76716,6 +85973,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type clubsUpsertWithoutClub_staffInput = {
@@ -76743,6 +86001,8 @@ export namespace Prisma {
     addresses?: addressesUpdateOneWithoutClubsNestedInput
     teams?: teamsUpdateManyWithoutClubsNestedInput
     custom_field_definitions?: custom_field_definitionsUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type clubsUncheckedUpdateWithoutClub_staffInput = {
@@ -76760,6 +86020,8 @@ export namespace Prisma {
     location_id?: NullableIntFieldUpdateOperationsInput | number | null
     teams?: teamsUncheckedUpdateManyWithoutClubsNestedInput
     custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUncheckedUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type club_staffCreateWithoutClubsInput = {
@@ -76907,6 +86169,78 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type uniform_kitsCreateWithoutClubsInput = {
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_jerseys?: uniform_jerseysCreateNestedManyWithoutUniform_kitsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutUniform_kitsInput
+  }
+
+  export type uniform_kitsUncheckedCreateWithoutClubsInput = {
+    id?: number
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_jerseys?: uniform_jerseysUncheckedCreateNestedManyWithoutUniform_kitsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutUniform_kitsInput
+  }
+
+  export type uniform_kitsCreateOrConnectWithoutClubsInput = {
+    where: uniform_kitsWhereUniqueInput
+    create: XOR<uniform_kitsCreateWithoutClubsInput, uniform_kitsUncheckedCreateWithoutClubsInput>
+  }
+
+  export type uniform_kitsCreateManyClubsInputEnvelope = {
+    data: uniform_kitsCreateManyClubsInput | uniform_kitsCreateManyClubsInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type schedule_leadsCreateWithoutOpponent_clubInput = {
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    seasons: seasonsCreateNestedOneWithoutSchedule_leadsInput
+    team_seasons?: team_seasonsCreateNestedOneWithoutSchedule_leadsInput
+  }
+
+  export type schedule_leadsUncheckedCreateWithoutOpponent_clubInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type schedule_leadsCreateOrConnectWithoutOpponent_clubInput = {
+    where: schedule_leadsWhereUniqueInput
+    create: XOR<schedule_leadsCreateWithoutOpponent_clubInput, schedule_leadsUncheckedCreateWithoutOpponent_clubInput>
+  }
+
+  export type schedule_leadsCreateManyOpponent_clubInputEnvelope = {
+    data: schedule_leadsCreateManyOpponent_clubInput | schedule_leadsCreateManyOpponent_clubInput[]
+    skipDuplicates?: boolean
+  }
+
   export type club_staffUpsertWithWhereUniqueWithoutClubsInput = {
     where: club_staffWhereUniqueInput
     update: XOR<club_staffUpdateWithoutClubsInput, club_staffUncheckedUpdateWithoutClubsInput>
@@ -77043,6 +86377,71 @@ export namespace Prisma {
     action_label?: StringNullableFilter<"custom_field_definitions"> | string | null
     created_at?: DateTimeNullableFilter<"custom_field_definitions"> | Date | string | null
     modified_at?: DateTimeNullableFilter<"custom_field_definitions"> | Date | string | null
+  }
+
+  export type uniform_kitsUpsertWithWhereUniqueWithoutClubsInput = {
+    where: uniform_kitsWhereUniqueInput
+    update: XOR<uniform_kitsUpdateWithoutClubsInput, uniform_kitsUncheckedUpdateWithoutClubsInput>
+    create: XOR<uniform_kitsCreateWithoutClubsInput, uniform_kitsUncheckedCreateWithoutClubsInput>
+  }
+
+  export type uniform_kitsUpdateWithWhereUniqueWithoutClubsInput = {
+    where: uniform_kitsWhereUniqueInput
+    data: XOR<uniform_kitsUpdateWithoutClubsInput, uniform_kitsUncheckedUpdateWithoutClubsInput>
+  }
+
+  export type uniform_kitsUpdateManyWithWhereWithoutClubsInput = {
+    where: uniform_kitsScalarWhereInput
+    data: XOR<uniform_kitsUpdateManyMutationInput, uniform_kitsUncheckedUpdateManyWithoutClubsInput>
+  }
+
+  export type uniform_kitsScalarWhereInput = {
+    AND?: uniform_kitsScalarWhereInput | uniform_kitsScalarWhereInput[]
+    OR?: uniform_kitsScalarWhereInput[]
+    NOT?: uniform_kitsScalarWhereInput | uniform_kitsScalarWhereInput[]
+    id?: IntFilter<"uniform_kits"> | number
+    club_id?: IntNullableFilter<"uniform_kits"> | number | null
+    type?: StringFilter<"uniform_kits"> | string
+    brand?: StringNullableFilter<"uniform_kits"> | string | null
+    style?: StringNullableFilter<"uniform_kits"> | string | null
+    color?: StringNullableFilter<"uniform_kits"> | string | null
+    year?: IntNullableFilter<"uniform_kits"> | number | null
+    is_active?: BoolFilter<"uniform_kits"> | boolean
+    created_at?: DateTimeNullableFilter<"uniform_kits"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_kits"> | Date | string | null
+  }
+
+  export type schedule_leadsUpsertWithWhereUniqueWithoutOpponent_clubInput = {
+    where: schedule_leadsWhereUniqueInput
+    update: XOR<schedule_leadsUpdateWithoutOpponent_clubInput, schedule_leadsUncheckedUpdateWithoutOpponent_clubInput>
+    create: XOR<schedule_leadsCreateWithoutOpponent_clubInput, schedule_leadsUncheckedCreateWithoutOpponent_clubInput>
+  }
+
+  export type schedule_leadsUpdateWithWhereUniqueWithoutOpponent_clubInput = {
+    where: schedule_leadsWhereUniqueInput
+    data: XOR<schedule_leadsUpdateWithoutOpponent_clubInput, schedule_leadsUncheckedUpdateWithoutOpponent_clubInput>
+  }
+
+  export type schedule_leadsUpdateManyWithWhereWithoutOpponent_clubInput = {
+    where: schedule_leadsScalarWhereInput
+    data: XOR<schedule_leadsUpdateManyMutationInput, schedule_leadsUncheckedUpdateManyWithoutOpponent_clubInput>
+  }
+
+  export type schedule_leadsScalarWhereInput = {
+    AND?: schedule_leadsScalarWhereInput | schedule_leadsScalarWhereInput[]
+    OR?: schedule_leadsScalarWhereInput[]
+    NOT?: schedule_leadsScalarWhereInput | schedule_leadsScalarWhereInput[]
+    id?: IntFilter<"schedule_leads"> | number
+    season_id?: IntFilter<"schedule_leads"> | number
+    team_season_id?: IntNullableFilter<"schedule_leads"> | number | null
+    opponent_club_id?: IntFilter<"schedule_leads"> | number
+    likelihood?: StringFilter<"schedule_leads"> | string
+    status?: StringFilter<"schedule_leads"> | string
+    preferred_home_away?: StringNullableFilter<"schedule_leads"> | string | null
+    preferred_date?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
+    notes?: StringNullableFilter<"schedule_leads"> | string | null
+    created_at?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"schedule_leads"> | Date | string | null
   }
 
   export type eventsCreateWithoutEvent_typesInput = {
@@ -77200,6 +86599,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutEventsInput = {
@@ -77231,6 +86633,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutEventsInput = {
@@ -77403,6 +86808,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutEventsInput = {
@@ -77434,6 +86842,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type player_unavailabilityUpsertWithWhereUniqueWithoutEventsInput = {
@@ -77612,6 +87023,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutGame_events_disciplineInput = {
@@ -77643,6 +87057,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutGame_events_disciplineInput = {
@@ -77785,6 +87202,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutGame_events_disciplineInput = {
@@ -77816,6 +87236,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type player_gamesCreateWithoutGame_events_goals_game_events_goals_assist_player_game_idToplayer_gamesInput = {
@@ -78030,6 +87453,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutGame_events_goalsInput = {
@@ -78061,6 +87487,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutGame_events_goalsInput = {
@@ -78360,6 +87789,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutGame_events_goalsInput = {
@@ -78391,6 +87823,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type game_events_penaltiesUpsertWithWhereUniqueWithoutGame_events_goalsInput = {
@@ -79046,6 +88481,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutGame_events_penaltiesInput = {
@@ -79077,6 +88515,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutGame_events_penaltiesInput = {
@@ -79393,6 +88834,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutGame_events_penaltiesInput = {
@@ -79424,6 +88868,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type gamesCreateWithoutGame_events_player_actionsInput = {
@@ -79788,6 +89235,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutGame_events_teamInput = {
@@ -79819,6 +89269,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutGame_events_teamInput = {
@@ -79945,6 +89398,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutGame_events_teamInput = {
@@ -79976,6 +89432,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type league_node_seasonsCreateWithoutGame_league_nodesInput = {
@@ -81233,6 +90692,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutGames_games_away_team_season_idToteam_seasonsInput = {
@@ -81264,6 +90726,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutGames_games_away_team_season_idToteam_seasonsInput = {
@@ -81299,6 +90764,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutGames_games_home_team_season_idToteam_seasonsInput = {
@@ -81330,6 +90798,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutGames_games_home_team_season_idToteam_seasonsInput = {
@@ -81374,6 +90845,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsCreateNestedManyWithoutSeasonsInput
     awards?: awardsCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsUncheckedCreateWithoutGamesInput = {
@@ -81388,6 +90862,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsUncheckedCreateNestedManyWithoutSeasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsCreateOrConnectWithoutGamesInput = {
@@ -81774,6 +91251,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutGames_games_away_team_season_idToteam_seasonsInput = {
@@ -81805,6 +91285,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUpsertWithoutGames_games_home_team_season_idToteam_seasonsInput = {
@@ -81846,6 +91329,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutGames_games_home_team_season_idToteam_seasonsInput = {
@@ -81877,6 +91363,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type locationsUpsertWithoutGamesInput = {
@@ -81933,6 +91422,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutSeasonsNestedInput
   }
 
   export type seasonsUncheckedUpdateWithoutGamesInput = {
@@ -81947,6 +91439,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUncheckedUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput
   }
 
   export type locations_sublocationsUpsertWithoutGamesInput = {
@@ -82440,6 +91935,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsCreateNestedManyWithoutSeasonsInput
     awards?: awardsCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsUncheckedCreateWithoutLeague_node_seasonsInput = {
@@ -82454,6 +91952,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsUncheckedCreateNestedManyWithoutSeasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsCreateOrConnectWithoutLeague_node_seasonsInput = {
@@ -82572,6 +92073,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutSeasonsNestedInput
   }
 
   export type seasonsUncheckedUpdateWithoutLeague_node_seasonsInput = {
@@ -82586,6 +92090,9 @@ export namespace Prisma {
     team_seasons?: team_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUncheckedUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput
   }
 
   export type team_league_enrollmentsUpsertWithWhereUniqueWithoutLeague_node_seasonsInput = {
@@ -83780,6 +93287,7 @@ export namespace Prisma {
     joined_date?: Date | string | null
     left_date?: Date | string | null
     team_seasons: team_seasonsCreateNestedOneWithoutPlayer_teamsInput
+    uniform_player_assignments?: uniform_player_assignmentsCreateNestedManyWithoutPlayer_teamsInput
   }
 
   export type player_teamsUncheckedCreateWithoutPeopleInput = {
@@ -83802,6 +93310,7 @@ export namespace Prisma {
     is_active?: boolean | null
     joined_date?: Date | string | null
     left_date?: Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedCreateNestedManyWithoutPlayer_teamsInput
   }
 
   export type player_teamsCreateOrConnectWithoutPeopleInput = {
@@ -84207,6 +93716,47 @@ export namespace Prisma {
 
   export type awardsCreateManyPeopleInputEnvelope = {
     data: awardsCreateManyPeopleInput | awardsCreateManyPeopleInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type player_season_lettersCreateWithoutPeopleInput = {
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    seasons: seasonsCreateNestedOneWithoutPlayer_season_lettersInput
+    team_seasons?: team_seasonsCreateNestedOneWithoutPlayer_season_lettersInput
+  }
+
+  export type player_season_lettersUncheckedCreateWithoutPeopleInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type player_season_lettersCreateOrConnectWithoutPeopleInput = {
+    where: player_season_lettersWhereUniqueInput
+    create: XOR<player_season_lettersCreateWithoutPeopleInput, player_season_lettersUncheckedCreateWithoutPeopleInput>
+  }
+
+  export type player_season_lettersCreateManyPeopleInputEnvelope = {
+    data: player_season_lettersCreateManyPeopleInput | player_season_lettersCreateManyPeopleInput[]
     skipDuplicates?: boolean
   }
 
@@ -84663,6 +94213,42 @@ export namespace Prisma {
     data: XOR<awardsUpdateManyMutationInput, awardsUncheckedUpdateManyWithoutPeopleInput>
   }
 
+  export type player_season_lettersUpsertWithWhereUniqueWithoutPeopleInput = {
+    where: player_season_lettersWhereUniqueInput
+    update: XOR<player_season_lettersUpdateWithoutPeopleInput, player_season_lettersUncheckedUpdateWithoutPeopleInput>
+    create: XOR<player_season_lettersCreateWithoutPeopleInput, player_season_lettersUncheckedCreateWithoutPeopleInput>
+  }
+
+  export type player_season_lettersUpdateWithWhereUniqueWithoutPeopleInput = {
+    where: player_season_lettersWhereUniqueInput
+    data: XOR<player_season_lettersUpdateWithoutPeopleInput, player_season_lettersUncheckedUpdateWithoutPeopleInput>
+  }
+
+  export type player_season_lettersUpdateManyWithWhereWithoutPeopleInput = {
+    where: player_season_lettersScalarWhereInput
+    data: XOR<player_season_lettersUpdateManyMutationInput, player_season_lettersUncheckedUpdateManyWithoutPeopleInput>
+  }
+
+  export type player_season_lettersScalarWhereInput = {
+    AND?: player_season_lettersScalarWhereInput | player_season_lettersScalarWhereInput[]
+    OR?: player_season_lettersScalarWhereInput[]
+    NOT?: player_season_lettersScalarWhereInput | player_season_lettersScalarWhereInput[]
+    id?: IntFilter<"player_season_letters"> | number
+    player_id?: IntFilter<"player_season_letters"> | number
+    season_id?: IntFilter<"player_season_letters"> | number
+    team_season_id?: IntNullableFilter<"player_season_letters"> | number | null
+    varsity_letter?: BoolFilter<"player_season_letters"> | boolean
+    number_patch?: IntNullableFilter<"player_season_letters"> | number | null
+    certificate?: BoolFilter<"player_season_letters"> | boolean
+    bar?: BoolFilter<"player_season_letters"> | boolean
+    ball?: BoolFilter<"player_season_letters"> | boolean
+    number_patch_needed?: BoolFilter<"player_season_letters"> | boolean
+    varsity_patch_needed?: BoolFilter<"player_season_letters"> | boolean
+    notes?: StringNullableFilter<"player_season_letters"> | string | null
+    created_at?: DateTimeNullableFilter<"player_season_letters"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"player_season_letters"> | Date | string | null
+  }
+
   export type game_events_disciplineCreateWithoutPlayer_gamesInput = {
     opponent_jersey_number?: number | null
     card_type: $Enums.game_events_discipline_card_type
@@ -85026,6 +94612,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_gamesInput = {
@@ -85065,6 +94652,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_gamesInput = {
@@ -85100,6 +94688,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutPlayer_gamesInput = {
@@ -85131,6 +94722,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutPlayer_gamesInput = {
@@ -85403,6 +94997,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_gamesInput = {
@@ -85442,6 +95037,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsUpsertWithoutPlayer_gamesInput = {
@@ -85483,6 +95079,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutPlayer_gamesInput = {
@@ -85514,6 +95113,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type gamesUpsertWithoutPlayer_gamesInput = {
@@ -85632,6 +95234,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_relationships_player_relationships_related_person_idTopeopleInput = {
@@ -85671,6 +95274,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_relationships_player_relationships_related_person_idTopeopleInput = {
@@ -85714,6 +95318,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_relationships_player_relationships_player_idTopeopleInput = {
@@ -85753,6 +95358,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_relationships_player_relationships_player_idTopeopleInput = {
@@ -85807,6 +95413,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_relationships_player_relationships_related_person_idTopeopleInput = {
@@ -85846,6 +95453,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUpsertWithoutPlayer_relationships_player_relationships_player_idTopeopleInput = {
@@ -85895,6 +95503,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_relationships_player_relationships_player_idTopeopleInput = {
@@ -85934,6 +95543,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleCreateWithoutPlayer_teamsInput = {
@@ -85972,6 +95582,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_teamsInput = {
@@ -86011,6 +95622,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_teamsInput = {
@@ -86046,6 +95658,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutPlayer_teamsInput = {
@@ -86077,11 +95692,41 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutPlayer_teamsInput = {
     where: team_seasonsWhereUniqueInput
     create: XOR<team_seasonsCreateWithoutPlayer_teamsInput, team_seasonsUncheckedCreateWithoutPlayer_teamsInput>
+  }
+
+  export type uniform_player_assignmentsCreateWithoutPlayer_teamsInput = {
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_jerseys: uniform_jerseysCreateNestedOneWithoutUniform_player_assignmentsInput
+  }
+
+  export type uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput = {
+    id?: number
+    uniform_jersey_id: number
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_player_assignmentsCreateOrConnectWithoutPlayer_teamsInput = {
+    where: uniform_player_assignmentsWhereUniqueInput
+    create: XOR<uniform_player_assignmentsCreateWithoutPlayer_teamsInput, uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput>
+  }
+
+  export type uniform_player_assignmentsCreateManyPlayer_teamsInputEnvelope = {
+    data: uniform_player_assignmentsCreateManyPlayer_teamsInput | uniform_player_assignmentsCreateManyPlayer_teamsInput[]
+    skipDuplicates?: boolean
   }
 
   export type peopleUpsertWithoutPlayer_teamsInput = {
@@ -86131,6 +95776,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_teamsInput = {
@@ -86170,6 +95816,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsUpsertWithoutPlayer_teamsInput = {
@@ -86211,6 +95858,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutPlayer_teamsInput = {
@@ -86242,6 +95892,38 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+  }
+
+  export type uniform_player_assignmentsUpsertWithWhereUniqueWithoutPlayer_teamsInput = {
+    where: uniform_player_assignmentsWhereUniqueInput
+    update: XOR<uniform_player_assignmentsUpdateWithoutPlayer_teamsInput, uniform_player_assignmentsUncheckedUpdateWithoutPlayer_teamsInput>
+    create: XOR<uniform_player_assignmentsCreateWithoutPlayer_teamsInput, uniform_player_assignmentsUncheckedCreateWithoutPlayer_teamsInput>
+  }
+
+  export type uniform_player_assignmentsUpdateWithWhereUniqueWithoutPlayer_teamsInput = {
+    where: uniform_player_assignmentsWhereUniqueInput
+    data: XOR<uniform_player_assignmentsUpdateWithoutPlayer_teamsInput, uniform_player_assignmentsUncheckedUpdateWithoutPlayer_teamsInput>
+  }
+
+  export type uniform_player_assignmentsUpdateManyWithWhereWithoutPlayer_teamsInput = {
+    where: uniform_player_assignmentsScalarWhereInput
+    data: XOR<uniform_player_assignmentsUpdateManyMutationInput, uniform_player_assignmentsUncheckedUpdateManyWithoutPlayer_teamsInput>
+  }
+
+  export type uniform_player_assignmentsScalarWhereInput = {
+    AND?: uniform_player_assignmentsScalarWhereInput | uniform_player_assignmentsScalarWhereInput[]
+    OR?: uniform_player_assignmentsScalarWhereInput[]
+    NOT?: uniform_player_assignmentsScalarWhereInput | uniform_player_assignmentsScalarWhereInput[]
+    id?: IntFilter<"uniform_player_assignments"> | number
+    player_team_id?: IntFilter<"uniform_player_assignments"> | number
+    uniform_jersey_id?: IntFilter<"uniform_player_assignments"> | number
+    assignment_type?: StringFilter<"uniform_player_assignments"> | string
+    returned?: BoolFilter<"uniform_player_assignments"> | boolean
+    created_at?: DateTimeNullableFilter<"uniform_player_assignments"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_player_assignments"> | Date | string | null
   }
 
   export type gamesCreateWithoutSeasonsInput = {
@@ -86386,6 +96068,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutSeasonsInput = {
@@ -86417,6 +96102,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutSeasonsInput = {
@@ -86492,6 +96180,109 @@ export namespace Prisma {
 
   export type awardsCreateManySeasonsInputEnvelope = {
     data: awardsCreateManySeasonsInput | awardsCreateManySeasonsInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type player_season_lettersCreateWithoutSeasonsInput = {
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    people: peopleCreateNestedOneWithoutPlayer_season_lettersInput
+    team_seasons?: team_seasonsCreateNestedOneWithoutPlayer_season_lettersInput
+  }
+
+  export type player_season_lettersUncheckedCreateWithoutSeasonsInput = {
+    id?: number
+    player_id: number
+    team_season_id?: number | null
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type player_season_lettersCreateOrConnectWithoutSeasonsInput = {
+    where: player_season_lettersWhereUniqueInput
+    create: XOR<player_season_lettersCreateWithoutSeasonsInput, player_season_lettersUncheckedCreateWithoutSeasonsInput>
+  }
+
+  export type player_season_lettersCreateManySeasonsInputEnvelope = {
+    data: player_season_lettersCreateManySeasonsInput | player_season_lettersCreateManySeasonsInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type uniform_season_kitsCreateWithoutSeasonsInput = {
+    squad_level: string
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    team_seasons?: team_seasonsCreateNestedOneWithoutUniform_season_kitsInput
+    uniform_kits: uniform_kitsCreateNestedOneWithoutUniform_season_kitsInput
+  }
+
+  export type uniform_season_kitsUncheckedCreateWithoutSeasonsInput = {
+    id?: number
+    team_season_id?: number | null
+    squad_level: string
+    uniform_kit_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_season_kitsCreateOrConnectWithoutSeasonsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    create: XOR<uniform_season_kitsCreateWithoutSeasonsInput, uniform_season_kitsUncheckedCreateWithoutSeasonsInput>
+  }
+
+  export type uniform_season_kitsCreateManySeasonsInputEnvelope = {
+    data: uniform_season_kitsCreateManySeasonsInput | uniform_season_kitsCreateManySeasonsInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type schedule_leadsCreateWithoutSeasonsInput = {
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    team_seasons?: team_seasonsCreateNestedOneWithoutSchedule_leadsInput
+    opponent_club: clubsCreateNestedOneWithoutSchedule_leadsInput
+  }
+
+  export type schedule_leadsUncheckedCreateWithoutSeasonsInput = {
+    id?: number
+    team_season_id?: number | null
+    opponent_club_id: number
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type schedule_leadsCreateOrConnectWithoutSeasonsInput = {
+    where: schedule_leadsWhereUniqueInput
+    create: XOR<schedule_leadsCreateWithoutSeasonsInput, schedule_leadsUncheckedCreateWithoutSeasonsInput>
+  }
+
+  export type schedule_leadsCreateManySeasonsInputEnvelope = {
+    data: schedule_leadsCreateManySeasonsInput | schedule_leadsCreateManySeasonsInput[]
     skipDuplicates?: boolean
   }
 
@@ -86575,6 +96366,67 @@ export namespace Prisma {
     data: XOR<awardsUpdateManyMutationInput, awardsUncheckedUpdateManyWithoutSeasonsInput>
   }
 
+  export type player_season_lettersUpsertWithWhereUniqueWithoutSeasonsInput = {
+    where: player_season_lettersWhereUniqueInput
+    update: XOR<player_season_lettersUpdateWithoutSeasonsInput, player_season_lettersUncheckedUpdateWithoutSeasonsInput>
+    create: XOR<player_season_lettersCreateWithoutSeasonsInput, player_season_lettersUncheckedCreateWithoutSeasonsInput>
+  }
+
+  export type player_season_lettersUpdateWithWhereUniqueWithoutSeasonsInput = {
+    where: player_season_lettersWhereUniqueInput
+    data: XOR<player_season_lettersUpdateWithoutSeasonsInput, player_season_lettersUncheckedUpdateWithoutSeasonsInput>
+  }
+
+  export type player_season_lettersUpdateManyWithWhereWithoutSeasonsInput = {
+    where: player_season_lettersScalarWhereInput
+    data: XOR<player_season_lettersUpdateManyMutationInput, player_season_lettersUncheckedUpdateManyWithoutSeasonsInput>
+  }
+
+  export type uniform_season_kitsUpsertWithWhereUniqueWithoutSeasonsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    update: XOR<uniform_season_kitsUpdateWithoutSeasonsInput, uniform_season_kitsUncheckedUpdateWithoutSeasonsInput>
+    create: XOR<uniform_season_kitsCreateWithoutSeasonsInput, uniform_season_kitsUncheckedCreateWithoutSeasonsInput>
+  }
+
+  export type uniform_season_kitsUpdateWithWhereUniqueWithoutSeasonsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    data: XOR<uniform_season_kitsUpdateWithoutSeasonsInput, uniform_season_kitsUncheckedUpdateWithoutSeasonsInput>
+  }
+
+  export type uniform_season_kitsUpdateManyWithWhereWithoutSeasonsInput = {
+    where: uniform_season_kitsScalarWhereInput
+    data: XOR<uniform_season_kitsUpdateManyMutationInput, uniform_season_kitsUncheckedUpdateManyWithoutSeasonsInput>
+  }
+
+  export type uniform_season_kitsScalarWhereInput = {
+    AND?: uniform_season_kitsScalarWhereInput | uniform_season_kitsScalarWhereInput[]
+    OR?: uniform_season_kitsScalarWhereInput[]
+    NOT?: uniform_season_kitsScalarWhereInput | uniform_season_kitsScalarWhereInput[]
+    id?: IntFilter<"uniform_season_kits"> | number
+    season_id?: IntFilter<"uniform_season_kits"> | number
+    team_season_id?: IntNullableFilter<"uniform_season_kits"> | number | null
+    squad_level?: StringFilter<"uniform_season_kits"> | string
+    uniform_kit_id?: IntFilter<"uniform_season_kits"> | number
+    created_at?: DateTimeNullableFilter<"uniform_season_kits"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_season_kits"> | Date | string | null
+  }
+
+  export type schedule_leadsUpsertWithWhereUniqueWithoutSeasonsInput = {
+    where: schedule_leadsWhereUniqueInput
+    update: XOR<schedule_leadsUpdateWithoutSeasonsInput, schedule_leadsUncheckedUpdateWithoutSeasonsInput>
+    create: XOR<schedule_leadsCreateWithoutSeasonsInput, schedule_leadsUncheckedCreateWithoutSeasonsInput>
+  }
+
+  export type schedule_leadsUpdateWithWhereUniqueWithoutSeasonsInput = {
+    where: schedule_leadsWhereUniqueInput
+    data: XOR<schedule_leadsUpdateWithoutSeasonsInput, schedule_leadsUncheckedUpdateWithoutSeasonsInput>
+  }
+
+  export type schedule_leadsUpdateManyWithWhereWithoutSeasonsInput = {
+    where: schedule_leadsScalarWhereInput
+    data: XOR<schedule_leadsUpdateManyMutationInput, schedule_leadsUncheckedUpdateManyWithoutSeasonsInput>
+  }
+
   export type seasonsCreateWithoutSeason_age_groupsInput = {
     season_name: string
     start_date: Date | string
@@ -86586,6 +96438,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutSeasonsInput
     team_seasons?: team_seasonsCreateNestedManyWithoutSeasonsInput
     awards?: awardsCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsUncheckedCreateWithoutSeason_age_groupsInput = {
@@ -86600,6 +96455,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
     team_seasons?: team_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsCreateOrConnectWithoutSeason_age_groupsInput = {
@@ -86657,6 +96515,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUpdateManyWithoutSeasonsNestedInput
     team_seasons?: team_seasonsUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutSeasonsNestedInput
   }
 
   export type seasonsUncheckedUpdateWithoutSeason_age_groupsInput = {
@@ -86671,6 +96532,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
     team_seasons?: team_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput
   }
 
   export type age_groupsUpsertWithoutSeason_age_groupsInput = {
@@ -86735,6 +96599,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutTeam_league_enrollmentsInput = {
@@ -86766,6 +96633,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutTeam_league_enrollmentsInput = {
@@ -86842,6 +96712,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutTeam_league_enrollmentsInput = {
@@ -86873,6 +96746,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type league_node_seasonsUpsertWithoutTeam_league_enrollmentsInput = {
@@ -87330,6 +97206,7 @@ export namespace Prisma {
     joined_date?: Date | string | null
     left_date?: Date | string | null
     people: peopleCreateNestedOneWithoutPlayer_teamsInput
+    uniform_player_assignments?: uniform_player_assignmentsCreateNestedManyWithoutPlayer_teamsInput
   }
 
   export type player_teamsUncheckedCreateWithoutTeam_seasonsInput = {
@@ -87352,6 +97229,7 @@ export namespace Prisma {
     is_active?: boolean | null
     joined_date?: Date | string | null
     left_date?: Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedCreateNestedManyWithoutPlayer_teamsInput
   }
 
   export type player_teamsCreateOrConnectWithoutTeam_seasonsInput = {
@@ -87454,6 +97332,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsCreateNestedManyWithoutSeasonsInput
     awards?: awardsCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsUncheckedCreateWithoutTeam_seasonsInput = {
@@ -87468,6 +97349,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsUncheckedCreateNestedManyWithoutSeasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsCreateOrConnectWithoutTeam_seasonsInput = {
@@ -87833,6 +97717,109 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type player_season_lettersCreateWithoutTeam_seasonsInput = {
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    people: peopleCreateNestedOneWithoutPlayer_season_lettersInput
+    seasons: seasonsCreateNestedOneWithoutPlayer_season_lettersInput
+  }
+
+  export type player_season_lettersUncheckedCreateWithoutTeam_seasonsInput = {
+    id?: number
+    player_id: number
+    season_id: number
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type player_season_lettersCreateOrConnectWithoutTeam_seasonsInput = {
+    where: player_season_lettersWhereUniqueInput
+    create: XOR<player_season_lettersCreateWithoutTeam_seasonsInput, player_season_lettersUncheckedCreateWithoutTeam_seasonsInput>
+  }
+
+  export type player_season_lettersCreateManyTeam_seasonsInputEnvelope = {
+    data: player_season_lettersCreateManyTeam_seasonsInput | player_season_lettersCreateManyTeam_seasonsInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type uniform_season_kitsCreateWithoutTeam_seasonsInput = {
+    squad_level: string
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    seasons: seasonsCreateNestedOneWithoutUniform_season_kitsInput
+    uniform_kits: uniform_kitsCreateNestedOneWithoutUniform_season_kitsInput
+  }
+
+  export type uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput = {
+    id?: number
+    season_id: number
+    squad_level: string
+    uniform_kit_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_season_kitsCreateOrConnectWithoutTeam_seasonsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    create: XOR<uniform_season_kitsCreateWithoutTeam_seasonsInput, uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput>
+  }
+
+  export type uniform_season_kitsCreateManyTeam_seasonsInputEnvelope = {
+    data: uniform_season_kitsCreateManyTeam_seasonsInput | uniform_season_kitsCreateManyTeam_seasonsInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type schedule_leadsCreateWithoutTeam_seasonsInput = {
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    seasons: seasonsCreateNestedOneWithoutSchedule_leadsInput
+    opponent_club: clubsCreateNestedOneWithoutSchedule_leadsInput
+  }
+
+  export type schedule_leadsUncheckedCreateWithoutTeam_seasonsInput = {
+    id?: number
+    season_id: number
+    opponent_club_id: number
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type schedule_leadsCreateOrConnectWithoutTeam_seasonsInput = {
+    where: schedule_leadsWhereUniqueInput
+    create: XOR<schedule_leadsCreateWithoutTeam_seasonsInput, schedule_leadsUncheckedCreateWithoutTeam_seasonsInput>
+  }
+
+  export type schedule_leadsCreateManyTeam_seasonsInputEnvelope = {
+    data: schedule_leadsCreateManyTeam_seasonsInput | schedule_leadsCreateManyTeam_seasonsInput[]
+    skipDuplicates?: boolean
+  }
+
   export type eventsUpsertWithWhereUniqueWithoutTeam_seasonsInput = {
     where: eventsWhereUniqueInput
     update: XOR<eventsUpdateWithoutTeam_seasonsInput, eventsUncheckedUpdateWithoutTeam_seasonsInput>
@@ -88079,6 +98066,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutSeasonsNestedInput
   }
 
   export type seasonsUncheckedUpdateWithoutTeam_seasonsInput = {
@@ -88093,6 +98083,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUncheckedUpdateManyWithoutSeasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput
   }
 
   export type team_staffUpsertWithWhereUniqueWithoutTeam_seasonsInput = {
@@ -88311,6 +98304,54 @@ export namespace Prisma {
     data: XOR<awardsUpdateManyMutationInput, awardsUncheckedUpdateManyWithoutTeam_seasonsInput>
   }
 
+  export type player_season_lettersUpsertWithWhereUniqueWithoutTeam_seasonsInput = {
+    where: player_season_lettersWhereUniqueInput
+    update: XOR<player_season_lettersUpdateWithoutTeam_seasonsInput, player_season_lettersUncheckedUpdateWithoutTeam_seasonsInput>
+    create: XOR<player_season_lettersCreateWithoutTeam_seasonsInput, player_season_lettersUncheckedCreateWithoutTeam_seasonsInput>
+  }
+
+  export type player_season_lettersUpdateWithWhereUniqueWithoutTeam_seasonsInput = {
+    where: player_season_lettersWhereUniqueInput
+    data: XOR<player_season_lettersUpdateWithoutTeam_seasonsInput, player_season_lettersUncheckedUpdateWithoutTeam_seasonsInput>
+  }
+
+  export type player_season_lettersUpdateManyWithWhereWithoutTeam_seasonsInput = {
+    where: player_season_lettersScalarWhereInput
+    data: XOR<player_season_lettersUpdateManyMutationInput, player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsInput>
+  }
+
+  export type uniform_season_kitsUpsertWithWhereUniqueWithoutTeam_seasonsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    update: XOR<uniform_season_kitsUpdateWithoutTeam_seasonsInput, uniform_season_kitsUncheckedUpdateWithoutTeam_seasonsInput>
+    create: XOR<uniform_season_kitsCreateWithoutTeam_seasonsInput, uniform_season_kitsUncheckedCreateWithoutTeam_seasonsInput>
+  }
+
+  export type uniform_season_kitsUpdateWithWhereUniqueWithoutTeam_seasonsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    data: XOR<uniform_season_kitsUpdateWithoutTeam_seasonsInput, uniform_season_kitsUncheckedUpdateWithoutTeam_seasonsInput>
+  }
+
+  export type uniform_season_kitsUpdateManyWithWhereWithoutTeam_seasonsInput = {
+    where: uniform_season_kitsScalarWhereInput
+    data: XOR<uniform_season_kitsUpdateManyMutationInput, uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsInput>
+  }
+
+  export type schedule_leadsUpsertWithWhereUniqueWithoutTeam_seasonsInput = {
+    where: schedule_leadsWhereUniqueInput
+    update: XOR<schedule_leadsUpdateWithoutTeam_seasonsInput, schedule_leadsUncheckedUpdateWithoutTeam_seasonsInput>
+    create: XOR<schedule_leadsCreateWithoutTeam_seasonsInput, schedule_leadsUncheckedCreateWithoutTeam_seasonsInput>
+  }
+
+  export type schedule_leadsUpdateWithWhereUniqueWithoutTeam_seasonsInput = {
+    where: schedule_leadsWhereUniqueInput
+    data: XOR<schedule_leadsUpdateWithoutTeam_seasonsInput, schedule_leadsUncheckedUpdateWithoutTeam_seasonsInput>
+  }
+
+  export type schedule_leadsUpdateManyWithWhereWithoutTeam_seasonsInput = {
+    where: schedule_leadsScalarWhereInput
+    data: XOR<schedule_leadsUpdateManyMutationInput, schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsInput>
+  }
+
   export type peopleCreateWithoutTeam_staffInput = {
     created_at?: Date | string | null
     modified_at?: Date | string | null
@@ -88347,6 +98388,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutTeam_staffInput = {
@@ -88386,6 +98428,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutTeam_staffInput = {
@@ -88421,6 +98464,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutTeam_staffInput = {
@@ -88452,6 +98498,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutTeam_staffInput = {
@@ -88506,6 +98555,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutTeam_staffInput = {
@@ -88545,6 +98595,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsUpsertWithoutTeam_staffInput = {
@@ -88586,6 +98637,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutTeam_staffInput = {
@@ -88617,6 +98671,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsCreateWithoutTeamsInput = {
@@ -88647,6 +98704,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutTeamsInput = {
@@ -88678,6 +98738,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutTeamsInput = {
@@ -88704,6 +98767,8 @@ export namespace Prisma {
     club_staff?: club_staffCreateNestedManyWithoutClubsInput
     addresses?: addressesCreateNestedOneWithoutClubsInput
     custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsUncheckedCreateWithoutTeamsInput = {
@@ -88721,6 +98786,8 @@ export namespace Prisma {
     location_id?: number | null
     club_staff?: club_staffUncheckedCreateNestedManyWithoutClubsInput
     custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsUncheckedCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsCreateOrConnectWithoutTeamsInput = {
@@ -88769,6 +98836,8 @@ export namespace Prisma {
     club_staff?: club_staffUpdateManyWithoutClubsNestedInput
     addresses?: addressesUpdateOneWithoutClubsNestedInput
     custom_field_definitions?: custom_field_definitionsUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type clubsUncheckedUpdateWithoutTeamsInput = {
@@ -88786,6 +98855,8 @@ export namespace Prisma {
     location_id?: NullableIntFieldUpdateOperationsInput | number | null
     club_staff?: club_staffUncheckedUpdateManyWithoutClubsNestedInput
     custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUncheckedUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type team_seasonsCreateWithoutUser_favoritesInput = {
@@ -88816,6 +98887,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutUser_favoritesInput = {
@@ -88847,6 +98921,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutUser_favoritesInput = {
@@ -88890,6 +98967,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutUser_favoritesInput = {
@@ -88929,6 +99007,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutUser_favoritesInput = {
@@ -88975,6 +99054,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutUser_favoritesInput = {
@@ -89006,6 +99088,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type peopleUpsertWithoutUser_favoritesInput = {
@@ -89055,6 +99140,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutUser_favoritesInput = {
@@ -89094,6 +99180,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsCreateWithoutUser_preferencesInput = {
@@ -89124,6 +99211,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutUser_preferencesInput = {
@@ -89155,6 +99245,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutUser_preferencesInput = {
@@ -89198,6 +99291,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutUser_preferencesInput = {
@@ -89237,6 +99331,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutUser_preferencesInput = {
@@ -89283,6 +99378,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutUser_preferencesInput = {
@@ -89314,6 +99412,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type peopleUpsertWithoutUser_preferencesInput = {
@@ -89363,6 +99464,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutUser_preferencesInput = {
@@ -89402,6 +99504,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleCreateWithoutUser_team_seasonsInput = {
@@ -89440,6 +99543,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutUser_team_seasonsInput = {
@@ -89479,6 +99583,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutUser_team_seasonsInput = {
@@ -89514,6 +99619,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutUser_team_seasonsInput = {
@@ -89545,6 +99653,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutUser_team_seasonsInput = {
@@ -89599,6 +99710,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutUser_team_seasonsInput = {
@@ -89638,6 +99750,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsUpsertWithoutUser_team_seasonsInput = {
@@ -89679,6 +99792,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutUser_team_seasonsInput = {
@@ -89710,6 +99826,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type peopleCreateWithoutUsersInput = {
@@ -89748,6 +99867,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutUsersInput = {
@@ -89787,6 +99907,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutUsersInput = {
@@ -89841,6 +99962,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutUsersInput = {
@@ -89880,6 +100002,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsCreateWithoutCustom_field_definitionsInput = {
@@ -89910,6 +100033,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutCustom_field_definitionsInput = {
@@ -89941,6 +100067,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutCustom_field_definitionsInput = {
@@ -89962,6 +100091,8 @@ export namespace Prisma {
     club_staff?: club_staffCreateNestedManyWithoutClubsInput
     addresses?: addressesCreateNestedOneWithoutClubsInput
     teams?: teamsCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsUncheckedCreateWithoutCustom_field_definitionsInput = {
@@ -89979,6 +100110,8 @@ export namespace Prisma {
     location_id?: number | null
     club_staff?: club_staffUncheckedCreateNestedManyWithoutClubsInput
     teams?: teamsUncheckedCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsUncheckedCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutOpponent_clubInput
   }
 
   export type clubsCreateOrConnectWithoutCustom_field_definitionsInput = {
@@ -90054,6 +100187,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutCustom_field_definitionsInput = {
@@ -90085,6 +100221,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type clubsUpsertWithoutCustom_field_definitionsInput = {
@@ -90112,6 +100251,8 @@ export namespace Prisma {
     club_staff?: club_staffUpdateManyWithoutClubsNestedInput
     addresses?: addressesUpdateOneWithoutClubsNestedInput
     teams?: teamsUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type clubsUncheckedUpdateWithoutCustom_field_definitionsInput = {
@@ -90129,6 +100270,8 @@ export namespace Prisma {
     location_id?: NullableIntFieldUpdateOperationsInput | number | null
     club_staff?: club_staffUncheckedUpdateManyWithoutClubsNestedInput
     teams?: teamsUncheckedUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUncheckedUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type custom_field_valuesUpsertWithWhereUniqueWithoutCustom_field_definitionsInput = {
@@ -90229,6 +100372,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutCustom_field_valuesInput = {
@@ -90268,6 +100412,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutCustom_field_valuesInput = {
@@ -90303,6 +100448,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutCustom_field_valuesInput = {
@@ -90334,6 +100482,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutCustom_field_valuesInput = {
@@ -90440,6 +100591,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutCustom_field_valuesInput = {
@@ -90479,6 +100631,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsUpsertWithoutCustom_field_valuesInput = {
@@ -90520,6 +100673,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutCustom_field_valuesInput = {
@@ -90551,6 +100707,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsCreateWithoutPerformance_testsInput = {
@@ -90581,6 +100740,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutPerformance_testsInput = {
@@ -90612,6 +100774,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutPerformance_testsInput = {
@@ -90701,6 +100866,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutPerformance_testsInput = {
@@ -90732,6 +100900,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type player_performance_logsUpsertWithWhereUniqueWithoutPerformance_testsInput = {
@@ -90812,6 +100983,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_performance_logsInput = {
@@ -90851,6 +101023,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_performance_logsInput = {
@@ -90937,6 +101110,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_performance_logsInput = {
@@ -90976,6 +101150,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsCreateWithoutTeam_groupsInput = {
@@ -91006,6 +101181,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutTeam_groupsInput = {
@@ -91037,6 +101215,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutTeam_groupsInput = {
@@ -91108,6 +101289,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutTeam_groupsInput = {
@@ -91139,6 +101323,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type player_group_assignmentsUpsertWithWhereUniqueWithoutTeam_groupsInput = {
@@ -91219,6 +101406,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_group_assignmentsInput = {
@@ -91258,6 +101446,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_group_assignmentsInput = {
@@ -91344,6 +101533,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_group_assignmentsInput = {
@@ -91383,6 +101573,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsCreateWithoutPlayer_pairingsInput = {
@@ -91413,6 +101604,9 @@ export namespace Prisma {
     team_groups?: team_groupsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutPlayer_pairingsInput = {
@@ -91444,6 +101638,9 @@ export namespace Prisma {
     team_groups?: team_groupsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutPlayer_pairingsInput = {
@@ -91487,6 +101684,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_pairings_player_pairings_player1_idTopeopleInput = {
@@ -91526,6 +101724,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_pairings_player_pairings_player1_idTopeopleInput = {
@@ -91569,6 +101768,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_pairings_player_pairings_player2_idTopeopleInput = {
@@ -91608,6 +101808,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_pairings_player_pairings_player2_idTopeopleInput = {
@@ -91654,6 +101855,9 @@ export namespace Prisma {
     team_groups?: team_groupsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutPlayer_pairingsInput = {
@@ -91685,6 +101889,9 @@ export namespace Prisma {
     team_groups?: team_groupsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type peopleUpsertWithoutPlayer_pairings_player_pairings_player1_idTopeopleInput = {
@@ -91734,6 +101941,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_pairings_player_pairings_player1_idTopeopleInput = {
@@ -91773,6 +101981,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUpsertWithoutPlayer_pairings_player_pairings_player2_idTopeopleInput = {
@@ -91822,6 +102031,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_pairings_player_pairings_player2_idTopeopleInput = {
@@ -91861,6 +102071,7 @@ export namespace Prisma {
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleCreateWithoutPlayer_unavailabilityInput = {
@@ -91899,6 +102110,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsCreateNestedManyWithoutPeople_player_pairings_player2_idTopeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutPlayer_unavailabilityInput = {
@@ -91938,6 +102150,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUncheckedCreateNestedManyWithoutPeople_player_pairings_player2_idTopeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutPlayer_unavailabilityInput = {
@@ -91973,6 +102186,9 @@ export namespace Prisma {
     team_groups?: team_groupsCreateNestedManyWithoutTeam_seasonsInput
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutPlayer_unavailabilityInput = {
@@ -92004,6 +102220,9 @@ export namespace Prisma {
     team_groups?: team_groupsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutPlayer_unavailabilityInput = {
@@ -92131,6 +102350,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUpdateManyWithoutPeople_player_pairings_player2_idTopeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutPlayer_unavailabilityInput = {
@@ -92170,6 +102390,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUncheckedUpdateManyWithoutPeople_player_pairings_player2_idTopeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsUpsertWithoutPlayer_unavailabilityInput = {
@@ -92211,6 +102432,9 @@ export namespace Prisma {
     team_groups?: team_groupsUpdateManyWithoutTeam_seasonsNestedInput
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutPlayer_unavailabilityInput = {
@@ -92242,6 +102466,9 @@ export namespace Prisma {
     team_groups?: team_groupsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type eventsUpsertWithoutPlayer_unavailabilityInput = {
@@ -92382,6 +102609,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsCreateNestedManyWithoutPeople_player_pairings_player2_idTopeopleInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     awards?: awardsCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutEvent_attendanceInput = {
@@ -92421,6 +102649,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUncheckedCreateNestedManyWithoutPeople_player_pairings_player2_idTopeopleInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutEvent_attendanceInput = {
@@ -92551,6 +102780,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUpdateManyWithoutPeople_player_pairings_player2_idTopeopleNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     awards?: awardsUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutEvent_attendanceInput = {
@@ -92590,6 +102820,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUncheckedUpdateManyWithoutPeople_player_pairings_player2_idTopeopleNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type player_unavailabilityUpsertWithoutEvent_attendanceInput = {
@@ -92664,6 +102895,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsCreateNestedManyWithoutPeople_player_pairings_player2_idTopeopleInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleUncheckedCreateWithoutAwardsInput = {
@@ -92703,6 +102935,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUncheckedCreateNestedManyWithoutPeople_player_pairings_player2_idTopeopleInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
     event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutPeopleInput
   }
 
   export type peopleCreateOrConnectWithoutAwardsInput = {
@@ -92738,6 +102971,9 @@ export namespace Prisma {
     team_groups?: team_groupsCreateNestedManyWithoutTeam_seasonsInput
     player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsUncheckedCreateWithoutAwardsInput = {
@@ -92769,6 +103005,9 @@ export namespace Prisma {
     team_groups?: team_groupsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
     player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
   }
 
   export type team_seasonsCreateOrConnectWithoutAwardsInput = {
@@ -92787,6 +103026,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsCreateNestedManyWithoutSeasonsInput
     team_seasons?: team_seasonsCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsUncheckedCreateWithoutAwardsInput = {
@@ -92801,6 +103043,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
     team_seasons?: team_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
     season_age_groups?: season_age_groupsUncheckedCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput
   }
 
   export type seasonsCreateOrConnectWithoutAwardsInput = {
@@ -92919,6 +103164,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUpdateManyWithoutPeople_player_pairings_player2_idTopeopleNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutPeopleNestedInput
   }
 
   export type peopleUncheckedUpdateWithoutAwardsInput = {
@@ -92958,6 +103204,7 @@ export namespace Prisma {
     player_pairings_player_pairings_player2_idTopeople?: player_pairingsUncheckedUpdateManyWithoutPeople_player_pairings_player2_idTopeopleNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
     event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutPeopleNestedInput
   }
 
   export type team_seasonsUpsertWithoutAwardsInput = {
@@ -92999,6 +103246,9 @@ export namespace Prisma {
     team_groups?: team_groupsUpdateManyWithoutTeam_seasonsNestedInput
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutAwardsInput = {
@@ -93030,6 +103280,9 @@ export namespace Prisma {
     team_groups?: team_groupsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type seasonsUpsertWithoutAwardsInput = {
@@ -93054,6 +103307,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUpdateManyWithoutSeasonsNestedInput
     team_seasons?: team_seasonsUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutSeasonsNestedInput
   }
 
   export type seasonsUncheckedUpdateWithoutAwardsInput = {
@@ -93068,6 +103324,9 @@ export namespace Prisma {
     league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
     team_seasons?: team_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
     season_age_groups?: season_age_groupsUncheckedUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput
   }
 
   export type league_nodesUpsertWithoutAwardsInput = {
@@ -93146,6 +103405,1507 @@ export namespace Prisma {
     leagues?: leaguesUncheckedUpdateManyWithoutGoverning_bodiesNestedInput
   }
 
+  export type peopleCreateWithoutPlayer_season_lettersInput = {
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    birth_date?: Date | string | null
+    first_name: string
+    last_name: string
+    nickname?: string | null
+    email?: string | null
+    alternate_emails?: NullableJsonNullValueInput | InputJsonValue
+    phone?: string | null
+    gender?: string | null
+    title?: string | null
+    other_last_name?: string | null
+    entry_year?: number | null
+    credits_needed?: number | null
+    is_active?: boolean | null
+    photo_url?: string | null
+    photo_status?: string
+    photo_rejection_reason?: string | null
+    club_staff?: club_staffCreateNestedManyWithoutPeopleInput
+    player_games?: player_gamesCreateNestedManyWithoutPeopleInput
+    player_relationships_player_relationships_related_person_idTopeople?: player_relationshipsCreateNestedManyWithoutPeople_player_relationships_related_person_idTopeopleInput
+    player_relationships_player_relationships_player_idTopeople?: player_relationshipsCreateNestedManyWithoutPeople_player_relationships_player_idTopeopleInput
+    player_teams?: player_teamsCreateNestedManyWithoutPeopleInput
+    team_staff?: team_staffCreateNestedManyWithoutPeopleInput
+    user_favorites?: user_favoritesCreateNestedManyWithoutPeopleInput
+    user_preferences?: user_preferencesCreateNestedOneWithoutPeopleInput
+    user_team_seasons?: user_team_seasonsCreateNestedManyWithoutPeopleInput
+    users?: usersCreateNestedOneWithoutPeopleInput
+    custom_field_values?: custom_field_valuesCreateNestedManyWithoutPeopleInput
+    player_performance_logs?: player_performance_logsCreateNestedManyWithoutPeopleInput
+    player_group_assignments?: player_group_assignmentsCreateNestedManyWithoutPeopleInput
+    player_pairings_player_pairings_player1_idTopeople?: player_pairingsCreateNestedManyWithoutPeople_player_pairings_player1_idTopeopleInput
+    player_pairings_player_pairings_player2_idTopeople?: player_pairingsCreateNestedManyWithoutPeople_player_pairings_player2_idTopeopleInput
+    player_unavailability?: player_unavailabilityCreateNestedManyWithoutPeopleInput
+    event_attendance?: event_attendanceCreateNestedManyWithoutPeopleInput
+    awards?: awardsCreateNestedManyWithoutPeopleInput
+  }
+
+  export type peopleUncheckedCreateWithoutPlayer_season_lettersInput = {
+    id?: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    birth_date?: Date | string | null
+    first_name: string
+    last_name: string
+    nickname?: string | null
+    email?: string | null
+    alternate_emails?: NullableJsonNullValueInput | InputJsonValue
+    phone?: string | null
+    gender?: string | null
+    title?: string | null
+    other_last_name?: string | null
+    entry_year?: number | null
+    credits_needed?: number | null
+    is_active?: boolean | null
+    photo_url?: string | null
+    photo_status?: string
+    photo_rejection_reason?: string | null
+    club_staff?: club_staffUncheckedCreateNestedManyWithoutPeopleInput
+    player_games?: player_gamesUncheckedCreateNestedManyWithoutPeopleInput
+    player_relationships_player_relationships_related_person_idTopeople?: player_relationshipsUncheckedCreateNestedManyWithoutPeople_player_relationships_related_person_idTopeopleInput
+    player_relationships_player_relationships_player_idTopeople?: player_relationshipsUncheckedCreateNestedManyWithoutPeople_player_relationships_player_idTopeopleInput
+    player_teams?: player_teamsUncheckedCreateNestedManyWithoutPeopleInput
+    team_staff?: team_staffUncheckedCreateNestedManyWithoutPeopleInput
+    user_favorites?: user_favoritesUncheckedCreateNestedManyWithoutPeopleInput
+    user_preferences?: user_preferencesUncheckedCreateNestedOneWithoutPeopleInput
+    user_team_seasons?: user_team_seasonsUncheckedCreateNestedManyWithoutPeopleInput
+    users?: usersUncheckedCreateNestedOneWithoutPeopleInput
+    custom_field_values?: custom_field_valuesUncheckedCreateNestedManyWithoutPeopleInput
+    player_performance_logs?: player_performance_logsUncheckedCreateNestedManyWithoutPeopleInput
+    player_group_assignments?: player_group_assignmentsUncheckedCreateNestedManyWithoutPeopleInput
+    player_pairings_player_pairings_player1_idTopeople?: player_pairingsUncheckedCreateNestedManyWithoutPeople_player_pairings_player1_idTopeopleInput
+    player_pairings_player_pairings_player2_idTopeople?: player_pairingsUncheckedCreateNestedManyWithoutPeople_player_pairings_player2_idTopeopleInput
+    player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutPeopleInput
+    event_attendance?: event_attendanceUncheckedCreateNestedManyWithoutPeopleInput
+    awards?: awardsUncheckedCreateNestedManyWithoutPeopleInput
+  }
+
+  export type peopleCreateOrConnectWithoutPlayer_season_lettersInput = {
+    where: peopleWhereUniqueInput
+    create: XOR<peopleCreateWithoutPlayer_season_lettersInput, peopleUncheckedCreateWithoutPlayer_season_lettersInput>
+  }
+
+  export type seasonsCreateWithoutPlayer_season_lettersInput = {
+    season_name: string
+    start_date: Date | string
+    end_date: Date | string
+    status?: $Enums.seasons_status
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    games?: gamesCreateNestedManyWithoutSeasonsInput
+    league_node_seasons?: league_node_seasonsCreateNestedManyWithoutSeasonsInput
+    team_seasons?: team_seasonsCreateNestedManyWithoutSeasonsInput
+    season_age_groups?: season_age_groupsCreateNestedManyWithoutSeasonsInput
+    awards?: awardsCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutSeasonsInput
+  }
+
+  export type seasonsUncheckedCreateWithoutPlayer_season_lettersInput = {
+    id?: number
+    season_name: string
+    start_date: Date | string
+    end_date: Date | string
+    status?: $Enums.seasons_status
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    games?: gamesUncheckedCreateNestedManyWithoutSeasonsInput
+    league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
+    team_seasons?: team_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
+    season_age_groups?: season_age_groupsUncheckedCreateNestedManyWithoutSeasonsInput
+    awards?: awardsUncheckedCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput
+  }
+
+  export type seasonsCreateOrConnectWithoutPlayer_season_lettersInput = {
+    where: seasonsWhereUniqueInput
+    create: XOR<seasonsCreateWithoutPlayer_season_lettersInput, seasonsUncheckedCreateWithoutPlayer_season_lettersInput>
+  }
+
+  export type team_seasonsCreateWithoutPlayer_season_lettersInput = {
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    is_active?: boolean
+    require_photo_review?: boolean
+    events?: eventsCreateNestedManyWithoutTeam_seasonsInput
+    game_events_discipline?: game_events_disciplineCreateNestedManyWithoutTeam_seasonsInput
+    game_events_goals?: game_events_goalsCreateNestedManyWithoutTeam_seasonsInput
+    game_events_penalties?: game_events_penaltiesCreateNestedManyWithoutTeam_seasonsInput
+    game_events_team?: game_events_teamCreateNestedManyWithoutTeam_seasonsInput
+    games_games_away_team_season_idToteam_seasons?: gamesCreateNestedManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsInput
+    games_games_home_team_season_idToteam_seasons?: gamesCreateNestedManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsInput
+    player_games?: player_gamesCreateNestedManyWithoutTeam_seasonsInput
+    player_teams?: player_teamsCreateNestedManyWithoutTeam_seasonsInput
+    team_league_enrollments?: team_league_enrollmentsCreateNestedManyWithoutTeam_seasonsInput
+    age_groups?: age_groupsCreateNestedOneWithoutTeam_seasonsInput
+    teams: teamsCreateNestedOneWithoutTeam_seasonsInput
+    seasons: seasonsCreateNestedOneWithoutTeam_seasonsInput
+    team_staff?: team_staffCreateNestedManyWithoutTeam_seasonsInput
+    user_favorites?: user_favoritesCreateNestedManyWithoutTeam_seasonsInput
+    user_preferences?: user_preferencesCreateNestedManyWithoutTeam_seasonsInput
+    user_team_seasons?: user_team_seasonsCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_values?: custom_field_valuesCreateNestedManyWithoutTeam_seasonsInput
+    performance_tests?: performance_testsCreateNestedManyWithoutTeam_seasonsInput
+    team_groups?: team_groupsCreateNestedManyWithoutTeam_seasonsInput
+    player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
+    player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
+    awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
+  }
+
+  export type team_seasonsUncheckedCreateWithoutPlayer_season_lettersInput = {
+    id?: number
+    team_id: number
+    season_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    age_group?: number | null
+    is_active?: boolean
+    require_photo_review?: boolean
+    events?: eventsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_goals?: game_events_goalsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_penalties?: game_events_penaltiesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_team?: game_events_teamUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    games_games_away_team_season_idToteam_seasons?: gamesUncheckedCreateNestedManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsInput
+    games_games_home_team_season_idToteam_seasons?: gamesUncheckedCreateNestedManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsInput
+    player_games?: player_gamesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_teams?: player_teamsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_league_enrollments?: team_league_enrollmentsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_staff?: team_staffUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_favorites?: user_favoritesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_preferences?: user_preferencesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_team_seasons?: user_team_seasonsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_values?: custom_field_valuesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    performance_tests?: performance_testsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_groups?: team_groupsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+  }
+
+  export type team_seasonsCreateOrConnectWithoutPlayer_season_lettersInput = {
+    where: team_seasonsWhereUniqueInput
+    create: XOR<team_seasonsCreateWithoutPlayer_season_lettersInput, team_seasonsUncheckedCreateWithoutPlayer_season_lettersInput>
+  }
+
+  export type peopleUpsertWithoutPlayer_season_lettersInput = {
+    update: XOR<peopleUpdateWithoutPlayer_season_lettersInput, peopleUncheckedUpdateWithoutPlayer_season_lettersInput>
+    create: XOR<peopleCreateWithoutPlayer_season_lettersInput, peopleUncheckedCreateWithoutPlayer_season_lettersInput>
+    where?: peopleWhereInput
+  }
+
+  export type peopleUpdateToOneWithWhereWithoutPlayer_season_lettersInput = {
+    where?: peopleWhereInput
+    data: XOR<peopleUpdateWithoutPlayer_season_lettersInput, peopleUncheckedUpdateWithoutPlayer_season_lettersInput>
+  }
+
+  export type peopleUpdateWithoutPlayer_season_lettersInput = {
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    birth_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    first_name?: StringFieldUpdateOperationsInput | string
+    last_name?: StringFieldUpdateOperationsInput | string
+    nickname?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    alternate_emails?: NullableJsonNullValueInput | InputJsonValue
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    gender?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    other_last_name?: NullableStringFieldUpdateOperationsInput | string | null
+    entry_year?: NullableIntFieldUpdateOperationsInput | number | null
+    credits_needed?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    photo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    photo_status?: StringFieldUpdateOperationsInput | string
+    photo_rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    club_staff?: club_staffUpdateManyWithoutPeopleNestedInput
+    player_games?: player_gamesUpdateManyWithoutPeopleNestedInput
+    player_relationships_player_relationships_related_person_idTopeople?: player_relationshipsUpdateManyWithoutPeople_player_relationships_related_person_idTopeopleNestedInput
+    player_relationships_player_relationships_player_idTopeople?: player_relationshipsUpdateManyWithoutPeople_player_relationships_player_idTopeopleNestedInput
+    player_teams?: player_teamsUpdateManyWithoutPeopleNestedInput
+    team_staff?: team_staffUpdateManyWithoutPeopleNestedInput
+    user_favorites?: user_favoritesUpdateManyWithoutPeopleNestedInput
+    user_preferences?: user_preferencesUpdateOneWithoutPeopleNestedInput
+    user_team_seasons?: user_team_seasonsUpdateManyWithoutPeopleNestedInput
+    users?: usersUpdateOneWithoutPeopleNestedInput
+    custom_field_values?: custom_field_valuesUpdateManyWithoutPeopleNestedInput
+    player_performance_logs?: player_performance_logsUpdateManyWithoutPeopleNestedInput
+    player_group_assignments?: player_group_assignmentsUpdateManyWithoutPeopleNestedInput
+    player_pairings_player_pairings_player1_idTopeople?: player_pairingsUpdateManyWithoutPeople_player_pairings_player1_idTopeopleNestedInput
+    player_pairings_player_pairings_player2_idTopeople?: player_pairingsUpdateManyWithoutPeople_player_pairings_player2_idTopeopleNestedInput
+    player_unavailability?: player_unavailabilityUpdateManyWithoutPeopleNestedInput
+    event_attendance?: event_attendanceUpdateManyWithoutPeopleNestedInput
+    awards?: awardsUpdateManyWithoutPeopleNestedInput
+  }
+
+  export type peopleUncheckedUpdateWithoutPlayer_season_lettersInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    birth_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    first_name?: StringFieldUpdateOperationsInput | string
+    last_name?: StringFieldUpdateOperationsInput | string
+    nickname?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    alternate_emails?: NullableJsonNullValueInput | InputJsonValue
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    gender?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    other_last_name?: NullableStringFieldUpdateOperationsInput | string | null
+    entry_year?: NullableIntFieldUpdateOperationsInput | number | null
+    credits_needed?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    photo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    photo_status?: StringFieldUpdateOperationsInput | string
+    photo_rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    club_staff?: club_staffUncheckedUpdateManyWithoutPeopleNestedInput
+    player_games?: player_gamesUncheckedUpdateManyWithoutPeopleNestedInput
+    player_relationships_player_relationships_related_person_idTopeople?: player_relationshipsUncheckedUpdateManyWithoutPeople_player_relationships_related_person_idTopeopleNestedInput
+    player_relationships_player_relationships_player_idTopeople?: player_relationshipsUncheckedUpdateManyWithoutPeople_player_relationships_player_idTopeopleNestedInput
+    player_teams?: player_teamsUncheckedUpdateManyWithoutPeopleNestedInput
+    team_staff?: team_staffUncheckedUpdateManyWithoutPeopleNestedInput
+    user_favorites?: user_favoritesUncheckedUpdateManyWithoutPeopleNestedInput
+    user_preferences?: user_preferencesUncheckedUpdateOneWithoutPeopleNestedInput
+    user_team_seasons?: user_team_seasonsUncheckedUpdateManyWithoutPeopleNestedInput
+    users?: usersUncheckedUpdateOneWithoutPeopleNestedInput
+    custom_field_values?: custom_field_valuesUncheckedUpdateManyWithoutPeopleNestedInput
+    player_performance_logs?: player_performance_logsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_group_assignments?: player_group_assignmentsUncheckedUpdateManyWithoutPeopleNestedInput
+    player_pairings_player_pairings_player1_idTopeople?: player_pairingsUncheckedUpdateManyWithoutPeople_player_pairings_player1_idTopeopleNestedInput
+    player_pairings_player_pairings_player2_idTopeople?: player_pairingsUncheckedUpdateManyWithoutPeople_player_pairings_player2_idTopeopleNestedInput
+    player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutPeopleNestedInput
+    event_attendance?: event_attendanceUncheckedUpdateManyWithoutPeopleNestedInput
+    awards?: awardsUncheckedUpdateManyWithoutPeopleNestedInput
+  }
+
+  export type seasonsUpsertWithoutPlayer_season_lettersInput = {
+    update: XOR<seasonsUpdateWithoutPlayer_season_lettersInput, seasonsUncheckedUpdateWithoutPlayer_season_lettersInput>
+    create: XOR<seasonsCreateWithoutPlayer_season_lettersInput, seasonsUncheckedCreateWithoutPlayer_season_lettersInput>
+    where?: seasonsWhereInput
+  }
+
+  export type seasonsUpdateToOneWithWhereWithoutPlayer_season_lettersInput = {
+    where?: seasonsWhereInput
+    data: XOR<seasonsUpdateWithoutPlayer_season_lettersInput, seasonsUncheckedUpdateWithoutPlayer_season_lettersInput>
+  }
+
+  export type seasonsUpdateWithoutPlayer_season_lettersInput = {
+    season_name?: StringFieldUpdateOperationsInput | string
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: Enumseasons_statusFieldUpdateOperationsInput | $Enums.seasons_status
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    games?: gamesUpdateManyWithoutSeasonsNestedInput
+    league_node_seasons?: league_node_seasonsUpdateManyWithoutSeasonsNestedInput
+    team_seasons?: team_seasonsUpdateManyWithoutSeasonsNestedInput
+    season_age_groups?: season_age_groupsUpdateManyWithoutSeasonsNestedInput
+    awards?: awardsUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutSeasonsNestedInput
+  }
+
+  export type seasonsUncheckedUpdateWithoutPlayer_season_lettersInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_name?: StringFieldUpdateOperationsInput | string
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: Enumseasons_statusFieldUpdateOperationsInput | $Enums.seasons_status
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    games?: gamesUncheckedUpdateManyWithoutSeasonsNestedInput
+    league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
+    team_seasons?: team_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
+    season_age_groups?: season_age_groupsUncheckedUpdateManyWithoutSeasonsNestedInput
+    awards?: awardsUncheckedUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput
+  }
+
+  export type team_seasonsUpsertWithoutPlayer_season_lettersInput = {
+    update: XOR<team_seasonsUpdateWithoutPlayer_season_lettersInput, team_seasonsUncheckedUpdateWithoutPlayer_season_lettersInput>
+    create: XOR<team_seasonsCreateWithoutPlayer_season_lettersInput, team_seasonsUncheckedCreateWithoutPlayer_season_lettersInput>
+    where?: team_seasonsWhereInput
+  }
+
+  export type team_seasonsUpdateToOneWithWhereWithoutPlayer_season_lettersInput = {
+    where?: team_seasonsWhereInput
+    data: XOR<team_seasonsUpdateWithoutPlayer_season_lettersInput, team_seasonsUncheckedUpdateWithoutPlayer_season_lettersInput>
+  }
+
+  export type team_seasonsUpdateWithoutPlayer_season_lettersInput = {
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    require_photo_review?: BoolFieldUpdateOperationsInput | boolean
+    events?: eventsUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_discipline?: game_events_disciplineUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_goals?: game_events_goalsUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_penalties?: game_events_penaltiesUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_team?: game_events_teamUpdateManyWithoutTeam_seasonsNestedInput
+    games_games_away_team_season_idToteam_seasons?: gamesUpdateManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsNestedInput
+    games_games_home_team_season_idToteam_seasons?: gamesUpdateManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsNestedInput
+    player_games?: player_gamesUpdateManyWithoutTeam_seasonsNestedInput
+    player_teams?: player_teamsUpdateManyWithoutTeam_seasonsNestedInput
+    team_league_enrollments?: team_league_enrollmentsUpdateManyWithoutTeam_seasonsNestedInput
+    age_groups?: age_groupsUpdateOneWithoutTeam_seasonsNestedInput
+    teams?: teamsUpdateOneRequiredWithoutTeam_seasonsNestedInput
+    seasons?: seasonsUpdateOneRequiredWithoutTeam_seasonsNestedInput
+    team_staff?: team_staffUpdateManyWithoutTeam_seasonsNestedInput
+    user_favorites?: user_favoritesUpdateManyWithoutTeam_seasonsNestedInput
+    user_preferences?: user_preferencesUpdateManyWithoutTeam_seasonsNestedInput
+    user_team_seasons?: user_team_seasonsUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_definitions?: custom_field_definitionsUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_values?: custom_field_valuesUpdateManyWithoutTeam_seasonsNestedInput
+    performance_tests?: performance_testsUpdateManyWithoutTeam_seasonsNestedInput
+    team_groups?: team_groupsUpdateManyWithoutTeam_seasonsNestedInput
+    player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
+    player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
+    awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
+  }
+
+  export type team_seasonsUncheckedUpdateWithoutPlayer_season_lettersInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    team_id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    age_group?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    require_photo_review?: BoolFieldUpdateOperationsInput | boolean
+    events?: eventsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_goals?: game_events_goalsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_penalties?: game_events_penaltiesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_team?: game_events_teamUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    games_games_away_team_season_idToteam_seasons?: gamesUncheckedUpdateManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsNestedInput
+    games_games_home_team_season_idToteam_seasons?: gamesUncheckedUpdateManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsNestedInput
+    player_games?: player_gamesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_teams?: player_teamsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_league_enrollments?: team_league_enrollmentsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_staff?: team_staffUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_favorites?: user_favoritesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_preferences?: user_preferencesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_team_seasons?: user_team_seasonsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_values?: custom_field_valuesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    performance_tests?: performance_testsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_groups?: team_groupsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+  }
+
+  export type clubsCreateWithoutUniform_kitsInput = {
+    name: string
+    location?: string | null
+    logo_url?: string | null
+    founded_year?: number | null
+    contact_info?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    is_active?: boolean
+    abbreviation?: string | null
+    type?: $Enums.clubs_type | null
+    club_staff?: club_staffCreateNestedManyWithoutClubsInput
+    addresses?: addressesCreateNestedOneWithoutClubsInput
+    teams?: teamsCreateNestedManyWithoutClubsInput
+    custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutOpponent_clubInput
+  }
+
+  export type clubsUncheckedCreateWithoutUniform_kitsInput = {
+    id?: number
+    name: string
+    location?: string | null
+    logo_url?: string | null
+    founded_year?: number | null
+    contact_info?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    is_active?: boolean
+    abbreviation?: string | null
+    type?: $Enums.clubs_type | null
+    location_id?: number | null
+    club_staff?: club_staffUncheckedCreateNestedManyWithoutClubsInput
+    teams?: teamsUncheckedCreateNestedManyWithoutClubsInput
+    custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutClubsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutOpponent_clubInput
+  }
+
+  export type clubsCreateOrConnectWithoutUniform_kitsInput = {
+    where: clubsWhereUniqueInput
+    create: XOR<clubsCreateWithoutUniform_kitsInput, clubsUncheckedCreateWithoutUniform_kitsInput>
+  }
+
+  export type uniform_jerseysCreateWithoutUniform_kitsInput = {
+    jersey_number: number
+    size?: string | null
+    is_lost?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsCreateNestedManyWithoutUniform_jerseysInput
+  }
+
+  export type uniform_jerseysUncheckedCreateWithoutUniform_kitsInput = {
+    id?: number
+    jersey_number: number
+    size?: string | null
+    is_lost?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedCreateNestedManyWithoutUniform_jerseysInput
+  }
+
+  export type uniform_jerseysCreateOrConnectWithoutUniform_kitsInput = {
+    where: uniform_jerseysWhereUniqueInput
+    create: XOR<uniform_jerseysCreateWithoutUniform_kitsInput, uniform_jerseysUncheckedCreateWithoutUniform_kitsInput>
+  }
+
+  export type uniform_jerseysCreateManyUniform_kitsInputEnvelope = {
+    data: uniform_jerseysCreateManyUniform_kitsInput | uniform_jerseysCreateManyUniform_kitsInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type uniform_season_kitsCreateWithoutUniform_kitsInput = {
+    squad_level: string
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    seasons: seasonsCreateNestedOneWithoutUniform_season_kitsInput
+    team_seasons?: team_seasonsCreateNestedOneWithoutUniform_season_kitsInput
+  }
+
+  export type uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    squad_level: string
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_season_kitsCreateOrConnectWithoutUniform_kitsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    create: XOR<uniform_season_kitsCreateWithoutUniform_kitsInput, uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput>
+  }
+
+  export type uniform_season_kitsCreateManyUniform_kitsInputEnvelope = {
+    data: uniform_season_kitsCreateManyUniform_kitsInput | uniform_season_kitsCreateManyUniform_kitsInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type clubsUpsertWithoutUniform_kitsInput = {
+    update: XOR<clubsUpdateWithoutUniform_kitsInput, clubsUncheckedUpdateWithoutUniform_kitsInput>
+    create: XOR<clubsCreateWithoutUniform_kitsInput, clubsUncheckedCreateWithoutUniform_kitsInput>
+    where?: clubsWhereInput
+  }
+
+  export type clubsUpdateToOneWithWhereWithoutUniform_kitsInput = {
+    where?: clubsWhereInput
+    data: XOR<clubsUpdateWithoutUniform_kitsInput, clubsUncheckedUpdateWithoutUniform_kitsInput>
+  }
+
+  export type clubsUpdateWithoutUniform_kitsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    founded_year?: NullableIntFieldUpdateOperationsInput | number | null
+    contact_info?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: NullableEnumclubs_typeFieldUpdateOperationsInput | $Enums.clubs_type | null
+    club_staff?: club_staffUpdateManyWithoutClubsNestedInput
+    addresses?: addressesUpdateOneWithoutClubsNestedInput
+    teams?: teamsUpdateManyWithoutClubsNestedInput
+    custom_field_definitions?: custom_field_definitionsUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutOpponent_clubNestedInput
+  }
+
+  export type clubsUncheckedUpdateWithoutUniform_kitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    founded_year?: NullableIntFieldUpdateOperationsInput | number | null
+    contact_info?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: NullableEnumclubs_typeFieldUpdateOperationsInput | $Enums.clubs_type | null
+    location_id?: NullableIntFieldUpdateOperationsInput | number | null
+    club_staff?: club_staffUncheckedUpdateManyWithoutClubsNestedInput
+    teams?: teamsUncheckedUpdateManyWithoutClubsNestedInput
+    custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutOpponent_clubNestedInput
+  }
+
+  export type uniform_jerseysUpsertWithWhereUniqueWithoutUniform_kitsInput = {
+    where: uniform_jerseysWhereUniqueInput
+    update: XOR<uniform_jerseysUpdateWithoutUniform_kitsInput, uniform_jerseysUncheckedUpdateWithoutUniform_kitsInput>
+    create: XOR<uniform_jerseysCreateWithoutUniform_kitsInput, uniform_jerseysUncheckedCreateWithoutUniform_kitsInput>
+  }
+
+  export type uniform_jerseysUpdateWithWhereUniqueWithoutUniform_kitsInput = {
+    where: uniform_jerseysWhereUniqueInput
+    data: XOR<uniform_jerseysUpdateWithoutUniform_kitsInput, uniform_jerseysUncheckedUpdateWithoutUniform_kitsInput>
+  }
+
+  export type uniform_jerseysUpdateManyWithWhereWithoutUniform_kitsInput = {
+    where: uniform_jerseysScalarWhereInput
+    data: XOR<uniform_jerseysUpdateManyMutationInput, uniform_jerseysUncheckedUpdateManyWithoutUniform_kitsInput>
+  }
+
+  export type uniform_jerseysScalarWhereInput = {
+    AND?: uniform_jerseysScalarWhereInput | uniform_jerseysScalarWhereInput[]
+    OR?: uniform_jerseysScalarWhereInput[]
+    NOT?: uniform_jerseysScalarWhereInput | uniform_jerseysScalarWhereInput[]
+    id?: IntFilter<"uniform_jerseys"> | number
+    uniform_kit_id?: IntNullableFilter<"uniform_jerseys"> | number | null
+    jersey_number?: IntFilter<"uniform_jerseys"> | number
+    size?: StringNullableFilter<"uniform_jerseys"> | string | null
+    is_lost?: BoolFilter<"uniform_jerseys"> | boolean
+    notes?: StringNullableFilter<"uniform_jerseys"> | string | null
+    created_at?: DateTimeNullableFilter<"uniform_jerseys"> | Date | string | null
+    modified_at?: DateTimeNullableFilter<"uniform_jerseys"> | Date | string | null
+  }
+
+  export type uniform_season_kitsUpsertWithWhereUniqueWithoutUniform_kitsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    update: XOR<uniform_season_kitsUpdateWithoutUniform_kitsInput, uniform_season_kitsUncheckedUpdateWithoutUniform_kitsInput>
+    create: XOR<uniform_season_kitsCreateWithoutUniform_kitsInput, uniform_season_kitsUncheckedCreateWithoutUniform_kitsInput>
+  }
+
+  export type uniform_season_kitsUpdateWithWhereUniqueWithoutUniform_kitsInput = {
+    where: uniform_season_kitsWhereUniqueInput
+    data: XOR<uniform_season_kitsUpdateWithoutUniform_kitsInput, uniform_season_kitsUncheckedUpdateWithoutUniform_kitsInput>
+  }
+
+  export type uniform_season_kitsUpdateManyWithWhereWithoutUniform_kitsInput = {
+    where: uniform_season_kitsScalarWhereInput
+    data: XOR<uniform_season_kitsUpdateManyMutationInput, uniform_season_kitsUncheckedUpdateManyWithoutUniform_kitsInput>
+  }
+
+  export type uniform_kitsCreateWithoutUniform_jerseysInput = {
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    clubs?: clubsCreateNestedOneWithoutUniform_kitsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutUniform_kitsInput
+  }
+
+  export type uniform_kitsUncheckedCreateWithoutUniform_jerseysInput = {
+    id?: number
+    club_id?: number | null
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutUniform_kitsInput
+  }
+
+  export type uniform_kitsCreateOrConnectWithoutUniform_jerseysInput = {
+    where: uniform_kitsWhereUniqueInput
+    create: XOR<uniform_kitsCreateWithoutUniform_jerseysInput, uniform_kitsUncheckedCreateWithoutUniform_jerseysInput>
+  }
+
+  export type uniform_player_assignmentsCreateWithoutUniform_jerseysInput = {
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    player_teams: player_teamsCreateNestedOneWithoutUniform_player_assignmentsInput
+  }
+
+  export type uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput = {
+    id?: number
+    player_team_id: number
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_player_assignmentsCreateOrConnectWithoutUniform_jerseysInput = {
+    where: uniform_player_assignmentsWhereUniqueInput
+    create: XOR<uniform_player_assignmentsCreateWithoutUniform_jerseysInput, uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput>
+  }
+
+  export type uniform_player_assignmentsCreateManyUniform_jerseysInputEnvelope = {
+    data: uniform_player_assignmentsCreateManyUniform_jerseysInput | uniform_player_assignmentsCreateManyUniform_jerseysInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type uniform_kitsUpsertWithoutUniform_jerseysInput = {
+    update: XOR<uniform_kitsUpdateWithoutUniform_jerseysInput, uniform_kitsUncheckedUpdateWithoutUniform_jerseysInput>
+    create: XOR<uniform_kitsCreateWithoutUniform_jerseysInput, uniform_kitsUncheckedCreateWithoutUniform_jerseysInput>
+    where?: uniform_kitsWhereInput
+  }
+
+  export type uniform_kitsUpdateToOneWithWhereWithoutUniform_jerseysInput = {
+    where?: uniform_kitsWhereInput
+    data: XOR<uniform_kitsUpdateWithoutUniform_jerseysInput, uniform_kitsUncheckedUpdateWithoutUniform_jerseysInput>
+  }
+
+  export type uniform_kitsUpdateWithoutUniform_jerseysInput = {
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    clubs?: clubsUpdateOneWithoutUniform_kitsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutUniform_kitsNestedInput
+  }
+
+  export type uniform_kitsUncheckedUpdateWithoutUniform_jerseysInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    club_id?: NullableIntFieldUpdateOperationsInput | number | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutUniform_kitsNestedInput
+  }
+
+  export type uniform_player_assignmentsUpsertWithWhereUniqueWithoutUniform_jerseysInput = {
+    where: uniform_player_assignmentsWhereUniqueInput
+    update: XOR<uniform_player_assignmentsUpdateWithoutUniform_jerseysInput, uniform_player_assignmentsUncheckedUpdateWithoutUniform_jerseysInput>
+    create: XOR<uniform_player_assignmentsCreateWithoutUniform_jerseysInput, uniform_player_assignmentsUncheckedCreateWithoutUniform_jerseysInput>
+  }
+
+  export type uniform_player_assignmentsUpdateWithWhereUniqueWithoutUniform_jerseysInput = {
+    where: uniform_player_assignmentsWhereUniqueInput
+    data: XOR<uniform_player_assignmentsUpdateWithoutUniform_jerseysInput, uniform_player_assignmentsUncheckedUpdateWithoutUniform_jerseysInput>
+  }
+
+  export type uniform_player_assignmentsUpdateManyWithWhereWithoutUniform_jerseysInput = {
+    where: uniform_player_assignmentsScalarWhereInput
+    data: XOR<uniform_player_assignmentsUpdateManyMutationInput, uniform_player_assignmentsUncheckedUpdateManyWithoutUniform_jerseysInput>
+  }
+
+  export type seasonsCreateWithoutUniform_season_kitsInput = {
+    season_name: string
+    start_date: Date | string
+    end_date: Date | string
+    status?: $Enums.seasons_status
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    games?: gamesCreateNestedManyWithoutSeasonsInput
+    league_node_seasons?: league_node_seasonsCreateNestedManyWithoutSeasonsInput
+    team_seasons?: team_seasonsCreateNestedManyWithoutSeasonsInput
+    season_age_groups?: season_age_groupsCreateNestedManyWithoutSeasonsInput
+    awards?: awardsCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutSeasonsInput
+  }
+
+  export type seasonsUncheckedCreateWithoutUniform_season_kitsInput = {
+    id?: number
+    season_name: string
+    start_date: Date | string
+    end_date: Date | string
+    status?: $Enums.seasons_status
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    games?: gamesUncheckedCreateNestedManyWithoutSeasonsInput
+    league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
+    team_seasons?: team_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
+    season_age_groups?: season_age_groupsUncheckedCreateNestedManyWithoutSeasonsInput
+    awards?: awardsUncheckedCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutSeasonsInput
+  }
+
+  export type seasonsCreateOrConnectWithoutUniform_season_kitsInput = {
+    where: seasonsWhereUniqueInput
+    create: XOR<seasonsCreateWithoutUniform_season_kitsInput, seasonsUncheckedCreateWithoutUniform_season_kitsInput>
+  }
+
+  export type team_seasonsCreateWithoutUniform_season_kitsInput = {
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    is_active?: boolean
+    require_photo_review?: boolean
+    events?: eventsCreateNestedManyWithoutTeam_seasonsInput
+    game_events_discipline?: game_events_disciplineCreateNestedManyWithoutTeam_seasonsInput
+    game_events_goals?: game_events_goalsCreateNestedManyWithoutTeam_seasonsInput
+    game_events_penalties?: game_events_penaltiesCreateNestedManyWithoutTeam_seasonsInput
+    game_events_team?: game_events_teamCreateNestedManyWithoutTeam_seasonsInput
+    games_games_away_team_season_idToteam_seasons?: gamesCreateNestedManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsInput
+    games_games_home_team_season_idToteam_seasons?: gamesCreateNestedManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsInput
+    player_games?: player_gamesCreateNestedManyWithoutTeam_seasonsInput
+    player_teams?: player_teamsCreateNestedManyWithoutTeam_seasonsInput
+    team_league_enrollments?: team_league_enrollmentsCreateNestedManyWithoutTeam_seasonsInput
+    age_groups?: age_groupsCreateNestedOneWithoutTeam_seasonsInput
+    teams: teamsCreateNestedOneWithoutTeam_seasonsInput
+    seasons: seasonsCreateNestedOneWithoutTeam_seasonsInput
+    team_staff?: team_staffCreateNestedManyWithoutTeam_seasonsInput
+    user_favorites?: user_favoritesCreateNestedManyWithoutTeam_seasonsInput
+    user_preferences?: user_preferencesCreateNestedManyWithoutTeam_seasonsInput
+    user_team_seasons?: user_team_seasonsCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_values?: custom_field_valuesCreateNestedManyWithoutTeam_seasonsInput
+    performance_tests?: performance_testsCreateNestedManyWithoutTeam_seasonsInput
+    team_groups?: team_groupsCreateNestedManyWithoutTeam_seasonsInput
+    player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
+    player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
+    awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsCreateNestedManyWithoutTeam_seasonsInput
+  }
+
+  export type team_seasonsUncheckedCreateWithoutUniform_season_kitsInput = {
+    id?: number
+    team_id: number
+    season_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    age_group?: number | null
+    is_active?: boolean
+    require_photo_review?: boolean
+    events?: eventsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_goals?: game_events_goalsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_penalties?: game_events_penaltiesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_team?: game_events_teamUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    games_games_away_team_season_idToteam_seasons?: gamesUncheckedCreateNestedManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsInput
+    games_games_home_team_season_idToteam_seasons?: gamesUncheckedCreateNestedManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsInput
+    player_games?: player_gamesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_teams?: player_teamsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_league_enrollments?: team_league_enrollmentsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_staff?: team_staffUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_favorites?: user_favoritesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_preferences?: user_preferencesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_team_seasons?: user_team_seasonsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_values?: custom_field_valuesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    performance_tests?: performance_testsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_groups?: team_groupsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    schedule_leads?: schedule_leadsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+  }
+
+  export type team_seasonsCreateOrConnectWithoutUniform_season_kitsInput = {
+    where: team_seasonsWhereUniqueInput
+    create: XOR<team_seasonsCreateWithoutUniform_season_kitsInput, team_seasonsUncheckedCreateWithoutUniform_season_kitsInput>
+  }
+
+  export type uniform_kitsCreateWithoutUniform_season_kitsInput = {
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    clubs?: clubsCreateNestedOneWithoutUniform_kitsInput
+    uniform_jerseys?: uniform_jerseysCreateNestedManyWithoutUniform_kitsInput
+  }
+
+  export type uniform_kitsUncheckedCreateWithoutUniform_season_kitsInput = {
+    id?: number
+    club_id?: number | null
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_jerseys?: uniform_jerseysUncheckedCreateNestedManyWithoutUniform_kitsInput
+  }
+
+  export type uniform_kitsCreateOrConnectWithoutUniform_season_kitsInput = {
+    where: uniform_kitsWhereUniqueInput
+    create: XOR<uniform_kitsCreateWithoutUniform_season_kitsInput, uniform_kitsUncheckedCreateWithoutUniform_season_kitsInput>
+  }
+
+  export type seasonsUpsertWithoutUniform_season_kitsInput = {
+    update: XOR<seasonsUpdateWithoutUniform_season_kitsInput, seasonsUncheckedUpdateWithoutUniform_season_kitsInput>
+    create: XOR<seasonsCreateWithoutUniform_season_kitsInput, seasonsUncheckedCreateWithoutUniform_season_kitsInput>
+    where?: seasonsWhereInput
+  }
+
+  export type seasonsUpdateToOneWithWhereWithoutUniform_season_kitsInput = {
+    where?: seasonsWhereInput
+    data: XOR<seasonsUpdateWithoutUniform_season_kitsInput, seasonsUncheckedUpdateWithoutUniform_season_kitsInput>
+  }
+
+  export type seasonsUpdateWithoutUniform_season_kitsInput = {
+    season_name?: StringFieldUpdateOperationsInput | string
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: Enumseasons_statusFieldUpdateOperationsInput | $Enums.seasons_status
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    games?: gamesUpdateManyWithoutSeasonsNestedInput
+    league_node_seasons?: league_node_seasonsUpdateManyWithoutSeasonsNestedInput
+    team_seasons?: team_seasonsUpdateManyWithoutSeasonsNestedInput
+    season_age_groups?: season_age_groupsUpdateManyWithoutSeasonsNestedInput
+    awards?: awardsUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutSeasonsNestedInput
+  }
+
+  export type seasonsUncheckedUpdateWithoutUniform_season_kitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_name?: StringFieldUpdateOperationsInput | string
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: Enumseasons_statusFieldUpdateOperationsInput | $Enums.seasons_status
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    games?: gamesUncheckedUpdateManyWithoutSeasonsNestedInput
+    league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
+    team_seasons?: team_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
+    season_age_groups?: season_age_groupsUncheckedUpdateManyWithoutSeasonsNestedInput
+    awards?: awardsUncheckedUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutSeasonsNestedInput
+  }
+
+  export type team_seasonsUpsertWithoutUniform_season_kitsInput = {
+    update: XOR<team_seasonsUpdateWithoutUniform_season_kitsInput, team_seasonsUncheckedUpdateWithoutUniform_season_kitsInput>
+    create: XOR<team_seasonsCreateWithoutUniform_season_kitsInput, team_seasonsUncheckedCreateWithoutUniform_season_kitsInput>
+    where?: team_seasonsWhereInput
+  }
+
+  export type team_seasonsUpdateToOneWithWhereWithoutUniform_season_kitsInput = {
+    where?: team_seasonsWhereInput
+    data: XOR<team_seasonsUpdateWithoutUniform_season_kitsInput, team_seasonsUncheckedUpdateWithoutUniform_season_kitsInput>
+  }
+
+  export type team_seasonsUpdateWithoutUniform_season_kitsInput = {
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    require_photo_review?: BoolFieldUpdateOperationsInput | boolean
+    events?: eventsUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_discipline?: game_events_disciplineUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_goals?: game_events_goalsUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_penalties?: game_events_penaltiesUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_team?: game_events_teamUpdateManyWithoutTeam_seasonsNestedInput
+    games_games_away_team_season_idToteam_seasons?: gamesUpdateManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsNestedInput
+    games_games_home_team_season_idToteam_seasons?: gamesUpdateManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsNestedInput
+    player_games?: player_gamesUpdateManyWithoutTeam_seasonsNestedInput
+    player_teams?: player_teamsUpdateManyWithoutTeam_seasonsNestedInput
+    team_league_enrollments?: team_league_enrollmentsUpdateManyWithoutTeam_seasonsNestedInput
+    age_groups?: age_groupsUpdateOneWithoutTeam_seasonsNestedInput
+    teams?: teamsUpdateOneRequiredWithoutTeam_seasonsNestedInput
+    seasons?: seasonsUpdateOneRequiredWithoutTeam_seasonsNestedInput
+    team_staff?: team_staffUpdateManyWithoutTeam_seasonsNestedInput
+    user_favorites?: user_favoritesUpdateManyWithoutTeam_seasonsNestedInput
+    user_preferences?: user_preferencesUpdateManyWithoutTeam_seasonsNestedInput
+    user_team_seasons?: user_team_seasonsUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_definitions?: custom_field_definitionsUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_values?: custom_field_valuesUpdateManyWithoutTeam_seasonsNestedInput
+    performance_tests?: performance_testsUpdateManyWithoutTeam_seasonsNestedInput
+    team_groups?: team_groupsUpdateManyWithoutTeam_seasonsNestedInput
+    player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
+    player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
+    awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
+  }
+
+  export type team_seasonsUncheckedUpdateWithoutUniform_season_kitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    team_id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    age_group?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    require_photo_review?: BoolFieldUpdateOperationsInput | boolean
+    events?: eventsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_goals?: game_events_goalsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_penalties?: game_events_penaltiesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_team?: game_events_teamUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    games_games_away_team_season_idToteam_seasons?: gamesUncheckedUpdateManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsNestedInput
+    games_games_home_team_season_idToteam_seasons?: gamesUncheckedUpdateManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsNestedInput
+    player_games?: player_gamesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_teams?: player_teamsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_league_enrollments?: team_league_enrollmentsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_staff?: team_staffUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_favorites?: user_favoritesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_preferences?: user_preferencesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_team_seasons?: user_team_seasonsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_values?: custom_field_valuesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    performance_tests?: performance_testsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_groups?: team_groupsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+  }
+
+  export type uniform_kitsUpsertWithoutUniform_season_kitsInput = {
+    update: XOR<uniform_kitsUpdateWithoutUniform_season_kitsInput, uniform_kitsUncheckedUpdateWithoutUniform_season_kitsInput>
+    create: XOR<uniform_kitsCreateWithoutUniform_season_kitsInput, uniform_kitsUncheckedCreateWithoutUniform_season_kitsInput>
+    where?: uniform_kitsWhereInput
+  }
+
+  export type uniform_kitsUpdateToOneWithWhereWithoutUniform_season_kitsInput = {
+    where?: uniform_kitsWhereInput
+    data: XOR<uniform_kitsUpdateWithoutUniform_season_kitsInput, uniform_kitsUncheckedUpdateWithoutUniform_season_kitsInput>
+  }
+
+  export type uniform_kitsUpdateWithoutUniform_season_kitsInput = {
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    clubs?: clubsUpdateOneWithoutUniform_kitsNestedInput
+    uniform_jerseys?: uniform_jerseysUpdateManyWithoutUniform_kitsNestedInput
+  }
+
+  export type uniform_kitsUncheckedUpdateWithoutUniform_season_kitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    club_id?: NullableIntFieldUpdateOperationsInput | number | null
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_jerseys?: uniform_jerseysUncheckedUpdateManyWithoutUniform_kitsNestedInput
+  }
+
+  export type player_teamsCreateWithoutUniform_player_assignmentsInput = {
+    grade?: string | null
+    status?: $Enums.player_teams_status | null
+    alt_jersey_number?: number | null
+    gk_number?: number | null
+    jersey_number?: number | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    position?: string | null
+    previous_school?: string | null
+    lives_with_parents?: boolean | null
+    played_last_season?: boolean | null
+    earned_credits?: boolean | null
+    enrolled_last_year?: boolean | null
+    captain?: boolean | null
+    is_active?: boolean | null
+    joined_date?: Date | string | null
+    left_date?: Date | string | null
+    people: peopleCreateNestedOneWithoutPlayer_teamsInput
+    team_seasons: team_seasonsCreateNestedOneWithoutPlayer_teamsInput
+  }
+
+  export type player_teamsUncheckedCreateWithoutUniform_player_assignmentsInput = {
+    id?: number
+    grade?: string | null
+    status?: $Enums.player_teams_status | null
+    alt_jersey_number?: number | null
+    gk_number?: number | null
+    player_id: number
+    team_season_id: number
+    jersey_number?: number | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    position?: string | null
+    previous_school?: string | null
+    lives_with_parents?: boolean | null
+    played_last_season?: boolean | null
+    earned_credits?: boolean | null
+    enrolled_last_year?: boolean | null
+    captain?: boolean | null
+    is_active?: boolean | null
+    joined_date?: Date | string | null
+    left_date?: Date | string | null
+  }
+
+  export type player_teamsCreateOrConnectWithoutUniform_player_assignmentsInput = {
+    where: player_teamsWhereUniqueInput
+    create: XOR<player_teamsCreateWithoutUniform_player_assignmentsInput, player_teamsUncheckedCreateWithoutUniform_player_assignmentsInput>
+  }
+
+  export type uniform_jerseysCreateWithoutUniform_player_assignmentsInput = {
+    jersey_number: number
+    size?: string | null
+    is_lost?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    uniform_kits?: uniform_kitsCreateNestedOneWithoutUniform_jerseysInput
+  }
+
+  export type uniform_jerseysUncheckedCreateWithoutUniform_player_assignmentsInput = {
+    id?: number
+    uniform_kit_id?: number | null
+    jersey_number: number
+    size?: string | null
+    is_lost?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_jerseysCreateOrConnectWithoutUniform_player_assignmentsInput = {
+    where: uniform_jerseysWhereUniqueInput
+    create: XOR<uniform_jerseysCreateWithoutUniform_player_assignmentsInput, uniform_jerseysUncheckedCreateWithoutUniform_player_assignmentsInput>
+  }
+
+  export type player_teamsUpsertWithoutUniform_player_assignmentsInput = {
+    update: XOR<player_teamsUpdateWithoutUniform_player_assignmentsInput, player_teamsUncheckedUpdateWithoutUniform_player_assignmentsInput>
+    create: XOR<player_teamsCreateWithoutUniform_player_assignmentsInput, player_teamsUncheckedCreateWithoutUniform_player_assignmentsInput>
+    where?: player_teamsWhereInput
+  }
+
+  export type player_teamsUpdateToOneWithWhereWithoutUniform_player_assignmentsInput = {
+    where?: player_teamsWhereInput
+    data: XOR<player_teamsUpdateWithoutUniform_player_assignmentsInput, player_teamsUncheckedUpdateWithoutUniform_player_assignmentsInput>
+  }
+
+  export type player_teamsUpdateWithoutUniform_player_assignmentsInput = {
+    grade?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: NullableEnumplayer_teams_statusFieldUpdateOperationsInput | $Enums.player_teams_status | null
+    alt_jersey_number?: NullableIntFieldUpdateOperationsInput | number | null
+    gk_number?: NullableIntFieldUpdateOperationsInput | number | null
+    jersey_number?: NullableIntFieldUpdateOperationsInput | number | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    previous_school?: NullableStringFieldUpdateOperationsInput | string | null
+    lives_with_parents?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    played_last_season?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    earned_credits?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    enrolled_last_year?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    captain?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    joined_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    left_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    people?: peopleUpdateOneRequiredWithoutPlayer_teamsNestedInput
+    team_seasons?: team_seasonsUpdateOneRequiredWithoutPlayer_teamsNestedInput
+  }
+
+  export type player_teamsUncheckedUpdateWithoutUniform_player_assignmentsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    grade?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: NullableEnumplayer_teams_statusFieldUpdateOperationsInput | $Enums.player_teams_status | null
+    alt_jersey_number?: NullableIntFieldUpdateOperationsInput | number | null
+    gk_number?: NullableIntFieldUpdateOperationsInput | number | null
+    player_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: IntFieldUpdateOperationsInput | number
+    jersey_number?: NullableIntFieldUpdateOperationsInput | number | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    position?: NullableStringFieldUpdateOperationsInput | string | null
+    previous_school?: NullableStringFieldUpdateOperationsInput | string | null
+    lives_with_parents?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    played_last_season?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    earned_credits?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    enrolled_last_year?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    captain?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    joined_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    left_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_jerseysUpsertWithoutUniform_player_assignmentsInput = {
+    update: XOR<uniform_jerseysUpdateWithoutUniform_player_assignmentsInput, uniform_jerseysUncheckedUpdateWithoutUniform_player_assignmentsInput>
+    create: XOR<uniform_jerseysCreateWithoutUniform_player_assignmentsInput, uniform_jerseysUncheckedCreateWithoutUniform_player_assignmentsInput>
+    where?: uniform_jerseysWhereInput
+  }
+
+  export type uniform_jerseysUpdateToOneWithWhereWithoutUniform_player_assignmentsInput = {
+    where?: uniform_jerseysWhereInput
+    data: XOR<uniform_jerseysUpdateWithoutUniform_player_assignmentsInput, uniform_jerseysUncheckedUpdateWithoutUniform_player_assignmentsInput>
+  }
+
+  export type uniform_jerseysUpdateWithoutUniform_player_assignmentsInput = {
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_kits?: uniform_kitsUpdateOneWithoutUniform_jerseysNestedInput
+  }
+
+  export type uniform_jerseysUncheckedUpdateWithoutUniform_player_assignmentsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uniform_kit_id?: NullableIntFieldUpdateOperationsInput | number | null
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type seasonsCreateWithoutSchedule_leadsInput = {
+    season_name: string
+    start_date: Date | string
+    end_date: Date | string
+    status?: $Enums.seasons_status
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    games?: gamesCreateNestedManyWithoutSeasonsInput
+    league_node_seasons?: league_node_seasonsCreateNestedManyWithoutSeasonsInput
+    team_seasons?: team_seasonsCreateNestedManyWithoutSeasonsInput
+    season_age_groups?: season_age_groupsCreateNestedManyWithoutSeasonsInput
+    awards?: awardsCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutSeasonsInput
+  }
+
+  export type seasonsUncheckedCreateWithoutSchedule_leadsInput = {
+    id?: number
+    season_name: string
+    start_date: Date | string
+    end_date: Date | string
+    status?: $Enums.seasons_status
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    games?: gamesUncheckedCreateNestedManyWithoutSeasonsInput
+    league_node_seasons?: league_node_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
+    team_seasons?: team_seasonsUncheckedCreateNestedManyWithoutSeasonsInput
+    season_age_groups?: season_age_groupsUncheckedCreateNestedManyWithoutSeasonsInput
+    awards?: awardsUncheckedCreateNestedManyWithoutSeasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutSeasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutSeasonsInput
+  }
+
+  export type seasonsCreateOrConnectWithoutSchedule_leadsInput = {
+    where: seasonsWhereUniqueInput
+    create: XOR<seasonsCreateWithoutSchedule_leadsInput, seasonsUncheckedCreateWithoutSchedule_leadsInput>
+  }
+
+  export type team_seasonsCreateWithoutSchedule_leadsInput = {
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    is_active?: boolean
+    require_photo_review?: boolean
+    events?: eventsCreateNestedManyWithoutTeam_seasonsInput
+    game_events_discipline?: game_events_disciplineCreateNestedManyWithoutTeam_seasonsInput
+    game_events_goals?: game_events_goalsCreateNestedManyWithoutTeam_seasonsInput
+    game_events_penalties?: game_events_penaltiesCreateNestedManyWithoutTeam_seasonsInput
+    game_events_team?: game_events_teamCreateNestedManyWithoutTeam_seasonsInput
+    games_games_away_team_season_idToteam_seasons?: gamesCreateNestedManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsInput
+    games_games_home_team_season_idToteam_seasons?: gamesCreateNestedManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsInput
+    player_games?: player_gamesCreateNestedManyWithoutTeam_seasonsInput
+    player_teams?: player_teamsCreateNestedManyWithoutTeam_seasonsInput
+    team_league_enrollments?: team_league_enrollmentsCreateNestedManyWithoutTeam_seasonsInput
+    age_groups?: age_groupsCreateNestedOneWithoutTeam_seasonsInput
+    teams: teamsCreateNestedOneWithoutTeam_seasonsInput
+    seasons: seasonsCreateNestedOneWithoutTeam_seasonsInput
+    team_staff?: team_staffCreateNestedManyWithoutTeam_seasonsInput
+    user_favorites?: user_favoritesCreateNestedManyWithoutTeam_seasonsInput
+    user_preferences?: user_preferencesCreateNestedManyWithoutTeam_seasonsInput
+    user_team_seasons?: user_team_seasonsCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_values?: custom_field_valuesCreateNestedManyWithoutTeam_seasonsInput
+    performance_tests?: performance_testsCreateNestedManyWithoutTeam_seasonsInput
+    team_groups?: team_groupsCreateNestedManyWithoutTeam_seasonsInput
+    player_pairings?: player_pairingsCreateNestedManyWithoutTeam_seasonsInput
+    player_unavailability?: player_unavailabilityCreateNestedManyWithoutTeam_seasonsInput
+    awards?: awardsCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsCreateNestedManyWithoutTeam_seasonsInput
+  }
+
+  export type team_seasonsUncheckedCreateWithoutSchedule_leadsInput = {
+    id?: number
+    team_id: number
+    season_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    age_group?: number | null
+    is_active?: boolean
+    require_photo_review?: boolean
+    events?: eventsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_discipline?: game_events_disciplineUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_goals?: game_events_goalsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_penalties?: game_events_penaltiesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    game_events_team?: game_events_teamUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    games_games_away_team_season_idToteam_seasons?: gamesUncheckedCreateNestedManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsInput
+    games_games_home_team_season_idToteam_seasons?: gamesUncheckedCreateNestedManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsInput
+    player_games?: player_gamesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_teams?: player_teamsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_league_enrollments?: team_league_enrollmentsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_staff?: team_staffUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_favorites?: user_favoritesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_preferences?: user_preferencesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    user_team_seasons?: user_team_seasonsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    custom_field_values?: custom_field_valuesUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    performance_tests?: performance_testsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    team_groups?: team_groupsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_pairings?: player_pairingsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_unavailability?: player_unavailabilityUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    awards?: awardsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    player_season_letters?: player_season_lettersUncheckedCreateNestedManyWithoutTeam_seasonsInput
+    uniform_season_kits?: uniform_season_kitsUncheckedCreateNestedManyWithoutTeam_seasonsInput
+  }
+
+  export type team_seasonsCreateOrConnectWithoutSchedule_leadsInput = {
+    where: team_seasonsWhereUniqueInput
+    create: XOR<team_seasonsCreateWithoutSchedule_leadsInput, team_seasonsUncheckedCreateWithoutSchedule_leadsInput>
+  }
+
+  export type clubsCreateWithoutSchedule_leadsInput = {
+    name: string
+    location?: string | null
+    logo_url?: string | null
+    founded_year?: number | null
+    contact_info?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    is_active?: boolean
+    abbreviation?: string | null
+    type?: $Enums.clubs_type | null
+    club_staff?: club_staffCreateNestedManyWithoutClubsInput
+    addresses?: addressesCreateNestedOneWithoutClubsInput
+    teams?: teamsCreateNestedManyWithoutClubsInput
+    custom_field_definitions?: custom_field_definitionsCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsCreateNestedManyWithoutClubsInput
+  }
+
+  export type clubsUncheckedCreateWithoutSchedule_leadsInput = {
+    id?: number
+    name: string
+    location?: string | null
+    logo_url?: string | null
+    founded_year?: number | null
+    contact_info?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+    is_active?: boolean
+    abbreviation?: string | null
+    type?: $Enums.clubs_type | null
+    location_id?: number | null
+    club_staff?: club_staffUncheckedCreateNestedManyWithoutClubsInput
+    teams?: teamsUncheckedCreateNestedManyWithoutClubsInput
+    custom_field_definitions?: custom_field_definitionsUncheckedCreateNestedManyWithoutClubsInput
+    uniform_kits?: uniform_kitsUncheckedCreateNestedManyWithoutClubsInput
+  }
+
+  export type clubsCreateOrConnectWithoutSchedule_leadsInput = {
+    where: clubsWhereUniqueInput
+    create: XOR<clubsCreateWithoutSchedule_leadsInput, clubsUncheckedCreateWithoutSchedule_leadsInput>
+  }
+
+  export type seasonsUpsertWithoutSchedule_leadsInput = {
+    update: XOR<seasonsUpdateWithoutSchedule_leadsInput, seasonsUncheckedUpdateWithoutSchedule_leadsInput>
+    create: XOR<seasonsCreateWithoutSchedule_leadsInput, seasonsUncheckedCreateWithoutSchedule_leadsInput>
+    where?: seasonsWhereInput
+  }
+
+  export type seasonsUpdateToOneWithWhereWithoutSchedule_leadsInput = {
+    where?: seasonsWhereInput
+    data: XOR<seasonsUpdateWithoutSchedule_leadsInput, seasonsUncheckedUpdateWithoutSchedule_leadsInput>
+  }
+
+  export type seasonsUpdateWithoutSchedule_leadsInput = {
+    season_name?: StringFieldUpdateOperationsInput | string
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: Enumseasons_statusFieldUpdateOperationsInput | $Enums.seasons_status
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    games?: gamesUpdateManyWithoutSeasonsNestedInput
+    league_node_seasons?: league_node_seasonsUpdateManyWithoutSeasonsNestedInput
+    team_seasons?: team_seasonsUpdateManyWithoutSeasonsNestedInput
+    season_age_groups?: season_age_groupsUpdateManyWithoutSeasonsNestedInput
+    awards?: awardsUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutSeasonsNestedInput
+  }
+
+  export type seasonsUncheckedUpdateWithoutSchedule_leadsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_name?: StringFieldUpdateOperationsInput | string
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: Enumseasons_statusFieldUpdateOperationsInput | $Enums.seasons_status
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    games?: gamesUncheckedUpdateManyWithoutSeasonsNestedInput
+    league_node_seasons?: league_node_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
+    team_seasons?: team_seasonsUncheckedUpdateManyWithoutSeasonsNestedInput
+    season_age_groups?: season_age_groupsUncheckedUpdateManyWithoutSeasonsNestedInput
+    awards?: awardsUncheckedUpdateManyWithoutSeasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutSeasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutSeasonsNestedInput
+  }
+
+  export type team_seasonsUpsertWithoutSchedule_leadsInput = {
+    update: XOR<team_seasonsUpdateWithoutSchedule_leadsInput, team_seasonsUncheckedUpdateWithoutSchedule_leadsInput>
+    create: XOR<team_seasonsCreateWithoutSchedule_leadsInput, team_seasonsUncheckedCreateWithoutSchedule_leadsInput>
+    where?: team_seasonsWhereInput
+  }
+
+  export type team_seasonsUpdateToOneWithWhereWithoutSchedule_leadsInput = {
+    where?: team_seasonsWhereInput
+    data: XOR<team_seasonsUpdateWithoutSchedule_leadsInput, team_seasonsUncheckedUpdateWithoutSchedule_leadsInput>
+  }
+
+  export type team_seasonsUpdateWithoutSchedule_leadsInput = {
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    require_photo_review?: BoolFieldUpdateOperationsInput | boolean
+    events?: eventsUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_discipline?: game_events_disciplineUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_goals?: game_events_goalsUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_penalties?: game_events_penaltiesUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_team?: game_events_teamUpdateManyWithoutTeam_seasonsNestedInput
+    games_games_away_team_season_idToteam_seasons?: gamesUpdateManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsNestedInput
+    games_games_home_team_season_idToteam_seasons?: gamesUpdateManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsNestedInput
+    player_games?: player_gamesUpdateManyWithoutTeam_seasonsNestedInput
+    player_teams?: player_teamsUpdateManyWithoutTeam_seasonsNestedInput
+    team_league_enrollments?: team_league_enrollmentsUpdateManyWithoutTeam_seasonsNestedInput
+    age_groups?: age_groupsUpdateOneWithoutTeam_seasonsNestedInput
+    teams?: teamsUpdateOneRequiredWithoutTeam_seasonsNestedInput
+    seasons?: seasonsUpdateOneRequiredWithoutTeam_seasonsNestedInput
+    team_staff?: team_staffUpdateManyWithoutTeam_seasonsNestedInput
+    user_favorites?: user_favoritesUpdateManyWithoutTeam_seasonsNestedInput
+    user_preferences?: user_preferencesUpdateManyWithoutTeam_seasonsNestedInput
+    user_team_seasons?: user_team_seasonsUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_definitions?: custom_field_definitionsUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_values?: custom_field_valuesUpdateManyWithoutTeam_seasonsNestedInput
+    performance_tests?: performance_testsUpdateManyWithoutTeam_seasonsNestedInput
+    team_groups?: team_groupsUpdateManyWithoutTeam_seasonsNestedInput
+    player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
+    player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
+    awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+  }
+
+  export type team_seasonsUncheckedUpdateWithoutSchedule_leadsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    team_id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    age_group?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    require_photo_review?: BoolFieldUpdateOperationsInput | boolean
+    events?: eventsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_discipline?: game_events_disciplineUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_goals?: game_events_goalsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_penalties?: game_events_penaltiesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    game_events_team?: game_events_teamUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    games_games_away_team_season_idToteam_seasons?: gamesUncheckedUpdateManyWithoutTeam_seasons_games_away_team_season_idToteam_seasonsNestedInput
+    games_games_home_team_season_idToteam_seasons?: gamesUncheckedUpdateManyWithoutTeam_seasons_games_home_team_season_idToteam_seasonsNestedInput
+    player_games?: player_gamesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_teams?: player_teamsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_league_enrollments?: team_league_enrollmentsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_staff?: team_staffUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_favorites?: user_favoritesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_preferences?: user_preferencesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    user_team_seasons?: user_team_seasonsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    custom_field_values?: custom_field_valuesUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    performance_tests?: performance_testsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    team_groups?: team_groupsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+  }
+
+  export type clubsUpsertWithoutSchedule_leadsInput = {
+    update: XOR<clubsUpdateWithoutSchedule_leadsInput, clubsUncheckedUpdateWithoutSchedule_leadsInput>
+    create: XOR<clubsCreateWithoutSchedule_leadsInput, clubsUncheckedCreateWithoutSchedule_leadsInput>
+    where?: clubsWhereInput
+  }
+
+  export type clubsUpdateToOneWithWhereWithoutSchedule_leadsInput = {
+    where?: clubsWhereInput
+    data: XOR<clubsUpdateWithoutSchedule_leadsInput, clubsUncheckedUpdateWithoutSchedule_leadsInput>
+  }
+
+  export type clubsUpdateWithoutSchedule_leadsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    founded_year?: NullableIntFieldUpdateOperationsInput | number | null
+    contact_info?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: NullableEnumclubs_typeFieldUpdateOperationsInput | $Enums.clubs_type | null
+    club_staff?: club_staffUpdateManyWithoutClubsNestedInput
+    addresses?: addressesUpdateOneWithoutClubsNestedInput
+    teams?: teamsUpdateManyWithoutClubsNestedInput
+    custom_field_definitions?: custom_field_definitionsUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUpdateManyWithoutClubsNestedInput
+  }
+
+  export type clubsUncheckedUpdateWithoutSchedule_leadsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    founded_year?: NullableIntFieldUpdateOperationsInput | number | null
+    contact_info?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    abbreviation?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: NullableEnumclubs_typeFieldUpdateOperationsInput | $Enums.clubs_type | null
+    location_id?: NullableIntFieldUpdateOperationsInput | number | null
+    club_staff?: club_staffUncheckedUpdateManyWithoutClubsNestedInput
+    teams?: teamsUncheckedUpdateManyWithoutClubsNestedInput
+    custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUncheckedUpdateManyWithoutClubsNestedInput
+  }
+
   export type clubsCreateManyAddressesInput = {
     id?: number
     name: string
@@ -93182,6 +104942,8 @@ export namespace Prisma {
     club_staff?: club_staffUpdateManyWithoutClubsNestedInput
     teams?: teamsUpdateManyWithoutClubsNestedInput
     custom_field_definitions?: custom_field_definitionsUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type clubsUncheckedUpdateWithoutAddressesInput = {
@@ -93199,6 +104961,8 @@ export namespace Prisma {
     club_staff?: club_staffUncheckedUpdateManyWithoutClubsNestedInput
     teams?: teamsUncheckedUpdateManyWithoutClubsNestedInput
     custom_field_definitions?: custom_field_definitionsUncheckedUpdateManyWithoutClubsNestedInput
+    uniform_kits?: uniform_kitsUncheckedUpdateManyWithoutClubsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutOpponent_clubNestedInput
   }
 
   export type clubsUncheckedUpdateManyWithoutAddressesInput = {
@@ -93289,6 +105053,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutAge_groupsInput = {
@@ -93320,6 +105087,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateManyWithoutAge_groupsInput = {
@@ -93390,6 +105160,31 @@ export namespace Prisma {
     instructions?: string | null
     action_url?: string | null
     action_label?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_kitsCreateManyClubsInput = {
+    id?: number
+    type: string
+    brand?: string | null
+    style?: string | null
+    color?: string | null
+    year?: number | null
+    is_active?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type schedule_leadsCreateManyOpponent_clubInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -93517,6 +105312,83 @@ export namespace Prisma {
     instructions?: NullableStringFieldUpdateOperationsInput | string | null
     action_url?: NullableStringFieldUpdateOperationsInput | string | null
     action_label?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_kitsUpdateWithoutClubsInput = {
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_jerseys?: uniform_jerseysUpdateManyWithoutUniform_kitsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutUniform_kitsNestedInput
+  }
+
+  export type uniform_kitsUncheckedUpdateWithoutClubsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_jerseys?: uniform_jerseysUncheckedUpdateManyWithoutUniform_kitsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutUniform_kitsNestedInput
+  }
+
+  export type uniform_kitsUncheckedUpdateManyWithoutClubsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    style?: NullableStringFieldUpdateOperationsInput | string | null
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsUpdateWithoutOpponent_clubInput = {
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    seasons?: seasonsUpdateOneRequiredWithoutSchedule_leadsNestedInput
+    team_seasons?: team_seasonsUpdateOneWithoutSchedule_leadsNestedInput
+  }
+
+  export type schedule_leadsUncheckedUpdateWithoutOpponent_clubInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsUncheckedUpdateManyWithoutOpponent_clubInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -95386,6 +107258,22 @@ export namespace Prisma {
     modified_at?: Date | string | null
   }
 
+  export type player_season_lettersCreateManyPeopleInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
   export type club_staffUpdateWithoutPeopleInput = {
     role?: Enumclub_staff_roleFieldUpdateOperationsInput | $Enums.club_staff_role
     title?: NullableStringFieldUpdateOperationsInput | string | null
@@ -95548,6 +107436,7 @@ export namespace Prisma {
     joined_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     left_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     team_seasons?: team_seasonsUpdateOneRequiredWithoutPlayer_teamsNestedInput
+    uniform_player_assignments?: uniform_player_assignmentsUpdateManyWithoutPlayer_teamsNestedInput
   }
 
   export type player_teamsUncheckedUpdateWithoutPeopleInput = {
@@ -95570,6 +107459,7 @@ export namespace Prisma {
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
     joined_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     left_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedUpdateManyWithoutPlayer_teamsNestedInput
   }
 
   export type player_teamsUncheckedUpdateManyWithoutPeopleInput = {
@@ -95954,6 +107844,53 @@ export namespace Prisma {
     year?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     badge_icon?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type player_season_lettersUpdateWithoutPeopleInput = {
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    seasons?: seasonsUpdateOneRequiredWithoutPlayer_season_lettersNestedInput
+    team_seasons?: team_seasonsUpdateOneWithoutPlayer_season_lettersNestedInput
+  }
+
+  export type player_season_lettersUncheckedUpdateWithoutPeopleInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type player_season_lettersUncheckedUpdateManyWithoutPeopleInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -96435,6 +108372,41 @@ export namespace Prisma {
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type uniform_player_assignmentsCreateManyPlayer_teamsInput = {
+    id?: number
+    uniform_jersey_id: number
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_player_assignmentsUpdateWithoutPlayer_teamsInput = {
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_jerseys?: uniform_jerseysUpdateOneRequiredWithoutUniform_player_assignmentsNestedInput
+  }
+
+  export type uniform_player_assignmentsUncheckedUpdateWithoutPlayer_teamsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uniform_jersey_id?: IntFieldUpdateOperationsInput | number
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_player_assignmentsUncheckedUpdateManyWithoutPlayer_teamsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uniform_jersey_id?: IntFieldUpdateOperationsInput | number
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type gamesCreateManySeasonsInput = {
     id?: number
     timezone_label?: string | null
@@ -96501,6 +108473,44 @@ export namespace Prisma {
     year?: number | null
     notes?: string | null
     badge_icon?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type player_season_lettersCreateManySeasonsInput = {
+    id?: number
+    player_id: number
+    team_season_id?: number | null
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_season_kitsCreateManySeasonsInput = {
+    id?: number
+    team_season_id?: number | null
+    squad_level: string
+    uniform_kit_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type schedule_leadsCreateManySeasonsInput = {
+    id?: number
+    team_season_id?: number | null
+    opponent_club_id: number
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -96663,6 +108673,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutSeasonsInput = {
@@ -96694,6 +108707,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateManyWithoutSeasonsInput = {
@@ -96772,6 +108788,117 @@ export namespace Prisma {
     year?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     badge_icon?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type player_season_lettersUpdateWithoutSeasonsInput = {
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    people?: peopleUpdateOneRequiredWithoutPlayer_season_lettersNestedInput
+    team_seasons?: team_seasonsUpdateOneWithoutPlayer_season_lettersNestedInput
+  }
+
+  export type player_season_lettersUncheckedUpdateWithoutSeasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type player_season_lettersUncheckedUpdateManyWithoutSeasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsUpdateWithoutSeasonsInput = {
+    squad_level?: StringFieldUpdateOperationsInput | string
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    team_seasons?: team_seasonsUpdateOneWithoutUniform_season_kitsNestedInput
+    uniform_kits?: uniform_kitsUpdateOneRequiredWithoutUniform_season_kitsNestedInput
+  }
+
+  export type uniform_season_kitsUncheckedUpdateWithoutSeasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    squad_level?: StringFieldUpdateOperationsInput | string
+    uniform_kit_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsUncheckedUpdateManyWithoutSeasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    squad_level?: StringFieldUpdateOperationsInput | string
+    uniform_kit_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsUpdateWithoutSeasonsInput = {
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    team_seasons?: team_seasonsUpdateOneWithoutSchedule_leadsNestedInput
+    opponent_club?: clubsUpdateOneRequiredWithoutSchedule_leadsNestedInput
+  }
+
+  export type schedule_leadsUncheckedUpdateWithoutSeasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    opponent_club_id?: IntFieldUpdateOperationsInput | number
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsUncheckedUpdateManyWithoutSeasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    opponent_club_id?: IntFieldUpdateOperationsInput | number
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -97060,6 +109187,44 @@ export namespace Prisma {
     year?: number | null
     notes?: string | null
     badge_icon?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type player_season_lettersCreateManyTeam_seasonsInput = {
+    id?: number
+    player_id: number
+    season_id: number
+    varsity_letter?: boolean
+    number_patch?: number | null
+    certificate?: boolean
+    bar?: boolean
+    ball?: boolean
+    number_patch_needed?: boolean
+    varsity_patch_needed?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_season_kitsCreateManyTeam_seasonsInput = {
+    id?: number
+    season_id: number
+    squad_level: string
+    uniform_kit_id: number
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type schedule_leadsCreateManyTeam_seasonsInput = {
+    id?: number
+    season_id: number
+    opponent_club_id: number
+    likelihood?: string
+    status?: string
+    preferred_home_away?: string | null
+    preferred_date?: Date | string | null
+    notes?: string | null
     created_at?: Date | string | null
     modified_at?: Date | string | null
   }
@@ -97535,6 +109700,7 @@ export namespace Prisma {
     joined_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     left_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     people?: peopleUpdateOneRequiredWithoutPlayer_teamsNestedInput
+    uniform_player_assignments?: uniform_player_assignmentsUpdateManyWithoutPlayer_teamsNestedInput
   }
 
   export type player_teamsUncheckedUpdateWithoutTeam_seasonsInput = {
@@ -97557,6 +109723,7 @@ export namespace Prisma {
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
     joined_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     left_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedUpdateManyWithoutPlayer_teamsNestedInput
   }
 
   export type player_teamsUncheckedUpdateManyWithoutTeam_seasonsInput = {
@@ -97980,6 +110147,117 @@ export namespace Prisma {
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type player_season_lettersUpdateWithoutTeam_seasonsInput = {
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    people?: peopleUpdateOneRequiredWithoutPlayer_season_lettersNestedInput
+    seasons?: seasonsUpdateOneRequiredWithoutPlayer_season_lettersNestedInput
+  }
+
+  export type player_season_lettersUncheckedUpdateWithoutTeam_seasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    varsity_letter?: BoolFieldUpdateOperationsInput | boolean
+    number_patch?: NullableIntFieldUpdateOperationsInput | number | null
+    certificate?: BoolFieldUpdateOperationsInput | boolean
+    bar?: BoolFieldUpdateOperationsInput | boolean
+    ball?: BoolFieldUpdateOperationsInput | boolean
+    number_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    varsity_patch_needed?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsUpdateWithoutTeam_seasonsInput = {
+    squad_level?: StringFieldUpdateOperationsInput | string
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    seasons?: seasonsUpdateOneRequiredWithoutUniform_season_kitsNestedInput
+    uniform_kits?: uniform_kitsUpdateOneRequiredWithoutUniform_season_kitsNestedInput
+  }
+
+  export type uniform_season_kitsUncheckedUpdateWithoutTeam_seasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    squad_level?: StringFieldUpdateOperationsInput | string
+    uniform_kit_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    squad_level?: StringFieldUpdateOperationsInput | string
+    uniform_kit_id?: IntFieldUpdateOperationsInput | number
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsUpdateWithoutTeam_seasonsInput = {
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    seasons?: seasonsUpdateOneRequiredWithoutSchedule_leadsNestedInput
+    opponent_club?: clubsUpdateOneRequiredWithoutSchedule_leadsNestedInput
+  }
+
+  export type schedule_leadsUncheckedUpdateWithoutTeam_seasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    opponent_club_id?: IntFieldUpdateOperationsInput | number
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    opponent_club_id?: IntFieldUpdateOperationsInput | number
+    likelihood?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    preferred_home_away?: NullableStringFieldUpdateOperationsInput | string | null
+    preferred_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type team_seasonsCreateManyTeamsInput = {
     id?: number
     season_id: number
@@ -98018,6 +110296,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateWithoutTeamsInput = {
@@ -98049,6 +110330,9 @@ export namespace Prisma {
     player_pairings?: player_pairingsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     player_unavailability?: player_unavailabilityUncheckedUpdateManyWithoutTeam_seasonsNestedInput
     awards?: awardsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    player_season_letters?: player_season_lettersUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    uniform_season_kits?: uniform_season_kitsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
+    schedule_leads?: schedule_leadsUncheckedUpdateManyWithoutTeam_seasonsNestedInput
   }
 
   export type team_seasonsUncheckedUpdateManyWithoutTeamsInput = {
@@ -98245,6 +110529,117 @@ export namespace Prisma {
     modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type uniform_jerseysCreateManyUniform_kitsInput = {
+    id?: number
+    jersey_number: number
+    size?: string | null
+    is_lost?: boolean
+    notes?: string | null
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_season_kitsCreateManyUniform_kitsInput = {
+    id?: number
+    season_id: number
+    team_season_id?: number | null
+    squad_level: string
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_jerseysUpdateWithoutUniform_kitsInput = {
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUpdateManyWithoutUniform_jerseysNestedInput
+  }
+
+  export type uniform_jerseysUncheckedUpdateWithoutUniform_kitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    uniform_player_assignments?: uniform_player_assignmentsUncheckedUpdateManyWithoutUniform_jerseysNestedInput
+  }
+
+  export type uniform_jerseysUncheckedUpdateManyWithoutUniform_kitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    jersey_number?: IntFieldUpdateOperationsInput | number
+    size?: NullableStringFieldUpdateOperationsInput | string | null
+    is_lost?: BoolFieldUpdateOperationsInput | boolean
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsUpdateWithoutUniform_kitsInput = {
+    squad_level?: StringFieldUpdateOperationsInput | string
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    seasons?: seasonsUpdateOneRequiredWithoutUniform_season_kitsNestedInput
+    team_seasons?: team_seasonsUpdateOneWithoutUniform_season_kitsNestedInput
+  }
+
+  export type uniform_season_kitsUncheckedUpdateWithoutUniform_kitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    squad_level?: StringFieldUpdateOperationsInput | string
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_season_kitsUncheckedUpdateManyWithoutUniform_kitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    season_id?: IntFieldUpdateOperationsInput | number
+    team_season_id?: NullableIntFieldUpdateOperationsInput | number | null
+    squad_level?: StringFieldUpdateOperationsInput | string
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_player_assignmentsCreateManyUniform_jerseysInput = {
+    id?: number
+    player_team_id: number
+    assignment_type?: string
+    returned?: boolean
+    created_at?: Date | string | null
+    modified_at?: Date | string | null
+  }
+
+  export type uniform_player_assignmentsUpdateWithoutUniform_jerseysInput = {
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    player_teams?: player_teamsUpdateOneRequiredWithoutUniform_player_assignmentsNestedInput
+  }
+
+  export type uniform_player_assignmentsUncheckedUpdateWithoutUniform_jerseysInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_team_id?: IntFieldUpdateOperationsInput | number
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type uniform_player_assignmentsUncheckedUpdateManyWithoutUniform_jerseysInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    player_team_id?: IntFieldUpdateOperationsInput | number
+    assignment_type?: StringFieldUpdateOperationsInput | string
+    returned?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    modified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
 
 
   /**
@@ -98315,6 +110710,10 @@ export namespace Prisma {
      */
     export type Player_gamesCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Player_gamesCountOutputTypeDefaultArgs<ExtArgs>
     /**
+     * @deprecated Use Player_teamsCountOutputTypeDefaultArgs instead
+     */
+    export type Player_teamsCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Player_teamsCountOutputTypeDefaultArgs<ExtArgs>
+    /**
      * @deprecated Use SeasonsCountOutputTypeDefaultArgs instead
      */
     export type SeasonsCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SeasonsCountOutputTypeDefaultArgs<ExtArgs>
@@ -98342,6 +110741,14 @@ export namespace Prisma {
      * @deprecated Use Player_unavailabilityCountOutputTypeDefaultArgs instead
      */
     export type Player_unavailabilityCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Player_unavailabilityCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use Uniform_kitsCountOutputTypeDefaultArgs instead
+     */
+    export type Uniform_kitsCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Uniform_kitsCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use Uniform_jerseysCountOutputTypeDefaultArgs instead
+     */
+    export type Uniform_jerseysCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = Uniform_jerseysCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use addressesDefaultArgs instead
      */
@@ -98534,6 +110941,30 @@ export namespace Prisma {
      * @deprecated Use awardsDefaultArgs instead
      */
     export type awardsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = awardsDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use player_season_lettersDefaultArgs instead
+     */
+    export type player_season_lettersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = player_season_lettersDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use uniform_kitsDefaultArgs instead
+     */
+    export type uniform_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = uniform_kitsDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use uniform_jerseysDefaultArgs instead
+     */
+    export type uniform_jerseysArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = uniform_jerseysDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use uniform_season_kitsDefaultArgs instead
+     */
+    export type uniform_season_kitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = uniform_season_kitsDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use uniform_player_assignmentsDefaultArgs instead
+     */
+    export type uniform_player_assignmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = uniform_player_assignmentsDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use schedule_leadsDefaultArgs instead
+     */
+    export type schedule_leadsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = schedule_leadsDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany
