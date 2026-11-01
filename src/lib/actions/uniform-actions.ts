@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-<<<<<<< HEAD
 import { ensureLegacyExtrasMigrated } from "@/lib/db/ensureLegacyExtrasMigrated";
 
 export async function getUniformDataForTeamSeason(
@@ -111,7 +110,10 @@ export async function getUniformDataForTeamSeason(
   }));
 
   const rosters = await prisma.player_teams.findMany({
-    where: { team_season_id: { in: targetTsIds } },
+    where: {
+      team_season_id: { in: targetTsIds },
+      status: "rostered",
+    },
     include: { people: true },
   });
 
@@ -142,7 +144,8 @@ export async function getUniformDataForTeamSeason(
       player_teams: pt
         ? {
             id: pt.id,
-            person_id: pt.person_id,
+            player_id: pt.player_id,
+            person_id: pt.player_id,
             jersey_number: pt.jersey_number,
             people: {
               first_name: pt.people.first_name,
@@ -153,82 +156,22 @@ export async function getUniformDataForTeamSeason(
       uniform_jerseys: jersey || null,
     };
   });
-=======
-
-export async function getUniformDataForTeamSeason(teamSeasonId: number, programTeamSeasonIds?: number[]) {
-  const ts = await prisma.team_seasons.findUnique({
-    where: { id: teamSeasonId },
-    include: { teams: true },
-  });
-  if (!ts) return { kits: [], seasonKits: [], assignments: [] };
-
-  const targetTsIds = programTeamSeasonIds && programTeamSeasonIds.length > 0 ? programTeamSeasonIds : [teamSeasonId];
-
-  const [kits, seasonKits, assignments] = await Promise.all([
-    prisma.uniform_kits.findMany({
-      where: ts.teams.club_id ? { OR: [{ club_id: ts.teams.club_id }, { club_id: null }] } : {},
-      include: {
-        uniform_jerseys: {
-          orderBy: { jersey_number: "asc" },
-        },
-      },
-      orderBy: [{ is_active: "desc" }, { year: "desc" }, { id: "asc" }],
-    }),
-    prisma.uniform_season_kits.findMany({
-      where: { season_id: ts.season_id },
-      include: {
-        uniform_kits: true,
-      },
-      orderBy: { id: "asc" },
-    }),
-    prisma.uniform_player_assignments.findMany({
-      where: {
-        player_teams: {
-          team_season_id: { in: targetTsIds },
-        },
-      },
-      include: {
-        player_teams: {
-          include: {
-            people: true,
-            team_seasons: { include: { teams: true } },
-          },
-        },
-        uniform_jerseys: {
-          include: {
-            uniform_kits: true,
-          },
-        },
-      },
-      orderBy: { id: "asc" },
-    }),
-  ]);
->>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
 
   return { kits, seasonKits, assignments };
 }
 
 export async function upsertUniformKitAction(data: {
   id?: number;
-<<<<<<< HEAD
-  clubId: number;
-=======
   clubId?: number | null;
->>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
   type: string;
   brand?: string | null;
   style?: string | null;
   color?: string | null;
-<<<<<<< HEAD
   year?: number | string | null;
-=======
-  year?: number | null;
->>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
   isActive?: boolean;
   teamSeasonId?: number;
 }) {
   try {
-<<<<<<< HEAD
     const safeClubId = Number(data.clubId) || 0;
     if (!safeClubId || !data.type.trim()) {
       return { success: false, error: "Club and Kit Type are required." };
@@ -294,33 +237,7 @@ export async function upsertUniformKitAction(data: {
       };
     }
   } catch (err: any) {
-=======
-    const payload = {
-      club_id: data.clubId || null,
-      type: data.type.trim(),
-      brand: data.brand?.trim() || null,
-      style: data.style?.trim() || null,
-      color: data.color?.trim() || null,
-      year: data.year || null,
-      is_active: data.isActive ?? true,
-    };
-
-    const kit = data.id
-      ? await prisma.uniform_kits.update({
-          where: { id: data.id },
-          data: payload,
-          include: { uniform_jerseys: true },
-        })
-      : await prisma.uniform_kits.create({
-          data: payload,
-          include: { uniform_jerseys: true },
-        });
-
-    if (data.teamSeasonId) revalidatePath(`/teams/${data.teamSeasonId}`);
-    return { success: true, kit };
-  } catch (err: any) {
     console.error("Error saving uniform kit:", err);
->>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
     return { success: false, error: err.message || "Failed to save uniform kit" };
   }
 }
@@ -332,7 +249,6 @@ export async function addUniformJerseysBatchAction(data: {
   teamSeasonId?: number;
 }) {
   try {
-<<<<<<< HEAD
     const safeKitId = Number(data.uniformKitId) || 0;
     if (!safeKitId) return { success: false, error: "Uniform Kit is required." };
 
@@ -358,28 +274,11 @@ export async function addUniformJerseysBatchAction(data: {
 
     if (data.teamSeasonId) revalidatePath(`/teams/${data.teamSeasonId}`);
     return { success: true, jerseys: createdJerseys };
-=======
-    const created = [];
-    for (const num of data.numbers) {
-      const j = await prisma.uniform_jerseys.create({
-        data: {
-          uniform_kit_id: data.uniformKitId,
-          jersey_number: num,
-          size: data.size || "M",
-          is_lost: false,
-        },
-      });
-      created.push(j);
-    }
-    if (data.teamSeasonId) revalidatePath(`/teams/${data.teamSeasonId}`);
-    return { success: true, jerseys: created };
->>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to add jerseys" };
   }
 }
 
-<<<<<<< HEAD
 export async function toggleJerseyLostAction(
   jerseyId: number,
   isLost: boolean,
@@ -397,65 +296,33 @@ export async function toggleJerseyLostAction(
 
   if (teamSeasonId) revalidatePath(`/teams/${teamSeasonId}`);
   return { success: true };
-=======
-export async function toggleJerseyLostAction(jerseyId: number, isLost: boolean, teamSeasonId?: number) {
-  try {
-    const updated = await prisma.uniform_jerseys.update({
-      where: { id: jerseyId },
-      data: { is_lost: isLost },
-    });
-    if (teamSeasonId) revalidatePath(`/teams/${teamSeasonId}`);
-    return { success: true, jersey: updated };
-  } catch (err: any) {
-    return { success: false, error: err.message || "Failed to update jersey status" };
-  }
->>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
 }
 
 export async function assignKitToSeasonSquadAction(data: {
   seasonId: number;
-<<<<<<< HEAD
-  teamSeasonId: number;
-  squadLevel: string;
-  uniformKitId: number;
-}) {
-  await ensureLegacyExtrasMigrated();
-  await prisma.$executeRawUnsafe(
-    `INSERT INTO \`uniform_season_kits\` (\`season_id\`, \`team_season_id\`, \`squad_level\`, \`uniform_kit_id\`) VALUES (?, ?, ?, ?)`,
-    Number(data.seasonId),
-    Number(data.teamSeasonId),
-    data.squadLevel.trim() || "Varsity",
-    Number(data.uniformKitId)
-  );
-  revalidatePath(`/teams/${data.teamSeasonId}`);
-  return { success: true };
-=======
   teamSeasonId?: number | null;
   squadLevel: string;
   uniformKitId: number;
 }) {
   try {
-    const record = await prisma.uniform_season_kits.create({
-      data: {
-        season_id: data.seasonId,
-        team_season_id: data.teamSeasonId || null,
-        squad_level: data.squadLevel,
-        uniform_kit_id: data.uniformKitId,
-      },
-      include: { uniform_kits: true },
-    });
+    await ensureLegacyExtrasMigrated();
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO \`uniform_season_kits\` (\`season_id\`, \`team_season_id\`, \`squad_level\`, \`uniform_kit_id\`) VALUES (?, ?, ?, ?)`,
+      Number(data.seasonId),
+      data.teamSeasonId ? Number(data.teamSeasonId) : null,
+      data.squadLevel.trim() || "Varsity",
+      Number(data.uniformKitId)
+    );
     if (data.teamSeasonId) revalidatePath(`/teams/${data.teamSeasonId}`);
-    return { success: true, seasonKit: record };
+    return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to assign kit to season" };
   }
->>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
 }
 
 export async function assignJerseyToPlayerAction(data: {
   playerTeamId: number;
   uniformJerseyId: number;
-<<<<<<< HEAD
   assignmentType: string;
   teamSeasonId?: number;
 }) {
@@ -499,7 +366,8 @@ export async function assignJerseyToPlayerAction(data: {
       player_teams: pt
         ? {
             id: pt.id,
-            person_id: pt.person_id,
+            player_id: pt.player_id,
+            person_id: pt.player_id,
             jersey_number: pt.jersey_number,
             people: {
               first_name: pt.people.first_name,
@@ -563,50 +431,4 @@ export async function deleteUniformAssignmentAction(
   );
   if (teamSeasonId) revalidatePath(`/teams/${teamSeasonId}`);
   return { success: true };
-=======
-  assignmentType: string; // 'primary', 'secondary', 'match', 'gk'
-  teamSeasonId?: number;
-}) {
-  try {
-    const record = await prisma.uniform_player_assignments.create({
-      data: {
-        player_team_id: data.playerTeamId,
-        uniform_jersey_id: data.uniformJerseyId,
-        assignment_type: data.assignmentType || "primary",
-        returned: false,
-      },
-      include: {
-        player_teams: { include: { people: true } },
-        uniform_jerseys: { include: { uniform_kits: true } },
-      },
-    });
-    if (data.teamSeasonId) revalidatePath(`/teams/${data.teamSeasonId}`);
-    return { success: true, assignment: record };
-  } catch (err: any) {
-    return { success: false, error: err.message || "Failed to assign jersey to player" };
-  }
-}
-
-export async function toggleUniformReturnedAction(assignmentId: number, returned: boolean, teamSeasonId?: number) {
-  try {
-    const updated = await prisma.uniform_player_assignments.update({
-      where: { id: assignmentId },
-      data: { returned },
-    });
-    if (teamSeasonId) revalidatePath(`/teams/${teamSeasonId}`);
-    return { success: true, assignment: updated };
-  } catch (err: any) {
-    return { success: false, error: err.message || "Failed to update return status" };
-  }
-}
-
-export async function deleteUniformAssignmentAction(assignmentId: number, teamSeasonId?: number) {
-  try {
-    await prisma.uniform_player_assignments.delete({ where: { id: assignmentId } });
-    if (teamSeasonId) revalidatePath(`/teams/${teamSeasonId}`);
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message || "Failed to delete assignment" };
-  }
->>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
 }

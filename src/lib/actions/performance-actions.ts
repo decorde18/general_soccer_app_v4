@@ -3,10 +3,20 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function getPerformanceTests(teamSeasonId?: number) {
+export async function getPerformanceTests(
+  teamSeasonId?: number,
+  programTeamSeasonIds?: number[]
+) {
+  const ids =
+    programTeamSeasonIds && programTeamSeasonIds.length > 0
+      ? programTeamSeasonIds
+      : teamSeasonId
+      ? [teamSeasonId]
+      : [];
+
   return await prisma.performance_tests.findMany({
-    where: teamSeasonId ? { team_season_id: teamSeasonId } : {},
-    orderBy: { name: "asc" },
+    where: ids.length > 0 ? { team_season_id: { in: ids } } : {},
+    orderBy: [{ name: "asc" }, { id: "asc" }],
   });
 }
 
@@ -58,19 +68,71 @@ export async function deletePerformanceTest(id: number, teamSeasonId?: number) {
   return result;
 }
 
-export async function getPlayerPerformanceLogs(teamSeasonId: number, testId?: number, playerId?: number) {
+export async function getPlayerPerformanceLogs(
+  teamSeasonId: number,
+  testId?: number,
+  playerId?: number,
+  programTeamSeasonIds?: number[]
+) {
+  const ids =
+    programTeamSeasonIds && programTeamSeasonIds.length > 0
+      ? programTeamSeasonIds
+      : teamSeasonId
+      ? [teamSeasonId]
+      : [];
+
   const where: any = {};
   if (testId) where.test_id = testId;
   if (playerId) where.player_id = playerId;
 
-  if (teamSeasonId) {
+  if (ids.length > 0) {
     where.performance_tests = {
-      team_season_id: teamSeasonId,
+      team_season_id: { in: ids },
     };
   }
 
-  return await prisma.player_performance_logs.findMany({
+  const seasonLogs = await prisma.player_performance_logs.findMany({
     where,
+    include: {
+      performance_tests: true,
+      people: {
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+        },
+      },
+    },
+    orderBy: [
+      { test_date: "desc" },
+      { created_at: "desc" },
+    ],
+  });
+
+  if (seasonLogs.length > 0 || testId || playerId || ids.length === 0) {
+    return seasonLogs;
+  }
+
+  // Fallback: if this specific season has no direct logs recorded yet,
+  // check if rostered players in this season have career fitness logs from adjacent seasons.
+  const rostered = await prisma.player_teams.findMany({
+    where: {
+      team_season_id: { in: ids },
+      status: "rostered",
+      is_active: true,
+    },
+    select: { player_id: true },
+  });
+
+  const rosteredPlayerIds = Array.from(new Set(rostered.map((r) => r.player_id)));
+  if (rosteredPlayerIds.length === 0) {
+    return [];
+  }
+
+  return await prisma.player_performance_logs.findMany({
+    where: {
+      player_id: { in: rosteredPlayerIds },
+    },
     include: {
       performance_tests: true,
       people: {

@@ -1,3 +1,35 @@
+### [2026-10-31 20:51] Independence Fitness Logs & Requirements/Gear Data Migration & Rostered-Only Tab Filtering
+- **Type**: Bug Fix / Data Migration / UI Hardening
+- **Summary**:
+  - **Root Cause Analysis**:
+    1. `performance_tests`, `player_performance_logs`, `custom_field_definitions`, and `custom_field_values` had 0 rows in MySQL because `ensureLegacyExtrasMigrated.ts` previously threw a runtime error (`t.name` instead of `t.team_name` and `pt.person_id` instead of `pt.player_id`), and `BeepInformation` / `BeepResults` from `IHS Girls Soccer - Most Recent.accdb` had not been extracted.
+    2. `TeamPageClient.tsx` passed `filteredPlayers` (which included `interested`, `trying_out`, and `not_playing` players) directly to `TeamPerformance`, `TeamRequirements`, `TeamGroups`, `TeamAvailability`, `TeamAwardsAndLetters`, and `TeamUniforms`, and `TeamRequirements.tsx` / `TeamPerformance.tsx` did not sync their state when squad tabs (`All Squads`, `Varsity`, `JV`) changed.
+  - **Binary `.accdb` Extraction & Database Migration (`accdb_beep_data.json`, `ensureLegacyExtrasMigrated.ts`, `migrate_accdb_and_legacy_extras.ts`)**:
+    - Extracted all 91 `BeepInformation` stages and 629 `BeepResults` player test runs directly from `IHS Girls Soccer - Most Recent.accdb` into `src/lib/db/accdb_beep_data.json`.
+    - Populated 23 `performance_tests` (`Beep Test (20m Shuttle)`) and 629 `player_performance_logs` (with stage level.shuttle, total shuttle distance in meters, attempt number, and test dates).
+    - Populated 216 `custom_field_definitions` (`Player Headshot`, `Lives With Parents`, `Enrolled Last 12 Months`, `Returning Player`, `Academic Credits Met`, `Previous School`, `Jersey Size`, `Uniform Issued`, `Uniform Returned`) and 5,565 `custom_field_values` across all Independence seasons, along with all 16 `uniform_kits`, 304 `uniform_jerseys`, 21 `uniform_season_kits`, 911 `uniform_player_assignments`, 25 `schedule_leads`, and 770 `player_season_letters`.
+  - **Strict Rostered-Only Filtering & Multi-Squad Scoping (`TeamPageClient.tsx`, `TeamPerformance.tsx`, `TeamRequirements.tsx`, `performance-actions.ts`, `customFields-actions.ts`, `photo-actions.ts`)**:
+    - Added `rosteredFilteredPlayers` (`status === "rostered"`) in `TeamPageClient.tsx` and passed it to `TeamRequirements`, `TeamPerformance`, `TeamGroups`, `TeamAvailability`, `TeamAwardsAndLetters`, and `TeamUniforms` (while keeping status filter tabs inside `TeamRoster.tsx`).
+    - Updated `TeamRequirements.tsx` and `TeamPerformance.tsx` to dynamically sync player lists and filter log entries to rostered players when switching between `All Squads`, `Varsity (V)`, and `Junior Varsity (JV)`.
+    - Updated `getPerformanceTests`, `getPlayerPerformanceLogs`, `getCustomFieldDefinitions`, and `getCustomFieldValues` to support `programTeamSeasonIds` across multi-squad programs.
+    - Resolved git merge conflict markers in `scripts/migrate_accdb_and_legacy_extras.ts`, `src/lib/actions/awards-actions.ts`, `src/lib/actions/scheduleHelper-actions.ts`, `src/lib/actions/uniform-actions.ts`, and `src/lib/data/queries.ts`.
+- **Modified Files**:
+  - `src/lib/db/accdb_beep_data.json`
+  - `src/lib/db/ensureLegacyExtrasMigrated.ts`
+  - `scripts/migrate_accdb_and_legacy_extras.ts`
+  - `src/app/(mainAppLayout)/teams/[teamSeasonId]/page.tsx`
+  - `src/components/team/TeamPageClient.tsx`
+  - `src/components/team/TeamPerformance.tsx`
+  - `src/components/team/TeamRequirements.tsx`
+  - `src/lib/actions/performance-actions.ts`
+  - `src/lib/actions/customFields-actions.ts`
+  - `src/lib/actions/photo-actions.ts`
+  - `src/lib/actions/awards-actions.ts`
+  - `src/lib/actions/scheduleHelper-actions.ts`
+  - `src/lib/actions/uniform-actions.ts`
+  - `src/lib/data/queries.ts`
+  - `updates.md`
+
 ### [2026-10-31 18:38] Legacy Feature Parity: Awards & Varsity Letters, Uniform Inventory, Schedule Helper, & Career Stats Scope Fix
 - **Type**: Feature / Data Migration / Bug Fix
 - **Summary**:

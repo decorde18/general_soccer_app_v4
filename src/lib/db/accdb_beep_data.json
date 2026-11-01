@@ -1,0 +1,4864 @@
+{
+  "BeepInformation": [
+    {
+      "ID": 1,
+      "Run": 5.1,
+      "Distance": 40
+    },
+    {
+      "ID": 2,
+      "Run": 9.1,
+      "Distance": 80
+    },
+    {
+      "ID": 3,
+      "Run": 11.1,
+      "Distance": 120
+    },
+    {
+      "ID": 4,
+      "Run": 11.2,
+      "Distance": 160
+    },
+    {
+      "ID": 5,
+      "Run": 12.1,
+      "Distance": 200
+    },
+    {
+      "ID": 6,
+      "Run": 12.2,
+      "Distance": 240
+    },
+    {
+      "ID": 7,
+      "Run": 12.3,
+      "Distance": 280
+    },
+    {
+      "ID": 8,
+      "Run": 13.1,
+      "Distance": 320
+    },
+    {
+      "ID": 9,
+      "Run": 13.2,
+      "Distance": 360
+    },
+    {
+      "ID": 10,
+      "Run": 13.3,
+      "Distance": 400
+    },
+    {
+      "ID": 11,
+      "Run": 13.4,
+      "Distance": 440
+    },
+    {
+      "ID": 12,
+      "Run": 14.1,
+      "Distance": 480
+    },
+    {
+      "ID": 13,
+      "Run": 14.2,
+      "Distance": 520
+    },
+    {
+      "ID": 14,
+      "Run": 14.3,
+      "Distance": 560
+    },
+    {
+      "ID": 15,
+      "Run": 14.4,
+      "Distance": 600
+    },
+    {
+      "ID": 16,
+      "Run": 14.5,
+      "Distance": 640
+    },
+    {
+      "ID": 17,
+      "Run": 14.6,
+      "Distance": 680
+    },
+    {
+      "ID": 18,
+      "Run": 14.7,
+      "Distance": 720
+    },
+    {
+      "ID": 19,
+      "Run": 14.8,
+      "Distance": 760
+    },
+    {
+      "ID": 20,
+      "Run": 15.1,
+      "Distance": 800
+    },
+    {
+      "ID": 21,
+      "Run": 15.2,
+      "Distance": 840
+    },
+    {
+      "ID": 22,
+      "Run": 15.3,
+      "Distance": 880
+    },
+    {
+      "ID": 23,
+      "Run": 15.4,
+      "Distance": 920
+    },
+    {
+      "ID": 24,
+      "Run": 15.5,
+      "Distance": 960
+    },
+    {
+      "ID": 25,
+      "Run": 15.6,
+      "Distance": 1000
+    },
+    {
+      "ID": 26,
+      "Run": 15.7,
+      "Distance": 1040
+    },
+    {
+      "ID": 27,
+      "Run": 15.8,
+      "Distance": 1080
+    },
+    {
+      "ID": 28,
+      "Run": 16.1,
+      "Distance": 1120
+    },
+    {
+      "ID": 29,
+      "Run": 16.2,
+      "Distance": 1160
+    },
+    {
+      "ID": 30,
+      "Run": 16.3,
+      "Distance": 1200
+    },
+    {
+      "ID": 31,
+      "Run": 16.4,
+      "Distance": 1240
+    },
+    {
+      "ID": 32,
+      "Run": 16.5,
+      "Distance": 1280
+    },
+    {
+      "ID": 33,
+      "Run": 16.6,
+      "Distance": 1320
+    },
+    {
+      "ID": 34,
+      "Run": 16.7,
+      "Distance": 1360
+    },
+    {
+      "ID": 35,
+      "Run": 16.8,
+      "Distance": 1400
+    },
+    {
+      "ID": 36,
+      "Run": 17.1,
+      "Distance": 1440
+    },
+    {
+      "ID": 37,
+      "Run": 17.2,
+      "Distance": 1480
+    },
+    {
+      "ID": 38,
+      "Run": 17.3,
+      "Distance": 1520
+    },
+    {
+      "ID": 39,
+      "Run": 17.4,
+      "Distance": 1560
+    },
+    {
+      "ID": 40,
+      "Run": 17.5,
+      "Distance": 1600
+    },
+    {
+      "ID": 41,
+      "Run": 17.6,
+      "Distance": 1640
+    },
+    {
+      "ID": 42,
+      "Run": 17.7,
+      "Distance": 1680
+    },
+    {
+      "ID": 43,
+      "Run": 17.8,
+      "Distance": 1720
+    },
+    {
+      "ID": 44,
+      "Run": 18.1,
+      "Distance": 1760
+    },
+    {
+      "ID": 45,
+      "Run": 18.2,
+      "Distance": 1800
+    },
+    {
+      "ID": 46,
+      "Run": 18.3,
+      "Distance": 1840
+    },
+    {
+      "ID": 47,
+      "Run": 18.4,
+      "Distance": 1880
+    },
+    {
+      "ID": 48,
+      "Run": 18.5,
+      "Distance": 1920
+    },
+    {
+      "ID": 49,
+      "Run": 18.6,
+      "Distance": 1960
+    },
+    {
+      "ID": 50,
+      "Run": 18.7,
+      "Distance": 2000
+    },
+    {
+      "ID": 51,
+      "Run": 18.8,
+      "Distance": 2040
+    },
+    {
+      "ID": 52,
+      "Run": 19.1,
+      "Distance": 2080
+    },
+    {
+      "ID": 53,
+      "Run": 19.2,
+      "Distance": 2120
+    },
+    {
+      "ID": 54,
+      "Run": 19.3,
+      "Distance": 2160
+    },
+    {
+      "ID": 55,
+      "Run": 19.4,
+      "Distance": 2200
+    },
+    {
+      "ID": 56,
+      "Run": 19.5,
+      "Distance": 2240
+    },
+    {
+      "ID": 57,
+      "Run": 19.6,
+      "Distance": 2280
+    },
+    {
+      "ID": 58,
+      "Run": 19.7,
+      "Distance": 2320
+    },
+    {
+      "ID": 59,
+      "Run": 19.8,
+      "Distance": 2360
+    },
+    {
+      "ID": 60,
+      "Run": 20.1,
+      "Distance": 2400
+    },
+    {
+      "ID": 61,
+      "Run": 20.2,
+      "Distance": 2440
+    },
+    {
+      "ID": 62,
+      "Run": 20.3,
+      "Distance": 2480
+    },
+    {
+      "ID": 63,
+      "Run": 20.4,
+      "Distance": 2520
+    },
+    {
+      "ID": 64,
+      "Run": 20.5,
+      "Distance": 2560
+    },
+    {
+      "ID": 65,
+      "Run": 20.6,
+      "Distance": 2600
+    },
+    {
+      "ID": 66,
+      "Run": 20.7,
+      "Distance": 2640
+    },
+    {
+      "ID": 67,
+      "Run": 20.8,
+      "Distance": 2680
+    },
+    {
+      "ID": 68,
+      "Run": 21.1,
+      "Distance": 2720
+    },
+    {
+      "ID": 69,
+      "Run": 21.2,
+      "Distance": 2760
+    },
+    {
+      "ID": 70,
+      "Run": 21.3,
+      "Distance": 2800
+    },
+    {
+      "ID": 71,
+      "Run": 21.4,
+      "Distance": 2840
+    },
+    {
+      "ID": 72,
+      "Run": 21.5,
+      "Distance": 2880
+    },
+    {
+      "ID": 73,
+      "Run": 21.6,
+      "Distance": 2920
+    },
+    {
+      "ID": 74,
+      "Run": 21.7,
+      "Distance": 2960
+    },
+    {
+      "ID": 75,
+      "Run": 21.8,
+      "Distance": 3000
+    },
+    {
+      "ID": 76,
+      "Run": 22.1,
+      "Distance": 3040
+    },
+    {
+      "ID": 77,
+      "Run": 22.2,
+      "Distance": 3080
+    },
+    {
+      "ID": 78,
+      "Run": 22.3,
+      "Distance": 3120
+    },
+    {
+      "ID": 79,
+      "Run": 22.4,
+      "Distance": 3160
+    },
+    {
+      "ID": 80,
+      "Run": 22.5,
+      "Distance": 3200
+    },
+    {
+      "ID": 81,
+      "Run": 22.6,
+      "Distance": 3240
+    },
+    {
+      "ID": 82,
+      "Run": 22.7,
+      "Distance": 3280
+    },
+    {
+      "ID": 83,
+      "Run": 22.8,
+      "Distance": 3320
+    },
+    {
+      "ID": 84,
+      "Run": 23.1,
+      "Distance": 3360
+    },
+    {
+      "ID": 85,
+      "Run": 23.2,
+      "Distance": 3400
+    },
+    {
+      "ID": 86,
+      "Run": 23.3,
+      "Distance": 3440
+    },
+    {
+      "ID": 87,
+      "Run": 23.4,
+      "Distance": 3480
+    },
+    {
+      "ID": 88,
+      "Run": 23.5,
+      "Distance": 3520
+    },
+    {
+      "ID": 89,
+      "Run": 23.6,
+      "Distance": 3560
+    },
+    {
+      "ID": 90,
+      "Run": 23.7,
+      "Distance": 3600
+    },
+    {
+      "ID": 91,
+      "Run": 23.8,
+      "Distance": 3640
+    }
+  ],
+  "BeepResults": [
+    {
+      "PlayerID": 2,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 2,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 3,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 4,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 4,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 5,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 5,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 5,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 6,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 6,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 8,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 9,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 9,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 9,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 10,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 10,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 10,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 11,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 11,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 17.6
+    },
+    {
+      "PlayerID": 12,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 12,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 15,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 15,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 16,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 16,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 18,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 18,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 19,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 21,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 21,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 21,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 22,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 23,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 23,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 18.3
+    },
+    {
+      "PlayerID": 23,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 23,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 18.3
+    },
+    {
+      "PlayerID": 24,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 24,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 25,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 25,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 25,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 26,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 26,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 26,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 28,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 29,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 29,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 30,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 30,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 31,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 31,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 32,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 34,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 34,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 35,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 35,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 36,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 36,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 37,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 44,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.4
+    },
+    {
+      "PlayerID": 44,
+      "SeasonID": 4,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 44,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.3
+    },
+    {
+      "PlayerID": 75,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 75,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 76,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 76,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 77,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 77,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 77,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 78,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 78,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 78,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.2
+    },
+    {
+      "PlayerID": 78,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 79,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 79,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 79,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 79,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 80,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.2
+    },
+    {
+      "PlayerID": 80,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 81,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 81,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 81,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 81,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 82,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 83,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.3
+    },
+    {
+      "PlayerID": 83,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 84,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 17.6
+    },
+    {
+      "PlayerID": 85,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 86,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 87,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 87,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 87,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 87,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 88,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 88,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 88,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 88,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 88,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 89,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 89,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 89,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 89,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 89,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 90,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 90,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 17.5
+    },
+    {
+      "PlayerID": 90,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 90,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.8
+    },
+    {
+      "PlayerID": 91,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 91,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 91,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 92,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 92,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 92,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 92,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 92,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 92,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 93,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 93,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 94,
+      "SeasonID": 6,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 94,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 94,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 94,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 94,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 94,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 95,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 95,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 95,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 96,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 96,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 96,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 96,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 96,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 97,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 97,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 97,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 97,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 97,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 97,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 98,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 17.5
+    },
+    {
+      "PlayerID": 98,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 98,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 98,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 99,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 100,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 100,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 100,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 101,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 102,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.4
+    },
+    {
+      "PlayerID": 102,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 103,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 104,
+      "SeasonID": 7,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 105,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 105,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 105,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 106,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 106,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 106,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 106,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 106,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 107,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 107,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 107,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 107,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 108,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 108,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 109,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 109,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 109,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 109,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 110,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.4
+    },
+    {
+      "PlayerID": 110,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 111,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 111,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 111,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 111,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 111,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 111,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 112,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 112,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 112,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 112,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 112,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 112,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 112,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 112,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 18.3
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 19.2
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 17.4
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 18.4
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 19.1
+    },
+    {
+      "PlayerID": 113,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 20.1
+    },
+    {
+      "PlayerID": 114,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 114,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 114,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 114,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 17.5
+    },
+    {
+      "PlayerID": 114,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 114,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 19.3
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 8,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 115,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 117,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 117,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 118,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 118,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 118,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 119,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 119,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 119,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 120,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 120,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 120,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 120,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 120,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.8
+    },
+    {
+      "PlayerID": 120,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 120,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 17.7
+    },
+    {
+      "PlayerID": 121,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.8
+    },
+    {
+      "PlayerID": 121,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 121,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 121,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 121,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 121,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 121,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 122,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 122,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 122,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 122,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 17.4
+    },
+    {
+      "PlayerID": 122,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 18.3
+    },
+    {
+      "PlayerID": 122,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 123,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 123,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 123,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 123,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 124,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 124,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 124,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 124,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 13.3
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.4
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 125,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 126,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 126,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 126,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 126,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 126,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 126,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 18.5
+    },
+    {
+      "PlayerID": 126,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 18.6
+    },
+    {
+      "PlayerID": 126,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 127,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 127,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 127,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 127,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 127,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 127,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 127,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 127,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 128,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 128,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 128,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 128,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 128,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 128,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 128,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 128,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 130,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 130,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 130,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 130,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 131,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 132,
+      "SeasonID": 9,
+      "RunDate": null,
+      "RunNo": 3,
+      "EndRun": 13.2
+    },
+    {
+      "PlayerID": 133,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 133,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 133,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 133,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 133,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 133,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 133,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 133,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 134,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 134,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 134,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 134,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 135,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 135,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 135,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 135,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 135,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 135,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 135,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 137,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 137,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 137,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 137,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 17.4
+    },
+    {
+      "PlayerID": 138,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 138,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 138,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 138,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 138,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 138,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 138,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 139,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 13.3
+    },
+    {
+      "PlayerID": 140,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 142,
+      "SeasonID": 10,
+      "RunDate": null,
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 142,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 142,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 142,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 143,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 143,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 18.4
+    },
+    {
+      "PlayerID": 143,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 19.2
+    },
+    {
+      "PlayerID": 143,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 20.4
+    },
+    {
+      "PlayerID": 143,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 18.3
+    },
+    {
+      "PlayerID": 145,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 15.8
+    },
+    {
+      "PlayerID": 145,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 146,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 146,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 146,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 147,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 147,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 147,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 148,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 148,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 13.2
+    },
+    {
+      "PlayerID": 148,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 150,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 150,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 150,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 150,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 150,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 150,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 150,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 150,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 151,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 151,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 151,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 151,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 152,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 152,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 152,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 153,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 153,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 153,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 153,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 17.4
+    },
+    {
+      "PlayerID": 153,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 153,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 153,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 153,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 154,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 154,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 154,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 154,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 154,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 154,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 154,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 155,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 155,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 155,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 155,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 18.3
+    },
+    {
+      "PlayerID": 155,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 155,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 156,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 156,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 156,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 156,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 156,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 157,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 157,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 157,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 157,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 157,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.2
+    },
+    {
+      "PlayerID": 157,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 157,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 158,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 158,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 158,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 19.2
+    },
+    {
+      "PlayerID": 158,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 17.5
+    },
+    {
+      "PlayerID": 158,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 158,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 20.1
+    },
+    {
+      "PlayerID": 159,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 159,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 160,
+      "SeasonID": 11,
+      "RunDate": "2014-07-22",
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 160,
+      "SeasonID": 11,
+      "RunDate": "2014-07-28",
+      "RunNo": 2,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 160,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 160,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 160,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 161,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 161,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 161,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 161,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 161,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 162,
+      "SeasonID": 11,
+      "RunDate": "2014-08-04",
+      "RunNo": 3,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 162,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 162,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 162,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 16.8
+    },
+    {
+      "PlayerID": 163,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 164,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 164,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 165,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 165,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 165,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 165,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 165,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 165,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 165,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 166,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 166,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 166,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 166,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 166,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 166,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 167,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 168,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.8
+    },
+    {
+      "PlayerID": 168,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.9
+    },
+    {
+      "PlayerID": 168,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 168,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 169,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 169,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 169,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 169,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 169,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 170,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 170,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 170,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 170,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 170,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 171,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 171,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 172,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 172,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 172,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 172,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 18.5
+    },
+    {
+      "PlayerID": 172,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 173,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 17.6
+    },
+    {
+      "PlayerID": 173,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 174,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 174,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 174,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 175,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 177,
+      "SeasonID": 12,
+      "RunDate": "2015-07-20",
+      "RunNo": 1,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 177,
+      "SeasonID": 12,
+      "RunDate": "2015-07-27",
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 177,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 193,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 193,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 193,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 194,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 194,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 195,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 195,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 195,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 195,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 195,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 195,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 195,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 196,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 196,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 196,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 196,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 196,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 196,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 196,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 197,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 197,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 198,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 198,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 198,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 198,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 198,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 198,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 198,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 199,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 199,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 17.7
+    },
+    {
+      "PlayerID": 199,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 199,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 199,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 199,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 199,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.4
+    },
+    {
+      "PlayerID": 200,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 200,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 200,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 17.8
+    },
+    {
+      "PlayerID": 200,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 201,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 201,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 201,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 18.3
+    },
+    {
+      "PlayerID": 201,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 18.4
+    },
+    {
+      "PlayerID": 201,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 18.1
+    },
+    {
+      "PlayerID": 201,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 202,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 202,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 203,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 17.4
+    },
+    {
+      "PlayerID": 203,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 203,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 19.3
+    },
+    {
+      "PlayerID": 203,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 203,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 18.1
+    },
+    {
+      "PlayerID": 203,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 203,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 18.3
+    },
+    {
+      "PlayerID": 204,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 204,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 205,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 205,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 205,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 205,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 205,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 205,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 206,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 206,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 16.5
+    },
+    {
+      "PlayerID": 206,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 206,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 207,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 207,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 208,
+      "SeasonID": 13,
+      "RunDate": "2016-07-25",
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 208,
+      "SeasonID": 13,
+      "RunDate": "2016-08-01",
+      "RunNo": 2,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 211,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 211,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 211,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 211,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 212,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 212,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 212,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 212,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 213,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 20.1
+    },
+    {
+      "PlayerID": 213,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 18.6
+    },
+    {
+      "PlayerID": 213,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 17.4
+    },
+    {
+      "PlayerID": 213,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 18.5
+    },
+    {
+      "PlayerID": 214,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 214,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 214,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 214,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 214,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 215,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 215,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 215,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 216,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.7
+    },
+    {
+      "PlayerID": 216,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 216,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 216,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 216,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 217,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 217,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 219,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 219,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 219,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 219,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.8
+    },
+    {
+      "PlayerID": 219,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 220,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 220,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.8
+    },
+    {
+      "PlayerID": 220,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 221,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 221,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 221,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 16.8
+    },
+    {
+      "PlayerID": 221,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 222,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 17.5
+    },
+    {
+      "PlayerID": 222,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 222,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 222,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.1
+    },
+    {
+      "PlayerID": 222,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 223,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 223,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 223,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 224,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 224,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 224,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 224,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 13.4
+    },
+    {
+      "PlayerID": 226,
+      "SeasonID": 14,
+      "RunDate": "2017-09-11",
+      "RunNo": 1,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 228,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 17.8
+    },
+    {
+      "PlayerID": 228,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 229,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 229,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 229,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 229,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 230,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 230,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 230,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.5
+    },
+    {
+      "PlayerID": 230,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.1
+    },
+    {
+      "PlayerID": 232,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 13.3
+    },
+    {
+      "PlayerID": 232,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 233,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 14.5
+    },
+    {
+      "PlayerID": 233,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 233,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 233,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 234,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 234,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.3
+    },
+    {
+      "PlayerID": 235,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 16.6
+    },
+    {
+      "PlayerID": 235,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 235,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 16.8
+    },
+    {
+      "PlayerID": 235,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 236,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 18.2
+    },
+    {
+      "PlayerID": 236,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 18.6
+    },
+    {
+      "PlayerID": 236,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 236,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 19.1
+    },
+    {
+      "PlayerID": 237,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 14.1
+    },
+    {
+      "PlayerID": 237,
+      "SeasonID": 15,
+      "RunDate": null,
+      "RunNo": 2,
+      "EndRun": 14.7
+    },
+    {
+      "PlayerID": 238,
+      "SeasonID": 15,
+      "RunDate": "2018-07-23",
+      "RunNo": 1,
+      "EndRun": 13.3
+    },
+    {
+      "PlayerID": 240,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 240,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 241,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 241,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 17.2
+    },
+    {
+      "PlayerID": 242,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.8
+    },
+    {
+      "PlayerID": 242,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 243,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.6
+    },
+    {
+      "PlayerID": 243,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.8
+    },
+    {
+      "PlayerID": 244,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.6
+    },
+    {
+      "PlayerID": 244,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 245,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 246,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 246,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 247,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 247,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.2
+    },
+    {
+      "PlayerID": 248,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.7
+    },
+    {
+      "PlayerID": 248,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 249,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 16.3
+    },
+    {
+      "PlayerID": 249,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 17.3
+    },
+    {
+      "PlayerID": 250,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.3
+    },
+    {
+      "PlayerID": 250,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 16.2
+    },
+    {
+      "PlayerID": 251,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 15.4
+    },
+    {
+      "PlayerID": 251,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 17.1
+    },
+    {
+      "PlayerID": 252,
+      "SeasonID": 16,
+      "RunDate": "2019-07-29",
+      "RunNo": 1,
+      "EndRun": 14.4
+    },
+    {
+      "PlayerID": 252,
+      "SeasonID": 16,
+      "RunDate": "2019-08-05",
+      "RunNo": 2,
+      "EndRun": 15.1
+    }
+  ]
+}

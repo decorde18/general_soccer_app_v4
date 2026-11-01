@@ -186,7 +186,10 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
     );
     const lettersCount = Number(lettersCountRows[0]?.cnt || 0);
 
-    if (kitCount > 0 && lettersCount > 0) {
+    const perfLogsCount = await prisma.player_performance_logs.count();
+    const customValsCount = await prisma.custom_field_values.count();
+
+    if (kitCount > 0 && lettersCount > 0 && perfLogsCount > 0 && customValsCount > 0) {
       return;
     }
 
@@ -230,8 +233,10 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
       where: { club_id: ihsClub.id },
     });
     const ihsVarsityTeam =
-      ihsTeams.find((t) => t.name.includes("Varsity") && !t.name.includes("Junior")) || ihsTeams[0];
-    const ihsJvTeam = ihsTeams.find((t) => t.name.includes("Junior Varsity") || t.name.includes("JV"));
+      ihsTeams.find((t) => t.team_name.includes("Varsity") && !t.team_name.includes("Junior")) || ihsTeams[0];
+    const ihsJvTeam = ihsTeams.find(
+      (t) => t.team_name.includes("Junior Varsity") || t.team_name.includes("JV")
+    );
 
     const ihsTeamSeasons = await prisma.team_seasons.findMany({
       where: { team_id: { in: ihsTeams.map((t) => t.id) } },
@@ -282,7 +287,7 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
 
     const personSeasonToPlayerTeamId = new Map<string, number>();
     for (const pt of allIhsPlayerTeams) {
-      const key = `${pt.person_id}_${pt.team_seasons.season_id}`;
+      const key = `${pt.player_id}_${pt.team_seasons.season_id}`;
       if (!personSeasonToPlayerTeamId.has(key)) {
         personSeasonToPlayerTeamId.set(key, pt.id);
       }
@@ -305,7 +310,7 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
     const clubByName = new Map<string, number>();
     for (const c of allClubs) {
       clubByName.set(c.name.trim().toLowerCase(), c.id);
-      if (c.short_name) clubByName.set(c.short_name.trim().toLowerCase(), c.id);
+      if (c.abbreviation) clubByName.set(c.abbreviation.trim().toLowerCase(), c.id);
     }
 
     const legacySchoolToClub = new Map<number, number>();
@@ -352,25 +357,34 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
       const fallbackKitId = Number(fallbackInserted[0].id);
 
       const legacyJerseyIdToDbId = new Map<number, number>();
-      for (const j of sqlUniformJerseys) {
-        const oldKitId = j[0] !== null ? Number(j[0]) : null;
-        const number = Number(j[1]) || 0;
-        const size = j[2] ? String(j[2]) : null;
-        const isLost = j[3] === 1 || j[3] === "1" ? 1 : 0;
-        const oldJerseyId = Number(j[6]);
-        const kitId = (oldKitId && legacyUniformIdToKitId.get(oldKitId)) || fallbackKitId;
-
+      if (sqlUniformJerseys.length > 0) {
+        const jerseyPlaceholders: string[] = [];
+        const jerseyParams: any[] = [];
+        for (const j of sqlUniformJerseys) {
+          const oldKitId = j[0] !== null ? Number(j[0]) : null;
+          const number = Number(j[1]) || 0;
+          const size = j[2] ? String(j[2]) : null;
+          const isLost = j[3] === 1 || j[3] === "1" ? 1 : 0;
+          const kitId = (oldKitId && legacyUniformIdToKitId.get(oldKitId)) || fallbackKitId;
+          jerseyPlaceholders.push("(?, ?, ?, ?)");
+          jerseyParams.push(kitId, number, size, isLost);
+        }
         await prisma.$executeRawUnsafe(
-          `INSERT INTO \`uniform_jerseys\` (\`uniform_kit_id\`, \`jersey_number\`, \`size\`, \`is_lost\`) VALUES (?, ?, ?, ?)`,
-          kitId,
-          number,
-          size,
-          isLost
+          `INSERT INTO \`uniform_jerseys\` (\`uniform_kit_id\`, \`jersey_number\`, \`size\`, \`is_lost\`) VALUES ${jerseyPlaceholders.join(", ")}`,
+          ...jerseyParams
         );
-        const insertedJ = await prisma.$queryRawUnsafe<{ id: number }[]>(`SELECT LAST_INSERT_ID() AS id`);
-        legacyJerseyIdToDbId.set(oldJerseyId, Number(insertedJ[0].id));
+        const insertedJerseys = await prisma.$queryRawUnsafe<{ id: number }[]>(
+          `SELECT id FROM \`uniform_jerseys\` ORDER BY id ASC`
+        );
+        sqlUniformJerseys.forEach((j, idx) => {
+          if (insertedJerseys[idx]) {
+            legacyJerseyIdToDbId.set(Number(j[6]), Number(insertedJerseys[idx].id));
+          }
+        });
       }
 
+      const skPlaceholders: string[] = [];
+      const skParams: any[] = [];
       for (const us of sqlUniformSeasons) {
         const oldSeasonId = Number(us[0]);
         const squadLevel = String(us[1] || "Varsity");
@@ -379,16 +393,19 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
         const dbKitId = legacyUniformIdToKitId.get(oldKitId);
         if (dbSeasonId && dbKitId) {
           const teamSeasonId = getIhsTeamSeasonId(dbSeasonId, squadLevel);
-          await prisma.$executeRawUnsafe(
-            `INSERT INTO \`uniform_season_kits\` (\`season_id\`, \`team_season_id\`, \`squad_level\`, \`uniform_kit_id\`) VALUES (?, ?, ?, ?)`,
-            dbSeasonId,
-            teamSeasonId,
-            squadLevel,
-            dbKitId
-          );
+          skPlaceholders.push("(?, ?, ?, ?)");
+          skParams.push(dbSeasonId, teamSeasonId, squadLevel, dbKitId);
         }
       }
+      if (skPlaceholders.length > 0) {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO \`uniform_season_kits\` (\`season_id\`, \`team_season_id\`, \`squad_level\`, \`uniform_kit_id\`) VALUES ${skPlaceholders.join(", ")}`,
+          ...skParams
+        );
+      }
 
+      const upaPlaceholders: string[] = [];
+      const upaParams: any[] = [];
       for (const usp of sqlUniformSeasonPlayers) {
         const oldPsId = Number(usp[1]);
         const oldJerseyId = Number(usp[2]);
@@ -396,13 +413,15 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
         const playerTeamId = legacyPlayerSeasonToPlayerTeam.get(oldPsId);
         const dbJerseyId = legacyJerseyIdToDbId.get(oldJerseyId);
         if (playerTeamId && dbJerseyId) {
-          await prisma.$executeRawUnsafe(
-            `INSERT INTO \`uniform_player_assignments\` (\`player_team_id\`, \`uniform_jersey_id\`, \`assignment_type\`, \`returned\`) VALUES (?, ?, ?, 1)`,
-            playerTeamId,
-            dbJerseyId,
-            assignType
-          );
+          upaPlaceholders.push("(?, ?, ?, 1)");
+          upaParams.push(playerTeamId, dbJerseyId, assignType);
         }
+      }
+      if (upaPlaceholders.length > 0) {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO \`uniform_player_assignments\` (\`player_team_id\`, \`uniform_jersey_id\`, \`assignment_type\`, \`returned\`) VALUES ${upaPlaceholders.join(", ")}`,
+          ...upaParams
+        );
       }
     }
 
@@ -410,6 +429,8 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
       `SELECT COUNT(*) AS cnt FROM \`schedule_leads\``
     );
     if (Number(leadsCountRows[0]?.cnt || 0) === 0) {
+      const slPlaceholders: string[] = [];
+      const slParams: any[] = [];
       for (const sh of sqlScheduleHelper) {
         const oldSchoolId = Number(sh[3]);
         const oldSeasonId = Number(sh[4]);
@@ -420,8 +441,8 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
         const dbSeasonId = legacySeasonToDbSeason.get(oldSeasonId);
         if (opponentClubId && dbSeasonId) {
           const teamSeasonId = getIhsTeamSeasonId(dbSeasonId, "Varsity");
-          await prisma.$executeRawUnsafe(
-            `INSERT INTO \`schedule_leads\` (\`season_id\`, \`team_season_id\`, \`opponent_club_id\`, \`likelihood\`, \`status\`, \`notes\`) VALUES (?, ?, ?, ?, ?, ?)`,
+          slPlaceholders.push("(?, ?, ?, ?, ?, ?)");
+          slParams.push(
             dbSeasonId,
             teamSeasonId,
             opponentClubId,
@@ -431,11 +452,20 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
           );
         }
       }
+      if (slPlaceholders.length > 0) {
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO \`schedule_leads\` (\`season_id\`, \`team_season_id\`, \`opponent_club_id\`, \`likelihood\`, \`status\`, \`notes\`) VALUES ${slPlaceholders.join(", ")}`,
+          ...slParams
+        );
+      }
     }
 
     if (lettersCount === 0) {
       const ihsPlayerTeamsChrono = await prisma.player_teams.findMany({
-        where: { team_seasons: { team_id: { in: ihsTeams.map((t) => t.id) } } },
+        where: {
+          team_seasons: { team_id: { in: ihsTeams.map((t) => t.id) } },
+          status: "rostered",
+        },
         include: {
           team_seasons: { include: { teams: true, seasons: true } },
         },
@@ -447,24 +477,30 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
       const personSeasonGroups = new Map<string, typeof ihsPlayerTeamsChrono>();
 
       for (const pt of ihsPlayerTeamsChrono) {
-        const key = `${pt.person_id}_${pt.team_seasons.season_id}`;
+        const key = `${pt.player_id}_${pt.team_seasons.season_id}`;
         const list = personSeasonGroups.get(key) || [];
         list.push(pt);
         personSeasonGroups.set(key, list);
       }
 
+      const pslPlaceholders: string[] = [];
+      const pslParams: any[] = [];
+
       for (const [, pts] of personSeasonGroups.entries()) {
         const primaryPt =
           pts.find(
-            (p) => p.team_seasons.teams.name.includes("Varsity") && !p.team_seasons.teams.name.includes("Junior")
+            (p) =>
+              p.team_seasons.teams.team_name.includes("Varsity") &&
+              !p.team_seasons.teams.team_name.includes("Junior")
           ) || pts[0];
-        const personId = primaryPt.person_id;
+        const personId = primaryPt.player_id;
         const seasonId = primaryPt.team_seasons.season_id;
         const seasonName = primaryPt.team_seasons.seasons.season_name;
 
         const isVarsity = pts.some(
           (p) =>
-            (p.team_seasons.teams.name.includes("Varsity") && !p.team_seasons.teams.name.includes("Junior")) ||
+            (p.team_seasons.teams.team_name.includes("Varsity") &&
+              !p.team_seasons.teams.team_name.includes("Junior")) ||
             (p.status && p.status.toLowerCase().includes("varsity") && !p.status.toLowerCase().includes("jv"))
         );
 
@@ -488,8 +524,8 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
           gradPatch = (seasonEndYear + yearsLeft) % 100;
         }
 
-        await prisma.$executeRawUnsafe(
-          `INSERT IGNORE INTO \`player_season_letters\` (\`player_id\`, \`season_id\`, \`team_season_id\`, \`certificate\`, \`varsity_letter\`, \`number_patch\`, \`number_patch_needed\`, \`varsity_patch_needed\`, \`ball\`, \`bar\`) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?)`,
+        pslPlaceholders.push("(?, ?, ?, 1, ?, ?, ?, ?, ?, ?)");
+        pslParams.push(
           personId,
           seasonId,
           primaryPt.team_season_id,
@@ -500,6 +536,479 @@ async function runEnsureTablesAndMigrate(): Promise<void> {
           isFirstVarsityYear ? 1 : 0,
           isVarsity ? 1 : 0
         );
+      }
+
+      if (pslPlaceholders.length > 0) {
+        await prisma.$executeRawUnsafe(
+          `INSERT IGNORE INTO \`player_season_letters\` (\`player_id\`, \`season_id\`, \`team_season_id\`, \`certificate\`, \`varsity_letter\`, \`number_patch\`, \`number_patch_needed\`, \`varsity_patch_needed\`, \`ball\`, \`bar\`) VALUES ${pslPlaceholders.join(", ")}`,
+          ...pslParams
+        );
+      }
+    }
+
+    // 5. Migrate Fitness Testing (BeepInformation & BeepResults -> performance_tests & player_performance_logs)
+    if (perfLogsCount === 0) {
+      const beepJsonPath = path.join(process.cwd(), "src", "lib", "db", "accdb_beep_data.json");
+      if (fs.existsSync(beepJsonPath)) {
+        const beepData = JSON.parse(fs.readFileSync(beepJsonPath, "utf-8")) as {
+          BeepInformation: Array<{ ID: number; Run: number; Distance: number }>;
+          BeepResults: Array<{
+            PlayerID: number;
+            SeasonID: number;
+            RunDate: string | null;
+            RunNo: number | null;
+            EndRun: number | null;
+          }>;
+        };
+
+        const beepDistMap = new Map<number, number>();
+        for (const info of beepData.BeepInformation || []) {
+          if (info.Run !== null && info.Run !== undefined && info.Distance !== null) {
+            beepDistMap.set(Math.round(Number(info.Run) * 10) / 10, Number(info.Distance));
+          }
+        }
+        if (!beepDistMap.has(16.9)) {
+          beepDistMap.set(16.9, 1420);
+        }
+
+        // Ensure a Beep Test performance_tests row exists for each Independence season (Varsity / primary team_season_id)
+        const seasonToPrimaryTsId = new Map<number, number>();
+        const seasonToStartDate = new Map<number, Date>();
+        for (const ts of ihsTeamSeasons) {
+          const isVarsity = ts.teams.team_name.includes("Varsity") && !ts.teams.team_name.includes("Junior");
+          if (!seasonToPrimaryTsId.has(ts.season_id) || isVarsity) {
+            seasonToPrimaryTsId.set(ts.season_id, ts.id);
+          }
+          if (ts.seasons?.start_date) {
+            seasonToStartDate.set(ts.season_id, new Date(ts.seasons.start_date));
+          }
+        }
+
+        const existingTests = await prisma.performance_tests.findMany({
+          where: { team_season_id: { in: Array.from(seasonToPrimaryTsId.values()) } },
+        });
+        const tsToTestId = new Map<number, number>();
+        for (const t of existingTests) {
+          if (t.team_season_id) tsToTestId.set(t.team_season_id, t.id);
+        }
+
+        const missingTsIds = Array.from(seasonToPrimaryTsId.values()).filter(
+          (tsId) => !tsToTestId.has(tsId)
+        );
+        if (missingTsIds.length > 0) {
+          await prisma.performance_tests.createMany({
+            data: missingTsIds.map((tsId) => ({
+              team_season_id: tsId,
+              name: "Beep Test (20m Shuttle)",
+              unit: "level.shuttle",
+              higher_is_better: true,
+              description: "20m multistage fitness shuttle test (91 stages from BeepInformation)",
+            })),
+          });
+          const allTestsNow = await prisma.performance_tests.findMany({
+            where: { team_season_id: { in: Array.from(seasonToPrimaryTsId.values()) } },
+          });
+          for (const t of allTestsNow) {
+            if (t.team_season_id) tsToTestId.set(t.team_season_id, t.id);
+          }
+        }
+
+        const logsToCreate: Array<{
+          test_id: number;
+          player_id: number;
+          test_date: Date;
+          score_numeric: number;
+          score_display: string;
+          entry_source: string;
+          frequency_reps: number;
+          interval_details: string;
+          verification_status: string;
+          notes: string;
+        }> = [];
+
+        for (const res of beepData.BeepResults || []) {
+          if (res.EndRun === null || res.EndRun === undefined) continue;
+          const dbPersonId = legacyPlayerToDbPerson.get(Number(res.PlayerID));
+          const dbSeasonId = legacySeasonToDbSeason.get(Number(res.SeasonID));
+          if (!dbPersonId || !dbSeasonId) continue;
+
+          const primaryTsId = seasonToPrimaryTsId.get(dbSeasonId);
+          const testId = primaryTsId ? tsToTestId.get(primaryTsId) : undefined;
+          if (!testId) continue;
+
+          const endRunNum = Math.round(Number(res.EndRun) * 10) / 10;
+          const dist = beepDistMap.get(endRunNum);
+          const runNo = Number(res.RunNo) || 1;
+
+          let testDateObj: Date;
+          if (res.RunDate) {
+            testDateObj = new Date(`${res.RunDate}T12:00:00Z`);
+          } else {
+            const baseDate = seasonToStartDate.get(dbSeasonId) || new Date("2010-08-01T12:00:00Z");
+            const year = baseDate.getUTCFullYear();
+            testDateObj = new Date(Date.UTC(year, 6, 15 + (runNo - 1) * 7, 12, 0, 0));
+          }
+
+          logsToCreate.push({
+            test_id: testId,
+            player_id: dbPersonId,
+            test_date: testDateObj,
+            score_numeric: endRunNum,
+            score_display: dist ? `${endRunNum.toFixed(1)} (${dist}m)` : endRunNum.toFixed(1),
+            entry_source: "coach_practice",
+            frequency_reps: runNo,
+            interval_details: `Attempt #${runNo}${dist ? ` • Total Shuttle Distance: ${dist}m` : ""}`,
+            verification_status: "verified",
+            notes: dist ? `Reached stage ${endRunNum.toFixed(1)} (${dist}m total)` : `Reached stage ${endRunNum.toFixed(1)}`,
+          });
+        }
+
+        if (logsToCreate.length > 0) {
+          await prisma.player_performance_logs.createMany({
+            data: logsToCreate,
+          });
+        }
+      }
+    }
+
+    // 6. Migrate Requirements & Gear (custom_field_definitions & custom_field_values)
+    if (customValsCount === 0) {
+      // Map legacy playerId -> previousSchool from sqlPlayers
+      const personToPreviousSchool = new Map<number, string>();
+      for (const pl of sqlPlayers) {
+        const oldPlayerId = Number(pl[0]);
+        const prevSchool = pl[4] ? String(pl[4]).trim() : "";
+        const dbPersonId = legacyPlayerToDbPerson.get(oldPlayerId);
+        if (dbPersonId && prevSchool && prevSchool.toLowerCase() !== "n/a") {
+          personToPreviousSchool.set(dbPersonId, prevSchool);
+        }
+      }
+
+      // Map (personId_seasonId) -> legacy playerSeasons attributes
+      const personSeasonLegacyAttrs = new Map<
+        string,
+        {
+          livesWithParents: boolean;
+          returningPlayer: boolean;
+          enrolledLastYear: boolean;
+          earnedCredits: boolean;
+        }
+      >();
+      for (const ps of sqlPlayerSeasons) {
+        const oldPlayerId = Number(ps[2]);
+        const oldSeasonId = Number(ps[3]);
+        const dbPersonId = legacyPlayerToDbPerson.get(oldPlayerId);
+        const dbSeasonId = legacySeasonToDbSeason.get(oldSeasonId);
+        if (!dbPersonId || !dbSeasonId) continue;
+
+        const livesWithParents = ps[12] === null || ps[12] === undefined ? true : Number(ps[12]) === 1;
+        const returningPlayer = ps[13] !== null && ps[13] !== undefined ? Number(ps[13]) === 1 : false;
+        const enrolledLastYear = ps[14] === null || ps[14] === undefined ? true : Number(ps[14]) === 1;
+        const earnedCredits = ps[15] === null || ps[15] === undefined ? true : Number(ps[15]) >= 0;
+
+        personSeasonLegacyAttrs.set(`${dbPersonId}_${dbSeasonId}`, {
+          livesWithParents,
+          returningPlayer,
+          enrolledLastYear,
+          earnedCredits,
+        });
+      }
+
+      const seasonToPrimaryTsId = new Map<number, number>();
+      for (const ts of ihsTeamSeasons) {
+        const isVarsity = ts.teams.team_name.includes("Varsity") && !ts.teams.team_name.includes("Junior");
+        if (!seasonToPrimaryTsId.has(ts.season_id) || isVarsity) {
+          seasonToPrimaryTsId.set(ts.season_id, ts.id);
+        }
+      }
+
+      const reqTemplates = [
+        {
+          field_key: "player_headshot",
+          label: "Player Headshot",
+          field_type: "photo_upload",
+          category: "Profile",
+          options: null,
+          is_required: true,
+          display_order: 1,
+          instructions: "Official roster headshot photo for player profile and match day cards.",
+        },
+        {
+          field_key: "lives_with_parents",
+          label: "Lives With Parents",
+          field_type: "boolean",
+          category: "TSSAA Eligibility",
+          options: null,
+          is_required: true,
+          display_order: 2,
+          instructions: "TSSAA bona fide residence compliance check (student resides with parents/legal guardians).",
+        },
+        {
+          field_key: "enrolled_last_year",
+          label: "Enrolled Last 12 Months",
+          field_type: "boolean",
+          category: "TSSAA Eligibility",
+          options: null,
+          is_required: true,
+          display_order: 3,
+          instructions: "Student has been enrolled for the preceding 12 months or qualified as an entering 9th grader.",
+        },
+        {
+          field_key: "played_last_season",
+          label: "Returning Player",
+          field_type: "boolean",
+          category: "TSSAA Eligibility",
+          options: null,
+          is_required: false,
+          display_order: 4,
+          instructions: "Participated in the Independence Girls Soccer program during the previous season.",
+        },
+        {
+          field_key: "earned_credits",
+          label: "Academic Credits Met",
+          field_type: "boolean",
+          category: "TSSAA Eligibility",
+          options: null,
+          is_required: true,
+          display_order: 5,
+          instructions: "Earned required TSSAA academic credits from the previous school year.",
+        },
+        {
+          field_key: "previous_school",
+          label: "Previous School",
+          field_type: "text",
+          category: "TSSAA Eligibility",
+          options: null,
+          is_required: false,
+          display_order: 6,
+          instructions: "Feeder middle school or transfer school prior to enrolling at Independence High School.",
+        },
+        {
+          field_key: "jersey_size",
+          label: "Jersey Size",
+          field_type: "select",
+          category: "Gear & Uniforms",
+          options: "YS, YM, YL, S, M, L, XL",
+          is_required: true,
+          display_order: 7,
+          instructions: "Player uniform jersey size issued for the season.",
+        },
+        {
+          field_key: "uniform_issued",
+          label: "Uniform Issued",
+          field_type: "boolean",
+          category: "Gear & Uniforms",
+          options: null,
+          is_required: true,
+          display_order: 8,
+          instructions: "Confirm primary/alternate match uniform kits have been issued to the player.",
+        },
+        {
+          field_key: "uniform_returned",
+          label: "Uniform Returned",
+          field_type: "boolean",
+          category: "Gear & Uniforms",
+          options: null,
+          is_required: true,
+          display_order: 9,
+          instructions: "Confirm all issued uniform jerseys have been returned at end of season.",
+        },
+      ];
+
+      // Create club-level annual recurring templates + season-specific definitions
+      const targetTsIds = Array.from(seasonToPrimaryTsId.values());
+      const existingDefs = await prisma.custom_field_definitions.findMany({
+        where: {
+          OR: [{ club_id: ihsClub.id }, { team_season_id: { in: targetTsIds } }],
+        },
+      });
+
+      if (existingDefs.length === 0) {
+        const defsToCreate: Array<{
+          team_season_id: number | null;
+          club_id: number;
+          field_key: string;
+          label: string;
+          field_type: string;
+          category: string;
+          options: string | null;
+          permission_role: string;
+          is_required: boolean;
+          is_annual_recurring: boolean;
+          display_order: number;
+          is_active: boolean;
+          instructions: string | null;
+        }> = [];
+
+        // Club-level templates (team_season_id = null)
+        for (const tpl of reqTemplates) {
+          defsToCreate.push({
+            team_season_id: null,
+            club_id: ihsClub.id,
+            field_key: tpl.field_key,
+            label: tpl.label,
+            field_type: tpl.field_type,
+            category: tpl.category,
+            options: tpl.options,
+            permission_role: "coach_edit_player_view",
+            is_required: tpl.is_required,
+            is_annual_recurring: true,
+            display_order: tpl.display_order,
+            is_active: true,
+            instructions: tpl.instructions,
+          });
+        }
+
+        // Per-season definitions so each season stores independent player values
+        for (const tsId of targetTsIds) {
+          for (const tpl of reqTemplates) {
+            defsToCreate.push({
+              team_season_id: tsId,
+              club_id: ihsClub.id,
+              field_key: tpl.field_key,
+              label: tpl.label,
+              field_type: tpl.field_type,
+              category: tpl.category,
+              options: tpl.options,
+              permission_role: "coach_edit_player_view",
+              is_required: tpl.is_required,
+              is_annual_recurring: true,
+              display_order: tpl.display_order,
+              is_active: true,
+              instructions: tpl.instructions,
+            });
+          }
+        }
+
+        await prisma.custom_field_definitions.createMany({
+          data: defsToCreate,
+        });
+      }
+
+      const allSeasonDefs = await prisma.custom_field_definitions.findMany({
+        where: { team_season_id: { in: targetTsIds }, is_active: true },
+      });
+
+      // Map (team_season_id, field_key) -> definition.id
+      const defIdByTsAndKey = new Map<string, number>();
+      for (const d of allSeasonDefs) {
+        if (d.team_season_id) {
+          defIdByTsAndKey.set(`${d.team_season_id}_${d.field_key}`, d.id);
+        }
+      }
+
+      // Fetch all rostered Independence player_teams with people
+      const rosteredPlayerTeams = await prisma.player_teams.findMany({
+        where: {
+          team_seasons: { team_id: { in: ihsTeams.map((t) => t.id) } },
+          status: "rostered",
+        },
+        include: {
+          people: true,
+          team_seasons: true,
+        },
+      });
+
+      // Fetch uniform assignments joined with uniform_jerseys via raw SQL
+      const rawAssignments = await prisma.$queryRawUnsafe<
+        Array<{
+          player_team_id: number;
+          returned: number | boolean;
+          size: string | null;
+        }>
+      >(
+        `SELECT upa.player_team_id, upa.returned, uj.size FROM \`uniform_player_assignments\` upa LEFT JOIN \`uniform_jerseys\` uj ON uj.id = upa.uniform_jersey_id`
+      );
+      const assignmentsByPtId = new Map<
+        number,
+        Array<{ returned: boolean; size: string | null }>
+      >();
+      for (const a of rawAssignments) {
+        const ptId = Number(a.player_team_id);
+        const list = assignmentsByPtId.get(ptId) || [];
+        list.push({
+          returned: Boolean(a.returned),
+          size: a.size ? String(a.size) : null,
+        });
+        assignmentsByPtId.set(ptId, list);
+      }
+
+      // Group by (person_id, season_id)
+      const rosteredGroups = new Map<string, typeof rosteredPlayerTeams>();
+      for (const pt of rosteredPlayerTeams) {
+        const key = `${pt.player_id}_${pt.team_seasons.season_id}`;
+        const list = rosteredGroups.get(key) || [];
+        list.push(pt);
+        rosteredGroups.set(key, list);
+      }
+
+      const valuesToCreate: Array<{
+        definition_id: number;
+        player_id: number;
+        team_season_id: number;
+        value: string;
+      }> = [];
+
+      for (const [, pts] of rosteredGroups.entries()) {
+        const primaryPt = pts[0];
+        const personId = primaryPt.player_id;
+        const seasonId = primaryPt.team_seasons.season_id;
+        const primaryTsId = seasonToPrimaryTsId.get(seasonId) || primaryPt.team_season_id;
+
+        const legacyAttrs = personSeasonLegacyAttrs.get(`${personId}_${seasonId}`);
+        const livesWithParents =
+          legacyAttrs?.livesWithParents ?? (primaryPt.lives_with_parents !== false);
+        const enrolledLastYear =
+          legacyAttrs?.enrolledLastYear ?? (primaryPt.enrolled_last_year !== false);
+        const playedLastSeason =
+          legacyAttrs?.returningPlayer ?? Boolean(primaryPt.played_last_season);
+        const earnedCredits =
+          legacyAttrs?.earnedCredits ?? (primaryPt.earned_credits !== false);
+        const prevSchool =
+          primaryPt.previous_school || personToPreviousSchool.get(personId) || "";
+
+        // Gather uniform assignments across any sub-team in this season
+        const allAssignments = pts.flatMap((p) => assignmentsByPtId.get(p.id) || []);
+        const sizeFound = allAssignments.find((a) => a.size)?.size || "";
+        const hasUniformIssued =
+          allAssignments.length > 0 || pts.some((p) => p.jersey_number !== null);
+        const allUniformsReturned =
+          allAssignments.length > 0
+            ? allAssignments.every((a) => a.returned)
+            : hasUniformIssued;
+
+        const hasPhoto = Boolean(primaryPt.people?.photo_url);
+
+        const fieldEntries: Array<[string, string]> = [
+          ["player_headshot", hasPhoto ? "Completed" : "Not Uploaded"],
+          ["lives_with_parents", livesWithParents ? "true" : "false"],
+          ["enrolled_last_year", enrolledLastYear ? "true" : "false"],
+          ["played_last_season", playedLastSeason ? "true" : "false"],
+          ["earned_credits", earnedCredits ? "true" : "false"],
+          ["previous_school", prevSchool],
+          ["jersey_size", sizeFound],
+          ["uniform_issued", hasUniformIssued ? "true" : "false"],
+          ["uniform_returned", allUniformsReturned ? "true" : "false"],
+        ];
+
+        for (const [fKey, fVal] of fieldEntries) {
+          const defId = defIdByTsAndKey.get(`${primaryTsId}_${fKey}`);
+          if (defId && fVal !== "") {
+            valuesToCreate.push({
+              definition_id: defId,
+              player_id: personId,
+              team_season_id: primaryTsId,
+              value: fVal,
+            });
+          }
+        }
+      }
+
+      if (valuesToCreate.length > 0) {
+        await prisma.custom_field_values.createMany({
+          data: valuesToCreate,
+          skipDuplicates: true,
+        });
       }
     }
   } catch (err) {

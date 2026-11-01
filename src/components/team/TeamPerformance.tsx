@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useMemo } from "react";
+import React, { useState, useTransition, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -33,6 +33,7 @@ interface Player {
   firstName: string;
   lastName: string;
   jerseyNumber: number | null;
+  status?: string | null;
 }
 
 interface PerformanceTest {
@@ -85,13 +86,23 @@ export default function TeamPerformance({
 
   const [isPending, startTransition] = useTransition();
 
+  const rosteredPlayers = useMemo(() => {
+    return players.filter(
+      (p) => !p.status || p.status.toLowerCase().replace(/_/g, " ").trim() === "rostered"
+    );
+  }, [players]);
+
+  const rosteredPersonIds = useMemo(() => {
+    return new Set(rosteredPlayers.map((p) => p.personId));
+  }, [rosteredPlayers]);
+
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [testName, setTestName] = useState("");
   const [testUnit, setTestUnit] = useState("level.shuttle");
   const [testDescription, setTestDescription] = useState("");
 
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<number>(players[0]?.personId || 0);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<number>(rosteredPlayers[0]?.personId || 0);
   const [testDate, setTestDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [scoreDisplay, setScoreDisplay] = useState("");
   const [scoreNumeric, setScoreNumeric] = useState<string>("");
@@ -101,19 +112,41 @@ export default function TeamPerformance({
   const [intervalDetails, setIntervalDetails] = useState<string>("");
   const [notes, setNotes] = useState("");
 
+  useEffect(() => {
+    setTestList(tests);
+    if (tests.length > 0 && !tests.some((t) => t.id === selectedTestId)) {
+      setSelectedTestId(tests[0].id);
+    }
+  }, [tests]);
+
+  useEffect(() => {
+    setLogs(initialLogs);
+  }, [initialLogs]);
+
+  useEffect(() => {
+    if (rosteredPlayers.length > 0 && !rosteredPlayers.some((p) => p.personId === selectedPlayerId)) {
+      setSelectedPlayerId(rosteredPlayers[0].personId);
+    }
+  }, [rosteredPlayers, selectedPlayerId]);
+
   const activeTest = useMemo(() => {
     return testList.find((t) => t.id === selectedTestId) || testList[0] || null;
   }, [testList, selectedTestId]);
 
   const activeLogs = useMemo(() => {
     if (!activeTest) return [];
-    return logs.filter((l) => l.test_id === activeTest.id);
-  }, [logs, activeTest]);
+    return logs.filter(
+      (l) =>
+        (l.test_id === activeTest.id ||
+          (l.performance_tests?.name && l.performance_tests.name === activeTest.name)) &&
+        rosteredPersonIds.has(l.player_id)
+    );
+  }, [logs, activeTest, rosteredPersonIds]);
 
   const playerProgress = useMemo(() => {
     if (!activeTest) return [];
 
-    return players.map((p) => {
+    const mapped = rosteredPlayers.map((p) => {
       const pLogs = activeLogs
         .filter((l) => l.player_id === p.personId)
         .sort((a, b) => new Date(b.test_date).getTime() - new Date(a.test_date).getTime());
@@ -122,8 +155,8 @@ export default function TeamPerformance({
       let best = null;
       if (pLogs.length > 0) {
         best = pLogs.reduce((acc, curr) => {
-          if (!acc.score_numeric) return curr;
-          if (!curr.score_numeric) return acc;
+          if (acc.score_numeric === null || acc.score_numeric === undefined) return curr;
+          if (curr.score_numeric === null || curr.score_numeric === undefined) return acc;
           return activeTest.higher_is_better
             ? curr.score_numeric > acc.score_numeric
               ? curr
@@ -141,7 +174,20 @@ export default function TeamPerformance({
         best,
       };
     });
-  }, [players, activeLogs, activeTest]);
+
+    return mapped.sort((a, b) => {
+      if (a.best && !b.best) return -1;
+      if (!a.best && b.best) return 1;
+      if (a.best && b.best && a.best.score_numeric !== null && b.best.score_numeric !== null) {
+        if (a.best.score_numeric !== b.best.score_numeric) {
+          return activeTest.higher_is_better
+            ? b.best.score_numeric - a.best.score_numeric
+            : a.best.score_numeric - b.best.score_numeric;
+        }
+      }
+      return (a.player.jerseyNumber ?? 999) - (b.player.jerseyNumber ?? 999);
+    });
+  }, [rosteredPlayers, activeLogs, activeTest]);
 
   const handleCreateTest = () => {
     if (!testName.trim()) {
@@ -484,7 +530,7 @@ export default function TeamPerformance({
               value={selectedPlayerId}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedPlayerId(Number(e.target.value))}
             >
-              {players.map((p) => (
+              {rosteredPlayers.map((p) => (
                 <option key={p.id} value={p.personId}>
                   #{p.jerseyNumber ?? "-"} {p.firstName} {p.lastName}
                 </option>

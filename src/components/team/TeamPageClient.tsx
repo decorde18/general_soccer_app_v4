@@ -212,6 +212,17 @@ export default function TeamPageClient({
     });
   }, [players, selectedSubTeam, currentSubTeamInfo]);
 
+  // Strictly rostered players for non-roster management tabs (Fitness Logs, Requirements & Gear, Groups, Uniforms, Awards, Availability)
+  const rosteredFilteredPlayers = useMemo(() => {
+    return filteredPlayers.filter(
+      (p) =>
+        (p.status || "rostered")
+          .toLowerCase()
+          .replace(/_/g, " ")
+          .trim() === "rostered"
+    );
+  }, [filteredPlayers]);
+
   // Recalculate W-L-D-Points record strictly for active squad
   const activeRecord = useMemo(() => {
     if (selectedSubTeam === "all" && record) {
@@ -398,7 +409,8 @@ export default function TeamPageClient({
         {activeTab === "requirements" && (
           <TeamRequirements
             teamSeasonId={activeTeamSeasonId}
-            players={filteredPlayers}
+            clubId={teamSeason.clubId}
+            players={rosteredFilteredPlayers}
             definitions={customDefs}
             initialValues={customVals}
           />
@@ -407,7 +419,7 @@ export default function TeamPageClient({
         {activeTab === "performance" && (
           <TeamPerformance
             teamSeasonId={activeTeamSeasonId}
-            players={filteredPlayers}
+            players={rosteredFilteredPlayers}
             tests={perfTests}
             initialLogs={perfLogs}
           />
@@ -416,7 +428,7 @@ export default function TeamPageClient({
         {activeTab === "groups" && (
           <TeamGroups
             teamSeasonId={activeTeamSeasonId}
-            players={filteredPlayers}
+            players={rosteredFilteredPlayers}
             groups={groups}
             pairings={pairings}
           />
@@ -425,7 +437,7 @@ export default function TeamPageClient({
         {activeTab === "availability" && (
           <TeamAvailability
             teamSeasonId={activeTeamSeasonId}
-            players={filteredPlayers}
+            players={rosteredFilteredPlayers}
             records={unavailabilities}
           />
         )}
@@ -455,7 +467,7 @@ export default function TeamPageClient({
             seasonId={teamSeason.seasonId}
             seasonName={teamSeason.seasonName}
             programTeamSeasonIds={programTeamSeasonIds}
-            players={filteredPlayers}
+            players={rosteredFilteredPlayers}
             initialAwards={awards}
             initialLetters={letters}
           />
@@ -467,7 +479,7 @@ export default function TeamPageClient({
             seasonId={teamSeason.seasonId}
             seasonName={teamSeason.seasonName}
             clubId={teamSeason.clubId}
-            players={filteredPlayers}
+            players={rosteredFilteredPlayers}
             initialKits={uniformKits}
             initialSeasonKits={uniformSeasonKits}
             initialAssignments={uniformAssignments}

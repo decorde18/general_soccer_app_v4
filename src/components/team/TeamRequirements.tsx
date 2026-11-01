@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useMemo } from "react";
+import React, { useState, useTransition, useMemo, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -51,6 +51,7 @@ interface Player {
   firstName: string;
   lastName: string;
   jerseyNumber: number | null;
+  status?: string | null;
   photoUrl?: string | null;
   photoStatus?: string | null;
   photoRejectionReason?: string | null;
@@ -80,6 +81,10 @@ interface CustomFieldValue {
   player_id: number;
   team_season_id: number | null;
   value: string | null;
+  custom_field_definitions?: {
+    id: number;
+    field_key: string;
+  };
 }
 
 interface TeamRequirementsProps {
@@ -101,11 +106,28 @@ export default function TeamRequirements({
   canManage = true,
   initialRequirePhotoReview = true,
 }: TeamRequirementsProps) {
+  const filterRostered = (list: Player[]) =>
+    list.filter(
+      (p) => !p.status || p.status.toLowerCase().replace(/_/g, " ").trim() === "rostered"
+    );
+
   const [fieldDefs, setFieldDefs] = useState<CustomFieldDefinition[]>(definitions);
   const [fieldValues, setFieldValues] = useState<CustomFieldValue[]>(initialValues);
-  const [rosterPlayers, setRosterPlayers] = useState<Player[]>(players);
+  const [rosterPlayers, setRosterPlayers] = useState<Player[]>(() => filterRostered(players));
   const [requirePhotoReview, setRequirePhotoReview] = useState<boolean>(initialRequirePhotoReview);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setRosterPlayers(filterRostered(players));
+  }, [players]);
+
+  useEffect(() => {
+    setFieldDefs(definitions);
+  }, [definitions]);
+
+  useEffect(() => {
+    setFieldValues(initialValues);
+  }, [initialValues]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
@@ -147,8 +169,11 @@ export default function TeamRequirements({
   const valueMap = useMemo(() => {
     const map = new Map<string, string>();
     fieldValues.forEach((v) => {
-      if (v.value !== null) {
+      if (v.value !== null && v.value !== undefined) {
         map.set(`${v.definition_id}_${v.player_id}`, v.value);
+        if (v.custom_field_definitions?.field_key) {
+          map.set(`${v.custom_field_definitions.field_key}_${v.player_id}`, v.value);
+        }
       }
     });
     return map;
@@ -387,7 +412,10 @@ export default function TeamRequirements({
   };
 
   const renderCellInput = (def: CustomFieldDefinition, player: Player) => {
-    const rawVal = valueMap.get(`${def.id}_${player.personId}`) || "";
+    const rawVal =
+      valueMap.get(`${def.id}_${player.personId}`) ??
+      valueMap.get(`${def.field_key}_${player.personId}`) ??
+      "";
 
     if (def.field_type === "photo_upload") {
       const status = player.photoStatus || "not_uploaded";

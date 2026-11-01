@@ -21,23 +21,54 @@ export interface CustomFieldDefinitionInput {
   actionLabel?: string | null;
 }
 
-export async function getCustomFieldDefinitions(teamSeasonId?: number, clubId?: number) {
-  const whereOr: any[] = [];
-  if (teamSeasonId) whereOr.push({ team_season_id: teamSeasonId });
-  if (clubId) whereOr.push({ club_id: clubId });
-  whereOr.push({ is_annual_recurring: true });
+export async function getCustomFieldDefinitions(
+  teamSeasonId?: number,
+  clubId?: number,
+  programTeamSeasonIds?: number[]
+) {
+  const ids =
+    programTeamSeasonIds && programTeamSeasonIds.length > 0
+      ? programTeamSeasonIds
+      : teamSeasonId
+      ? [teamSeasonId]
+      : [];
 
-  return await prisma.custom_field_definitions.findMany({
+  const whereOr: any[] = [];
+  if (ids.length > 0) {
+    whereOr.push({ team_season_id: { in: ids } });
+  }
+  if (clubId) {
+    whereOr.push({ team_season_id: null, club_id: clubId });
+  }
+  whereOr.push({ team_season_id: null, is_annual_recurring: true });
+
+  const defs = await prisma.custom_field_definitions.findMany({
     where: {
       OR: whereOr,
       is_active: true,
     },
     orderBy: [
-      { category: "asc" },
       { display_order: "asc" },
+      { category: "asc" },
       { created_at: "asc" },
     ],
   });
+
+  // Deduplicate by field_key, preferring season-specific definitions over club/global templates
+  const byKey = new Map<string, (typeof defs)[number]>();
+  for (const def of defs) {
+    const key = def.field_key || String(def.id);
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, def);
+    } else if (existing.team_season_id === null && def.team_season_id !== null) {
+      byKey.set(key, def);
+    } else if (def.team_season_id === teamSeasonId) {
+      byKey.set(key, def);
+    }
+  }
+
+  return Array.from(byKey.values());
 }
 
 export async function upsertCustomFieldDefinition(input: CustomFieldDefinitionInput) {
@@ -136,10 +167,21 @@ export async function deleteCustomFieldDefinition(id: number, teamSeasonId?: num
   return result;
 }
 
-export async function getCustomFieldValues(teamSeasonId: number) {
+export async function getCustomFieldValues(
+  teamSeasonId: number,
+  programTeamSeasonIds?: number[]
+) {
+  const ids =
+    programTeamSeasonIds && programTeamSeasonIds.length > 0
+      ? programTeamSeasonIds
+      : [teamSeasonId];
+
   return await prisma.custom_field_values.findMany({
     where: {
-      team_season_id: teamSeasonId,
+      OR: [
+        { team_season_id: { in: ids } },
+        { custom_field_definitions: { team_season_id: { in: ids } } },
+      ],
     },
     include: {
       custom_field_definitions: true,

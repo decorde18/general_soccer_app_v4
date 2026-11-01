@@ -12,6 +12,7 @@ export async function getTeamRosterPhotos(teamSeasonId: number) {
   const playerTeams = await prisma.player_teams.findMany({
     where: {
       team_season_id: teamSeasonId,
+      status: "rostered",
       is_active: true,
     },
     include: {

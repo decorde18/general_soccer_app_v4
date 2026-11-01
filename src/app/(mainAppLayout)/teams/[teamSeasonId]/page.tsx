@@ -26,6 +26,7 @@ import {
 import { getPlayerUnavailability } from "@/lib/actions/unavailability-actions";
 import { getTeamSeasonAwardsAndLetters } from "@/lib/actions/awards-actions";
 import { getUniformDataForTeamSeason } from "@/lib/actions/uniform-actions";
+import { ensureLegacyExtrasMigrated } from "@/lib/db/ensureLegacyExtrasMigrated";
 
 import TeamPageClient from "@/components/team/TeamPageClient";
 import { Card } from "@/components/ui/Card";
@@ -101,6 +102,7 @@ export default async function TeamPage({ params }: PageProps) {
 
     // Resolve sub-teams / squads (e.g. LM and DC for U12 Elite, Varsity and JV for High School)
     const { subTeams, programTeamSeasonIds } = await resolveSubTeams(idNumber);
+    await ensureLegacyExtrasMigrated();
 
     // Fetch rest of data in parallel
     const [
@@ -127,10 +129,10 @@ export default async function TeamPage({ params }: PageProps) {
       getPlayerStatsByTeamSeason(idNumber),
       getTeamSeasonRecords(undefined, idNumber),
       getLeaguesForTeamSeason(idNumber),
-      getCustomFieldDefinitions(idNumber, teamSeason.clubId),
-      getCustomFieldValues(idNumber),
-      getPerformanceTests(idNumber),
-      getPlayerPerformanceLogs(idNumber),
+      getCustomFieldDefinitions(idNumber, teamSeason.clubId, programTeamSeasonIds),
+      getCustomFieldValues(idNumber, programTeamSeasonIds),
+      getPerformanceTests(idNumber, programTeamSeasonIds),
+      getPlayerPerformanceLogs(idNumber, undefined, undefined, programTeamSeasonIds),
       getTeamGroups(idNumber),
       getPlayerPairings(idNumber),
       getPlayerUnavailability(idNumber),
