@@ -3681,6 +3681,13 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
         include: { seasons: true },
         orderBy: [{ year: "desc" }, { id: "desc" }],
       },
+<<<<<<< HEAD
+=======
+      player_season_letters: {
+        include: { seasons: true },
+        orderBy: [{ seasons: { start_date: "desc" } }, { id: "desc" }],
+      },
+>>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
       player_teams: {
         include: {
           team_seasons: {
@@ -3900,10 +3907,17 @@ export async function getPlayerProfile(personId: number): Promise<PlayerProfileD
       seasonName: a.seasons?.season_name ?? null,
       notes: a.notes ?? null,
     })),
+<<<<<<< HEAD
     letters: (rawLetters || []).map((l: any) => ({
       id: l.id,
       seasonId: l.season_id,
       seasonName: l.season_name ?? "",
+=======
+    letters: (person.player_season_letters || []).map((l) => ({
+      id: l.id,
+      seasonId: l.season_id,
+      seasonName: l.seasons?.season_name ?? "",
+>>>>>>> 78a62d1d15f79f390743a9c92d1ae7feec4a9e56
       varsityLetter: Boolean(l.varsity_letter),
       numberPatch: l.number_patch ?? null,
       certificate: Boolean(l.certificate),
